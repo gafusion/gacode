@@ -315,7 +315,61 @@ class TGYROData:
         
         return k_max, omega_max, gamma_max
 
-# Analysis Tools
+    def sprofile(self, what, nf0=201, verbose=False):
+        """
+        This function returns smooth profiles on a uniform r/a grid
+        @param what: what profile to return ['r/a', 'te', 'a/LTe', 'ne', 'a/Lne', 'ti', 'a/LTi', 'M=wR/cs', 'M=wR/cs']
+        @param nf0: number of points
+        @param verbose: plotting of the `what` quantity
+        @return: `what` quantity (nf0xniterations) or `r/a` at the locations
+        """
+
+        from scipy import interpolate
+        import numpy
+
+        n   = self.n_iterations
+        rf0 = numpy.linspace(self.data['r/a'][0][0],self.data['r/a'][0][-1],int(nf0*self.data['r/a'][0][-1]))
+        if what=='r/a':
+            return rf0
+
+        quantity={'ne':'a/Lne', 'te':'a/LTe', 'ti':'a/LTi', 'M=wR/cs':'M=wR/cs'}
+        quantityScaleLen={'a/Lne':'ne', 'a/LTe':'te', 'a/LTi':'ti', 'M=wR/cs':'M=wR/cs'}
+        if what in quantity:
+            whatScale=quantity[what]
+        elif what in quantityScaleLen:
+            whatScale=what
+            what=None
+        else:
+            raise(Exception("Quantity '+what+' is not ['r/a', 'te', 'a/LTe', 'ne', 'a/Lne', 'ti', 'a/LTi', 'M=wR/cs', 'M=wR/cs']"))
+
+        # Linearly interpolate gradient scale lenghts
+        zf0 = numpy.zeros((len(rf0),n))
+        for l in range(n):
+            zf0[:,l] = interpolate.interp1d(self.data['r/a'][0],self.data[whatScale][l])(rf0)
+
+        if what is not None:
+            pf0 = numpy.zeros((len(rf0),n))
+            for l in range(n):
+                # Set boundary condition at pivot point
+                pf0[-1,l] = self.data[what][l][-1]
+                # Exponential integration to obtain smooth profiles
+            for i in numpy.arange(len(rf0)-1,0,-1):
+                pf0[i-1,:] = pf0[i,:]*numpy.exp(0.5*(rf0[i]-rf0[i-1])*(zf0[i,:]+zf0[i-1,:]))
+        else:
+            what=whatScale
+            pf0=zf0
+
+        if verbose:
+            from matplotlib import pyplot
+            pyplot.figure()
+            pyplot.plot(rf0,pf0)
+            pyplot.ylabel(what)
+            pyplot.xlabel(r'$r/a$')
+
+        return pf0
+
+    # ----------------------------------------- #
+    # Analysis Tools
 
     def make_gradient_vs_field_space(self, r=1, evolve_field=1, grad='a/LTi', profile='ti'):
         """Return matrix of Space[iteration][gradient,profile,residual] at given radial point.
