@@ -318,7 +318,7 @@ class TGYROData:
     def sprofile(self, what, nf0=201, verbose=False):
         """
         This function returns smooth profiles on a uniform r/a grid
-        @param what: what profile to return ['r/a', 'te', 'a/LTe', 'ne', 'a/Lne', 'ti', 'a/LTi', 'M=wR/cs', 'M=wR/cs']
+        @param what: what profile to return ['r/a', 'te', 'a/LTe', 'ne', 'a/Lne' , 'ti', 'a/LTi', 'ni', 'a/Lni', 'M=wR/cs', 'M=wR/cs']
         @param nf0: number of points
         @param verbose: plotting of the `what` quantity
         @return: `what` quantity (nf0xniterations) or `r/a` at the locations
@@ -332,15 +332,15 @@ class TGYROData:
         if what=='r/a':
             return rf0
 
-        quantity={'ne':'a/Lne', 'te':'a/LTe', 'ti':'a/LTi', 'M=wR/cs':'M=wR/cs'}
-        quantityScaleLen={'a/Lne':'ne', 'a/LTe':'te', 'a/LTi':'ti', 'M=wR/cs':'M=wR/cs'}
+        quantity={'ne':'a/Lne', 'te':'a/LTe', 'ti':'a/LTi', 'ni':'a/Lni', 'M=wR/cs':'M=wR/cs'}
+        quantityScaleLen={'a/Lne':'ne', 'a/LTe':'te', 'a/LTi':'ti', 'ni':'a/Lni', 'M=wR/cs':'M=wR/cs'}
         if what in quantity:
             whatScale=quantity[what]
         elif what in quantityScaleLen:
             whatScale=what
             what=None
         else:
-            raise(Exception("Quantity '+what+' is not ['r/a', 'te', 'a/LTe', 'ne', 'a/Lne', 'ti', 'a/LTi', 'M=wR/cs', 'M=wR/cs']"))
+            raise(Exception("Quantity '+what+' is not ['r/a', 'te', 'a/LTe', 'ne', 'a/Lne', 'ti', 'a/LTi', 'ni', 'a/Lni', 'M=wR/cs', 'M=wR/cs']"))
 
         # Linearly interpolate gradient scale lenghts
         zf0 = numpy.zeros((len(rf0),n))
