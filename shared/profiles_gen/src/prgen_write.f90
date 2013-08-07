@@ -41,7 +41,7 @@ subroutine prgen_write
      write(1,40) '#          SHOT NUMBER : ',onetwo_ishot
      write(1,20) '#'
      write(1,'(10(a,1x))') '#                 IONS : ',&
-          (trim(ion_name(reorder_vec(i))),i=1,onetwo_nion+onetwo_nbion)
+          (trim(onetwo_ion_name(reorder_vec(i))),i=1,min(onetwo_nion+onetwo_nbion+1,5))
 
   case (2)
      write(1,20) '#              TOKAMAK : ',trim(plst_tokamak_id)

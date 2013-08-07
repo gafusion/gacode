@@ -117,6 +117,9 @@ subroutine prgen_read_iterdb_nc
 
   err = nf90_inq_varid(ncid,trim('enbeam'),varid)
   err = nf90_get_var(ncid,varid,onetwo_enbeam(:,1:onetwo_nbion))
+  
+  err = nf90_inq_varid(ncid,trim('enalp'),varid)
+  err = nf90_get_var(ncid,varid,onetwo_enalp)
 
   ! Total plasma pressure
   err = nf90_inq_varid(ncid,trim('press'),varid)

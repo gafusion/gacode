@@ -16,7 +16,7 @@ subroutine prgen_map_iterdb
 
   implicit none
 
-  integer :: i
+  integer :: i, j
   integer :: ip
   integer :: n0
   real :: xoh_exp
@@ -30,7 +30,6 @@ subroutine prgen_map_iterdb
 
   ! Volume integrations to obtain integrated 
   ! powers and flows
-
   xoh_exp  = 1.0 !counts powe_oh_exp
   xrad_exp = 1.0 !counts powe_rad_exp
   xfus_exp = 1.0 !counts any non-zero powe_fus_exp and powi_fus_exp
@@ -133,28 +132,64 @@ subroutine prgen_map_iterdb
 
   !-----------------------------------------------------------------
   ! Construct ion densities and temperatures with reordering
-  ! in general case.  Use vphi and vpol as temporary arrays.
+  ! in general case.  
   !
   do i=1,onetwo_nion
      ! ni
-     vec(31+i-1,:) = onetwo_enion(:,i)*1e-19
+     onetwo_enion_vec(i,:) = onetwo_enion(:,i)*1e-19
      ! Ti
-     vec(36+i-1,:) = onetwo_ti(:)
+     onetwo_Tion_vec(i,:) = onetwo_ti(:)
   enddo
   ! Beam ions
   do i=1,onetwo_nbion
-     ! ni
-     vec(31+i+onetwo_nion-1,:) = onetwo_enbeam(:,i)*1e-19
-     ! Ti: T[keV] = (p/n)[J]/1.6022e-16[J/eV]
-     vec(36+i+onetwo_nion-1,:) = onetwo_pressb(:,i)/onetwo_enbeam(:,i)/&
-          1.6022e-16
+     if (sum(onetwo_enbeam(:,1))==0) then
+        do j=1,5
+           if (reorder_vec(j)==onetwo_nion+i) then
+             reorder_vec(j) = reorder_vec(j)+1
+           endif
+        enddo
+     else
+        print '(a)',"INFO: (prgen) Found fast ion beam species"
+        print '(a)',"INFO: (prgen) Modifying fast ion beam temperature to satisfy beam pressure"
+        onetwo_enion_vec(i+onetwo_nion,:) = onetwo_enbeam(:,i)*1e-19
+        ! Ti: T[keV] = (p/n)[J]/1.6022e-16[J/keV]
+        do j=1,onetwo_nj
+            if (onetwo_enbeam(j,i)>0) then
+            onetwo_Tion_vec(i+onetwo_nion,j) = onetwo_pressb(j,i)/onetwo_enbeam(j,i)/&
+                 1.6022e-16
+            endif
+        enddo
+     endif
   enddo
-
+  ! Fast alphas
+  onetwo_enion_vec(1+onetwo_nion+onetwo_nbion,:) = onetwo_enalp(:)*1e-19
+  if (sum(onetwo_enalp(:))==0) then
+    do j=1,5
+       if (reorder_vec(j)==onetwo_nion+onetwo_nbion+1) then
+          reorder_vec(j) = 0
+       endif
+    enddo
+  else
+    print '(a)',"INFO: (prgen) Found fast alpha species"
+    print '(a)',"INFO: (prgen) Modifying fast alpha temperature to satisfy total pressure"
+    onetwo_Tion_vec(1+onetwo_nion+onetwo_nbion,:) = (onetwo_press(:)-&
+            (sum(onetwo_enion_vec(1:onetwo_nion+onetwo_nbion,:)*&
+                onetwo_Tion_vec(1:onetwo_nion+onetwo_nbion,:),dim=1)*1e19+&
+            onetwo_ene(:)*onetwo_te(:))*1.6022e-16)/(onetwo_enalp)/1.6022e-16
+  endif
   ! reorder
-  do i=1,5 
-     vec(20+i,:) = vec(30+reorder_vec(i),:)
-     vec(25+i,:) = vec(35+reorder_vec(i),:)
+  do i=1,5
+     if (reorder_vec(i) == 0) then
+       cycle
+     endif
+     if (any(reorder_vec(1:i-1)==reorder_vec(i))) then
+       reorder_vec(i) = 0
+       cycle
+     endif
+     vec(20+i,:) = onetwo_enion_vec(reorder_vec(i),:)
+     vec(25+i,:) = onetwo_Tion_vec(reorder_vec(i),:)
   enddo
+  
 
   ! vphi
   vec(31:35,:) = 0.0
@@ -202,29 +237,39 @@ subroutine prgen_map_iterdb
   endif
   !---------------------------------------------------
 
-  ion_name(1:onetwo_nprim) = onetwo_namep(1:onetwo_nprim)
+  onetwo_ion_name(1:onetwo_nprim) = onetwo_namep(1:onetwo_nprim)
 
   n0 = onetwo_nprim
 
-  ion_name(1+n0:onetwo_nimp+n0) = &
+  onetwo_ion_name(1+n0:onetwo_nimp+n0) = &
        onetwo_namei(1:onetwo_nimp)
 
   n0 = n0+onetwo_nimp
 
-  ion_name(1+n0:onetwo_nbion+n0) = &
+  onetwo_ion_name(1+n0:onetwo_nbion+n0) = &
        onetwo_nameb(1:onetwo_nbion)
-
+  
+  n0 = n0+onetwo_nbion
+  
+  onetwo_ion_name(1+n0) = 'he'
+  
   ! Ion reordering diagnostics
 
   print '(a)','INFO: (prgen) Found these ion species'
-  do i=1,onetwo_nion+onetwo_nbion
-     ip = reorder_vec(i)
-     if (i <= 6) then
-        print '(t6,i2,1x,3(a))',&
-             i-1,trim(ion_name(i)),' -> ',trim(ion_name(ip))
+  do i=1,onetwo_nion+onetwo_nbion+1
+     if (any(reorder_vec==i)) then
+        do j=1,5
+          if (reorder_vec(j)==i) then
+            ip = j
+            exit
+          endif
+        enddo
+        print '(t6,i2,1x,2(a),i2,a)',&
+             i,trim(onetwo_ion_name(i)),' -> ',ip,trim(onetwo_ion_name(i))
+        ion_name(ip) = onetwo_ion_name(i)
      else
         print '(t6,i2,1x,3(a))',&
-             i-1,trim(ion_name(i)),' [unmapped]'
+             i,trim(onetwo_ion_name(i)),' [unmapped]'
      endif
   enddo
 

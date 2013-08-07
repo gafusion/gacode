@@ -8,6 +8,7 @@ subroutine allocate_iterdb_vars
   allocate(onetwo_te(onetwo_nj))
   allocate(onetwo_rho_grid(onetwo_nj))
   allocate(onetwo_ene(onetwo_nj))
+  allocate(onetwo_enalp(onetwo_nj))
   allocate(onetwo_zeff(onetwo_nj))
   allocate(onetwo_angrot(onetwo_nj))
   allocate(onetwo_psi(onetwo_nj))
@@ -52,5 +53,9 @@ subroutine allocate_iterdb_vars
   allocate(sbcx_d(onetwo_nj)) 
   allocate(onetwo_sbeam(onetwo_nj)) 
   allocate(onetwo_storqueb(onetwo_nj))
+  
+  
+  allocate(onetwo_enion_vec(onetwo_nion+onetwo_nbion+1,onetwo_nj))
+  allocate(onetwo_Tion_vec(onetwo_nion+onetwo_nbion+1,onetwo_nj))
 
 end subroutine allocate_iterdb_vars
