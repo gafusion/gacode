@@ -56,7 +56,7 @@ class TGYROData:
         if self.tgyro_mode == 2:
             self.read_stabilities()
         else:
-            self.loc_n_ion = self.get_tag_value("LOC_N_ION")
+            self.loc_n_ion = int(self.get_tag_value("LOC_N_ION"))
             self.read_control()
             self.fileparser('gyrobohm.out')
             self.fileparser('flux_e.out')
@@ -69,7 +69,12 @@ class TGYROData:
             self.fileparser('gradient.out')
             self.fileparser('out.tgyro.geometry.1')
             self.fileparser('out.tgyro.geometry.2')
-
+            self.fileparser('out.tgyro.power')
+            for i in range(2,self.loc_n_ion+1):
+                si = '%d'%i
+                for fn in ['profile','chi_i','mflux_i','flux_i']:
+                    self.fileparser(fn+si+'.out',spec_num=i)
+            self.get_residual()
     #---------------------------------------------------------------------------#
 
     def get_tag_value(self, tag):
@@ -105,7 +110,7 @@ class TGYROData:
 
     #---------------------------------------------------------------------------#
 
-    def fileparser(self,file):
+    def fileparser(self,file,spec_num=''):
         """
         Generic parser for standard TGYRO file format.
         """
@@ -121,7 +126,6 @@ class TGYROData:
         nb = self.n_iterations+1
 
         numdata = np.zeros((nc,nb,nr-2))
-    
         for ib in range(nb):
             tags=string.split(data[ib*nr])
             null=string.split(data[ib*nr+1])
@@ -131,7 +135,9 @@ class TGYROData:
                     numdata[ic,ib,ir] = row[ic]
 
         for ic in range(nc):
-            self.data[tags[ic]] = numdata[ic,:,:]
+            if tags[ic]=='r/a' and spec_num!='':
+                continue
+            self.data[tags[ic]+str(spec_num)] = numdata[ic,:,:]
 
     #---------------------------------------------------------------------------#
 
@@ -141,25 +147,26 @@ class TGYROData:
         import string
         import numpy as np
 
-        data = open(self.dirname+'/'+file,'r').readlines()
+        fn = 'residual.out'
+        data = open(self.dirname+'/'+fn,'r').readlines()
         
         # Data dimensions
-        nr = self.n_radial+1
+        nr = self.n_radial
         nb = self.n_iterations+1
-        nc = 1+2*self.get_tag_value("LOC_NE_FEEDBACK_FLAG") \
+        nc = int(1+2*self.get_tag_value("LOC_NE_FEEDBACK_FLAG") \
               +2*self.get_tag_value("LOC_TE_FEEDBACK_FLAG") \
-              +2*self.get_tag_value("LOC_TI_FEEDBACK_FLAG")
-
-        numdata = np.zeros((nc,nb,nr-2))
-    
+              +2*self.get_tag_value("LOC_TI_FEEDBACK_FLAG"))
+        
+        numdata = np.zeros((nc,nb,nr-1),dtype=float)
+        
         for ib in range(nb):
-            tags=string.split(data[ib*nr])
+            tags=string.split(data[ib*nr]) # Contains overall residual
             for ir in range(nr-1):
                 row=string.split(data[ib*nr+ir+1])
                 for ic in range(nc):
                     numdata[ic,ib,ir] = row[ic]
 
-        self.data['residual'] = numdata[ic,:,:]
+        self.data['residual'] = numdata
         
     #---------------------------------------------------------------------------#
 

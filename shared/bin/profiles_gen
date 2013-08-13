@@ -192,7 +192,7 @@ then
    echo "             -nfourier <gfile>"
    echo "             Number of Fourier modes to retain in input.profiles.geo/input.geo."
    echo "             Default: -nfourier 24"
-    echo
+   echo
    echo "GATO mapper control options"
    echo 
    echo "             -gato <parameter=val,parameter=val,...>"
@@ -226,9 +226,12 @@ then
    echo "             -vgen"
    echo "             Toggle vgen mode."
    echo
-   echo "             -in <ion string> " 
+   echo "             -in <string of ion species> " 
    echo "             Choices: DC, DC.revip, DCD, DHCD, HDC"
    echo "             If this is blank, input.vgen must exist."
+   echo "             See"
+   echo "             $VGEN_DIR/input.vgen.*"
+   echo "             for examples."
    echo
    echo "             -er <val>" 
    echo "             Method to compute Er."
