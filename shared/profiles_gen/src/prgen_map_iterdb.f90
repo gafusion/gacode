@@ -2,11 +2,11 @@
 ! prgen_map_iterdb.f90
 !
 ! PURPOSE:
-!  Map native iterdb data onto input.profiles standard.  
-!  
+!  Map native iterdb data onto input.profiles standard.
+!
 ! NOTES:
 !  - This routine is common to both text and NetCDF formats.
-!  - See map_plasmastate.f90 for analogous routine for 
+!  - See map_plasmastate.f90 for analogous routine for
 !    plasmastate data.
 !------------------------------------------------------------
 
@@ -28,7 +28,7 @@ subroutine prgen_map_iterdb
      rho(i) = (i-1)/(onetwo_nj-1.0)
   enddo
 
-  ! Volume integrations to obtain integrated 
+  ! Volume integrations to obtain integrated
   ! powers and flows
   xoh_exp  = 1.0 !counts powe_oh_exp
   xrad_exp = 1.0 !counts powe_rad_exp
@@ -60,7 +60,7 @@ subroutine prgen_map_iterdb
   ! Torque (TAM flow) (nt-m)
   call volint(onetwo_storqueb,flow_mom)
   ! COORDINATES: -ipccw accounts for DIII-D toroidal angle convention
-  flow_mom = -ipccw*flow_mom  
+  flow_mom = -ipccw*flow_mom
 
   ! Total transport power (MW) to electrons: pow_e
 
@@ -73,10 +73,10 @@ subroutine prgen_map_iterdb
   ! pow_ei_exp (MW)   : [positive for Te > Ti] power *subtracted*
   ! powe_fus_exp (MW) : [zero] any fusion power added
 
-  pow_e(:) = powe_beam_exp(:) &     
-       +powe_rf_exp(:) &                
-       +xoh_exp*powe_oh_exp(:) &      
-       +xrad_exp*powe_rad_exp(:) &    
+  pow_e(:) = powe_beam_exp(:) &
+       +powe_rf_exp(:) &
+       +xoh_exp*powe_oh_exp(:) &
+       +xrad_exp*powe_rad_exp(:) &
        +powe_ion_exp(:) &
        -(1.0-xwdot)*powe_wdot_exp(:) &
        -pow_ei_exp(:) &
@@ -132,17 +132,20 @@ subroutine prgen_map_iterdb
 
   !-----------------------------------------------------------------
   ! Construct ion densities and temperatures with reordering
-  ! in general case.  
+  ! in general case.
   !
+  onetwo_enion_vec(:,:) = 0.0
+  onetwo_Tion_vec(:,:) = 0.0
   do i=1,onetwo_nion
      ! ni
      onetwo_enion_vec(i,:) = onetwo_enion(:,i)*1e-19
      ! Ti
      onetwo_Tion_vec(i,:) = onetwo_ti(:)
   enddo
-  ! Beam ions
+
+  !Beam ions
   do i=1,onetwo_nbion
-     if (sum(onetwo_enbeam(:,1))==0) then
+     if (sum(onetwo_enbeam(:,i))==0) then
         do j=1,5
            if (reorder_vec(j)==onetwo_nion+i) then
              reorder_vec(j) = reorder_vec(j)+1
@@ -161,11 +164,12 @@ subroutine prgen_map_iterdb
         enddo
      endif
   enddo
+
   ! Fast alphas
   onetwo_enion_vec(1+onetwo_nion+onetwo_nbion,:) = onetwo_enalp(:)*1e-19
   if (sum(onetwo_enalp(:))==0) then
     do j=1,5
-       if (reorder_vec(j)==onetwo_nion+onetwo_nbion+1) then
+       if (reorder_vec(j) >= onetwo_nion+onetwo_nbion+1) then
           reorder_vec(j) = 0
        endif
     enddo
@@ -179,8 +183,11 @@ subroutine prgen_map_iterdb
   endif
   ! reorder
   do i=1,5
+     if (reorder_vec(i) > onetwo_nion+onetwo_nbion+1) then
+        cycle
+     endif
      if (reorder_vec(i) == 0) then
-       cycle
+        cycle
      endif
      if (any(reorder_vec(1:i-1)==reorder_vec(i))) then
        reorder_vec(i) = 0
@@ -189,7 +196,7 @@ subroutine prgen_map_iterdb
      vec(20+i,:) = onetwo_enion_vec(reorder_vec(i),:)
      vec(25+i,:) = onetwo_Tion_vec(reorder_vec(i),:)
   enddo
-  
+
 
   ! vphi
   vec(31:35,:) = 0.0
@@ -248,15 +255,18 @@ subroutine prgen_map_iterdb
 
   onetwo_ion_name(1+n0:onetwo_nbion+n0) = &
        onetwo_nameb(1:onetwo_nbion)
-  
+
   n0 = n0+onetwo_nbion
-  
-  onetwo_ion_name(1+n0) = 'he'
-  
+  if ( sum (onetwo_enalp(:)) > 0) then
+    onetwo_ion_name(1+n0) = 'he'
+  else
+    onetwo_nalp = 0
+  endif
+
   ! Ion reordering diagnostics
 
   print '(a)','INFO: (prgen) Found these ion species'
-  do i=1,onetwo_nion+onetwo_nbion+1
+  do i=1,onetwo_nion+onetwo_nbion+onetwo_nalp
      if (any(reorder_vec==i)) then
         do j=1,5
           if (reorder_vec(j)==i) then
@@ -284,11 +294,11 @@ subroutine volint(f,fdv)
   use prgen_globals, &
        only : onetwo_rho_grid,pi,onetwo_R0,onetwo_hcap,onetwo_nj
 
-  implicit none 
+  implicit none
 
   integer :: i
   real, intent(in) :: f(onetwo_nj)
-  real, intent(out) :: fdv(onetwo_nj) 
+  real, intent(out) :: fdv(onetwo_nj)
   real :: drho
   real :: dvoldr_p,dvoldr_m
 

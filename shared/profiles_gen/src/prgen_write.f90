@@ -42,7 +42,7 @@ subroutine prgen_write
      write(1,40) '#          SHOT NUMBER : ',onetwo_ishot
      write(1,20) '#'
      ion_string = ''
-     do i=1,min(onetwo_nion+onetwo_nbion+1,5)
+     do i=1,min(onetwo_nion+onetwo_nbion+onetwo_nalp,5)
         if (reorder_vec(i) /= 0) then
             write(ion_string,'(a)') trim(ion_string) // ' '// trim(onetwo_ion_name(reorder_vec(i)))
         endif
@@ -86,9 +86,9 @@ subroutine prgen_write
      if ((format_type == 1 .or. format_type == 2)) then
         if (abs(dpsi_efit/dpsi_data-1) > 0.001) then
            write(1,'(a,1pe9.2,a)') &
-                '#    FLUX SHRINK FACTOR : ',dpsi_efit/dpsi_data-1.0,' [WARNING]' 
+                '#    FLUX SHRINK FACTOR : ',dpsi_efit/dpsi_data-1.0,' [WARNING]'
         else
-           write(1,'(a,1pe9.2,a)') '#   FLUX SHRINK FACTOR : ',dpsi_efit/dpsi_data-1.0,' [GOOD]' 
+           write(1,'(a,1pe9.2,a)') '#   FLUX SHRINK FACTOR : ',dpsi_efit/dpsi_data-1.0,' [GOOD]'
         endif
      endif
      write(1,40) '#             NFOURIER : ',nfourier
@@ -110,8 +110,8 @@ subroutine prgen_write
   write(1,'(a,1pe8.2,a)') '#  PLASMA MINOR RADIUS : ',rmin(nx),' m'
   write(1,20) '#'
   write(1,20)    '# * Field/current orientationq:'
-  write(1,'(a)') '# ' 
-  write(1,'(a)') '#   NOTE: All variables carry correct and consistent signs' 
+  write(1,'(a)') '# '
+  write(1,'(a)') '#   NOTE: All variables carry correct and consistent signs'
   write(1,'(a)') '#         in fixed gacode (r,theta,varphi) coordinates.'
   write(1,20) '#'
   write(1,'(a,i2)')       '#                IPCCW : ',ipccw
@@ -120,7 +120,7 @@ subroutine prgen_write
 
   EXPRO_n_exp = nx
 
-  ! COORDINATES: For all data sources, ensure correct sign of EXPRO_b_ref 
+  ! COORDINATES: For all data sources, ensure correct sign of EXPRO_b_ref
   !              (and thus toroidal flux)
   !
   select case (format_type)
@@ -159,7 +159,7 @@ subroutine prgen_write
      write(1,20) '# '
      write(1,20) '#',EXPRO_tag(indx:indx+4)
      do i=1,nx
-        write(1,10) vec(indx:indx+4,i) 
+        write(1,10) vec(indx:indx+4,i)
      enddo
 
   enddo
@@ -204,7 +204,7 @@ subroutine prgen_write
   EXPRO_vpol(1:5,:) = vec(36:40,:)
 
   EXPRO_ctrl_density_method=1
-  EXPRO_ctrl_z(1) = 1.0 
+  EXPRO_ctrl_z(1) = 1.0
   EXPRO_ctrl_rotation_method = 1
   if (efit_method > 1) then
      EXPRO_ctrl_numeq_flag = 1

@@ -83,6 +83,7 @@ module prgen_globals
   integer :: onetwo_nimp
   integer :: onetwo_nneu
   integer :: onetwo_nbion
+  integer :: onetwo_nalp
   character (len=2), dimension(5) :: onetwo_namep
   character (len=2), dimension(5) :: onetwo_namei
   character (len=2), dimension(5) :: onetwo_nameb
@@ -149,7 +150,7 @@ module prgen_globals
   ! conglomerate ion vectors
   !
   real, dimension(:,:), allocatable :: onetwo_enion_vec
-  real, dimension(:,:), allocatable :: onetwo_Tion_vec  
+  real, dimension(:,:), allocatable :: onetwo_Tion_vec
   !---------------------------------------------------------
 
   !---------------------------------------------------------
@@ -280,7 +281,7 @@ module prgen_globals
   real, dimension(:), allocatable :: ufile_nm1
   real, dimension(:), allocatable :: ufile_nm2
   real, dimension(:), allocatable :: ufile_nm3
-  real, dimension(:), allocatable :: ufile_te 
+  real, dimension(:), allocatable :: ufile_te
   real, dimension(:), allocatable :: ufile_ti
   real, dimension(:), allocatable :: ufile_zeff
   real, dimension(:), allocatable :: ufile_pres

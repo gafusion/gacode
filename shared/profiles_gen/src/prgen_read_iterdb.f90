@@ -23,15 +23,17 @@ subroutine prgen_read_iterdb
   open(unit=1,file=raw_data_file,status='old')
   read(1,*) t
 
-  read(1,*) t ; read(1,*) onetwo_ishot 
+  read(1,*) t ; read(1,*) onetwo_ishot
   read(1,*) t ; read(1,*) onetwo_nj
   read(1,*) t ; read(1,*) onetwo_nion
-  read(1,*) t ; read(1,*) onetwo_nprim 
+  read(1,*) t ; read(1,*) onetwo_nprim
   read(1,*) t ; read(1,*) onetwo_nimp
   read(1,*) t ; read(1,*) onetwo_nneu
-  read(1,*) t ; read(1,*) i 
+  read(1,*) t ; read(1,*) i
   read(1,*) t ; read(1,*) onetwo_namep(1:onetwo_nprim)
   read(1,*) t ; read(1,*) onetwo_namei(1:onetwo_nimp)
+  onetwo_nameb(1) = onetwo_namep(i)
+  onetwo_nbion = 1 ! Assume 1 for now
   read(1,*) t ; read(1,*) t
   read(1,*) t ; read(1,*) onetwo_time
   read(1,*) t ; read(1,*) onetwo_Rgeom
@@ -72,6 +74,7 @@ subroutine prgen_read_iterdb
      read(1,*) t ; read(1,*) onetwo_enion(:,i)
   enddo
 
+
   sbcx_d(:) = 0.0
   sion_d(:) = 0.0
   do i=1,onetwo_nprim
@@ -85,7 +88,8 @@ subroutine prgen_read_iterdb
      sion_d(:) = sion_d(:)+onetwo_sion(:,i)
   enddo
 
-  read(1,*) t ; read(1,*) xv ! fast ion density
+  read(1,*) t ; read(1,*) onetwo_enbeam(:,1) ! fast ion density
+
 
   do i=1,onetwo_nprim
      read(1,*) t ; read(1,*) xv ! neutral density
@@ -141,7 +145,7 @@ subroutine prgen_read_iterdb
   read(1,*) t ; read(1,*) xv ! sawtooth ion heating
   read(1,*) t ; read(1,*) onetwo_qrad ! 59
   read(1,*) t ; read(1,*) onetwo_qohm ! 60
-  read(1,*) t ; read(1,*) rmaj ! 61 
+  read(1,*) t ; read(1,*) rmaj ! 61
   read(1,*) t ; read(1,*) rmin ! 62
   read(1,*) t ; read(1,*) onetwo_volume ! 63
   read(1,*) t ; read(1,*) kappa ! 64
@@ -149,7 +153,7 @@ subroutine prgen_read_iterdb
   read(1,*) t ; read(1,*) xv ! indentation of each flux surface
   read(1,*) t
   read(1,*) t ; read(1,*) xv ! surface area each flux surface
-  read(1,*) t ; read(1,*) xv ! cross-sectional area each surface 
+  read(1,*) t ; read(1,*) xv ! cross-sectional area each surface
   read(1,*) t ; read(1,*) xv ! flux surface average absolute grad rho
   read(1,*) t ; read(1,*) xv ! flux surface  grad_rho_sq
   read(1,*) t ; read(1,*) onetwo_nb !number points in plasma boundary
@@ -160,26 +164,39 @@ subroutine prgen_read_iterdb
   read(1,*) t ; read(1,*) xvv !plasma boundary z
 
   ! Torque density may be missing on iterdb file
-  read(1,*,iostat=i) t 
+  read(1,'(a)',iostat=i) t
   if (i == 0) then
+     print '(3(a))', 'INFO: (prgen) Assuming "', trim(t), '" is beam torque density.'
      read(1,*) onetwo_storqueb !torque density nt-m/m**3
   else
      onetwo_storqueb(:) = 0.0
   endif
 
+  ! Beam pressure may be missing on iterdb file
+  read(1,'(a)',iostat=i) t
+  if (i == 0) then
+     print '(3(a))', 'INFO: (prgen) Assuming "', trim(t), '" is beam pressure.'
+     read(1,*) onetwo_pressb(:,1)
+  else
+     onetwo_pressb(:,:) = 0.0
+     onetwo_nbion = 0 ! Need beam pressure to get effective beam temp
+  endif
+
+  ! Total pressure may be missing on iterdb file
+  read(1,'(a)',iostat=i) t
+  if (i == 0) then
+     print '(3(a))', 'INFO: (prgen) Assuming "', trim(t), '" is total pressure.'
+    read(1,*) onetwo_press(:)
+  else
+    onetwo_press(:) = 0.0
+  endif
+
   dpsi(:) = onetwo_psi(:)-onetwo_psi(1)
 
-  ! No squareness 
+  ! No squareness
   zeta(:) = 0.0
 
-  ! No elevation 
+  ! No elevation
   zmag(:) = 0.0
-
-  ! No beam ions
-  onetwo_nbion = 0
-  onetwo_pressb = 0.0
-  
-  ! No total pressure data
-  onetwo_press = 0.0
 
 end subroutine prgen_read_iterdb
