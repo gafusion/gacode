@@ -197,7 +197,7 @@ contains
 
     implicit none
 
-    integer :: ierr
+    integer :: ierr, i
 
     open(unit=1,file=trim(tglf_path_in)//'out.tglf.localdump',&
          status='replace',iostat=ierr)
@@ -256,56 +256,36 @@ contains
     write(1,*) '#---------------------------------------------------'
     write(1,*) '# Species vectors:'
     write(1,*) '#---------------------------------------------------'
-    write(1,30) 'ZS_1',tglf_zs_in(1)
-    write(1,30) 'ZS_2',tglf_zs_in(2)
-    write(1,30) 'ZS_3',tglf_zs_in(3)
-    write(1,30) 'ZS_4',tglf_zs_in(4)
-    write(1,30) 'ZS_5',tglf_zs_in(5)
-    write(1,30) 'MASS_1',tglf_mass_in(1)
-    write(1,30) 'MASS_2',tglf_mass_in(2)
-    write(1,30) 'MASS_3',tglf_mass_in(3)
-    write(1,30) 'MASS_4',tglf_mass_in(4)
-    write(1,30) 'MASS_5',tglf_mass_in(5)
-    write(1,30) 'RLNS_1',tglf_rlns_in(1)
-    write(1,30) 'RLNS_2',tglf_rlns_in(2)
-    write(1,30) 'RLNS_3',tglf_rlns_in(3)
-    write(1,30) 'RLNS_4',tglf_rlns_in(4)
-    write(1,30) 'RLNS_5',tglf_rlns_in(5)
-    write(1,30) 'RLTS_1',tglf_rlts_in(1)
-    write(1,30) 'RLTS_2',tglf_rlts_in(2)
-    write(1,30) 'RLTS_3',tglf_rlts_in(3)
-    write(1,30) 'RLTS_4',tglf_rlts_in(4)
-    write(1,30) 'RLTS_5',tglf_rlts_in(5)
-    write(1,30) 'TAUS_1',tglf_taus_in(1)
-    write(1,30) 'TAUS_2',tglf_taus_in(2)
-    write(1,30) 'TAUS_3',tglf_taus_in(3)
-    write(1,30) 'TAUS_4',tglf_taus_in(4)
-    write(1,30) 'TAUS_5',tglf_taus_in(5)
-    write(1,30) 'AS_1',tglf_as_in(1)
-    write(1,30) 'AS_2',tglf_as_in(2)
-    write(1,30) 'AS_3',tglf_as_in(3)
-    write(1,30) 'AS_4',tglf_as_in(4)
-    write(1,30) 'AS_5',tglf_as_in(5)
-    write(1,30) 'VPAR_1',tglf_vpar_in(1)
-    write(1,30) 'VPAR_2',tglf_vpar_in(2)
-    write(1,30) 'VPAR_3',tglf_vpar_in(3)
-    write(1,30) 'VPAR_4',tglf_vpar_in(4)
-    write(1,30) 'VPAR_5',tglf_vpar_in(5)
-    write(1,30) 'VPAR_SHEAR_1',tglf_vpar_shear_in(1)
-    write(1,30) 'VPAR_SHEAR_2',tglf_vpar_shear_in(2)
-    write(1,30) 'VPAR_SHEAR_3',tglf_vpar_shear_in(3)
-    write(1,30) 'VPAR_SHEAR_4',tglf_vpar_shear_in(4)
-    write(1,30) 'VPAR_SHEAR_5',tglf_vpar_shear_in(5)
-    write(1,30) 'VNS_SHEAR_1',tglf_vns_shear_in(1)
-    write(1,30) 'VNS_SHEAR_2',tglf_vns_shear_in(2)
-    write(1,30) 'VNS_SHEAR_3',tglf_vns_shear_in(3)
-    write(1,30) 'VNS_SHEAR_4',tglf_vns_shear_in(4)
-    write(1,30) 'VNS_SHEAR_5',tglf_vns_shear_in(5)
-    write(1,30) 'VTS_SHEAR_1',tglf_vts_shear_in(1)
-    write(1,30) 'VTS_SHEAR_2',tglf_vts_shear_in(2)
-    write(1,30) 'VTS_SHEAR_3',tglf_vts_shear_in(3)
-    write(1,30) 'VTS_SHEAR_4',tglf_vts_shear_in(4)
-    write(1,30) 'VTS_SHEAR_5',tglf_vts_shear_in(5)
+    do i = 1,tglf_ns_in
+        write(1,40) 'ZS_',i,tglf_zs_in(i)
+    enddo
+    do i = 1,tglf_ns_in
+        write(1,40) 'MASS_',i,tglf_mass_in(i)
+    enddo
+    do i = 1,tglf_ns_in
+        write(1,40) 'RLNS_',i,tglf_rlns_in(i)
+    enddo
+    do i = 1,tglf_ns_in
+        write(1,40) 'RLTS_',i,tglf_rlts_in(i)
+    enddo
+    do i = 1,tglf_ns_in
+        write(1,40) 'TAUS_',i,tglf_taus_in(i)
+    enddo
+    do i = 1,tglf_ns_in
+        write(1,40) 'AS_',i,tglf_as_in(i)
+    enddo
+    do i = 1,tglf_ns_in
+        write(1,40) 'VPAR_',i,tglf_vpar_in(i)
+    enddo
+    do i = 1,tglf_ns_in
+        write(1,40) 'VPAR_SHEAR_',i,tglf_vpar_shear_in(i)
+    enddo
+    do i = 1,tglf_ns_in
+        write(1,40) 'VNS_SHEAR_',i,tglf_vns_shear_in(i)
+    enddo
+    do i = 1,tglf_ns_in
+        write(1,40) 'VTS_SHEAR_',i,tglf_vts_shear_in(i)
+    enddo
     write(1,*) ' '
     write(1,*) '#---------------------------------------------------'
     write(1,*) '# Gaussian width parameters:'
@@ -367,6 +347,7 @@ contains
 10  format(t2,a,'=',l1)
 20  format(t2,a,'=',i3)
 30  format(t2,a,'=',1pe12.5)
+40  format(t2,a,i1,'=',1pe12.5)
 
   end subroutine tglf_dump_local
 
