@@ -1,3 +1,4 @@
+import numpy as np
 class TGYROData:
     """TGYRO output data class.
 
@@ -392,3 +393,65 @@ class TGYROData:
                       textcoords='data', size=15, arrowprops=dict(width=3, headwidth=5, shrink=0.05, facecolor="black"))
 
         return fig
+    
+    def sprofile(self, what, nf0=201, x='r/a'):
+        """
+        This function returns smooth profiles on a uniform r/a grid
+        @param what: what profile to return ['r/a', 'rho', 'rmin', 'rmaj/a', 'te', 'a/LTe', 'ne', 'a/Lne' , 'ti', 'a/LTi', 'ni', 'a/Lni', 'M=wR/cs', 'M=wR/cs']
+        @param nf0: number of points
+        @param x: return profiles equally spaced in 'r/a', 'rho', 'rmin', 'rmaj/a'
+        @param verbose: plotting of the `what` quantity
+        @return: `what` quantity (niterations x nf0) or `x` at the locations
+        """
+        bc_offset = self.get_tag_value('LOC_BC_OFFSET')
+        nr = len(self.data[x][0,:])
+        r_ref = self.data[x][0,nr-bc_offset-1]
+        n   = self.n_iterations+1
+        rf00 = np.linspace(self.data[x][0,0],self.data[x][0,-1],int(nf0))
+        rf0 = np.array(sorted(set(list(rf00)+list(self.data[x][0]))))
+        rf00_ind = np.zeros(len(rf0),dtype=bool)
+        for i in range(len(rf0)):
+            if rf0[i] in rf00:
+                rf00_ind[i] = True
+        r_ref_ind = np.nonzero(rf0==r_ref)[0]
+        if what == x:
+            return rf0[rf00_ind]
+        elif what in ['r/a', 'rho','rmin','rmaj/a']:
+            return np.interp(rf0[rf00_ind],self.data[x][0],self.data[what][0])
+
+        quantity={'ne':'a/Lne', 'ni':'a/Lni', 'te':'a/LTe', 'ti':'a/LTi'}#, 'M=wR/cs':'M=wR/cs'}
+        quantityScaleLen={'a/Lne':'ne', 'a/Lni':'ni', 'a/LTe':'te', 'a/LTi':'ti'}#, 'M=wR/cs':'M=wR/cs'}
+        for spec in range(2,self.loc_n_ion+1):
+            for quant in ['T','n']:
+                quantity['%si%d'%(quant,spec)] = 'a/L%si%d'%(quant,spec)
+                quantityScaleLen['a/L%si%d'%(quant,spec)] = '%si%d'%(quant,spec)
+        
+        if what in quantity:
+            whatScale=quantity[what]
+        elif what in quantityScaleLen:
+            whatScale=what
+            what=None
+        else:
+            raise(Exception("Quantity '"+what+"' is not in %s"%repr(quantity.keys()+quantity.values())))
+
+        # Linearly interpolate gradient scale lenghts
+        zf0 = np.zeros((n,len(rf0)))
+        for l in range(n):
+            zf0[l,:] = np.interp(rf0,self.data[x][0],self.data[whatScale][l,:])
+
+        if what is not None:
+            pf0 = np.zeros((n,len(rf0)))
+            for l in range(n):
+                # Set boundary condition at pivot point
+                pf0[l,r_ref_ind] = self.data[what][l,nr-bc_offset-1]
+            # Exponential integration to obtain smooth profiles
+            for i in range(r_ref_ind,0,-1):
+                pf0[:,i-1] = pf0[:,i]*np.exp( 0.5*(rf0[i]-rf0[i-1])*(zf0[:,i]+zf0[:,i-1]))
+            for i in range(r_ref_ind+1,len(rf0)):
+                pf0[:,i] = pf0[:,i-1]*np.exp(-0.5*(rf0[i]-rf0[i-1])*(zf0[:,i]+zf0[:,i-1]))
+            
+        else:
+            what=whatScale
+            pf0=zf0
+
+        return pf0[:,rf00_ind]
