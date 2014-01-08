@@ -15,7 +15,7 @@
        INTEGER,SAVE :: first_step
        INTEGER(I4B), SAVE, DIMENSION(:), ALLOCATABLE:: itport_pt
        REAL(DP) iglf_chie,iglf_chii,iglf_chiv,iglf_d
-       REAL(DP), SAVE,DIMENSION(:,:), ALLOCATABLE :: egamma_d ,dcoefp_glf23     
+       REAL(DP), SAVE,DIMENSION(:,:), ALLOCATABLE :: egamma_d ,dcoefp_glf23
        REAL(DP), SAVE,DIMENSION(:), ALLOCATABLE ::             &
               te_glf,ti_glf,ne_glf, ni_glf,                    &
               q_glf,  shat_exp,  elong_glf,  zeff_exp,         &
@@ -70,7 +70,7 @@
               dvexb_base_drho,vexb_base,vexb_term1,diamag_term,&
               vperm_term1,vparm_term1,ddiamag_drho,            &
               dvexb_term1_drho,dvpar_term1_drho,dvphim_drho,   &
-              egamma_exp_zc,gamma_p_exp_zc,dangrot_drho
+              egamma_exp_zc,gamma_p_exp_zc,dangrot_drho,rdrho
               
 
 
@@ -85,7 +85,8 @@
           glf_anrate2_output
      REAL(DP),ALLOCATABLE,PUBLIC,DIMENSION(:,:)            ::  &
           glf_p_output,glf_e_output,glf_val_pert,              &
-          glf_val_base,glf_egamma_d,glf_m_output
+          glf_val_base,glf_egamma_d,glf_m_output,              &
+          glf_eff_chi_output
      REAL(DP),ALLOCATABLE,PUBLIC,DIMENSION(:,:,:)          ::  &
              glf_p_flux,glf_e_flux,glf_m_flux,glf_vp,          &
              glf_vm,glf_d

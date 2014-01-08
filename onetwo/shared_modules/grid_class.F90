@@ -4,7 +4,8 @@
     USE plasma_properties,   ONLY : mhd_dat,dischg
     USE common_constants,    ONLY : pisq,zeroc
     USE error_handler,       ONLY : lerrno,terminate,iomaxerr,dbg_print
-    USE MPI_data,            ONLY : myid,master  
+    USE MPI_data,            ONLY : myid,master 
+!!    USE BC_values_gcnmp,     ONLY : robin_bc,nb_robin,nb_robin_nj cant use because circular ref
 #ifdef GCNMP
     USE io_gcnmp,            ONLY : ncrt,nlog 
 #elif defined  NFREYA
@@ -425,9 +426,10 @@
         IF(dbg_print .AND. myid == master)  &
              WRITE(ncrt,FMT='("CALLING: refactor_profiles from grid_interface",i5,x,i5)')nj,nj_save
 
-       CALL refactor_profiles(nj,nj_save,factor,skip_vectors)
+        CALL refactor_profiles(nj,nj_save,factor,skip_vectors)
 
-         IF(dbg_print .AND. myid == master)  &
+!!        IF(robin_bc) CALL change_nb_robin(nj,nj_save) ! temp disable 12/12/13 HSJ 8888888899999
+        IF(dbg_print .AND. myid == master)  &
              WRITE(nlog,FMT='("DONE: refactor_profiles from grid_interface",i5,x,i5)')nj,nj_save
         IF(dbg_print .AND. myid == master)  &
              WRITE(ncrt,FMT='("DONE: refactor_profiles from grid_interface",i5,x,i5)')nj,nj_save
@@ -590,5 +592,23 @@
       RETURN
       END  SUBROUTINE average7_1d
 
+!      SUBROUTINE change_nb_robin(nj,nj_save)
+      !-----------------------------------------------------------------------
+      !  if robin_bc is in effect the currently nb_robin
+      ! is based on grid size nj_save. But we now need it on grid_size nj
+      ! so change it here
+      !-----------------------------------------------------------------------
+       
+!        IF(size(rold) == nj_save)THEN
+!        rho_nb_save = rold(nb_robin)
+!        DO j=1,nj
+!           IF(rho(j) .lt. ?rhold(nb_robin)
+!               nb_robin_nj = j ??
+!        ENDO
+!        ELSE
+
+!        ENDIF
+        
+!      END  SUBROUTINE change_nb_robin
 
   END MODULE grid_class

@@ -78,7 +78,8 @@
                              ion_eng_fixed_transpt,                                &
                              ion_den_fixed_transpt,                                &
                              ion_torrot_fixed_transpt,                             &
-                             curden_fixed_transpt
+                             curden_fixed_transpt,                                 &
+                             time_deriv_in_flux
 
       LOGICAL,     PUBLIC :: frz_glf,frz_tglf,frz_mmm,use_frz_chi
 

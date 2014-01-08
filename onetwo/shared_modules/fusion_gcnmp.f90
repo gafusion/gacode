@@ -7,11 +7,13 @@
       IMPLICIT NONE
 
       REAL(DP),PUBLIC,ALLOCATABLE,DIMENSION(:)    ::         &
-           ddn_fus,dtn_fus,tt2n_fus,ddp_fus,dhe_fus
+           ddn_fus,dtn_fus,tt2n_fus,ddp_fus,dhe_fus,         &
+           he3dp_fus
 
       REAL(DP),PUBLIC                             ::         &
            ddn_tot,dtn_tot,tt2n_tot,dhe_tot,ddp_tot,         &
-           ddnp_branch_ratio,pfuse_tot
+           ddnp_branch_ratio,pfuse_tot,he3_frac,             &
+           he3_thermal_spin_pol
       REAL(DP),PUBLIC,ALLOCATABLE,DIMENSION(:)    ::         &
            neutr_ddn_th,neutr_ddn_beam_beam,                 &  ! neutron rates
            neutr_ddn_beam_thermal,                           &
@@ -32,6 +34,7 @@
            ALLOCATE(tt2n_fus(nj))
            ALLOCATE(ddp_fus(nj))
            ALLOCATE(dhe_fus(nj))
+           ALLOCATE(he3dp_fus(nj))
            ALLOCATE(neutr_ddn_th(nj))
            ALLOCATE(neutr_ddn_beam_beam(nj))
            ALLOCATE(neutr_ddn_beam_thermal(nj))

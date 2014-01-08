@@ -29,7 +29,7 @@ c
       character rcs_id*63
       save      rcs_id
       data      rcs_id /
-     ."$Id: cray206.f,v 1.55 2013/07/19 16:55:04 stjohn Exp $"/
+     ."$Id: cray206.f,v 1.56 2013/09/03 18:53:21 stjohn Exp $"/
 
       dimension zeta(*),rho(*),v_dep(*),v_dep_out(*),
      .          zeta_loc(*),csp(kj,3)
@@ -1451,6 +1451,7 @@ c     plasma boundary since that information does not
 c     exist at the desired time
 c
 
+ 
       call chekeqd (psi, nyeqd, xdimeqd, ydimeqd, redeqd, ncrt,
      .              rcontr, zcontr, ncontr, btor, rma, zma,
      .              psimag, psilim, totcur(1), rmajor, nconmax)

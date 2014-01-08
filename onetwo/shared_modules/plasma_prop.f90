@@ -150,22 +150,26 @@
    END TYPE diffusivity
 
   TYPE fusion_prod
-     TYPE(Vector) :: neutr_ddn_th                        ! neutron rate profiles
+     TYPE(Vector) :: neutr_ddn_th                     ! neutron rate profiles
      TYPE(Vector) :: neutr_ddn_beam_beam
      TYPE(Vector) :: neutr_ddn_beam_thermal
      TYPE(Vector) :: neutr_ddn_knock
      TYPE(Vector) :: neutr_ddn_tot
-     TYPE(Vector) :: alpha_dthe4_th                        ! fusion alpha rates
+     TYPE(Vector) :: alpha_dthe4_th                   ! fusion alpha rates
      TYPE(Vector) :: alpha_dthe4_beam
      TYPE(Vector) :: alpha_dthe4_beam_thermal
      TYPE(Vector) :: alpha_dthe4_knock
      TYPE(Vector) :: alpa_dthe4_tot
+     TYPE(vector) :: p_he3d_th                        ! proton production rates
+     TYPE(vector) :: p_ddt
+     TYPE(vector) :: p_he3d_beam_thermal
      REAL(DP) total_neutr_ddn_th,total_neutr_ddn_beam_beam,                 & ! integrated values
               total_neutr_ddn_beam_thermal,total_neutr_ddn_knock,           &
               total_neutr_ddn,                                              &
               total_alpha_dthe4_th,total_alpha_dthe4_beam,                  &  
               total_alpha_dthe4_beam_th,total_alpha_dthe4_knock,            &
-              total_alpha_dthe4_tot
+              total_alpha_dthe4_tot,total_p_ddt,total_p_he3d,               &
+              total_p_he3d_th,total_p_he3d_beam_thermal
   END TYPE
 
   TYPE power 
@@ -307,7 +311,7 @@
      REAL(DP),    DIMENSION(:,:,:),    POINTER :: pb0
      REAL(DP),    DIMENSION(:),        POINTER :: rhog_beam
      INTEGER(I4B) nj_beam  ! size of rhog_beam  on which above arrays are defined
-
+     REAL(DP) d_beam_spin_pol
 
  END TYPE neutral_beam
 

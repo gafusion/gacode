@@ -14,7 +14,7 @@
                                             t716_TSVAL1,t716_TSPSS
 
      USE common_constants,           ONLY : M2cm,T2gauss,im32icm3,cm2m,        &
-                                            im22icm2,Tm2gcm,M22cm2,            &
+                                            im22icm2,Tm2gcm,M22cm2,M32cm3,     &
                                             convert,zeroc,g2kg,joupkev,        &
                                             ppmks,ffpmks,pconvert,kgauss2t,    &
                                             kevpjou,M32CM3,izero
@@ -42,7 +42,8 @@
      USE vector_class,               ONLY : delete_vector,new_vector,       &
                                             Vector_mult_real,assign_Vector, &
                                             assignrt_Vector,zero_Vector,    &
-                                            copy_Vector, delete_vector_nf
+                                            copy_Vector, delete_vector_nf,  &
+                                            Vector_mult
 
      USE grid_class,                 ONLY : nj_ncd => nj,psir_grid, &
                                             rho_grid,rho_gridn,     &
@@ -135,7 +136,12 @@
 
      USE fusion_gcnmp,              ONLY : neutr_ddn_th,neutr_ddn_beam_beam,   & ! neutron rates
                                            neutr_ddn_beam_thermal,             &
-                                           neutr_ddn_knock,neutr_ddn_tot
+                                           neutr_ddn_knock,neutr_ddn_tot,      &
+                                           he3dp_fus,ddp_fus,ddn_fus,          &
+                                           dtn_fus,tt2n_fus,                   &
+                                           he3_frac_ncd   => he3_frac,         &
+                                           he3_thermal_spin_pol_ncd  =>        &
+                                           he3_thermal_spin_pol
 
      USE tglfin,                    ONLY : tglf_p_output,tglf_e_output,        &
                                            tglf_m_output
@@ -148,7 +154,7 @@
                                            glf_gamma_net_e_output,glf_anfreq_output,  &
                                            glf_anfreq2_output,glf_anrate_output,      &
                                            glf_anrate2_output,glf_gamma_net_i_output, &
-                                           glf_etg_output
+                                           glf_etg_output,glf_eff_chi_output
 
 
 !    ----------------------------------------------------------------------
@@ -159,7 +165,8 @@
 
      USE contour,                   ONLY :  nplasbdry,rcontr,zcontr
 
-     USE nub,                       ONLY :  nbion,sbcx,sbion,nbeams
+     USE nub,                       ONLY :  nbion,sbcx,sbion,nbeams, &
+                                            d_beam_spin_pol
 
      USE nub2,                      ONLY :  enbeam,wbeam
 
@@ -170,10 +177,16 @@
      USE fusion,                    ONLY :  enalp,walp,fdbeam,fd,          &
                                             ddfusn,ddbeam,beam_thermalddn, &
                                             ddnthm,ddknct,ddbmt,ddntot,    &
+                                            ddpfus,he3dpfus,dtnfus,        &
                                             beam_thermal_ddntot,           &
                                             beam_beamddn,ddknck,ddnfus,    &
-                                            beam_beam_ddntot,              &
-                                            thermal_thermal_ddntot
+                                            beam_beam_ddntot,tt2nfus,      &
+                                            thermal_thermal_ddntot,        &
+                                            thermal_thermal_ddptot,        &
+                                            thermal_thermal_he3dptot,      &
+                                            beam_thermalhe3th_df,          &
+                                            beam_thermalhe3th_dftot,       &
+                                            he3_frac,he3_thermal_spin_pol
 
      USE psig,                      ONLY :  pindentnpsi,psivolp,     &
                                             rmajavnpsi,              &
@@ -370,6 +383,8 @@
         namei(1:nimp)   = namei_ncd(1:nimp_ncd)
         namen(1:nneu)   = namen_ncd(1:nneu_ncd)
         nameb_nubeam(1:nbion)  = nameb_ncd(1:nbion_ncd)
+        he3_frac =  he3_frac_ncd
+        he3_thermal_spin_pol =  he3_thermal_spin_pol_ncd
         IF(nbion == 1)nameb = nameb_ncd(1)
 
         ishot            = shot_id%shot_nmbr
@@ -390,6 +405,7 @@
         !is not the same as in gcnmp. hence we need to interpolate):
         psir             = get_values(psir_grid)   
         psir(:)          = psir(:) * psikgaus  ! from mks to cgs
+ 
         IF(ALLOCATED(work))DEALLOCATE(work)
         ALLOCATE(work(nj_ncd))
 
@@ -602,12 +618,7 @@
         fpsi(1:npsi)  = fpsi_eqdsk(:)
         qpsi(1:npsi)  = qpsi_eqdsk(:)
 
- WRITE(777,FMT='("input from  statefile")')
- WRITE(777,FMT='("npsi,mhd_dat%npsi,nxeqd_eqdsk =",3(2x,i5))')npsi,mhd_dat%npsi,nxeqd_eqdsk
- WRITE(777,FMT='("mhd_dat%psivalnpsi =")')
- WRITE(777,FMT='(5(2x,1pe14.6))')(mhd_dat%psivalnpsi%data(j),j = 1,mhd_dat%psivalnpsi%size)
- WRITE(777,FMT='("psival from onetwo =")')
- WRITE(777,FMT='(5(2x,1pe14.6))')(psival(j),j = 1,SIZE(psival))
+
 
         r2cap            = get_values(mhd_dat%r2cap) !r2cap  = <R0**2/R**2>
         r2capi           = get_values(mhd_dat%r2capi) 
@@ -837,13 +848,21 @@
         qsawe(1:nj)      = qsawe(1:nj)/convert
         qsawi            = get_values(pwrden%qsawi)
         qsawi(1:nj)      = qsawi(1:nj)/convert
-        qmag            = get_values(pwrden%qmag)
-        qmag(1:nj)      = qmag(1:nj)/convert
-        qohm            = get_values(pwrden%qohm)
-        qohm(1:nj)      = qohm(1:nj)/convert
-        qrad            = get_values(pwrden%qrad)
-        qrad(1:nj)      = qrad(1:nj)/convert
-     
+        qmag             = get_values(pwrden%qmag)
+        qmag(1:nj)       = qmag(1:nj)/convert
+        qohm             = get_values(pwrden%qohm)
+        qohm(1:nj)       = qohm(1:nj)/convert
+        qrad             = get_values(pwrden%qrad)
+        qrad(1:nj)       = qrad(1:nj)/convert
+
+        ddnfus(1:nj)     = ddn_fus(1:nj)*im32icm3   ! convert to 1/cm^3 sec
+        ddpfus(1:nj)     = ddp_fus(1:nj)*im32icm3 
+        dtnfus(1:nj)     = dtn_fus(1:nj)*im32icm3 
+        tt2nfus(1:nj)    = tt2n_fus(1:nj)*im32icm3 
+        he3dpfus(1:nj)   = he3dp_fus(1:nj)*im32icm3 
+
+
+
         storqueb(1:nj)  = storqueb_ncd(1:nj)/pconvert
         ! storqueb in cgs, storqueb_ncd in mks
         stfus(1:nj)     = get_values(prtcl_src%stfuse)/im32icm3
@@ -948,6 +967,10 @@
           ennw(1:nj,jj)        = ennw_ncd(:,jj)      * im32icm3
           volsn(1:nj,jj)       = volsn_ncd(:,jj)     * im32icm3
        ENDDO
+
+        CALL  check_statefile_equilibrium(xax(1),yax(1),psiaxis)
+        rma = xax(1) ; zma = yax(1)
+        xmagn1 = rma ; ymagn1 = zma
  
 !       release storage used for statefile reads:
         CALL delete_Vector (psir_grid)
@@ -1033,6 +1056,7 @@
 
 
 
+
 !        DEALLOCATE(scx_ncd,srecom_ncd,sion_ncd,sbcx_ncd ,      &
 !                   stsource,dudtsv_ncd,enbeam_ncd,enn_ncd)    
         DEALLOCATE(scx_ncd,sion_ncd,sbcx_ncd ,                  &
@@ -1091,17 +1115,19 @@
      LOGICAL set_u
      REAL(DP) sumpow,five_halfs_ti,five_halfs_te
 
-        shot_id%shot_nmbr       = ishot ! from yoka
-        time_ncd                = time
-        tGCNMF                  = timmax
-        nj_ncd                  = nj
-        nion_ncd                = nion
-        nprim_ncd               = nprim
-        nimp_ncd                = nimp
-        nneu_ncd                = nneu
-        nk                      = nion + dp4  
-        neut_beam%nj_beam       = nj
-
+        shot_id%shot_nmbr         = ishot ! from yoka
+        time_ncd                  = time
+        tGCNMF                    = timmax
+        nj_ncd                    = nj
+        nion_ncd                  = nion
+        nprim_ncd                 = nprim
+        nimp_ncd                  = nimp
+        nneu_ncd                  = nneu
+        he3_frac_ncd              = he3_frac
+        he3_thermal_spin_pol_ncd  = he3_thermal_spin_pol
+        nk                        = nion + dp4  
+        neut_beam%nj_beam         = nj
+        neut_beam%d_beam_spin_pol = d_beam_spin_pol
       IF(use_nubeam)THEN
          isz = MIN(SIZE(nameb_nubeam),SIZE(beam_data%label_beamions))
          nbion_ncd              = beam_data%nbeam_species
@@ -1219,7 +1245,7 @@
            ENDIF
 
 
-!---- glf fluxes assume they are calcualted in gcnp so jsut zero them here:
+!---- glf fluxes assume they are calcualted in gcnmp so just zero them here:
           IF(.NOT. ALLOCATED(glf_p_output))THEN
                    ALLOCATE(glf_p_output(nj,3))
                    glf_p_output(:,:) = zeroc
@@ -1284,7 +1310,7 @@
            glf_etg_output(:)     = zeroc
            glf_anrate_output(:)  = zeroc
            glf_anrate2_output(:) = zeroc
-           glf_anfreq2_output(:) = zeroc
+           glf_anfreq_output(:)  = zeroc
            glf_anfreq2_output(:) = zeroc
 
           IF(.NOT. ALLOCATED(glf_gamma_net_i_output))THEN
@@ -1475,11 +1501,28 @@
       !     fus_prod%alpha_dthe4_knock            = new_Vector(nj,ddfusn?)
       !     fus_prod%alpha_dthe4_tot              = new_Vector(nj,ddfusn?)
 
+
+
+
+           fus_prod%p_he3d_th                = new_Vector(nj,he3dpfus)
+           CALL Vector_mult(fus_prod%p_he3d_th,M32cm3) !1/M^3 sec
+           fus_prod%p_ddt                 = new_Vector(nj,ddpfus)
+           CALL Vector_mult(fus_prod%p_ddt,M32cm3) !1/M^3 sec
+           fus_prod%total_p_ddt           = thermal_thermal_ddptot ! note only thermal at preent
+           fus_prod%total_p_he3d              = thermal_thermal_he3dptot + beam_thermalhe3th_dftot       
+           fus_prod%total_p_he3d_th           = thermal_thermal_he3dptot
+           fus_prod%total_p_he3d_beam_thermal = beam_thermalhe3th_dftot
+
+           fus_prod%p_he3d_beam_thermal   = new_Vector(nj,beam_thermalhe3th_df(1,nbeams+1))
+           CALL Vector_mult(fus_prod%p_he3d_beam_thermal,M32cm3) !1/M^3 sec
+
            fus_prod%total_neutr_ddn_th            = thermal_thermal_ddntot 
            fus_prod%total_neutr_ddn_beam_beam     = beam_beam_ddntot 
            fus_prod%total_neutr_ddn_beam_thermal  = beam_thermal_ddntot 
            fus_prod%total_neutr_ddn_knock         = ddknct  
            fus_prod%total_neutr_ddn               = ddntot ! see sub fiziks 307.F 
+
+
 
 
            flux_bc(1:nj,1:ntot) = zeroc            
@@ -1607,7 +1650,7 @@
 
 
 
-
+        
         zeff_ncd(1:nj)         = zeff(1:nj)
 !        dnedt_ncd(1:nj)       = dnedt(1:nj)/im32icm3
         wpdot%dnedt            = new_Vector(nj,dnedt)
@@ -1679,6 +1722,13 @@
  
         diffuse%xkeneo   = Vector_mult_real(diffuse%xkeneo,M2cm)
  
+
+        IF(.NOT. ALLOCATED(glf_eff_chi_output))THEN
+           ALLOCATE(glf_eff_chi_output(nj,ntot))
+           glf_eff_chi_output(:,:) = zeroc
+        ENDIF
+
+
         ! total ion pressure, load only first comonent:
         DO j=1,nion
            work(:)         = dnidt(:,j)*ti(:)
@@ -2334,5 +2384,76 @@
 
    RETURN
    END SUBROUTINE get_ene_bc
+
+
+   SUBROUTINE  check_statefile_equilibrium(rma_in,zma_in,psiax_in)
+!-----------------------------------------------------------------------------
+! -- consitency check of equilibirum in  statfile
+!-----------------------------------------------------------------------------
+      USE bicube,                        ONLY : cspln,wnoperm,pds,n2cspln,nh2
+      USE replace_imsl,                  ONLY : my_ibcccu,my_dbcevl1
+      USE mhdpar,                        ONLY : nh,nwh,nw
+      use mhdcom,                        ONLY : zero
+      USE limiter,                       ONLY : nlimiter,xlimiter,ylimiter
+
+      IMPLICIT NONE
+      INTEGER(i4B) ier ,icalc,iknowax,ispln,isignpsi, &
+                   ioout,nxs,nys
+      REAL(DP) psiax_in,psiaxisl,elongaxl,rma_in,zma_in,rmal,zmal,psimal,psi_in, &
+           rdum,zdum
+      REAL(DP),DIMENSION(:),ALLOCATABLE ::  xliml,yliml
+
+
+      ALLOCATE(xliml(nlimiter),yliml(nlimiter))
+      xliml = xlimiter*100._DP ; yliml = ylimiter*100._DP
+
+
+      nxs = size(rmhdgrid)   ; nys =size(zmhdgrid)
+      ioout    = 777
+!      WRITE(ioout,FMT='("nw,nh,nxs,nys =",4(x,i3))')nw,nh,nxs,nys
+
+      iknowax  = 0  ! mag axis not known
+      ispln    = 0  ! cspln not known
+      isignpsi = -1  ! search for min in psi
+      rmal     = 0.0_DP  ; zmal =0.0_DP
+
+      ! --- set up array zero ( = 1 inside limiter, =0 outside limiter)
+      iflag = 1
+      call zlim (zero,nw,nh,nlimiter,xliml,yliml,rmhdgrid, &
+                      zmhdgrid,iflag)
+!      write(ioout,FMT='("nlimiter =",i5)')nlimiter
+!      DO j=1,nlimiter
+!         WRITE(ioout,FMT='("j,xlim,ylim =",i5,x,2(x,1pe12.4))')j,xliml(j),yliml(j)
+!      ENDDO
+ 
+      call magax (psi,rmhdgrid,zmhdgrid,nxs,nys,isignpsi,iknowax,  &
+                 ioout,ispln,zero,rmal,zmal,cspln,n2cspln,nh2,     &
+                 psiaxisl,elongaxl)
+!      WRITE(ioout,FMT='("magax reports xaxis,yaxis,psiaxis,elong =",4(x,1pe16.8))')rmal,zmal,psiaxisl,elongaxl
+      if (iknowax .eq. 0) &
+        call STOP ('sub check_statefile_equilibrium: problem 1', 1)
+
+      call my_ibcccu (psi,rmhdgrid,nxs,zmhdgrid,nys,cspln,nw,wnoperm,ier)
+      icalc = 1
+      call my_dbcevl1 (rmhdgrid,nxs,zmhdgrid,nys,cspln,nw,rmal,zmal,pds, &
+                       ier,icalc)
+      psimal = pds(1)
+      call my_dbcevl1 (rmhdgrid,nxs,zmhdgrid,nys,cspln,nw,rma_in,zma_in,pds, &
+                       ier,icalc)
+      psi_in = pds(1)
+!     WRITE(ioout,FMT='("rma_in,zma_in,psiax calc =",3(x,1pe16.8))')rma_in,zma_in,pds(1)
+     DEALLOCATE(xliml,yliml)
+!!     WRITE(ioout,FMT='("rma_in,rmal =",2(x,1pe16.8))')rma_in,rmal    
+!     WRITE(ioout,FMT='("zma_in,zmal =",2(x,1pe16.8))')zma_in,zmal
+!     WRITE(ioout,FMT='("psiax_in, psiax(rmal,zmal) =",2(x,1pe16.8))')psiax_in,psimal
+!     WRITE(ioout,FMT='("psiax_in, psiax(rma_in,zma_in) =",2(x,1pe16.8))')psiax_in,psi_in
+!     WRITE(ioout,FMT='("psiax(rma_in,zma_in)  - psi(rmal,zmal) =",1pe16.8)')psi_in - psimal
+
+     rma_in = rmal
+     zma_in = zmal
+
+   RETURN
+   END SUBROUTINE  check_statefile_equilibrium
+
 
    END MODULE set_12_gcnmp_vars

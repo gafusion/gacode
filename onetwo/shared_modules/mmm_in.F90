@@ -2522,6 +2522,7 @@
          mmm_gammaW20_zct(:,jm) = gammaW20lcl(:,1)
          mmm_omegaW20_zct(:,jm) = omegaW20lcl(:,1)
          mmm_vconv_zct(:,jm)    = vconvlcl(:,1)
+         ! note vconvlcl(1:3,:) is returned as zero by  mmm7_1
          mmm_vflux_zct(:,jm)    = vfluxlcl(:,1)
          !---------------------------------------------------------------------------------------
          ! -- apparently the energy vflux output needs to be multiplied by density and temperature
@@ -2941,6 +2942,9 @@
          mmm_omegaW20_ze(:,jm) = omegaW20lcl(:,1)
          mmm_vconv_ze(:,jm)    = vconvlcl(:,1)
          mmm_vflux_ze(:,jm)    = vfluxlcl(:,1)
+
+
+ 
          !---------------------------------------------------------------------------------------
          ! -- apparently the energy vflux output needs to be multiplied by density and temperature
          ! -- WhaT appears to be put out by mmm7_1 is JUST VFLUX = XT(E,I)*(-rDT/DR)(1/(R*T))
@@ -3046,9 +3050,6 @@
       mmm_loaded_ze = .TRUE.
 
 
-      !print *,'mmm_vflux_ze(te) =', mmm_vflux_ze(3,jm),jm,pertrb ! 8888899999
-      !print *,'mmm_vflux_ze(ti) =', mmm_vflux_ze(1,jm),jm,pertrb ! 8888899999
-      !print *,'mmm_nh_ze =', mmm_nh_ze(jm),jm,pertrb ! 8888899999
 
       IF(nerr .ne. 0)THEN ! nerr is global to this routine
          lerrno = 57
@@ -3087,7 +3088,7 @@
 
       INTEGER(i4B)k, nj_local,oknf,ngW20,jj,njnew,nold,j,njoldin, nsp,kit,ksp
 
-       !WRITE(173,FMT='("mmm_loaded_ze =",l8)')mmm_loaded_ze ! 888889999
+
 
       IF(.NOT. mmm_loaded_ze)THEN
          ! if using _zct values then load  _ze values for output
@@ -3098,12 +3099,12 @@
          CALL mmm_zct2ze(nold,rold_zc,r,njnew)  
       ENDIF
 
-      !WRITE(173,FMT='("nold,njnew,nj_local =",3(i3,x))')nold,njnew,nj_local ! 888889999
-      !write(173,FMT='("rold_zc =",(5(x,1pe14.6)))')rold_zc(1:SIZE(rold_zc))  ! 88889999
 
       oknf = delete_Vector_nf(diffuse%mmm_xti)  ! non fatal delete
+      !IF(select_solver == 'nwt_pred_cor')CALL zct2ze(mmm_xti_zct,mmm_xti_ze)
+ 
       diffuse%mmm_xti           = new_Vector(nj_local,mmm_xti_ze)
-      !write(173,FMT='("mmm_xti_ze =",(5(x,1pe14.6)))')mmm_xti_ze ! 888899999
+
       oknf = delete_Vector_nf(diffuse%mmm_xdi)
       diffuse%mmm_xdi           = new_Vector(nj_local,mmm_xdi_ze)
 
@@ -3145,8 +3146,7 @@
 
       oknf = delete_Vector_nf(diffuse%mmm_omegaDBM)
       diffuse%mmm_omegaDBM      = new_Vector(nj_local,mmm_omegaDBM_ze)
-      !write(173,FMT='("mmm_omegaDBM =",(5(x,1pe14.6)))')mmm_omegaDBM_ze ! 888899999
-
+ 
       ngW20 = 4
       IF(ASSOCIATED(diffuse%mmm_gammaW20))DEALLOCATE(diffuse%mmm_gammaW20)
       ALLOCATE(diffuse%mmm_gammaW20(ngW20))     
@@ -3165,9 +3165,7 @@
               diffuse%mmm_gammaW20(jj) = new_Vector(nj_local,work)
               work(:)                  = mmm_vflux_ze(jj,:)
               diffuse%mmm_vflux(jj)    = new_Vector(nj_local,work)
-              !if(jj == 3)THEN 
-                !WRITE(173,FMT='("diffuse%mmm_vflux(3,4) = ",(5(x,1pe16.6)))')mmm_vflux_ze(3,:)  ! 8888889999999
-              !endif 
+ 
               ! If the flux was based on diffusivity type assumption we have to
               ! use the following output for Consistency:
               IF(jj == 1 .AND. use_mmm_flux(3) == 0)THEN ! ion thermal flux
@@ -3219,7 +3217,7 @@
                        work(j) =  joupkev*0.5_DP*(mmm_e_flux_zc(j-1,3,0) + mmm_e_flux_zc(j,3,0))
                     ENDDO
                     work(nj_local) = joupkev*mmm_e_flux_zc(k,3,0)
-      print *,'no intrp' ! 8888889999999
+
                  ELSE
                     nsp = 3      ! elct thermal flux
                     ksp = SIZE(mmm_e_flux_zc,2)
@@ -3227,10 +3225,10 @@
                     CALL mmm_flux_processing(njoldin,njnew,mmm_e_flux_zc,k,ksp,kit,nsp,work)
                     !lerrno = 62
                     !CALL terminate(lerrno,nlog)
-   print *,'with intrp' ! 8888889999999
+
                  ENDIF
                     diffuse%mmm_vflux(jj)    = new_Vector(nj_local,work)
-     print *,'diffuse%mmm_vflux (3,j=4) = ',work(4) ! 8888889999999
+ 
               ENDIF
   
               IF(jj == 4 .AND. use_mmm_flux(1) == 0)THEN ! impurity particle flux
@@ -3284,14 +3282,13 @@
               USE NRTYPE ,         ONLY : I4B,DP 
 
               IMPLICIT  NONE
-              REAL(DP),DIMENSION(:) :: f_zc,f_ze
-              REAL(DP),DIMENSION(nold_ze)       :: work,rold_ze
+              REAL(DP),DIMENSION(:),ALLOCATABLE :: f_zc,f_ze
+              REAL(DP),DIMENSION(nold_ze)       :: rold_ze
               REAL(DP),DIMENSION(nold_ze-1)     :: rold_zc
               REAL(DP),DIMENSION(nnew_ze)       :: rnew_ze
               REAL(DP) fl,fr,factor
               INTEGER(I4B) j,nnew_ze,nold_ze
             END SUBROUTINE resize_extrap
-
         END INTERFACE  
 
 
@@ -3299,12 +3296,14 @@
                 CALL resize_extrap(mmm_gammaDBM_ze,mmm_gammaDBM_zct,nold,rold_zc,r,njnew)
                 CALL resize_extrap(mmm_omegaDBM_ze,mmm_omegaDBM_zct,nold,rold_zc,r,njnew)
                 CALL resize_extrap(mmm_xdi_ze,mmm_xdi_zct,nold,rold_zc,r,njnew)
-                CALL resize_extrap(mmm_xdi_ze,mmm_xti_zct,nold,rold_zc,r,njnew)
+                CALL resize_extrap(mmm_xti_ze,mmm_xti_zct,nold,rold_zc,r,njnew)
+
                 CALL resize_extrap(mmm_xte_ze,mmm_xte_zct,nold,rold_zc,r,njnew)
+
                 CALL resize_extrap(mmm_xdz_ze,mmm_xdz_zct,nold,rold_zc,r,njnew)
                 CALL resize_extrap(mmm_xvt_ze,mmm_xvt_zct,nold,rold_zc,r,njnew)
                 CALL resize_extrap(mmm_xvp_ze,mmm_xvp_zct,nold,rold_zc,r,njnew)
-
+ 
                 CALL resize_extrap(mmm_xtiW20_ze,mmm_xtiW20_zct,nold,rold_zc,r,njnew)
                 CALL resize_extrap(mmm_xteW20_ze,mmm_xteW20_zct,nold,rold_zc,r,njnew)
                 CALL resize_extrap(mmm_xdiW20_ze,mmm_xdiW20_zct,nold,rold_zc,r,njnew)
@@ -3337,7 +3336,7 @@
                 IF(ALLOCATED(mmm_vconv_ze))DEALLOCATE(mmm_vconv_ze)
                 ALLOCATE(mmm_vconv_ze(SIZE(work_mmm_ze,1),SIZE(work_mmm_ze,2)))
                 mmm_vconv_ze(:,:)  = work_mmm_ze(:,:)
- 
+
                 DEALLOCATE(work_mmm_ze,work_mmm_zc)
                 DEALLOCATE(work_temp_zc)
 
@@ -3370,8 +3369,6 @@
                 DEALLOCATE(work_mmm_ze,work_mmm_zc)
                 DEALLOCATE(work_temp_zc)
 
-
-
              ! process mmm_gammaW20:
                 IF(ALLOCATED(work_mmm_ze))DEALLOCATE(work_mmm_ze)
                 ALLOCATE(work_mmm_ze(SIZE(mmm_gammaW20_zct,1),njnew))
@@ -3399,7 +3396,6 @@
  
                 DEALLOCATE(work_mmm_ze,work_mmm_zc)
                 DEALLOCATE(work_temp_zc)
-
 
 
             ! process mmm_vflux:
@@ -3430,7 +3426,6 @@
  
                 DEALLOCATE(work_mmm_ze,work_mmm_zc)
                 DEALLOCATE(work_temp_zc,work_temp_ze)
-
 
 
                 mmm_loaded_ze = .TRUE.

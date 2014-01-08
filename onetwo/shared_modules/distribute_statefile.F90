@@ -57,7 +57,8 @@
                                             sign_It_tg_state,sign_Bt_tg_state
 
       USE glf23_gcnmp,               ONLY : glf_etg_output,glf_p_output,         &
-                                            glf_e_output,glf_m_output
+                                            glf_e_output,glf_m_output,           &
+                                            glf_eff_chi_output
 
 
 
@@ -614,6 +615,12 @@
 ! use some of the information in the current run to construc fixed chis,etc.
 ! -- glf23 related
 !-------------------------------------------------------------------------------
+     IF(myid == master) THEN
+       IF(.NOT. ALLOCATED(glf_eff_chi_output))THEN
+          ALLOCATE(glf_eff_chi_output(ntot,nj))
+          glf_eff_chi_output(:,:) = zeroc
+       ENDIF
+     ENDIF
      IF(myid .NE. master)THEN
         IF(ALLOCATED(glf_p_output))DEALLOCATE(glf_p_output)
         ALLOCATE(glf_p_output(nj,3))
@@ -621,7 +628,10 @@
         ALLOCATE(glf_e_output(nj,3))
         IF(ALLOCATED(glf_etg_output))DEALLOCATE(glf_etg_output)
         ALLOCATE(glf_etg_output(nj))
+        IF(ALLOCATED(glf_eff_chi_output))DEALLOCATE(glf_eff_chi_output)
+        ALLOCATE(glf_eff_chi_output(ntot,nj))
      ENDIF
+
 
       DO j=1,3
          IF(myid == master)work(:) = glf_p_output(:,j)
@@ -639,6 +649,7 @@
       CALL MPI_BCAST(work,nj,MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,mpiierr)
       IF(myid .NE. master)glf_etg_output(:) = work(:)
 
+      CALL MPI_BCAST(glf_eff_chi_output,njntot,MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,mpiierr)
 
 
    !----------------------------------------------------------------------------

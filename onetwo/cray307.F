@@ -73,7 +73,7 @@ c
       character rcs_id*63
       save      rcs_id
       data      rcs_id /
-     ."$Id: cray307.F,v 1.32 2013/01/23 19:24:32 stjohn Exp $"/
+     ."$Id: cray307.F,v 1.35 2013/09/19 16:29:15 stjohn Exp $"/
 c
 c     This subroutine calculates transport (or diffusion) coefficients.
 c     Note that the logic in TPORT is such that
@@ -4863,15 +4863,17 @@ c --- New fusion calcs, 1/25/96 HSJ
 c
       if (fusionvb .gt. 0)  write (*, '(" calling THERMONUCLEAR_RATE")')
  
- 
+   
       call thermonuclear_rate (ddfusn,ddpfus,dtnfus,ttnfus,
-     .                         hdpfus,
+     .                         he3dpfus,
      .                         thermal_thermal_ddntot,
      .                         thermal_thermal_ddptot,
      .                         thermal_thermal_dtntot,
      .                         thermal_thermal_tt2ntot,
-     .                         thermal_thermal_hdptot,
-     .                         iddfus,ti,en,kj,nj,
+     .                         thermal_thermal_he3dptot,
+     .                         iddfus,
+     .                         idhe3fus,ihe,ihei,he3_frac,
+     .                         ti,en,kj,nj,
      .                         id,idt,it,fd,volfac,hcap,r)
  
 
@@ -4888,8 +4890,8 @@ c
        call beam_beam_rate (time, time0, timmax, totcur(1))
        if (beam_beam_long_calc .lt. 0)
      .   call beam_beam_approx_rate(time,time0,timmax)
-       if (fusionvb .gt. 0)  write (*, '(" beam-thermal d(d,n)he3",
-     .                                " from DDFUST =", 1pe14.3)') ddbmt
+c       if (fusionvb .gt. 0)  write (*, '(" beam-thermal d(d,n)he3",
+c     .                                " from DDFUST =", 1pe14.3)') ddbmt
        if (fusionvb .gt. 0)  write (*, '(" d(d,n)he3 from ",
      .                "BEAM_THERMAL_FUS", 1pe14.3)') beam_thermal_ddntot
 
@@ -4922,6 +4924,13 @@ c
        ddptot = thermal_thermal_ddptot + beam_thermal_ddptot
      .          + beam_beam_ddptot
 c
+c
+c --- total He3(d,p)He4 rate
+c     NOTE: beam_beam_he3 is not programmed since we assume single species beam
+      beam_beam_he3dptot =0.0D0
+      he3dptot = thermal_thermal_he3dptot + beam_thermal_he3dptot
+     .           + beam_beam_he3dptot
+
        qdd = ddntot*3270.0               ! 3.27 MeV for d(d,n)he3
      .     + ddptot*4030.0               ! 4.03 MeV for d(d,p)t
 c
@@ -4930,15 +4939,20 @@ c
        qdd = qdd*1.602e-16 ! watts, divide by input power elsewhere
        qdt = qdt*1.602e-16
        qtt = qtt*1.602e-16
+       qhe3d = he3dptot *1.602e-16
+       qhe3d = qhe3d*18300.0             ! 18.3 mev for  he3(d,p)He4
+
        call getpow (time, pwrinpt)
        if (pwrinpt .gt. 1.0) then
-         qdd = qdd/pwrinpt
-         qtt = qtt/pwrinpt
-         qdt = qdt/pwrinpt
+         qdd    = qdd/pwrinpt
+         qtt    = qtt/pwrinpt
+         qdt    = qdt/pwrinpt
+         qhe3d  = qhe3d/pwrinpt
        else
-          qdd = 0.0
-          qtt = 0.0
-          qdt = 0.0
+          qdd   = 0.0
+          qtt   = 0.0
+          qdt   = 0.0
+          qhe3d = 0.0
        end if
 
 c

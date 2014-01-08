@@ -544,7 +544,7 @@ c
       character rcs_id*63 
       save      rcs_id
       data      rcs_id /
-     ."$Id: cray102.f,v 1.263 2013/05/08 00:45:32 stjohn Exp $"/
+     ."$Id: cray102.f,v 1.267 2013/12/12 18:37:01 stjohn Exp $"/
 c
 c ----------------------------------------------------------------------
 c 1) initializes input variables to their default values and reads
@@ -717,7 +717,8 @@ c                                                                              @
      .  en_bc_inpt,ren_bc_inpt,iglf_d,fix_edge_ni_bc_inpt,ts_smfactor, 
      .  single_density_simulation,density_mult,set_te_to_ti,
      .  set_ti_to_te,te_mult,ti_mult,ang_mult,ene_mult,
-     .  include_ntv,c_p,delta_b_sqr,mp_polnum,mp_tornum  !C.K. Pan
+     .  include_ntv,c_p,delta_b_sqr,mp_polnum,mp_tornum , !C.K. Pan
+     .  he3_frac,he3_thermal_spin_pol
     
 c                                                                          
      %
@@ -770,7 +771,10 @@ c
      .  enbmin_curray,wrt_kinetic_efit,genray_path,save_genray_io,             %
      .  genray_fi,genraydat,avg_nubeam_torque,fidiff_on,bfr_neutrlz,
      .  nubeam_back_delt,nubeam_fix_t,ifix_nubeam_dt,use_ufile, !JMP
-     .  nubeam_back_average,P_Nfreya_dt,nubeam_version !JMP
+     .  nubeam_back_average,P_Nfreya_dt,nubeam_version,    !JMP
+     .  d_beam_spin_pol,he3_thermal_spin_pol
+
+
 c                                                                      
       NAMELIST /namelis3/                                                      %
      .  ifixshap, mhdmode, xdim, ydim, redge, nlimiter, xlimiter,              %
@@ -3175,6 +3179,7 @@ c                                                                              @
       ene_mult        = 1.0D0
       ang_mult        = 1.0D0
       zeff_mult       = 1.0D0
+      he3_frac        = 0.0D0
 c                             
       do i=1,kbctim                                                            %
         if (i .gt. 1)  pfact = 0.0    ! else logic in SPECIFY won't work       %
@@ -4004,6 +4009,17 @@ c                second index, kbctime ranges over times in bctime (this
 c                structure is identical to the other profiles inputs such as
 c                tein, described above)
 c                
+c  d_beam_spin_pol  The "spin polarization"  of the deuterium beam.
+c                 This is used to determine the Dbeam(he3,p)He4
+c                 reaction rate. At present this is just a multiplier
+c                 on that reaction rate. The default is 1.0
+c                 Spin polarized cross sections are not in the code yet. 
+c                 NOTE that since this is a simple multiplier a value of zero
+c                 will turn off the fusion rate!!! So 1 really means
+c                 randomized spin using the spin state averaged cross
+c                 section (Bosch and Hale)      HSJ
+c  he3_thermal_spin_pol same as d_beam_spin_pol but for thermal he3 density
+
 c   -----            NEW INPUTS USED ONLY IF time_dep_beam =1 --------
 c% beamoff(i)     the length of time                                           @
 c                all the sources of beam i are off before they turn on again   @
@@ -4892,6 +4908,9 @@ c
       iddcal        = 3                                                        %
       fdbeam        = 0.150e-3    ! isotopic content of d in h                 %
 c                                   this default is for h beams                %
+      d_beam_spin_pol      = 1.0
+      he3_thermal_spin_pol = 1.0
+
       ranseed       = 7**7                                                     %
       npart         = 10000                                                    %
       npart_mcgo    =  3000                                                    %
@@ -9817,6 +9836,8 @@ c
 
 
 
+      rmhdgrid(nw) = -1.0e30          ! used as a flag until reset below
+      zmhdgrid(nh) = -1.0e30
 
 c--------------------------------------------------------------------
 c --- read statefile and  and set profiles (if initialize_from_statefile
@@ -10211,6 +10232,7 @@ c
       it     = 0
       idt    = 0
       ihe    = 0
+      ihei   = 0    ! He can be primary or imourity
 c
       do i=1,nprim
         if (namep(i) .eq. 'd' )  id  = i
@@ -10218,6 +10240,11 @@ c
         if (namep(i) .eq. 'dt')  idt = i
         if (namep(i) .eq. 'he')  ihe = i
       end do
+
+ 
+      do i=1,nimp
+         if(namei(i) .eq. 'he') ihei = i
+      enddo
 c
 
       call zen
@@ -10798,11 +10825,22 @@ c
         if (id  .ne. 0 .or.  it .ne. 0)  ifus = 2
       end if
 c
- 4130 iddfus = 0
-      if (id  .ne. 0 .and. it .eq. 0)  iddfus = 1
-      if (idt .ne. 0                )  iddfus = 2
-      if (id  .ne. 0 .and. it .ne. 0)  iddfus = 3
-      if (id  .eq. 0 .and. it .ne. 0)  iddfus = 4     ! for completeness
+ 4130 iddfus  = 0
+      idhe3fus = 0
+      if (id  .ne. 0 .and. it .eq. 0)   iddfus   = 1
+      if (idt .ne. 0                )   iddfus   = 2
+      if (id  .ne. 0 .and. it .ne. 0)   iddfus   = 3
+      if (id  .eq. 0 .and. it .ne. 0)   iddfus   = 4     ! for completeness
+      IF(id .ne.   0 .AND. ihe .ne. 0)  idhe3fus = 1     ! prim d and he
+      IF(id .ne.   0 .AND. ihei .ne. 0) idhe3fus = 2     ! prim d impurity he
+      IF(id .ne.   0 .AND. ihe .ne. 0 
+     .                .and. ihei .ne. 0)idhe3fus = 3     ! prim d,he and impurity he
+      IF(idt .ne.  0 .AND. ihe  .ne. 0) idhe3fus = 4     ! prim dt and prim he
+      IF(idt .ne.  0 .AND. ihei .ne. 0) idhe3fus = 5     ! prim dt and imp he
+      IF(idt .ne.  0 .AND. ihe  .ne. 0 
+     .               .AND. ihei .ne. 0)idhe3fus = 6      ! prim dt and he and imp he
+
+
       if (ifus .lt. 0 ) then
         iddfus  = 5
         adjzeff = 1
@@ -10822,8 +10860,8 @@ c
 
 
       if (codeid .eq. 'onedee')  go to 5030
-      rmhdgrid(nw) = -1.0e30          ! used as a flag until reset below
-      zmhdgrid(nh) = -1.0e30
+!      rmhdgrid(nw) = -1.0e30          ! used as a flag until reset below
+!      zmhdgrid(nh) = -1.0e30
       if (irguess .lt. 0 .and. ifixshap .eq. 1)  go to 4980
 c
 c     read the Green's table (also returns mhdgrid in cm):
@@ -10887,6 +10925,15 @@ c
       if (nlimiter .le. 0 .and. mhdmethd .eq. 'tdem'
      .      .AND. .NOT. initialize_from_statefile )call get_cdf_data
 
+c-----------------------------------------------------------------------
+c     make sure xdim,ydim,redge set in inone are overwritten with
+c     values consistent with statefile:
+      IF(initialize_from_statefile)THEN
+            xdim  = rmhdgrid(nw)-rmhdgrid(1)
+            ydim  = zmhdgrid(nh)-zmhdgrid(1)
+            redge = rmhdgrid(1)
+      ENDIF
+c------------------------------------------------------------------------
 c
 c --- if mhdgrid is still not set try to set it now, in cm:
 c

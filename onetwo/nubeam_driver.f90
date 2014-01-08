@@ -226,6 +226,8 @@
        time_start = time
        time_stop  = time +nubeam_dt
 
+
+
    IF( nubeam_restart .GT. 0)THEN 
 
          !user wishes to use existing restart files on the 
@@ -255,6 +257,7 @@
        nRgrid_tr = 100 ;   nZgrid_tr = 100    ! (R,Z) grid sizes -- default: 100x100 OK.
  
        !load current beam powers into beam_data%pinja:
+ 
        CALL  beam_power_interp(time_pwr)
 
 
@@ -766,8 +769,6 @@
 !  ----------------------------------------------------------------------
 !   Set the profiles determined by nubeam
 !   Both restart and NEW cases are handled 
-
-
 !  ----------------------------------------------------------------------
 
       USE transp,ONLY :                                                  &

@@ -7,7 +7,8 @@
 !             INTEGER, PARAMETER :: ncpu_arch  = 44  !add lohan5,6,7
 !             INTEGER, PARAMETER :: ncpu_arch  = 49  !add lohan8,9,10,11,12
 !             INTEGER, PARAMETER :: ncpu_arch  = 50  !add lohan1
-              INTEGER, PARAMETER :: ncpu_arch  = 56  !add star cluster
+!             INTEGER, PARAMETER :: ncpu_arch  = 56  !add star cluster
+              INTEGER, PARAMETER :: ncpu_arch  = 57  !add vidar
 
              INTEGER, PARAMETER :: ncpu_arch_32 = 7
              !number of grid size variants available:
@@ -59,8 +60,8 @@
              CHARACTER (len =8)    ::  plotcodeid  ='10dec08v'
              CHARACTER (len =16)   :: gcnmp_hosts(16)
              CHARACTER (len =128)  :: gcnmp_paths(16)
-             CHARACTER (len =16)   :: P_Nfreya_hosts(21)
-             CHARACTER (len =128)  :: P_Nfreya_paths(21)
+             CHARACTER (len =16)   :: P_Nfreya_hosts(22)
+             CHARACTER (len =128)  :: P_Nfreya_paths(22)
 
              CHARACTER *256  preplt_py ,preplt_to_run
              CHARACTER *256 pedestal_to_run
@@ -79,7 +80,7 @@
                    'NODE06','LOHAN1',                        &
                    'STAR','STAR1','STAR2','STAR3','STAR4',   & ! star = 44
                    'STAR5','STAR6','STAR7','STAR8','STAR9',  &
-                   'STAR10','STAR11','STAR12' /     
+                   'STAR10','STAR11','STAR12', 'VIDAR'/     
 
              DATA host_names_32                              &
                   / 'LOHAN2','DELPHI','LOHAN3',              &
@@ -116,7 +117,7 @@
                    'LOHAN5', 'LOHAN6',                        & 
                    'STAR','STAR1','STAR2','STAR3','STAR4',    &
                    'STAR5','STAR6','STAR7','STAR8','STAR9',   &
-                   'STAR10','STAR11','STAR12' /
+                   'STAR10','STAR11','STAR12','VIDAR'/
      
              DATA P_Nfreya_paths                                                      &
                   / '/p/linux/onetwo/pgf90/P_Nfreya_ven_star',  &  ! VENUS
@@ -139,7 +140,8 @@
                     '/p/linux/onetwo/pgf90/P_Nfreya_ven_star',  &  ! STAR9
                     '/p/linux/onetwo/pgf90/P_Nfreya_ven_star',  &  ! STAR10
                     '/p/linux/onetwo/pgf90/P_Nfreya_ven_star',  &  ! STAR11
-                    '/p/linux/onetwo/pgf90/P_Nfreya_ven_star'   &  ! STAR12
+                    '/p/linux/onetwo/pgf90/P_Nfreya_ven_star',  &  ! STAR12
+                    '/p/linux/onetwo/pgf90/P_Nfreya_l1'         &  ! VIDAR
                   /
 
 
@@ -216,7 +218,7 @@
              DATA fastcd_paths(54,1) / '/p/linux/fastcd/v1.0/129_51/fastcd'         / !STAR10
              DATA fastcd_paths(55,1) / '/p/linux/fastcd/v1.0/129_51/fastcd'         / !STAR11
              DATA fastcd_paths(56,1) / '/p/linux/fastcd/v1.0/129_51/fastcd'         / !STAR12
- 
+             DATA fastcd_paths(57,1) / '/p/linux/fastcd/v1.0/129_51/fastcd'         / !VIDAR
 
 
 
@@ -372,7 +374,7 @@
              DATA curray_paths(55,2)   /     '/p/linux/curray/65_65/xcurray'          / !STAR11
              DATA curray_paths(56,1)   /     '/p/linux/curray/65_65/xcurray'          / !STAR12
              DATA curray_paths(56,2)   /     '/p/linux/curray/65_65/xcurray'          / !STAR12
-     
+             DATA curray_paths(57,2)   /     '/p/linux/curray/65_65/xcurray'          / !VIDAR
  
              DATA curray_path       / '' / !user specified path for curray
 
@@ -593,7 +595,9 @@
              !STAR12
              DATA nubeam_paths(56) / '/p/linux/nubeam/201201/bin/d3d_nubeam_driver'/
              DATA nubeam_setup(56) / 'none'/
- 
+             !VIDAR   data (new nubeam)
+             DATA  nubeam_paths(57) /'/p/linux/nubeam/201201/bin/d3d_nubeam_driver' /
+             DATA  nubeam_setup(57) /'none' /
 
 
 
@@ -847,7 +851,9 @@
              DATA toq_paths(56,1)   /     '/p/linux/toq/129_129/toq.x'        / !STAR12
              DATA toq_paths(56,2)   /     '/p/linux/toq/65_65/toq.x'          / !STAR12
              DATA toq_base(56)      /     '/p/linux/toq/129_129/'             / !STAR12
-
+             DATA toq_paths(57,1)   /     '/p/linux/toq/129_129/toq.x'        / !VIDAR
+             DATA toq_paths(57,2)   /     '/p/linux/toq/65_65/toq.x'          / !VIDAR
+             DATA toq_base(57)      /     '/p/linux/toq/129_129/'             / !VIDAR
              DATA toq_path       / '' / !user specified path for toq
              DATA is_32_bit      /.false./
 
@@ -1801,7 +1807,11 @@
              preplt_paths(56,3)  =   '/p/linux/preplt/101/preplt'
              root_str_prplt(56)  =   '/p/linux/preplt/' 
 
-
+             !VIDAR
+             preplt_paths(1,1)  =   '/p/linux/preplt/51/preplt' 
+             preplt_paths(1,2)  =   '/p/linux/preplt/201/preplt'
+             preplt_paths(1,3)  =   '/p/linux/preplt/101/preplt'
+             root_str_prplt(1)  =   '/p/linux/preplt/' 
 
              CALL get_hostname(ncrt,nout)
         
@@ -2860,7 +2870,7 @@
         CALL get_hostname(ncrt,nout)
         SELECT CASE (host_index)
            CASE (1,2,3,5,17,18,20,21,22,23,24,25,26,27,28,35,36,37,38,39,40,41,42,43,44,&
-                 45,46,47,48,49,50,51,52,53,56)
+                 45,46,47,48,49,50,51,52,53,56,57)
                onetwo_xsct = "/p/linux/onetwo/"
                print *,'onetwo_xsct=',onetwo_xsct !jmp
            CASE (4)

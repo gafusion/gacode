@@ -75,6 +75,7 @@ subroutine set_nbupdate
   nbeam_tr = beam_data%nbeam
    time_nubeam = 0.5*(tbm2+tbm1)      !use values at midpoint
    time_nubeam = time + dt            ! = tbm2 to plot correctly need tbm1
+
    call beam_power_interp(time_nubeam)
 
   zpowers%einja(1:nbeam_tr) = beam_data%einja(1:nbeam_tr)     ! voltages

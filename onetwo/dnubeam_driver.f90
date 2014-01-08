@@ -179,6 +179,8 @@ SUBROUTINE write_nubeam_input(nubeam_namelist)
   ! beam power, energy, species mix
  
   time_pwr = 0.5*(t0_nubeam+t1_nubeam) !time + 0.5*nubeam_dt
+
+ 
   CALL beam_power_interp(time_pwr)
 
   beam_data%pwf_tot_intg = 0.0

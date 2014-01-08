@@ -604,7 +604,7 @@ c     [Beam is time-dependent, and enbeam 0'ed at each entry to source.]
       enddo
 
       nspecgr=1+nprim+nimp+ibeamcmpt  !electrons, ions, & beam component
-c      print *,'nprim+nimp+ibeamcmpt =',nprim,nimp,ibeamcmpt, nspecgr ! 888889999
+
 c     If one of the primary ion species is 'dt', then split it up into
 c     two species
       ipsplit=0
@@ -613,7 +613,7 @@ c     two species
       enddo
       if (ipsplit.gt.1) STOP 'CALL_GENRAY not configrd for two dt ions'
       nspecgr=nspecgr+ipsplit
-c      print *,'ndt primary    nspecgr,ibsplit =', nspecgr,ibsplit ! 888889999
+
       nion1=nion+ipsplit   !total ion species, except beam components.
 
 c     If the beam species is 'dt', then split it up into two species
@@ -1737,7 +1737,7 @@ c
       character rcs_id*63
       save rcs_id
       data rcs_id/
-     &"$Id: cray331.f,v 1.100 2013/05/08 00:45:34 stjohn Exp $"/
+     &"$Id: cray331.f,v 1.101 2013/09/03 18:53:21 stjohn Exp $"/
 c
       integer i, n, nmax, k
       doubleprecision p, sig, qn, un
@@ -1898,7 +1898,7 @@ c
       CHARACTER torayinpt*256
       save      rcs_id
       data      rcs_id /
-     ."$Id: cray331.f,v 1.100 2013/05/08 00:45:34 stjohn Exp $"/
+     ."$Id: cray331.f,v 1.101 2013/09/03 18:53:21 stjohn Exp $"/
 c
 c       parameter (nx_param = 129, ny_param = 129) ! HSJ 10/24/96
 c
@@ -1946,6 +1946,7 @@ c
 
 c     get fully qualified name of toray to run:
 c                          toray_to_run(1:len_toray_to_run)
+
       if(first_time)
      . call get_toray(nx_param,ny_param,ktoray,ncrt,nout,
      .          toray_to_run,len_toray_to_run)
@@ -1961,6 +1962,7 @@ c-----------------------------------------------------------------------
 c     decide if gafit should  be  called, label 19 bypasses gafit section:
 c------------------------------------------------------------------------
 c
+
       if(toray_version .lt. toray_version_switch)then
            !old version of toray does not accept igafit input in
            !file toray.in. Hence if toray.in exists we must check to see
@@ -1983,9 +1985,12 @@ c           print * ,'gafsep =',gafsep
          iecall = iecall + 1
          ldata  = 2
          !if(read_toray_in .eq. 0) call rwrt_toray_in
+
          call rwrt_toray_in
+
          read_toray_in = 1
           call rf_mhddat(task)   !writes psiin file
+
 c         call rf_mhd_interface        !write file  mhddat (read  by toray)directly
           print*,'skipping gafit spawn from Onetwo'
           go to 19
@@ -2216,6 +2221,7 @@ c     of toray gafit may be run by calling toray (rather than gafit)
 c     This depends on switch igafit in file toray.in.
 c---------------------------------------------------------------------HSJ
    19 call getioun(nscr,nscr)
+
       open (unit = nscr, file = 'echin', status = 'UNKNOWN')
       if (idamp .lt. 0)  idamp = -idamp
 
@@ -4879,6 +4885,8 @@ c ----------------------------------------------------------------------
 c calculate volumes of flux zones for elliptical cross sections
 c ----------------------------------------------------------------------
 c
+
+
           factor = 2.0 * pi**2 * rmajor*kappa*(rminor/ngrid_rfm1)**2
           do 30 i=1,ngrid_rfm1
    30     vol_psi_rf(i) = factor*(i**2-(i-1)**2)
@@ -4910,7 +4918,8 @@ c         get fpsi on rf grid from Fcap (= f(psilim)/f(psi))
           do j=1,nj
              fpsi_rf(j)= cconst/xdum(j) !kg-cm
           enddo
-c          print *,'fpsi-rf line 4889 cray331.f  =',fpsi_rf(1:nj) ! 88899999
+ 
+
 c
 c ----------------------------------------------------------------------
 c flux values are assumed to be in  Kgauss-cm**2
@@ -4982,7 +4991,7 @@ c
                iconvg = 0
              end if
 c
-
+ 
              call cntour (xmagn1,ymagn1,ptrace,rcmin,rcmax,zcmin,
      .                    zcmax,zrcmin,zrcmax,rzcmin,rzcmax,dang,arcl,
      .                    bperr,drx,dry,100.0*xlimiter(nlimiter+1),

@@ -24,7 +24,7 @@ c
       character rcs_id*63
       save      rcs_id
       data      rcs_id /
-     ."$Id: cray401.f,v 1.136 2013/05/08 00:45:35 stjohn Exp $"/
+     ."$Id: cray401.f,v 1.140 2013/12/12 18:37:01 stjohn Exp $"/
 c
 c ----------------------------------------------------------------------
 c     this subroutine generates the matrices a, b, and c (and em and w)
@@ -2170,6 +2170,7 @@ c     other parameters required for neutron rate calculations
 c     when iddfusb = 1
 c
       ddnt = 0.0
+
       if (iddfus .eq. 0)  return
 c
       mass_deut       = 2.0 * xmassp   ! approx mass of deuteron, grams
@@ -2442,7 +2443,9 @@ c
      .                             endfus,sbd,ddbm)
                     end if
               end if
+
               ddbeam(j) = ddbeam(j) + ddbm
+
 c
   105     continue      ! end loop over beams and beam energy components
 ****      write (6, '(a, i2, a, f16.4)') ' ddbeam(', j, ') =', ddbeam(j)
@@ -3829,12 +3832,13 @@ c
         USE fusion, only : 
      .           ifus,iddfus,fd,id,it,idt,thermal_thermal_ddntot,
      .           thermal_thermal_ddptot,thermal_thermal_dtntot,
-     .           thermal_thermal_tt2ntot,thermal_thermal_hdptot,
-     .           ddnfus,ddpfus,dtnfus,ttnfus,hdpfus,beam_thermaltth_df,
+     .           thermal_thermal_tt2ntot,thermal_thermal_he3dptot,
+     .           ddnfus,ddpfus,dtnfus,ttnfus,he3dpfus,
+     .           beam_thermaltth_df,idhe3fus,ihe,ihei,he3_frac,
      .           beam_thermaldth_tf,tot_th_fuse,no_beam_fusion,
      .           iddfusb_bulk,tausa,fencap,enasav,ffe,wasav,enalp,
      .           walp,tauea,wtifus,ffi,beam_thermal_long_calc,
-     .           beam_beam_long_calc,ecritalpha,ihe,iaslow,taupa
+     .           beam_beam_long_calc,ecritalpha,iaslow,taupa
         USE soln,only:     ti,en,ene,te
         USE verbose, only : fusionvb
         USE geom,only:      volfac,hcap
@@ -3884,14 +3888,17 @@ c
 ****   end do
 c
       if(fusionvb .gt. 0)print *,'in fusion12,call thermonuclear_rate'
+
       call thermonuclear_rate (ddnfus,ddpfus,dtnfus,ttnfus,
-     .                         hdpfus,
+     .                         he3dpfus,
      .                         thermal_thermal_ddntot,
      .                         thermal_thermal_ddptot,
      .                         thermal_thermal_dtntot,
      .                         thermal_thermal_tt2ntot,
-     .                         thermal_thermal_hdptot,
-     .                         iddfus,ti,en,kj,nj,
+     .                         thermal_thermal_he3dptot,
+     .                         iddfus,
+     .                         idhe3fus,ihe,ihei,he3_frac,
+     .                         ti,en,kj,nj,
      .                         id,idt,it,fd,volfac,hcap,r)
       if(fusionvb .gt. 0)print *,'in fusion12,done thermonuclear_rate'
       do j=1,nj
@@ -3992,7 +3999,7 @@ c           total energy released in thermal fusion (includes
 c           neutron, proton, alpha energies)
 c
             tot_th_fuse(j) = dtnfus(j)*17.6e3+ddnfus(j)*4.03e3
-     .                     + ttnfus(j)*11.3e3+hdpfus(j)*18.3e3
+     .                     + ttnfus(j)*11.3e3+he3dpfus(j)*18.3e3
      .                                       +ddpfus(j)*4.03e3
       end do
 
@@ -5146,7 +5153,7 @@ c  -------------------------------------------------------------HSJ
 
 
 
-      real*8 function hdprate (ti)
+      real*8 function he3dprate (ti)
 c
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
@@ -5164,15 +5171,15 @@ c
      .      -1.91080e-05, 1.35776e-4, 4726.672, 1124572 /
 c
       if (ti .lt. 0.5) then
-        hdprate = 0.0
+        he3dprate = 0.0
       else if (ti .le. 190.0) then
         theta  = ti*(C2+ti*C4)/(1.0+ti*(C3+ti*C5))
         theta  = ti/(1.0-theta)
         xsi    = (B_gsq/(4.0*theta))**(0.33333333334)
-        hdprate = C1 * theta * SQRT (xsi/(mrcsq*ti**3))
+        he3dprate = C1 * theta * SQRT (xsi/(mrcsq*ti**3))
      .                       *  EXP (-3.0*xsi)
       else
-        call STOP ('function HDPRATE: TI out of range', 38)
+        call STOP ('function He3DPRATE: TI out of range', 38)
       end if
       return
 c
@@ -8802,24 +8809,25 @@ c
       end
 
       subroutine thermonuclear_rate (ddfusn,ddpfus,dtnfus,ttnfus,
-     .                         hdpfus,ddntot,ddptot,dtntot,
-     .                         ttntot,hdptot,iddfus,ti,en,kj,nj,id,
+     .                         he3dpfus,ddntot,ddptot,dtntot,
+     .                         ttntot,he3dptot,iddfus,
+     .                         idhe3fus,ihe,ihei,he3_frac,ti,en,
+     .                         kj,nj,id,
      .                         idt,it,fd,volfac,hcap,r)
 c
       USE verbose
+      USE numbrs,            ONLY : nprim
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
 c ------------------------------------------------- 11/20/95 --- HSJ ---
 c     BASIC THERMAL FUSION REACTION RATE CALCUALTIONS:
 c
-c     DDFUSN  = D(D,   N)HE3       THERMAL-THERMAL (I.E., THERMONUCLEAR)
-c     DDPFUS  = D(D,   P)T           "       "             "
-c     DTNFUS  = D(T,   N)HE4         "       "             "
-c     TTNFUS  = T(T,  2N)HE4         "       "             "
-c     HDPFUS  = HE3(D, P)HE4         "       "             "
+c     DDFUSN    = D(D,   N)HE3       THERMAL-THERMAL (I.E., THERMONUCLEAR)
+c     DDPFUS    = D(D,   P)T           "       "             "
+c     DTNFUS    = D(T,   N)HE4         "       "             "
+c     TTNFUS    = T(T,  2N)HE4         "       "             "
+c     HE3DPFUS  = HE3(D, P)HE4         "       "             "
 c
-c     hdpfus  is not active at present. function hdprate exist however
-c     add other  cross sections here as necessary
 c
 c             RATE COEFFICIENT AND CROSS SECTIONS are from
 c             Bosch & Hale, Nuc. Fus., vol32, no.4 (1992) 611
@@ -8866,24 +8874,24 @@ c      thermal t,t reactants: ( if 1 < iddfus <= 4 )
 c             ttnfus(j)   local reaction (i.e., neutron production) rate,
 c                        #/cm**3/sec
 c             ttntot       volume integrated rate, #/sec
-c      thermal he,d reactants:  (not activated at present time)
-c             hdpfus(j)   local reaction (i.e., neutron production) rate,
+c      thermal he,d reactants: 
+c             he3dpfus(j)   local reaction (i.e., proton production) rate,
 c                        #/cm**3/sec
-c             hdptot       volume integrated rate, #/sec
+c             he3dptot       volume integrated rate, #/sec
 c
 c ----------------------------------------------------------------------
 c
 c
       dimension  ti(*),en(kj,*),ddfusn(*),dtnfus(*),ttnfus(*),
-     .           hdpfus(*),ddpfus(*),hcap(*),r(*)
+     .           he3dpfus(*),ddpfus(*),hcap(*),r(*)
 c
 c     zero volume integrated rates:
 c
-      ddntot = 0.0
-      dtntot = 0.0
-      ttntot = 0.0
-      hdptot = 0.0
-      ddptot = 0.0
+      ddntot   = 0.0
+      dtntot   = 0.0
+      ttntot   = 0.0
+      he3dptot = 0.0
+      ddptot   = 0.0
 c
 c     zero profiles:
 c
@@ -8891,7 +8899,7 @@ c
       call zeroa (dtnfus, kj)
       call zeroa (ttnfus, kj)
       call zeroa (ddpfus, kj)
-      call zeroa (hdpfus, kj)
+      call zeroa (he3dpfus, kj)
 c
       if (iddfus .eq. 0 )  return  ! thermal species is not d or t or dt
 c                                    mixture so no fusion reactions take place
@@ -8902,6 +8910,7 @@ c
          if (iddfus .le. 3) then
 c
 c               we have thermal deuterium in system
+c
 c               d(d,n)he3 reaction:
 c
                 if (iddfus .eq. 1 .or. iddfus .eq. 3)
@@ -8951,6 +8960,39 @@ c
              ttnfus(j) = 0.5*entfus*entfus * sigmavt        ! like-like
 c                                                             collisions
          end if
+
+            !he3 fusion,default is idhe3fus =0,no helium in system
+
+            IF(idhe3fus .NE. 0)call he3den(enhe3fus,j)
+            IF(idhe3fus      == 1)THEN      ! prim ion d and  he3
+               endfus    = en(j,id)
+               !enhe3fus  = en(j,ihe)*he3_frac
+            ELSEIF(idhe3fus  == 2)THEN      ! prim ion d , imp ion he3
+               endfus    = en(j,id)
+               !enhe3fus  = en(j,nprim+ihei)*he3_frac
+            ELSEIF(idhe3fus  == 3)THEN      ! prim ion d, prim ion he3 and imp ion  he3        
+               endfus     = en(j,id)
+               ! assume  same he3_frac,T imp = T prim ion:
+               !enhe3fus   = (en(j,ihe)+en(j,nprim+ihei))*he3_frac 
+
+            ELSEIF(idhe3fus  == 4)THEN      ! dt mixture and prim ion he3
+               endfus = fd*en(j,idt) 
+               !enhe3fus  = en(j,ihe)*he3_frac
+            ELSEIF(idhe3fus   == 5)THEN      ! impurity he3 and dt mixture
+               endfus = fd*en(j,idt) 
+               !enhe3fus  = en(j,nprim+ihei)*he3_frac
+            ELSEIF(idhe3fus   == 6)THEN      ! prim he3 and imp he3 and dt mixture
+               endfus = fd*en(j,idt) 
+               !enhe3fus  = (en(j,ihe) + en(j,nprim+ihei))*he3_frac 
+            ELSEIF(idhe3fus .NE. 0)THEN
+               WRITE(ncrt,FMT='("Sub thermonuclear rate encounterd",
+     .           " bad idhe3fus value = ",i6)')idhe3fus
+               call STOP('thermonuclear rate,idhe3fus not set',1)
+            ENDIF
+            IF(idhe3fus .NE. 0)THEN ! he3(d,p)he4 ,Maxwellian at Ti
+               sigmav= he3dprate(ti(j))
+               he3dpfus(j) = endfus*enhe3fus*sigmav
+            ENDIF
 c
         end do            ! end loop over rho(j)
 c
@@ -8968,15 +9010,22 @@ c
            call trapv (r, dtnfus , hcap, nj, dtntot  )
            dtntot   = dtntot   * volfac
         end if
+
+        IF(idhe3fus .ne. 0)THEN
+           call trapv (r, he3dpfus , hcap, nj,he3dptot )
+           he3dptot   = he3dptot   * volfac
+        ENDIF
         if (fusionvb .gt. 0) then
           write (*, '(" thermal-thermal d(d,n)he3  rate per second",
      .                  1pe12.3 /
-     .                " thermal-thermal d(t,n)he4  rate per second",
+     .            " thermal-thermal d(t,n)he4  rate per second",
      .                  1pe12.3 /
-     .                " thermal-thermal t(t,2n)he4 rate per second",
+     .            " thermal-thermal t(t,2n)he4 rate per second",
      .                  1pe12.3 /
-     .                " thermal-thermal d(d,p)t    rate per second",
-     .                  1pe12.3)')  ddntot, dtntot, ttntot, ddptot
+     .            " thermal-thermal d(d,p)t    rate per second",
+     .                  1pe12.3 /
+     .            " thermal-thermal he3(d,p)he4 rate per second",
+     .            1pe12.3)')  ddntot, dtntot, ttntot, ddptot,he3dptot
         end if
         iddfus = iddfushold
       return
@@ -9474,8 +9523,7 @@ c
       totboot = 2.0 * pi * totboot
       totb    = 2.0 * pi * totb
       totrf   = 2.0 * pi * totrf
-c      write(940,FMT='("c401,line 9468,totrf =",1pe12.4)')totrf ! 888888889999
-c
+
       if (curtype .ne. 0) then
 c
 c       _dmc total currents are diamagnetic corrected  HSJ 8/25/98
@@ -9588,7 +9636,7 @@ c
      .                     thermal_thermal_ddptot,
      .                     thermal_thermal_dtntot,
      .                     thermal_thermal_tt2ntot,
-     .                     thermal_thermal_hdptot,
+     .                     thermal_thermal_he3dptot,
      .                        beam_thermal_ddntot,
      .                        beam_thermal_dtntot,
      .                        beam_thermal_ddptot,
@@ -9871,7 +9919,7 @@ c
       write (ntrplt, 8020) (ddpfus(j),j=1,nj)
       write (ntrplt, 8020) (dtnfus(j),j=1,nj)
       write (ntrplt, 8020) (ttnfus(j),j=1,nj)
-      write (ntrplt, 8020) (hdpfus(j),j=1,nj)
+      write (ntrplt, 8020) (he3dpfus(j),j=1,nj)
       jj = 3*nbeams+1        ! only write out the totals for the beams
       write (ntrplt, 8020) (beam_thermalddn(j,jj),j=1,nj)
       write (ntrplt, 8020) (beam_thermaltth_df(j,jj),j=1,nj)
@@ -10732,8 +10780,7 @@ c
 c
 c this subroutine updates the dependent variables (en, te, ti, rbp and
 c angrot) by setting them equal to the appropriate elements of the
-c current solution vector u.
-c
+c current solution vector u.c
       dimension u(kk,*), en(kj,*), te(*), ti(*), rbp(*), angrot(*)
 c
       do j=1,nj

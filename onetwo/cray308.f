@@ -37,7 +37,7 @@ c
       character rcs_id*63
       save      rcs_id
       data      rcs_id /
-     ."$Id: cray308.f,v 1.67 2013/05/08 00:45:34 stjohn Exp $"/
+     ."$Id: cray308.f,v 1.68 2013/12/12 18:37:01 stjohn Exp $"/
 c
 c --- this subroutine prints out results at selected times
 c
@@ -2372,8 +2372,9 @@ c
       poh =           pohmic(nj)  * 1.0e-6
       pbe =           pbeame(nj)  * 1.0e-6
       pbi =           pbeami(nj)  * 1.0e-6
-      prf = (prfe(nj) + prfi(nj)) * 1.0e-6
-
+      prf = (prfe(nj) + prfi(nj)) * 1.0e-6 
+      write(173,fmt='("c308,l2376, pbi =",x,1pe12.4)')pbi ! 888888999
+      write(173,fmt='("c308,l2376, pbe =",x,1pe12.4)')pbe ! 888888999
 c
 c ----------------------------------------------------------------------
 c --- print out energy terms related to angular rotation

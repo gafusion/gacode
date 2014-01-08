@@ -281,7 +281,8 @@
   USE vector_class,              ONLY : new_Vector,get_element,  &
                                         real_mult_Vector,list,   &
                                         zero_Vector,load_Vector, &
-                                        delete_vector,get_values
+                                        delete_vector,get_values,&
+                                        delete_vector_nf
 
   USE ions_gcnmp,                ONLY : namep,namei,nion,                     &
                                         namen,nprim,nimp,nneu,z,zsq,zeff,     &
@@ -331,16 +332,17 @@
 
   USE tglfin,                    ONLY : tglf_p_output,tglf_e_output,tglf_m_output
   
-  USE fusion_gcnmp,              ONLY : pfuse_tot
+  USE fusion_gcnmp,              ONLY : pfuse_tot,ddn_fus,dtn_fus,tt2n_fus,                  &
+                                        ddp_fus,dhe_fus,he3_frac,he3_thermal_spin_pol
 
   USE glf23_gcnmp,               ONLY : glf_etg_output,glf_gamma_net_i_output,               &
                                         glf_gamma_net_e_output,glf_anfreq_output,            &
                                         glf_anfreq2_output,glf_anrate_output,                &
                                         glf_anrate2_output,                                  &
-                                        glf_p_output,glf_e_output,glf_m_output
+                                        glf_p_output,glf_e_output,glf_m_output,              &
+                                        glf_eff_chi_output
 
   USE pl_freq,                   ONLY : allocate_plasma_freq
-
 
   IMPLICIT  NONE
   
@@ -354,7 +356,7 @@
 
 
   REAL(DP) elmt
-  INTEGER(I4B) ie, j,jb,jp,jj,ji,jn,k,ntot,deptot,nmax,ngW20
+  INTEGER(I4B) ie, j,jb,jp,jj,ji,jn,k,ntot,deptot,nmax,ngW20,ok
   INTEGER(I4B), PARAMETER :: one = 1_I4B
   INTEGER(I4B), PARAMETER :: ke_bm  = 3_I4B ! 3 beam energy componenets
   INTEGER(I2B) i
@@ -4894,6 +4896,7 @@ nbgt0:  IF(neut_beam%nbeams .GT.0)THEN
         IF( jj == 4)tlabel = '* multimode - impurity ion particle  convective velocity,m/sec'
         IF( jj == 5)tlabel = '* multimode - toroidal momentum pinch ,m/sec'
         IF( jj == 6)tlabel = '* multimode - poloidal momentum pinch ,m/sec'
+  !NOTE jj=1,2,3 info is put out as zero by current version of multimode
         tlabel = ADJUSTL(tlabel)
         IF (iterdsc .NE. 0 )&
              WRITE  (niterdb, FMT='(A)') tlabel(1:LEN_TRIM(tlabel))
@@ -5032,7 +5035,7 @@ nbgt0:  IF(neut_beam%nbeams .GT.0)THEN
      !------------------------------------------------------------
      ! put out common frequencies:
      ! If these are not defined then define them and set to zero
-     ! frequqncies that are not flux functions are on the rho grid at zma=0
+     ! frequencies that are not flux functions are on the rho grid at zma=0
      ! on the outboard side
      !-----------------------------------------------------------------
  
@@ -5152,8 +5155,119 @@ nbgt0:  IF(neut_beam%nbeams .GT.0)THEN
            plasma_frequencies%omega_uh(k) = zero_vector(nj)
         ENDIF
      ENDIF
-
 2052 CONTINUE
+
+!-------------------------------------------------------------------------
+! -- put out glf eff chi values these are defined as the fluxes
+! -- divided by the gradients
+!-------------------------------------------------------------------------
+    IF (irwflag .EQ. 0) THEN
+        IF(.NOT. ALLOCATED(glf_eff_chi_output))THEN
+           ALLOCATE(glf_eff_chi_output(ntot,nj)) 
+           glf_eff_chi_output(:,:) = zeroc ! print out zeroes if not set
+        ENDIF
+
+
+
+        do j=1,nprim
+           WRITE(niterdb,FMT='("* Effective glf prim ion diffusivity M^2/sec species: ",a)')namep(j)
+           WRITE(niterdb,10)(glf_eff_chi_output(i,j),i=1,nj)
+        ENDDO
+
+        DO j=nprim+1,nion
+           WRITE(niterdb,FMT='("* Effective glf imp ion diffusivity M^2/sec species: ",a)')namei(j-nprim)
+           WRITE(niterdb,10)(glf_eff_chi_output(i,j),i=1,nj)
+        ENDDO
+
+        j= nion+1
+        WRITE(niterdb,FMT='("* Effective glf elect energy  diffusivity M^2/sec")')
+        WRITE(niterdb,10)(glf_eff_chi_output(i,j),i=1,nj)
+        j=nion+2
+        WRITE(niterdb,FMT='("* Effective glf ion energy  diffusivity M^2/sec")')
+        WRITE(niterdb,10)(glf_eff_chi_output(i,j),i=1,nj)
+        j=nion+3
+        WRITE(niterdb,FMT='("* Effective glf empty slot for Bp)")')
+        WRITE(niterdb,10)(glf_eff_chi_output(i,j),i=1,nj)
+        j=nion+4
+        WRITE(niterdb,FMT='("* Effective glf momentum  diffusivity M^2/sec")')
+        WRITE(niterdb,10)(glf_eff_chi_output(i,j),i=1,nj)
+     ELSE
+        IF(ALLOCATED(glf_eff_chi_output))DEALLOCATE(glf_eff_chi_output)
+        ALLOCATE(glf_eff_chi_output(ntot,nj))
+        DO j=1,nion+4
+           READ   (niterdb,  7,END = 2053) starflag
+           READ   (niterdb,  10,END = 2053)(glf_eff_chi_output(i,j),i=1,nj)
+        ENDDO
+     ENDIF
+
+2053 CONTINUE
+
+!------------------------------------------------------------------------
+! -- Aneutronic fusion reaction rates d(d,p)t,he3(d,p)he4
+! -- see neutron rates for ddn reactions (fus_prod%..) above
+! -- NOTE: gcnmp currently does not have these  rates
+! -- NOTE d(d,p)t is  thermal-thermal rates only at this time
+!------------------------------------------------------------------------
+
+      IF (irwflag .EQ. 0) THEN 
+        IF(.NOT. ASSOCIATED(fus_prod%p_ddt%data))THEN 
+           fus_prod%p_ddt = zero_vector(nj)
+           fus_prod%total_p_ddt = zeroc
+        ENDIF
+        IF(.NOT. ASSOCIATED(fus_prod%p_he3d_th%data))THEN 
+           fus_prod%p_he3d_th = zero_vector(nj)
+           fus_prod%total_p_he3d_th = zeroc
+        ENDIF
+        IF(.NOT. ASSOCIATED(fus_prod%p_he3d_beam_thermal%data))THEN 
+           fus_prod%p_he3d_beam_thermal = zero_vector(nj)
+           fus_prod%total_p_he3d_beam_thermal = zeroc
+        ENDIF
+
+        WRITE(niterdb,FMT='("* d(d,p)t reaction rate, #/(M^3 sec)",a)')
+        WRITE(niterdb,10)(fus_prod%p_ddt%data(i),i=1,nj)
+        WRITE(niterdb,FMT='("* d(d,p)t total reaction rate, #/sec",a)')
+        WRITE(niterdb,10)fus_prod%total_p_ddt
+
+
+        WRITE(niterdb,FMT='("* he3(d,p)he4 total,thermal,beam_thermal, reaction rates, #/sec",a)')
+        WRITE(niterdb,10)fus_prod%total_p_he3d, fus_prod%total_p_he3d_th,fus_prod%total_p_he3d_beam_thermal  
+        WRITE(niterdb,FMT='("* he3(d,p)he4 thermal-thermal reaction rate, #/(M^3 sec",a)')
+        WRITE(niterdb,10)(fus_prod%p_he3d_th%data(i),i=1,nj)
+
+        WRITE(niterdb,FMT='("* d(he3,p)he4 beam-thermal  summed over all beams  reaction rate, #/M^3 sec",a)')
+        WRITE(niterdb,10)(fus_prod%p_he3d_beam_thermal%data(i),i=1,nj) ! beam-thermal
+        WRITE(niterdb,FMT='("* d beam spin polarization, he3_frac for he3(d,p)he4 reactions")')
+        WRITE(niterdb,10)neut_beam%d_beam_spin_pol,he3_frac,he3_thermal_spin_pol
+
+     ELSE
+        ok = delete_vector_nf(fus_prod%p_ddt)
+        ok = delete_vector_nf(fus_prod%p_he3d_th)
+        ok = delete_vector_nf(fus_prod%p_he3d_beam_thermal)
+        fus_prod%p_ddt                     =  zero_Vector(nj)
+        fus_prod%p_he3d_th                 =  zero_Vector(nj)
+        fus_prod%p_he3d_beam_thermal       =  zero_Vector(nj)
+        fus_prod%total_p_he3d              = zeroc
+        fus_prod%total_p_he3d_th           = zeroc
+        fus_prod%total_p_he3d_beam_thermal = zeroc
+
+        READ   (niterdb,  7,END = 2054) starflag
+        READ   (niterdb,  10,END = 2054)(fus_prod%p_ddt%data(j),j=1,nj)
+        READ   (niterdb,  7,END = 2054) starflag
+        READ   (niterdb,  10,END = 2054)fus_prod%total_p_ddt
+
+        READ   (niterdb,  7,END = 2054) starflag
+        READ   (niterdb,  10,END = 2054)fus_prod%total_p_he3d,fus_prod%total_p_he3d_th,fus_prod%total_p_he3d_beam_thermal
+        READ   (niterdb,  7,END = 2054) starflag
+        READ   (niterdb,  10,END = 2054)(fus_prod%p_he3d_th%data(j),j=1,nj)
+
+        READ   (niterdb,  7,END = 2054) starflag
+        READ   (niterdb,  10,END = 2054)(fus_prod%p_he3d_beam_thermal%data(j),j=1,nj)
+        READ   (niterdb,  7,END = 2054) starflag
+        READ   (niterdb,  10,END = 2054)neut_beam%d_beam_spin_pol,he3_frac,he3_thermal_spin_pol
+
+     ENDIF
+
+2054 CONTINUE
 
 
   CLOSE (unit = niterdb, status = 'KEEP')

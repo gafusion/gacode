@@ -143,7 +143,7 @@
 				FTN90LIB      = 
                                 CFLG = 
 				#OPTIMIZE      = -fast
-	                        OPTIMIZE      = -O3
+	                        OPTIMIZE      = -O2
 				#NETCDF_LIB   = /p/linux/tools/netcdf-3.6.2/64/pgf7.0-6/lib/libnetcdf.a
 				#NETCDF_INC   = /p/linux/tools/netcdf-3.6.2/64/pgf7.0-6/include/
 	                        #link to current version of netcdf:

@@ -1101,7 +1101,7 @@ SUBROUTINE load_12(io)
                  i1,i2,i3,i4,.FALSE.,swap_lbl,qbeame_nub,qbeame_intg_nub)
         IF(i2 .EQ. -1)qbeame_nub(:) = 0.0d0
         WHERE(qbeame_nub < 0.0)qbeame_nub =0.0
-!        PRINT *,'integrated =',qbeame_intg_nub  !watts 
+
 
 !pbes may ot be present
 ! read pbes(D_MCBEAM) watts/m**3
@@ -1122,8 +1122,7 @@ SUBROUTINE load_12(io)
                   i4,.FALSE.,swap_lbl,qbeami_nub,qbeami_intg_nub)
         IF(i2 .EQ. -1)qbeami_nub(:) = 0.0d0
         WHERE(qbeami_nub < 0.0)qbeami_nub =0.0
-!        PRINT *,'integrated =',qbeami_intg_nub
-!        print *,'qbeami_nub =',qbeami_nub
+
 
 
 
@@ -1153,7 +1152,7 @@ SUBROUTINE load_12(io)
                             i4,skip_summary,swap_lbl,qbth_nub,qbth_intg_nub)
 
             WHERE(qbth_nub < 0.0)qbth_nub =0.0
-            qbeami_nub(1:nj) = qbeami_nub(1:nj) + qbth_nub(1:nj) 
+            qbeami_nub(1:nj) = qbeami_nub(1:nj)  + qbth_nub(1:nj) 
                                             ! thermal energy of fast ions 
                                             ! that drop below thermal Ti 
                                             ! is added to qbeami

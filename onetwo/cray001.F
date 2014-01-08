@@ -34,7 +34,7 @@ c
       character rcs_id*63 
       save      rcs_id
       data      rcs_id /
-     ."$Id: cray001.F,v 1.18 2013/07/19 16:55:04 stjohn Exp $"/
+     ."$Id: cray001.F,v 1.20 2013/12/12 18:37:01 stjohn Exp $"/
 
 
       include 'quit.i'
@@ -85,6 +85,9 @@ D      call MPI_Barrier( MPI_COMM_WORLD,ierr)
        versid = 'Onetwo V5.46'  ! update for venus,star,P_Nfreya
        versid = 'Onetwo V5.47'  ! add timing routines for perfomance study 5/7/13  
        versid ='Onetwo  V5.48'  ! removed dbg calls
+       versid ='Onetwo  V5.49'  ! added he3 fusion calcs 8/29/13 HSJ
+       versid ='Onetwo  V5.50'  ! added VIDAR as running host 11/4/13 working yet in this verson 12/12/13   HSJ
+                                ! robin bc not 
 !$OMP parallel
 !$      print *,"OMP  thread number =",omp_get_thread_num()
 !$OMP end parallel

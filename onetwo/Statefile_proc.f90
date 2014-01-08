@@ -32,11 +32,19 @@
           CALL iter_dbase129
       ENDIF
 
+!      write(6,FMT='("statefile_type,switch_iterdb_output ,mhdmethd =", &
+!            x,i3,x,i3,x,a)')statefile_type,switch_iterdb_output ,mhdmethd ! 8888999cat fort
+
+!      write(6,FMT='("iterdb,ifixshap,switch_iterdb_output,create_gcnmp_imnput=", &
+!           x,i3,x,i3,x,i3,x,l5)')iterdb,ifixshap,switch_iterdb_output,create_GCNMP_input 
+!      write(6,FMT='("statefile_type =",x,i3)')statefile_type
       irwflag_gcnmp = 0   ! write new statefile
       IF (ifixshap .EQ. 1 .AND. iterdb .EQ.  2 .AND.                                     &
                    .NOT. create_GCNMP_input )  CALL iter_dbase !returns without writing
 
  
+
+
        IF (iterdb .EQ.  1 .AND. create_GCNMP_input .AND. mhdmethd .NE.'tdem' )THEN 
            iterdb_file_name = ADJUSTL(gcnmp_iterdb_filename(1:LEN_TRIM(gcnmp_iterdb_filename)))
 
@@ -91,11 +99,11 @@
                iterdb_file_name = ADJUSTL(gcnmp_iterdb_filename(1:LEN_TRIM(gcnmp_iterdb_filename)))//'.nc'
 
                CALL append_time_to_filename (time,iterdb_file_name)
-
+ 
                CALL iter_dbase_nc   ! file rw_iterdb_netcdf.F90
 
                CALL rename_disk_file(iterdb_file_name)
-
+ 
              ENDIF
           ENDIF
       ENDIF
@@ -166,7 +174,7 @@
         irwflag = 1                              ! set for read acces
         iterdb_file_name = statefile_name(1:LEN_TRIM(statefile_name))
 
-        switch_iterdb_output = 1              ! default output is  .nc
+!        switch_iterdb_output = 1              ! default output is  .nc
 
 
 !       read statefile,text or netcdf form:

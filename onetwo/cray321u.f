@@ -424,7 +424,7 @@ c
       character rcs_id*63
       save      rcs_id
       data      rcs_id /
-     ."$Id: cray321u.f,v 1.5 2013/07/19 16:55:04 stjohn Exp $"/
+     ."$Id: cray321u.f,v 1.6 2013/12/12 18:37:01 stjohn Exp $"/
 c      include 'param.i'
 c      include 'io.i'
 c      include 'numbrs.i'
@@ -2010,27 +2010,7 @@ c
 ****  if (ifail1 .eq. 0)  go to 15
 c
       ijob = 1
-c temp test
-      go to 666 ! 888889999
-      ns =4
-      qq(1,1)  = 4.0_Dp
-      qq(2,1)  = 0.0_DP
-      qq(3,1)  = 5._DP
-      qq(4,1)  = 3._DP
-      qq(1,2)  = -5.0_Dp
-      qq(2,2)  = 4.0_DP
-      qq(3,2)  = -3.0_DP
-      qq(4,2)  = 0.0_DP
-      qq(1,3)  = 0.0_DP
-      qq(2,3)  = -3.0_DP
-      qq(3,3)  = 4.0_DP
-      qq(4,3)  = 5.0_DP
-      qq(1,4)  = 3.0_DP
-      qq(2,4)  = -5.0_DP
-      qq(3,4)  = 0.0_DP
-      qq(4,4)  = 4.0_DP
- 666  continue
-c end temp test 
+
       call my_eigrf (qq, ns, ms+1, ijob, w, z, ms+1, work2, ifail1) ! 888889999
       if (ifail1 .eq. 0)  go to 15
       ihxbug = 9 

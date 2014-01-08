@@ -295,6 +295,11 @@
      error(67)%errno     =  67
      error(67)%descrip   =  'Error: read_efit_eqdsk,forcebal.f90 mhd data not in state file'
 
+     error(68)%errno     =  68
+     error(68)%descrip   =  'Error: sub robinbc requires common boundary'
+
+     error(69)%errno     =  69
+     error(69)%descrip   =  'Error: sub ss_boundary_flux,equation not known'
 
      error(iomaxerr)%descrip   =  'Generic error exit'
      error(iomaxerr)%errno     =  iomaxerr

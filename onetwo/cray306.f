@@ -777,7 +777,7 @@ c
       character rcs_id*63
       save      rcs_id
       data      rcs_id /
-     ."$Id: cray306.f,v 1.111 2013/07/19 16:55:04 stjohn Exp $"/
+     ."$Id: cray306.f,v 1.112 2013/09/03 18:53:21 stjohn Exp $"/
 c
 c ----------------------------------------------------------------------
 c --- subroutine TPORT is driver for transport portion of ONETWO code.
@@ -1378,9 +1378,9 @@ c
       iborb = iborb_save        ! enable MCGO if it was set on input
       call diffus (xi_include)  !HSJ call added  11/07/03
       print *,'calling source  beam iterations are done'
- 
+
       call source
-      
+
       if(bp0_ic(1:LEN_TRIM(bp0_ic)) == bp0_icv(2))then !bp0_icv(2) = 'analytic'
          call reinit_bp0
          call curcalc (rbp, fcap, hcap, gcap, r, curden,
@@ -1397,6 +1397,7 @@ c
 c --- check if time0-beamon is sufficiently large that
 c --- asymptotic density was achieved
 c
+
       if (ibslow .eq. 1 .and. (time0 - beamon(1)) .ge. 0.0
      .                                  .and. .not. use_nubeam ) then
         taupbmax = 0.0                      ! fast ion slowing down time
@@ -1429,6 +1430,7 @@ c
         call timederiv (dt, n, hcap, hcap0, dhdt, nj)
       end if
 ****  if (twkfar .gt. 2.0)  implicit_fh = .false.
+
 c
 c ----------------------------------------------------------------------
 c update fast ion quantities
@@ -1486,7 +1488,7 @@ c
 c
 c ----------------------------------- HSJ ---- 1/8/99 ---- end
 c
-
+ 
       call fiziks
 c
 c get the experimental profiles if this is tdem mode
@@ -1563,11 +1565,6 @@ c     the  profiles  read from the file as the inital conditions.
       If(test_xptor .eq. 1)then
          call xptor_init
       endif
-
-
-
-
-
 
 
 

@@ -33,7 +33,7 @@ c
       character rcs_id*63
       save      rcs_id
       data      rcs_id /
-     ."$Id: cray208.f,v 1.67 2013/05/08 00:45:33 stjohn Exp $"/
+     ."$Id: cray208.f,v 1.68 2013/09/03 18:53:21 stjohn Exp $"/
 c
 c***********************************************************************
 c**                                                                   **
@@ -991,11 +991,15 @@ c
       cconst = -1.0
       call multpl1 (p       , nx*ny, cconst)
       call multpl1 (psivlcpy,  npsi, cconst)
+
 c
 c --- set up bicubic spline coefficient array cspln
 c
       imslmd='997 c208'
       call my_ibcccu (p, x, nx, y, ny, cspln, nx, wnoperm, ierr)
+
+
+
 c
 ****  call multpl1 (p,nx*ny,cconst) ! p is changed back after we're..
 c                                   ..done with torflux2
@@ -1052,11 +1056,15 @@ c
 c         if (j .eq. 1 .and. mhdmode  .eq. 'no coils'
 c     .                .and. mhdmethd .eq. 'sorpicrd')  go to 15
 c
+
+
          call cntour (xmagax,ymagax,psivlcpy(j),rcmin,rcmax,zcmin,zcmax,
      .                zrcmin,zrcmax,rzcmin,rzcmax,dang,arcl,bperr,
      .                dx,dy,xmin,xmax,ymin,ymax,iauto,iautoc,xp,yp,
      .                mp,x,nx,y,ny,cspln,n2cspln,nh2,iounit,nconmax,
      .                ierr,gp,iconvg,delta_psi)
+
+
          if (ierr .eq. 0  .and.  j .eq. 1)
      .   write (iounit, *) ' number of points on plasma boundary = ', mp
 c
@@ -1576,6 +1584,7 @@ c
 c
    50        continue         ! end loop on psi values to be contoured
 
+
 D         call MPI_Barrier( MPI_COMM_WORLD,ierr)
 
 
@@ -1900,6 +1909,7 @@ c
          elong(npsi) = elong(npsi-1)
        end if
 c
+
        rm2        (npsi) = 1.0 / xmagax**2
        rm2i       (npsi) = 1.0 / rm2(npsi)
        ravg       (npsi) = xmagax
@@ -1950,6 +1960,7 @@ c flux surface wrt psi and setting the result equal to the
 c volume at that point (which is known):
 c ----------------------------------------------------------------------
 c
+
       vprime(npsi) = 2.0 * psivolp(npsi-1) /
      .              (psivlcpy(npsi)-psivlcpy(npsi-1)) - vprime(npsi-1)
       if (ixcal .eq. 0)  go to 350
@@ -1986,8 +1997,6 @@ c
       xxp(5)=psivlcpy(npsi)          !evaluation point
 
       call polint(xxp,yyp,nxxp-1,xxp(5),bsq_avg(npsi),dyyp)
-
-
 
       yyp(1)=b_avg(npsi-1)
       yyp(2)=b_avg(npsi-2)
@@ -2063,6 +2072,7 @@ c
 c     apply psifctr only once if MHD calcs are not done:
 c
       if (ifixshap .eq. 1)  psifctr = 0.0
+
       return
 c
  1000 if (iounit .ne. 0) then
@@ -4479,6 +4489,7 @@ c --- subroutine CNTOUR can do its thing:
 c
       imslmd='4480c208'
       call my_ibcccu (psi,rmhdgrid,nw,zmhdgrid,nh,cspln,nw,wnoperm,ier)
+
 c
 c --- trace each contour of psir(j) and do the flux surface integrals:
 c
@@ -5396,7 +5407,7 @@ c
       call multpl1 (ravgi,npsi,cconst)
       cconst = 1.0e-06
       call multpl1 (rbp, nj, cconst)      ! tesla-meters
-      print *,'c208,l5397 rbp=',rbp(nj-1),rbp(nj)
+c      print *,'c208,l5397 rbp=',rbp(nj-1),rbp(nj)
       cconst = 1.0e-01
       call multpl1 (pressb,nj,cconst)
       cconst = 1.0e-04

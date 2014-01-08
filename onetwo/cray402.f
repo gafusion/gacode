@@ -6,7 +6,7 @@ c
       character rcs_id*63
       save      rcs_id
       data      rcs_id /
-     ."$Id: cray402.f,v 1.30 2010/10/08 18:11:00 stjohn Exp $"/
+     ."$Id: cray402.f,v 1.33 2013/12/12 18:37:01 stjohn Exp $"/
 c
 c ----------------------------------------------------------------------
 c --- subroutine AZIMUTH_INTEGRAL constructs a table of
@@ -1169,6 +1169,7 @@ c          Df(Dth,p)T                    beam_thermalddp
 c          Df(Tth,n)He4                  beam_thermaltth_df
 c          Tf(Dth,n)He4                  beam_thermaldth_tf
 c          Tf(Tth,2n)He4                 beam_thermaltt2n
+c          Df(he3,p)he4                  beam_thermalhe3dp
 c
 c     CROSS SECTIONS are from
 c     Bosch & Hale, Nuc. Fus., vol32, no.4 (1992) 611
@@ -1192,8 +1193,8 @@ c     zsq(j,i)
 c     atw(i)
 c     nameb
 c     time             current time,sec
-c    bpol
-c    totcur1           bpol and totcur1 are used to determine correct
+c     bpol
+c     totcur1           bpol and totcur1 are used to determine correct
 c                      signs on some angles
 c
 c     OUTPUT:
@@ -1204,12 +1205,15 @@ c             beam_thermal_ddntot       volume integrated rate, #/sec
 c         if beam d and thermal t are prsent:
 c         beam_thermaltth_df(j,k)
 c             beam_thermal_dtntot       volume integrated rate, #/sec
-c         if beam t and therma t are present:
+c         if beam t and thermal t are present:
 c         beam_thermaltt2n(j,k)
 c             beam_thermal_tt2ntot       volume integrated rate, #/sec
 c         if beam t and thermal d are present
 c         beam_thermaldth_tf(j,k)
 c             beam_thermaldth_tftot      volume integrated rate, #/sec
+c         if beam d and thermal he3 are present
+c         beam_thermalhe3th_df(j,k)
+c             beam_thermalhe3th_dftot      volume integrated rate, #/sec
 c
 c     sbfus(j)  beam fusion rate density counts total of
 c               all d(t,n)he4 reactions
@@ -1220,7 +1224,7 @@ c     beam_thermalddp_scale(j,ksym)
 c     beam_thermaltth_df_scale(j,ksym)
 c     beam_thermaltt2n_scale(j,ksym)
 c     beam_thermaldth_tf_scale(j,ksym)
-c
+c     beam_thermalhe3th_df_scale(j,ksym)
 c ----------------------------------------------------------------------
 c
       USE param
@@ -1237,21 +1241,9 @@ c
       USE geom
       USE colrate
       USE tordlrot
+      USE common_constants,             ONLY: AMU_Value ! in kg
       implicit  integer (i-n), real*8 (a-h, o-z)
-c      include 'param.i'
-c      include 'fusion.i'
-c      include 'geom.i'
-c      include 'ions.i'
-c      include 'machin.i'     ! btor
-c      include 'mesh.i'
-c      include 'neut.i'       ! pick up neutral density here
-c      include 'nub.i'
-c      include 'nub2.i'
-c      include 'numbrs.i'
-c      include 'soln.i'
-c      include 'tordlrot.i'
-c      include 'colrate.i'
-c      include 'verbose.i'
+
 c
       real*8  bpol(*), qbfus(*), sbfus(*)
       data    idfdf, idftf, itftf, ixvfast_set /0, 0, 0, 0/
@@ -1262,6 +1254,7 @@ c
       mass_deut = 3.3435e-24         ! collect into a common area?
       mass_trit = 5.007289e-24
       mass_beam = xmassp*atw_beam
+      mass_he3  = AMU_Value*1000.*3.0160293  ! grams
       nterms    = nlegendre  ! terms retained in Legendre expansion of
 c                              reaction rate integrals. This is not the
 c                              same as # of terms retained in expansion
@@ -1272,18 +1265,20 @@ c
       call zeroa (beam_thermaltth_df,kj*3*kb)
       call zeroa (beam_thermaltt2n,kj*3*kb)
       call zeroa (beam_thermaldth_tf,kj*3*kb)
+      call zeroa (beam_thermalhe3th_df,kj*3*kb)
 c
       beam_thermal_long_calc = -1    ! determines if full or approximate
 c                                      calcs will be done
-      beam_thermal_ddptot    = 0.0
-      beam_thermal_dtntot    = 0.0
-      beam_thermal_tt2ntot   = 0.0
-      beam_thermaldth_tftot  = 0.0
+      beam_thermal_ddptot     = 0.0
+      beam_thermal_dtntot     = 0.0
+      beam_thermal_tt2ntot    = 0.0
+      beam_thermaldth_tftot   = 0.0
+      beam_thermalhe3th_dftot = 0.0
       if (beam_thermal_fusion .le. 0)  return
-      if (iddfus .eq. 0     )  return
+      IF (iddfus .eq. 0 .AND. idhe3fus .EQ. 0    )  return
       if (beamon(1) .ge. timmax)  return       ! beam is not on in this run
 c
-      if (beam_thermal_fusion .gt. 0) then
+      if (beam_thermal_fusion .gt. 0) then ! determine frequncey of calcs
         imod_calc = imod_calc + 1
         if (imod_calc .eq. 1) go to 10 ! always do it on the first call
         if (MOD (imod_calc, beam_thermal_fusion) .eq. 0) go to 10
@@ -1383,7 +1378,7 @@ c
                        vthelec = 1.3256e9
      .                         * SQRT (2.0*te(j))              ! cm/sec
 c
-c                   sbpure = true (FREYA calced/saved) source rate,#/(cm**3sec):
+c                   sbpure = true (FREYA calc/saved) source rate,#/(cm**3sec):
 c                   sbsav has effects of charge exchange and time dependence
 c                   already in it, so must use sbpure if icalc_cxfactor = 1
 c
@@ -1421,6 +1416,7 @@ c
 ****             expt       = 0.5*mass_trit*xkeverg/tion ! 1/(cm/sec)**2
                  expt       = expd
                  expdt      = expd
+                 exphe3     = 0.5*mass_he3*xkeverg/tion  ! 1/(cm/sec)**2
                  vthuplim   = 2.0 * SQRT (1.0/expd) ! int. limits over..
                  vthlowlim  = 0.0                   ! ..distribution
                  vthuplim   = 2.0 *vthuplim
@@ -1439,7 +1435,7 @@ c
                    isetsigvr      = 0
                  end if
 c
-                 if (isetsigvr .eq. 0) then
+                 IF (isetsigvr .eq. 0) then
                    isetsigvr = 1
 c
 c                  load sigvrddn(n2v,n1v)and sigvrddp (stored in colrate.i)
@@ -1455,7 +1451,12 @@ c                    create table for d(d,p)t reaction
 c
                      call sigintddp (vionmin_table,vionmax_table,
      .                               vbeammin_table,vbeammax_table)
-                   end if
+c                    create table for df(he3,p)he4 reaction
+                     IF(idhe3fus .NE. 0)THEN
+                        call sigintdhe3 (vionmin_table,vionmax_table,
+     .                               vbeammin_table,vbeammax_table)
+                     ENDIF
+                   ENDIF
 c
 c                  load sigvrdtn(n2v,n1v) (stored in colrate.i):
 c
@@ -1481,7 +1482,7 @@ c
 c                     do the integrals for all reactions simultaneously:
 c
                       call beam_thermal_int1 (iddfus,vthuplim,vthlowlim,
-     .                               vbeam,rddn,rdtn,rtt2n,rdth_tf,rddp)
+     .                     vbeam,rddn,rdtn,rtt2n,rdth_tf,rddp,rhe3th_df)
 c
                       if (iddfus .eq. 1) then
                         endth = en(j,id)
@@ -1503,13 +1504,18 @@ c
                         endth = en(j,id)
                         entth = en(j,it)
                       end if
+                      if(idhe3fus .ne. 0)call he3den(enhe3th,j)
                       beam_thermalddn(j,k)    = rddn*endth*sbd*fdbeam
                       beam_thermaltth_df(j,k) = rdtn*entth*sbd*fdbeam
+                      beam_thermalhe3th_df(j,k) = rhe3th_df*enhe3th*
+     .                                    sbd*fdbeam *d_beam_spin_pol
                       beam_thermaldth_tf(j,k) = rdth_tf*endth
      .                                        * sbd*(1.0-fdbeam)
                       beam_thermaltt2n(j,k)   = rtt2n*entth
      .                                        * sbd*(1.0-fdbeam)
-                      beam_thermalddp(j,k)    = rddp*endth*sbd*fdbeam
+                      beam_thermalddp(j,k)    = rddp*endth*sbd*fdbeam 
+            rhe3max = max(rhe3max,rhe3th_df)
+            rddnmax = max(rddnmax,rddn)
 c
 c ---- If we neglect changes in fast and thermal distributions
 c ---- and assume that the initial critical velocity doesnt change too
@@ -1517,20 +1523,22 @@ c ---- much then the integrals performed above me be treated as constant,
 c ---- So let's save the relevant info:
 c
                       beam_thermalddn_scale(j,k)=rddn*fdbeam
+                      beam_thermalhe3th_df_scale(j,k)=rhe3th_df*fdbeam
                       beam_thermalddp_scale(j,k)=rddp*fdbeam
                       beam_thermaltth_df_scale(j,k)=rdtn*fdbeam
                       beam_thermaldth_tf_scale(j,k)=rdth_tf*(1.0-fdbeam)
                       beam_thermaltt2n_scale(j,k)=rtt2n*(1.0-fdbeam)
                       beam_thermal_long_calc=1
-            end do ! loop over energy componenets
+            end do ! loop over energy components
           end do   ! loop over beams
 c
-          k                       = k + 1
-          beam_thermalddn(j,k)    = 0.0
-          beam_thermaltth_df(j,k)    = 0.0
-          beam_thermaltt2n(j,k)   = 0.0
-          beam_thermaldth_tf(j,k) = 0.0
-          beam_thermalddp(j,k)    = 0.0
+          k                            = k + 1
+          beam_thermalddn(j,k)         = 0.0
+          beam_thermaltth_df(j,k)      = 0.0
+          beam_thermaltt2n(j,k)        = 0.0
+          beam_thermaldth_tf(j,k)      = 0.0
+          beam_thermalddp(j,k)         = 0.0
+          beam_thermalhe3th_df(j,k)    = 0.0
 c
 c         sum over beams and energy components and save in last column:
 c
@@ -1545,8 +1553,11 @@ c
      .                   +beam_thermaldth_tf(j,jj)
               beam_thermaltt2n(j,k)=beam_thermaltt2n(j,k)
      .                   +beam_thermaltt2n(j,jj)
+              beam_thermalhe3th_df(j,k)=beam_thermalhe3th_df(j,k)
+     .                   +beam_thermalhe3th_df(j,jj)
           end do
-c         include fast d,thermal t and fast t,thermal d in sbfus:
+c         include fast d,thermal t and fast t,thermal d in sbfus,
+c         do not include fastd thermal he3
           sbfus(j)=beam_thermaltth_df(j,k)+beam_thermaldth_tf(j,k)
           qbfus(j) = sbfus(j)*3.5e3                      ! keV/cm**3/sec
       end do                              ! end loop over spatial mesh j
@@ -1561,19 +1572,26 @@ c
      .               beam_thermal_tt2ntot )
       call trapv (r, beam_thermaldth_tf(1,k), hcap, nj,
      .               beam_thermaldth_tftot)
-      beam_thermal_ddntot   = beam_thermal_ddntot*volfac ! volfac = 4 *
+      call trapv (r, beam_thermalhe3th_df(1,k), hcap, nj,
+     .               beam_thermalhe3th_dftot)
+
+
+      beam_thermal_ddntot     = beam_thermal_ddntot*volfac ! volfac = 4 *
 c                                                          pisq * rmajor
-      beam_thermal_ddptot   = beam_thermal_ddptot*volfac
-      beam_thermal_dtntot   = beam_thermal_dtntot*volfac
-      beam_thermal_tt2ntot  = beam_thermal_tt2ntot*volfac
-      beam_thermaldth_tftot = beam_thermaldth_tftot*volfac
+      beam_thermal_ddptot     = beam_thermal_ddptot*volfac
+      beam_thermal_dtntot     = beam_thermal_dtntot*volfac
+      beam_thermal_tt2ntot    = beam_thermal_tt2ntot*volfac
+      beam_thermaldth_tftot   = beam_thermaldth_tftot*volfac
+      beam_thermalhe3th_dftot = beam_thermalhe3th_dftot*volfac
 c
 c     guard against underflow for subsequent 32-bit programs:
 c
-      if (beam_thermal_ddptot   .lt. 1.0e-30)  beam_thermal_ddptot  =0.0
-      if (beam_thermal_dtntot   .lt. 1.0e-30)  beam_thermal_dtntot  =0.0
-      if (beam_thermal_tt2ntot  .lt. 1.0e-30)  beam_thermal_tt2ntot =0.0
-      if (beam_thermaldth_tftot .lt. 1.0e-30)  beam_thermaldth_tftot=0.0
+      if (beam_thermal_ddptot   .lt. 1.0e-30)beam_thermal_ddptot  =0.0
+      if (beam_thermal_dtntot   .lt. 1.0e-30)beam_thermal_dtntot  =0.0
+      if (beam_thermal_tt2ntot  .lt. 1.0e-30)beam_thermal_tt2ntot =0.0
+      if (beam_thermaldth_tftot .lt. 1.0e-30)beam_thermaldth_tftot=0.0
+      if (beam_thermalhe3th_dftot .lt. 1.0e-30)  
+     .                                     beam_thermalhe3th_dftot=0.0
 c
       if (fusionvb .gt. 0) then
          write (*, '(" beam_thermal_ddntot   =", 1pe14.3)')
@@ -1586,16 +1604,18 @@ c
      .                 beam_thermal_tt2ntot
          write (*, '(" beam_thermaldth_tftot =", 1pe14.3)')
      .                 beam_thermaldth_tftot
+         write (*, '(" beam_thermalhe3th_dftot =", 1pe14.3)')
+     .                 beam_thermalhe3th_dftot
+ 
+      
       end if
       return
 c
       end
 
       subroutine beam_thermal_int1 (iddfus, vthuplim, vthlowlim, vbeam,
-     .                              rddn, rdtn, rtt2n, rdth_tf,rddp)
+     .                       rddn, rdtn, rtt2n, rdth_tf,rddp,rhe3th_df)
 c
-      USE colrate
-      implicit  integer (i-n), real*8 (a-h, o-z)
 c
 c ----------------------------------------------------------------------
 c    integrate the thermdist function
@@ -1617,10 +1637,12 @@ c        rdtn
 c        rtt2n
 c        rdth_tf
 c        rddp
+c        rhe3th_df
 c ------------------------------------------------------------------ HSJ
+      USE fusion,                         ONLY : idhe3fus
+      USE colrate
 c
-c      include 'colrate.i'
-c
+      implicit  integer (i-n), real*8 (a-h, o-z)
       data idid /0/
 c
 c     generate the weights,wxvtherml, and evaluation points, xvtherml,
@@ -1638,20 +1660,24 @@ c
 c
 c     evaluate the integral by summing with the appropriate weights:
 c
-      valddn  = 0.0
-      valdtn  = 0.0
-      valtt2n = 0.0
-      valddp  = 0.0
-      dv      = vthuplim-vthlowlim
+      valddn   = 0.0
+      valdtn   = 0.0
+      valtt2n  = 0.0
+      valddp   = 0.0
+      valhe3p  = 0.0
+      dv       = vthuplim-vthlowlim
       do j=1,nvtherml
         vth     = xvtherml(j) * dv + vthlowlim ! scale to interval..
 c                                              ..pass in colrate.i
-        call thermal_distb (iddfus, valddnl, valdtnl, valtt2nl,valddpl)
-        valddn  = valddn  + wxvtherml(j) * valddnl
-        valdtn  = valdtn  + wxvtherml(j) * valdtnl
-        valtt2n = valtt2n + wxvtherml(j) * valtt2nl
-        valddp  = valddp  + wxvtherml(j) * valddpl
+        call thermal_distb (iddfus, valddnl, valdtnl, valtt2nl,
+     .                      valddpl,valhe3pl)
+        valddn   = valddn  + wxvtherml(j) * valddnl
+        valdtn   = valdtn  + wxvtherml(j) * valdtnl
+        valtt2n  = valtt2n + wxvtherml(j) * valtt2nl
+        valddp   = valddp  + wxvtherml(j) * valddpl
+        valhe3p  = valhe3p + wxvtherml(j) * valhe3pl
       end do
+
 c
 c     done with integrations do some normalization of results:
 c
@@ -1707,12 +1733,19 @@ c
          rtt2n   = valtt2n * dv * twopi * alphat * 1.0e-27
          rdth_tf = valdtn  * dv * twopi * alphad * 1.0e-27
       end if
+     
+
+      IF(idhe3fus .NE. 0)THEN  
+         alphahe3  = (exphe3/(twopi/2.0))**1.5  ! norm factor for Maxwellian
+         rhe3th_df = valhe3p * dv * twopi * alphahe3* 1.0e-27
+      ENDIF
+
       return
 c
       end
 
       subroutine beam_thermal_int2 (vthh, valddnl, valdtnl, valtt2nl,
-     .                                                       valddpl)
+     .                                             valddpl,valhe3pl) 
 c
       USE colrate
       implicit  integer (i-n), real*8 (a-h, o-z)
@@ -1748,21 +1781,24 @@ c
       valdtnl  = 0.0
       valtt2nl = 0.0
       valddpl  = 0.0
+      valhe3pl = 0.0
       dv = vfast_up_lim - vfast_low_lim
       vb = vfast_up_lim          ! set upper integration limit for cxint
       do j=1,nvfast
         vf       = xvfast(j) * dv
      .           + vfast_low_lim ! scale to actual integration limits
         call fast_ion_distb(vf,valddnll,valtt2nll,valdtnll,valddpll)
-        valddnl  = valddnl  + wxvfast(j)*valddnll ! gaussian integration
-        valdtnl  = valdtnl  + wxvfast(j)*valdtnll ! gaussian integration
-        valtt2nl = valtt2nl + wxvfast(j)*valtt2nll! gaussian integration
-        valddpl  = valddpl + wxvfast(j)*valddpll  ! gaussian integration
+        valddnl   = valddnl  + wxvfast(j)*valddnll   ! gaussian integration
+        valdtnl   = valdtnl  + wxvfast(j)*valdtnll   ! gaussian integration
+        valtt2nl  = valtt2nl + wxvfast(j)*valtt2nll  ! gaussian integration
+        valddpl   = valddpl + wxvfast(j)*valddpll    ! gaussian integration
+        valhe3pl  = valddpl + wxvfast(j)*valdhe3pll  ! gaussian integration
       end do
-      valddnl  = valddnl  * dv
-      valdtnl  = valdtnl  * dv
-      valtt2nl = valtt2nl * dv
-      valddpl  = valddpl  * dv
+      valddnl   = valddnl  * dv
+      valdtnl   = valdtnl  * dv
+      valtt2nl  = valtt2nl * dv
+      valddpl   = valddpl  * dv
+      valhe3pl  = valhe3pl * dv
       return
 c
       end
@@ -2411,6 +2447,53 @@ c
 c
       end
 
+
+      real*8 function dhe3p (e)
+c
+      implicit none
+c
+c ----------------------------------------------------------------------
+c --- function returns cross section for d(he3,p)he4 reaction.
+c --- parameterization is taken from
+c --- Bosch & Hale, Nuc. Fus., Vol.32, No.4 (1992)
+c --- input argument e is energy in keV (in com system)
+c --- output is cross section in millibarns (i.e., 10^-27 cm^2)
+c --- Results are valid in [el,eh] keV. We arbitrarily assume
+c --- that if e < el then dhe3p =0
+c ---------------------------------------------------------HSJ--9/17/13--
+c
+      real*8 a(5), b(4), bg,el, eh, s, arg, e, estar, answ
+      data   a 
+     .      /5.7501e6,  2.5226e3,4.5566e1, 0.0,0.0/
+      data   b
+     .      / -3.1995e-3,-8.5530e-6,5.9014e-8,0.0/
+ 
+      data  bg,el, eh
+     .       / 68.7508, 0.3, 900.0/
+c
+      estar = MAX (el   , e )
+      estar = MIN (estar, eh)
+c
+****  e must be within range of parmeterization
+        IF ( e .gt. eh)THEN
+           write(6,FMT='("rel energy in dhe3,emin,emax =",
+     .       3(x,1pe12.2))') e,el,eh
+           call STOP('subroutine Dhe3p: erel out of range(0.3,900kev',
+     .             973)
+        ENDIF
+
+        IF(e .lt. el)THEN
+          dhe3p = 0.0
+        ELSE
+          s = (((estar*a(5)+a(4))*estar+a(3))*estar+a(2))*estar+a(1)
+          s = s/(1. +(((b(3)+estar*b(4))*estar+b(2))*estar+b(1))*estar)
+          arg  = bg / SQRT (estar)
+          dhe3p = s * EXP (-arg) / estar
+        ENDIF
+      return
+c
+      end
+
       real*8 function dtnhe4 (e)
 c
       implicit none
@@ -2689,6 +2772,41 @@ c
       return
 c
       end
+     
+
+      SUBROUTINE he3den(enhe3th,gp)
+!-------------------------------------------------------------------------
+! -- return thermal he3 density at grid point gp
+!-------------------------------------------------------------------------
+
+      USE fusion,                         ONLY : idhe3fus,ihe,ihei,
+     .                                           he3_frac,   
+     .                                           he3_thermal_spin_pol
+      USE soln ,                          ONLY : en      !en(kj,kion)
+
+      USE numbrs,                         ONLY : nprim,nj
+
+
+      IMPLICIT NONE
+      INTEGER gp
+      REAl*8 enhe3th
+
+      IF(idhe3fus ==1)THEN         ! prim d and prim he
+            enhe3th  =  en(gp,ihe) 
+      ELSEIF(idhe3fus ==2)THEN     ! prim d impurity he
+            enhe3th  =  en(gp,nprim+ihei)
+      ELSEIF(idhe3fus ==3)THEN     ! prim d,he and impurity he
+            enhe3th  =  (en(gp,nprim+ihei) + en(gp,nprim+ihe))
+      ELSEIF(idhe3fus ==4)THEN     ! prim dt and prim he
+            enhe3th  =  en(gp,ihe)
+      ELSEIF(idhe3fus ==5)THEN     ! prim dt and imp he
+            enhe3th  =  en(gp,nprim+ihei)
+      ELSEIF(idhe3fus ==6)THEN     ! prim dt and he and imp he
+            enhe3th  =  (en(gp,nprim+ihei) + en(gp,nprim+ihe))
+      ENDIF
+      enhe3th  = enhe3th*he3_thermal_spin_pol*he3_frac
+      RETURN
+      END SUBROUTINE he3den
 
       subroutine non_inductive_cd (dt_tdem)
 c
@@ -3147,6 +3265,29 @@ c
 c
       end
 
+
+
+      real*8 function sgv_dhe3p (zeta, vb1, vb2)
+c
+      USE colrate
+      implicit  integer (i-n), real*8 (a-h, o-z)
+c
+c ----------------------------------------------------------------------
+c --- return sigma*vrel for ddpt reaction
+c --- zeta is angle between vf (fast ion) and vth (thermal ion) vectors
+c ----------------------------------------------------------------------
+c
+c      include 'colrate.i'
+c
+****  umdd      = 5.2175e-16             ! (keV/(cm/sec)**2) set in DATA
+      vrelsq    = vb1**2 + vb2**2 - 2.0*vb1*vb2*zeta
+      ecom      = umdd * vrelsq          ! keV
+      sgv_dhe3p  = dhe3p (ecom) * SQRT (vrelsq)
+      return
+c
+      end
+
+
       real*8 function sgv_dtnhe4 (zeta, vb1, vb2)
 c
       USE colrate
@@ -3322,7 +3463,6 @@ c                      rate integral[cm/sec]*[units of sigma]
 c
 c ---------------------------------------------------------------------
 c
-c      include 'colrate.i'
 c
 c     first get the weights for the zeta quadrature rule
 c     we use nzeta points
@@ -3376,7 +3516,6 @@ c                      rate integral[cm/sec]*[units of sigma]
 c
 c ---------------------------------------------------------------------
 c
-c      include 'colrate.i'
 c
 c     first get the weights for the zeta quadrature rule
 c     we use nzeta points
@@ -3403,20 +3542,76 @@ c
 c
       end
 
-      subroutine thermal_distb (iddfus,valddnl, valdtnl, valtt2nl,
-     .                                                    valddpl)
+
+
+      subroutine sigintdhe3 (v1min, v1max, v2min, v2max)
 c
       USE colrate
+      implicit  integer (i-n), real*8 (a-h, o-z)
+c
+c ---------------------------------------------------------------------
+c --- SIGINTDHE3 constructs a table of
+c ---          Integral from -1 to 1 {sigma(Erel)*vrel}
+c ---  the integration is over COS(theta), where theta is the angle
+c ---  between the two velocity vectors of the two distributions
+c
+c --- input
+c     v1max
+c     v1min
+c     v2min      the max and min speeds to be considered for the
+c     v2max      two distributions. [ in cm/sec]
+c
+c --- Parameters defined in colrate.i
+c     n1v        #of intervals for grid of first speed
+c     n2v        #                         second
+c
+c --- output
+c     sigvrdhe3p(i,j)      i=1,2..n1,j=1,2..n2 the value of the reaction
+c                      rate integral[cm/sec]*[units of sigma]
+c
+c ---------------------------------------------------------------------
+c
+c     first get the weights for the zeta quadrature rule
+c     we use nzeta points
+c
+      xx1 = -1.
+      xx2 =  1.
+      call gauleg(xx1,xx2,xzeta,wzeta,nzeta)
+      dv1=(v1max-v1min)/(n1v-1)
+      dv2=(v2max-v2min)/(n2v-1)
+      do j=1,n2v
+         vth=v1min+(j-1)*dv1
+         v1(j)=vth
+         do i=1,n1v
+             vf=v2min+(i-1)*dv2      ! pass v1=vth, v2=vf with colrate.i
+             v2(i)=vf
+             sigvrdhe3p(i,j)=0.0
+             do k=1,nzeta
+                 sigvrdhe3p(i,j)=sigvrdhe3p(i,j)+wzeta(k)
+     .                            *sgv_dhe3p(xzeta(k),vth,vf)
+             end do
+         end do
+      end do
+      return
+c
+      end
+
+      subroutine thermal_distb (iddfus,valddnl, valdtnl, valtt2nl,
+     .                                          valddpl,valhe3pl)
+c
+      USE colrate
+      USE fusion ,                                ONLY : idhe3fus
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
 c ----------------------------------------------------------------------
 c     thermal distribution times fastint
 c ------------------------------------------------------------------ HSJ
 c
-c      include 'colrate.i'
 c
       vthsq = vth * vth
-      call beam_thermal_int2(vth,valddnl,valdtnl,valtt2nl,valddpl)
+      call beam_thermal_int2(vth,valddnl,valdtnl,valtt2nl,valddpl,
+     .                       valhe3pl) 
+
 c
       if (iddfus .eq. 1) then
 c
@@ -3461,11 +3656,13 @@ c
          valdtnl     = valdtnl*thermdistt
          valtt2nl    = valtt2nl*thermdistt
       else
-c
-c        goofed
-c
          call STOP ('subroutine THERMAL_DISTB: IDDFUS not set', 205)
       end if
+      
+      IF(idhe3fus .ne. 0)THEN
+         thermdisthe3  = vthsq * EXP (-exphe3*vthsq)
+         valhe3pl      = thermdisthe3 * valhe3pl
+      ENDIF
       return
 c
       end
@@ -3479,7 +3676,6 @@ c ----------------------------------------------------------------------
 c     thermal distribution times fastint
 c ------------------------------------------------------------------ HSJ
 c
-c      include 'colrate.i'
 c
       vthsq     =   vth * vth
       thermdist = vthsq * EXP (-expd*vthsq)*fastint(vth)
