@@ -25,7 +25,9 @@ OBJECTS   = cray001.o cray101.o cray102.o cray202.o cray203.o cray204.o \
 	    neo2dp.o fast_ion_diffusion.o restore_12.o load_restart_12.o \
 	    iterdbmd.o nrtype.o etc.o cer.o  flx.o  monitr.o ode_pkg.o   \
 	    tmpcom.o oloss.o smthspline.o rw_iterdb.o\
-	    mmm95_ntcc.o mmm95_mod.o nubeam_sub.o periodic_table_mod.o \
+	    mmm95_ntcc.o mmm95_mod.o \
+	    brainfuse_mod.o \
+	    nubeam_sub.o periodic_table_mod.o \
 	    eq_pfprim.o confinement_factors.o rad_loss.o iterdb_v1.29.o \
 	    Statefile_proc.o  rw_iterdb_netcdf.o \
 	    vector_class.o plasma_prop.o shot_info.o grid_class.o \

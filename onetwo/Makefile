@@ -64,7 +64,6 @@ ifeq ($(HOST),Linux)
            include $(INCPATH)make.lohan6          
 	endif
 
-        
         ifeq ($(shell uname -n),venusa)
            include $(INCPATH)make.venus
         endif
@@ -120,9 +119,9 @@ ifeq ($(HOST),Linux)
 	 	GCCLIB =  /usr/lib/libstdc++-3-libc6.2-2-2.10.0.so
                 LISTING    = 
 		ifeq ($(OPT),debug)
-			OPTION = $(DEBUG) 
+			OPTION = $(DEBUG)
 		else
-			OPTION = $(OPTIMIZE) 
+			OPTION = $(OPTIMIZE)
 		endif
 		ifndef OPEN_MP
 			OMP =
@@ -206,6 +205,7 @@ LIBRARIES = $(LIBS)/$(PORTLIB).a $(LIBS)/cortlib.a  \
 			$(UFILE_LIBRARIES)  $(TSPLINE_LIB)/$(SPLINE_LIB)
                         # $(NETCDF_LIB) 
 endif
+
 .SUFFIXES:
 
 
@@ -217,11 +217,14 @@ all: $(NAME) data_files
 #	@echo $(UFILE_LIBRARIES)
 #	@echo $(NETCDF_LIB)
 
-$(NAME):           $(OBJECTS) $(OBJECTS_P) $(LIBRARIES)
+$(NAME):           $(OBJECTS) $(OBJECTS_P) $(LIBRARIES) brainfuse.o
 	@echo "loading .... "
-	$(LOAD)    $(OBJECTS) $(NETCDF_LIB) $(LIBRARIES)    $(FTN90LIB)
+	$(LOAD)  -L /u/meneghini/fann/src/  $(OBJECTS) brainfuse.o $(NETCDF_LIB) $(LIBRARIES) $(FTN90LIB) -lfann
 	$(PROTECT) $(NAME)
 #	cp $(NAME) $(INSTALLDIR)
+
+brainfuse.o: brainfuse.c
+	gcc -c -g -I/u/meneghini/fann/src/include brainfuse.c
 
 #JMP START
 
@@ -251,6 +254,7 @@ make_depends: make_depends.sh make.objects
 	@echo "Running make_depends.sh."
 	@./make_depends.sh "$(OBJECTS)"
 include make_depends
+
 
 #
 #END Smith optimization
