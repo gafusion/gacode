@@ -517,6 +517,7 @@ cJMP  USE nbi_dimensions
       USE cer
       USE tmpcom
       USE mmm95_mod !JMP
+      USE brainfuse_mod         !OM
       !USE platform !jmp.ibm.par
       USE rad_loss,                    ONLY : brems_nions          
       USE gpsi
@@ -719,8 +720,9 @@ c                                                                              @
      .  single_density_simulation,density_mult,set_te_to_ti,
      .  set_ti_to_te,te_mult,ti_mult,ang_mult,ene_mult,
      .  include_ntv,c_p,delta_b_sqr,mp_polnum,mp_tornum , !C.K. Pan
-     .  he3_frac,he3_thermal_spin_pol
-    
+     .  he3_frac,he3_thermal_spin_pol,
+     .  include_brainfuse
+     
 c                                                                          
      %
       NAMELIST /namelis2/  beam_thermal_fusion,                                            
@@ -2123,6 +2125,14 @@ c ---------------default values added  3/15/01 HSJ ----------------------
       ichiv_chii = 0   !jmp.snu
       iglf_eq = 0      !jmp.den
       iglf_idt = 0.0   !jmp.den
+
+c   ---------------------------- MMM95 MODEL --------------------------------- @
+c   OM, 24/01/14                                                               @
+c                                                                              @
+c                                                                              @
+c                 ONETWO INPUT SWITCHES FOR THE BRAINFUSE MODEL                @
+c    ------------------------------------------------------------------------  @
+      include_brainfuse = 3
 
 c   ---------------------------- MMM95 MODEL --------------------------------- @
 c   JMP, 3/23/06                                                               @

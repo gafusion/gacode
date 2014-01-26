@@ -61,7 +61,8 @@ c
       USE flx
       USE neo2d
       USE kapisn_module,               ONLY : kapisn_driver
-      USE mmm95_mod !JMP      
+      USE mmm95_mod !JMP
+      USE brainfuse_mod !OM
       USE glf23 !jmp.snu
 #ifdef PARALLEL_12
       USE mpi12 !jmp.snu.par
@@ -3693,6 +3694,24 @@ c
 
           irotstab = irotstab_save
         endif  glf_sect  !end glf23 block
+
+c---------------------------------------------------------------------------
+c     BRAINFUSE OM 24/01/14
+c---------------------------------------------------------------------------
+        brainfuse_sect:    IF(include_brainfuse .EQ. 1 )THEN
+!     
+           CALL BRAINFUSE(nj,   ! number of points
+     .          r(nj)*0.01,     ! a : minor radius [m]
+     .          btor*1.0e-4,    ! Bt: Toroidal magnetic field on axis [T]
+     .          r*0.01,         ! r[j] : radius [m]
+     .          ravg_r*0.01,    ! R[j] : major radius [m] = rmajor+shif(j)
+     .          kappa_nj,       ! kappa[j] : elongation
+     .          ene*1E6,        ! ne[j] : electron density [m-3]
+     .          te,             ! Te[j] : electron temperature [keV]
+     .          ti,             ! Ti[j]: ion temperature [keV]
+     .          q              ! q[j] : safety factor with sign
+     .          )
+        ENDIF  brainfuse_sect
 
 c---------------------------------------------------------------------------
 c     MMM95 JMP 3/23/06
