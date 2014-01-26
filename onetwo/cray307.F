@@ -3700,6 +3700,12 @@ c     BRAINFUSE OM 24/01/14
 c---------------------------------------------------------------------------
         brainfuse_sect:    IF(include_brainfuse .EQ. 1 )THEN
 !     
+!     Deuterium/Tritium densities
+
+           do jj=1,nprim        ! loop to find index of deuterium
+              if(atw(jj) .eq. 2.)  exit
+           enddo
+
            CALL BRAINFUSE(nj,   ! number of points
      .          r(nj)*0.01,     ! a : minor radius [m]
      .          btor*1.0e-4,    ! Bt: Toroidal magnetic field on axis [T]
@@ -3707,9 +3713,10 @@ c---------------------------------------------------------------------------
      .          ravg_r*0.01,    ! R[j] : major radius [m] = rmajor+shif(j)
      .          kappa_nj,       ! kappa[j] : elongation
      .          ene*1E6,        ! ne[j] : electron density [m-3]
+     .          en(:,jj)*1E6,   ! ni[j] : ion density [m-3]
      .          te,             ! Te[j] : electron temperature [keV]
      .          ti,             ! Ti[j]: ion temperature [keV]
-     .          q              ! q[j] : safety factor with sign
+     .          q               ! q[j] : safety factor with sign
      .          )
         ENDIF  brainfuse_sect
 

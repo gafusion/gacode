@@ -31,9 +31,9 @@ int run_net_on_data_(int * num_data, int * num_input, int * num_output, fann_typ
     }
   }
 
-  for(i = 0; i < *num_data; i++){
-    printf("  (%f, %f) -> %f\n", input[i], input[i+*num_data], output[i]);
-  }
+  //for(i = 0; i < *num_data; i++){
+  //  printf("  (%f, %f) -> %f\n", input[i], input[i+*num_data], output[i]);
+  //}
 
   //////////////////////////////
   printf("- cleanup\n");
