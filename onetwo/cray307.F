@@ -162,6 +162,11 @@ c
      .   pgeo_local, rdrho_local, rdrho_local_p1,zval
 
 c
+cOM  brainfuse variables
+      REAL*8, DIMENSION (:), ALLOCATABLE :: vol_brainfuse
+      REAL*8 dummy_brainfuse
+
+c
 cJMP  mmm variables
 c
       integer matdim_mm, npoints_mm, nprout_mm 
@@ -3699,12 +3704,19 @@ c---------------------------------------------------------------------------
 c     BRAINFUSE OM 24/01/14
 c---------------------------------------------------------------------------
         brainfuse_sect:    IF(include_brainfuse .EQ. 1 )THEN
-!     
-!     Deuterium/Tritium densities
 
-           do jj=1,nprim        ! loop to find index of deuterium
-              if(atw(jj) .eq. 2.)  exit
-           enddo
+           DO jj=1,nprim        ! loop to find index of deuterium
+              IF(atw(jj) .EQ. 2.)  EXIT
+           ENDDO
+
+           !calculate volume
+           fact = volfac * hcap *1E-6
+           ALLOCATE(vol_brainfuse(nj))
+           vol_brainfuse=vol_brainfuse*0+1
+           DO jj=1,nj
+              CALL TRAPV(r,vol_brainfuse,fact,nj-jj+1,dummy_brainfuse)
+              vol_brainfuse(nj-jj+1)=dummy_brainfuse
+           ENDDO
 
            CALL BRAINFUSE(nj,   ! number of points
      .          r(nj)*0.01,     ! a : minor radius [m]
@@ -3712,12 +3724,16 @@ c---------------------------------------------------------------------------
      .          r*0.01,         ! r[j] : radius [m]
      .          ravg_r*0.01,    ! R[j] : major radius [m] = rmajor+shif(j)
      .          kappa_nj,       ! kappa[j] : elongation
-     .          ene*1E6,        ! ne[j] : electron density [m-3]
-     .          en(:,jj)*1E6,   ! ni[j] : ion density [m-3]
+     .          ene*1E6,        ! ne[j] : electron density [m^-3]
+     .          en(:,jj)*1E6,   ! ni[j] : ion density [m^-3]
      .          te,             ! Te[j] : electron temperature [keV]
      .          ti,             ! Ti[j]: ion temperature [keV]
-     .          q               ! q[j] : safety factor with sign
+     .          q,              ! q[j] : safety factor with sign
+     .          vol_brainfuse   ! vol[j] : volume enclosed by each flux surface [m^3]
      .          )
+           
+           DEALLOCATE(vol_brainfuse)
+
         ENDIF  brainfuse_sect
 
 c---------------------------------------------------------------------------

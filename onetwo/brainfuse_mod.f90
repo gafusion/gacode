@@ -4,14 +4,14 @@ module brainfuse_mod
   
 contains
   
-  subroutine brainfuse (nn,a,bt,r,rmaj,kappa,ne,ni,te,ti,q)
+  subroutine brainfuse (nn,a,bt,r,rmaj,kappa,ne,ni,te,ti,q,vol)
     implicit none
     integer*4 debug, nn, j
     parameter (debug=1)
     real*8   a, bt, &
          r(nn), rmaj(nn), kappa(nn), &
          ne(nn), ni(nn), te(nn), ti(nn), &
-         q(nn)
+         q(nn), vol(nn)
 
     INTEGER num_data, num_input, num_output
     REAL*4, DIMENSION (:,:), ALLOCATABLE :: input, output
@@ -30,10 +30,11 @@ contains
 !       write(*,*) 'R/a=',rmaj/a
 !       write(*,*) 'kappa=',kappa
 !       write(*,*) 'ne=',ne
-       write(*,*) 'ni=',ni
+!       write(*,*) 'ni=',ni
 !       write(*,*) 'te=',te
 !       write(*,*) 'ti=',ti
 !       write(*,*) 'q=',q
+       write(*,*) 'vol=',vol
     ENDIF
 !===============================
 
