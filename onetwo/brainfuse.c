@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "fann.h"
 
-int run_net_on_data_(int * num_data, int * num_input, int * num_output, fann_type * input, fann_type * output){
+int run_net_on_data_(int * num_data, int * num_input, int * num_output, fann_type * input, fann_type * output, int *debug){
   struct fann *ann;
   fann_type *calc_in, *calc_out;
   int i, j, k;
@@ -10,7 +10,7 @@ int run_net_on_data_(int * num_data, int * num_input, int * num_output, fann_typ
   printf("%d %d %d\n",*num_data,*num_input,*num_output);
 
   //////////////////////////////
-  printf("- network\n");
+  if (debug) printf("- network\n");
   //////////////////////////////
   ann = fann_create_from_file("brainfuse.net");
   if(!ann){
@@ -19,7 +19,7 @@ int run_net_on_data_(int * num_data, int * num_input, int * num_output, fann_typ
   }
 
   //////////////////////////////
-  printf("- calculate\n");
+  if (debug) printf("- calculate\n");
   //////////////////////////////
   for(i = 0; i < *num_data; i++){
     for(j = 0; j < *num_input; j++){
@@ -31,12 +31,14 @@ int run_net_on_data_(int * num_data, int * num_input, int * num_output, fann_typ
     }
   }
 
-  //for(i = 0; i < *num_data; i++){
-  //  printf("  (%f, %f) -> %f\n", input[i], input[i+*num_data], output[i]);
+  //if(debug){
+  //  for(i = 0; i < *num_data; i++){
+  //    printf("  (%f, %f) -> %f\n", input[i], input[i+*num_data], output[i]);
+  //  }
   //}
 
   //////////////////////////////
-  printf("- cleanup\n");
+  if (debug) printf("- cleanup\n");
   //////////////////////////////
   fann_destroy(ann);
   free(calc_in);
