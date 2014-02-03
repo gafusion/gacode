@@ -59,7 +59,7 @@ CONTAINS
     input_names(3)='kappa'
     input_names(4)='taus'
     input_names(5)='aus'
-    input_names(6)='press'
+    input_names(6)='q'
 
     output_names(1)='Qe'
     output_names(2)='Qi'
@@ -218,14 +218,16 @@ CONTAINS
     DO j=1,num_output
        dummy=1
        SELECT CASE (to_lower(trim(output_names(j))))
-       CASE('Qe')
+       CASE('qe')
           Qe=output(:,j)
-       CASE('Qe_Qnorm')
-          Qe=output(:,j)*dvol
-       CASE('Qi')
+       CASE('qe_qnorm')
+          output(:,j)=output(:,j)*dvol
+          Qe=output(:,j)
+       CASE('qi')
           Qi=output(:,j)
-       CASE('Qi_Qnorm')
-          Qi=output(:,j)*dvol
+       CASE('qi_qnorm')
+          output(:,j)=output(:,j)*dvol
+          Qi=output(:,j)
        CASE DEFAULT
           dummy=0
        END SELECT
@@ -253,6 +255,7 @@ CONTAINS
        ENDDO
        CLOSE(17)
     ENDIF
+
 !========================
 
     DEALLOCATE( cs )

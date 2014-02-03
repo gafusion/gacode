@@ -31,7 +31,7 @@ int run_net_on_data_(int * num_data, int * num_input, int * num_output, fann_typ
     //compute
     calc_out = fann_run(ann, calc_in);
     //scale out
-    fann_scale_output(ann,calc_out);
+    fann_descale_output(ann,calc_out);
     //save
     for(j = 0; j < *num_output; j++){
       output[i + j * *num_data]=calc_out[j];
