@@ -3708,10 +3708,6 @@ c---------------------------------------------------------------------------
            !check if IP has a sign
            !check units of angrot
 
-           DO jj=1,nprim        ! loop to find index of deuterium
-              IF(atw(jj) .EQ. 2.)  EXIT
-           ENDDO
-
            !calculate volume
            fact = volfac * hcap *1E-6
            ALLOCATE(vol_brainfuse(nj))
@@ -3719,6 +3715,12 @@ c---------------------------------------------------------------------------
            DO jj=1,nj
               CALL TRAPV(r,vol_brainfuse,fact,nj-jj+1,dummy_brainfuse)
               vol_brainfuse(nj-jj+1)=dummy_brainfuse
+           ENDDO
+
+           !this loop should be right before the BRAINFUSE call
+           !since the variable jj is used for identifying the deuterium species
+           DO jj=1,nprim        ! loop to find index of deuterium
+              IF(atw(jj) .EQ. 2.)  EXIT
            ENDDO
 
            CALL BRAINFUSE(nj,   ! number of points

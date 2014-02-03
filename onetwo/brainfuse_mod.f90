@@ -17,13 +17,13 @@ contains
 
   subroutine brainfuse(nn,bt,ip,r,rmaj,kappa,ne,ni,te,ti,q,vol,wt)
     IMPLICIT NONE
-    INTEGER*4 debug, nn, j
+    INTEGER*4 debug, nn, j, i, dummy
     PARAMETER (debug=1)
     REAL*8  bt, ip, &
          r(nn), rmaj(nn), kappa(nn), &
          ne(nn), ni(nn), te(nn), ti(nn), &
          q(nn), vol(nn), wt(nn)
-    REAL*8, DIMENSION (:), ALLOCATABLE :: cs, dte, dti, dne, dni, dr, dq, dkappa
+    REAL*8, DIMENSION (:), ALLOCATABLE :: cs, dte, dti, dne, dni, dr, dq, dkappa, dvol
     REAL*8 a, mD, eV
     PARAMETER (mD= 3.3475E-27)
     PARAMETER (eV= 1.60217646E-19)
@@ -32,17 +32,23 @@ contains
 !        _e0 = 8.8541878176E-12
 !        _Kb = 1.3806505E-23
     CHARACTER input_names(20)*255
+    CHARACTER output_names(20)*255
 
     REAL*4, DIMENSION (:,:), ALLOCATABLE :: input, output
     INTEGER num_data, num_input, num_output
 
+    IF (debug) WRITE(*,*)'Running brainfuse!'
+
 !===============================
-    input_names(1)='r'
-    input_names(2)='rmaj'
+    input_names(1)='rmin_loc'
+    input_names(2)='rmaj_loc'
     input_names(3)='kappa'
     input_names(4)='taus'
     input_names(5)='aus'
     input_names(6)='q'
+
+    output_names(1)='Qe'
+    output_names(2)='Qi'
 !===============================
 
     a=r(nn)
@@ -55,6 +61,7 @@ contains
     ALLOCATE( dni(nn) )
     ALLOCATE( dq(nn) )
     ALLOCATE( dkappa(nn) )
+    ALLOCATE( dvol(nn) )
 
     cs = SQRT(1E3*eV*te/mD)
     call GRADIENT(nn,r,dr)
@@ -64,6 +71,7 @@ contains
     call GRADIENT(nn,ni,dni)
     call GRADIENT(nn,q,dq)
     call GRADIENT(nn,kappa,dkappa)
+    call GRADIENT(nn,vol,dvol)
 
 !===============================
 
@@ -72,11 +80,29 @@ contains
     ALLOCATE( input(nn,num_input)   )
     ALLOCATE( output(nn,num_output) )
     DO j=1,num_input
-       IF (DEBUG) WRITE(*,*)trim(input_names(j))
+       dummy=1
        SELECT CASE (trim(input_names(j)))
        CASE('r')
-          input(:,j) = r/a                     !normalized minor radius
+          input(:,j) = r                       !minor radius
        CASE('rmaj')
+          input(:,j) = rmaj                    !major radius
+       CASE('te')
+          input(:,j) = te                      !main electron temperature
+       CASE('ti')
+          input(:,j) = ti                      !main ion temperature
+       CASE('ne')
+          input(:,j) = ne                      !electron density
+       CASE('ni')
+          input(:,j) = ni                      !main ion density
+       CASE('cs')
+          input(:,j) = cs                      !electron sound speed
+       CASE('vol')
+          input(:,j) = vol                     !volume
+       CASE('dvol')
+          input(:,j) = dvol                    !differential volume
+       CASE('rmin_loc')
+          input(:,j) = r/a                     !normalized minor radius
+       CASE('rmaj_loc')
           input(:,j) = rmaj/a                  !normalized major radius
        CASE('kappa')
           input(:,j) = kappa                   !elongation
@@ -100,7 +126,15 @@ contains
           input(:,j) = -a*dne/ne               !electron density scale length
        CASE('lni')
           input(:,j) = -a*dni/ni               !ion density scale length
+       CASE DEFAULT
+          dummy=0
        END SELECT
+       IF (dummy) THEN
+          IF (debug) WRITE(*,*)'BRAINFUSE input variable: ',trim(input_names(j))
+       ELSE
+          WRITE(*,*)'ERROR in BRAINFUSE: input variable`',trim(input_names(j)),'` is not defined!'
+          STOP
+       ENDIF
     ENDDO
 !===============================
 
@@ -109,9 +143,8 @@ contains
 !===============================
 
     IF (debug) THEN
-       write(*,*)'Running brainfuse!'
-       WRITE(6,10) nn, num_input, num_output
-10     FORMAT('nn= ',i4,' num_input= ',i4,' num_output= ',i4)
+!       WRITE(6,10) nn, num_input, num_output
+!10     FORMAT('nn= ',i4,' num_input= ',i4,' num_output= ',i4)
 !       write(*,*) 'r=',r
 !       write(*,*) 'Bt=',bt
 !       write(*,*) 'Ip=',ip
@@ -125,10 +158,22 @@ contains
 !       write(*,*) 'vol=',vol
 !       write(*,*) 'wt=',wt
 !       WRITE(6,*)'dr=',dr
-       WRITE(6,*)'Qe=',output(:,1)
-       WRITE(6,*)'Qi=',output(:,2)
-    ENDIF
+!       WRITE(6,*)'Qe=',output(:,1)
+!       WRITE(6,*)'Qi=',output(:,2)
 
+       OPEN(unit=17,file='brainfuse_in.dat',FORM='FORMATTED',STATUS='REPLACE')
+       WRITE(17,'(100(2X,A15))')(input_names(j),j=1,num_input)
+       DO i=1,nn
+          WRITE(17,'(100(1X,e16.9))')(input(i,j),j=1,num_input)
+       ENDDO
+       CLOSE(17)
+       OPEN(unit=17,file='brainfuse_out.dat',FORM='FORMATTED',STATUS='REPLACE')
+       WRITE(17,'(100(2X,A15))')(output_names(j),j=1,num_output)
+       DO i=1,nn
+          WRITE(17,'(100(1X,e16.9))')(output(i,j),j=1,num_output)
+       ENDDO
+       CLOSE(17)
+    ENDIF
 !===============================
 
     DEALLOCATE( cs )
@@ -139,6 +184,7 @@ contains
     DEALLOCATE( dni )
     DEALLOCATE( dq )
     DEALLOCATE( dkappa )
+    DEALLOCATE( dvol )
     DEALLOCATE( input )
     DEALLOCATE( output )
     
