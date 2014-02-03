@@ -163,8 +163,10 @@ c
 
 c
 cOM  brainfuse variables
-      REAL*8, DIMENSION (:), ALLOCATABLE :: vol_brainfuse
-      REAL*8 dummy_brainfuse
+      REAL*8, DIMENSION (:), ALLOCATABLE :: vol_brain
+      REAL*8, DIMENSION (:), ALLOCATABLE :: entot_brain
+      REAL*8 dummy_brain
+      INTEGER*4 main_ion_brain
 
 c
 cJMP  mmm variables
@@ -3710,17 +3712,19 @@ c---------------------------------------------------------------------------
 
            !calculate volume
            fact = volfac * hcap *1E-6
-           ALLOCATE(vol_brainfuse(nj))
-           vol_brainfuse=vol_brainfuse*0+1
+           ALLOCATE(vol_brain(nj))
+           vol_brain=vol_brain*0+1
            DO jj=1,nj
-              CALL TRAPV(r,vol_brainfuse,fact,nj-jj+1,dummy_brainfuse)
-              vol_brainfuse(nj-jj+1)=dummy_brainfuse
+              CALL TRAPV(r,vol_brain,fact,nj-jj+1,dummy_brain)
+              vol_brain(nj-jj+1)=dummy_brain
            ENDDO
 
-           !this loop should be right before the BRAINFUSE call
-           !since the variable jj is used for identifying the deuterium species
-           DO jj=1,nprim        ! loop to find index of deuterium
-              IF(atw(jj) .EQ. 2.)  EXIT
+           ! loop to find index of deuterium and calculate total ion density
+           ALLOCATE(entot_brain(nj))
+           entot_brain=0
+           DO jj=1,nprim
+              IF(atw(jj) .EQ. 2.) main_ion_brain=jj
+              entot_brain=entot_brain+en(:,jj)
            ENDDO
 
            CALL BRAINFUSE(nj,   ! number of points
@@ -3730,15 +3734,17 @@ c---------------------------------------------------------------------------
      .          ravg_r*0.01,    ! R[j] : major radius [m]; R=rmajor+shif(j) [m]
      .          kappa_nj,       ! kappa[j] : elongation
      .          ene*1E6,        ! ne[j] : electron density [m^-3]
-     .          en(:,jj)*1E6,   ! ni[j] : ion density [m^-3]
+     .          en(:,main_ion_brain)*1E6,   ! ni[j] : ion density [m^-3]
      .          te,             ! Te[j] : electron temperature [keV]
      .          ti,             ! Ti[j]: ion temperature [keV]
      .          q,              ! q[j] : safety factor with sign
-     .          vol_brainfuse,  ! vol[j] : volume enclosed by each flux surface [m^3]
-     .          angrot          ! wt[j] : toroidal rotation [1/s]
+     .          vol_brain,  ! vol[j] : volume enclosed by each flux surface [m^3]
+     .          angrot,         ! wt[j] : toroidal rotation [1/s]
+     .          (ene*te+entot_brain*ti+2./3.*(wbeam+walp))*1.6022e-10 ! press[j] : total pressure [nt/m**2]
      .          )
            
-           DEALLOCATE(vol_brainfuse)
+           DEALLOCATE(entot_brain)
+           DEALLOCATE(vol_brain)
 
         ENDIF  brainfuse_sect
 

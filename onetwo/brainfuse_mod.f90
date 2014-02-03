@@ -21,29 +21,27 @@ contains
 
 end function to_lower
   
-  SUBROUTINE GRADIENT(nn,y,yy)
+  SUBROUTINE GRADIENT(nn, y, yy)
     IMPLICIT NONE
-    INTEGER*4 nn,j
-    REAL*8 y(nn),yy(nn)
+    INTEGER*4 nn, j
+    REAL*8 y(nn), yy(nn)
 
-    yy(1)=y(2)-y(1)
-    yy(2:nn-1)=(y(3:nn)-y(1:nn-2))/2.
-    yy(nn)=y(nn)-y(nn-1)
+    yy(1) = y(2)-y(1)
+    yy(2:nn-1) = (y(3:nn)-y(1:nn-2))/2.
+    yy(nn) = y(nn)-y(nn-1)
 
   END SUBROUTINE GRADIENT
 
-  subroutine brainfuse(nn,bt,ip,r,rmaj,kappa,ne,ni,te,ti,q,vol,wt)
+  subroutine brainfuse(nn, bt, ip, r, rmaj, kappa, ne, ni, te, ti, q, vol, wt, press)
     IMPLICIT NONE
     INTEGER*4 debug, nn, j, i, dummy
     PARAMETER (debug=1)
-    REAL*8  bt, ip, &
-         r(nn), rmaj(nn), kappa(nn), &
-         ne(nn), ni(nn), te(nn), ti(nn), &
-         q(nn), vol(nn), wt(nn)
-    REAL*8, DIMENSION (:), ALLOCATABLE :: cs, dte, dti, dne, dni, dr, dq, dkappa, dvol
-    REAL*8 a, mD, eV
-    PARAMETER (mD= 3.3475E-27)
-    PARAMETER (eV= 1.60217646E-19)
+    REAL*8  bt, ip, r(nn), rmaj(nn), kappa(nn), ne(nn), ni(nn), te(nn), ti(nn), q(nn), vol(nn), wt(nn), press(nn)
+    REAL*8, DIMENSION (:), ALLOCATABLE :: cs, bunit, dte, dti, dne, dni, dr, dq, dkappa, dvol, dwt, rhos
+    REAL*8 a, mD, eV, pi
+    PARAMETER (mD = 3.3475E-27)
+    PARAMETER (eV = 1.60217646E-19)
+    PARAMETER (pi = 3.14159265359)
 !        _mE = 9.10938291E-31
 !        _c = 3E8
 !        _e0 = 8.8541878176E-12
@@ -62,7 +60,7 @@ end function to_lower
     input_names(3)='kappa'
     input_names(4)='taus'
     input_names(5)='aus'
-    input_names(6)='q'
+    input_names(6)='press'
 
     output_names(1)='Qe'
     output_names(2)='Qi'
@@ -71,6 +69,8 @@ end function to_lower
     a=r(nn)
 
     ALLOCATE( cs(nn) )
+    ALLOCATE( rhos(nn) )
+    ALLOCATE( bunit(nn) )
     ALLOCATE( dr(nn) )
     ALLOCATE( dte(nn) )
     ALLOCATE( dti(nn) )
@@ -79,8 +79,12 @@ end function to_lower
     ALLOCATE( dq(nn) )
     ALLOCATE( dkappa(nn) )
     ALLOCATE( dvol(nn) )
+    ALLOCATE( dwt(nn) )
 
     cs = SQRT(1E3*eV*te/mD)
+    rhos=1.022e-4*SQRT(1E3*eV*ti)/mD/Bt/a
+    bunit = cs*mD/(eV*rhos*a)
+
     call GRADIENT(nn,r,dr)
     call GRADIENT(nn,te,dte)
     call GRADIENT(nn,ti,dti)
@@ -112,11 +116,13 @@ end function to_lower
        CASE('ni')
           input(:,j) = ni                      !main ion density
        CASE('cs')
-          input(:,j) = cs                      !electron sound speed
+          input(:,j) = cs                      !ion sound speed
        CASE('vol')
           input(:,j) = vol                     !volume
        CASE('dvol')
           input(:,j) = dvol                    !differential volume
+       CASE('press')
+          input(:,j) = press                   !total pressure
        CASE('rmin_loc')
           input(:,j) = r/a                     !normalized minor radius
        CASE('rmaj_loc')
@@ -125,6 +131,8 @@ end function to_lower
           input(:,j) = kappa                   !elongation
        CASE('dkappa')
           input(:,j) = dkappa                  !elongation shear
+       CASE('s_kappa_loc')
+          input(:,j) = r*dkappa                !normalized elongation shear
        CASE('taus')
           input(:,j) = ti/te                   !temperature ratio
        CASE('aus')
@@ -133,8 +141,26 @@ end function to_lower
           input(:,j) = q                       !safety factor
        CASE('dq')
           input(:,j) = dq                      !safety factor shear
+       CASE('q_prime_loc')
+          input(:,j) = r*dq                    !normalized safety factor shear
+       CASE('gamma_p')
+          input(:,j) = -rmaj*dwt               !gamma P
+       CASE('gamma_e')
+          input(:,j) = -dwt*r/q                !gamma E
        CASE('vpar')
           input(:,j) = -ABS(Ip)/Ip*rmaj*wt/cs  !vpar
+       CASE('vpar_shear')
+          input(:,j) = -ABS(Ip)/Ip*(-rmaj*dwt)*r/cs  !vpar shear
+       CASE('vexb_shear')
+          input(:,j) = -ABS(Ip)/Ip*(-dwt*r/q)*r/cs   !vper shear
+       CASE('betae')
+          input(:,j) = 8*pi*ne*te/bunit**2     !electron beta
+       CASE('xnue')
+          input(:,j) = 1.33E5*(ne/1E20)/te**1.5 * a/cs     !normalized ei collisionality
+       CASE('debye')
+          input(:,j) = 2.35E-5*SQRT(te/(ne/1E20)) / (rhos*a)     !normalized Debye length
+       CASE('qgb')
+          input(:,j) = ne*cs*(te*1E3*eV)*(rhos/a)**2     !normalized Debye length
        CASE('lte')
           input(:,j) = -a*dte/te               !electron temperature scale length
        CASE('lti')
@@ -194,6 +220,8 @@ end function to_lower
 !===============================
 
     DEALLOCATE( cs )
+    DEALLOCATE( rhos )
+    DEALLOCATE( bunit )
     DEALLOCATE( dr )
     DEALLOCATE( dte )
     DEALLOCATE( dti )
@@ -202,6 +230,7 @@ end function to_lower
     DEALLOCATE( dq )
     DEALLOCATE( dkappa )
     DEALLOCATE( dvol )
+    DEALLOCATE( dwt )
     DEALLOCATE( input )
     DEALLOCATE( output )
     
