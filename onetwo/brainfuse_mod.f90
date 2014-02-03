@@ -3,6 +3,23 @@ module brainfuse_mod
   integer include_brainfuse
   
 contains
+
+  FUNCTION to_lower(strIn) result(strOut)
+    IMPLICIT NONE
+    character(len=*), intent(in) :: strIn
+    character(len=len(strIn)) :: strOut
+    integer :: i,j
+
+    do i = 1, len(strIn)
+       j = iachar(strIn(i:i))
+       if (j>= iachar("A") .and. j<=iachar("Z") ) then
+          strOut(i:i) = achar(iachar(strIn(i:i))+32)
+       else
+          strOut(i:i) = strIn(i:i)
+       end if
+    end do
+
+end function to_lower
   
   SUBROUTINE GRADIENT(nn,y,yy)
     IMPLICIT NONE
@@ -81,7 +98,7 @@ contains
     ALLOCATE( output(nn,num_output) )
     DO j=1,num_input
        dummy=1
-       SELECT CASE (trim(input_names(j)))
+       SELECT CASE (to_lower(trim(input_names(j))))
        CASE('r')
           input(:,j) = r                       !minor radius
        CASE('rmaj')
