@@ -23,7 +23,7 @@ contains
          r(nn), rmaj(nn), kappa(nn), &
          ne(nn), ni(nn), te(nn), ti(nn), &
          q(nn), vol(nn), wt(nn)
-    REAL*8, DIMENSION (:), ALLOCATABLE :: cs, dte, dti, dne, dni, dr
+    REAL*8, DIMENSION (:), ALLOCATABLE :: cs, dte, dti, dne, dni, dr, dq, dkappa
     REAL*8 a, mD, eV
     PARAMETER (mD= 3.3475E-27)
     PARAMETER (eV= 1.60217646E-19)
@@ -31,10 +31,18 @@ contains
 !        _c = 3E8
 !        _e0 = 8.8541878176E-12
 !        _Kb = 1.3806505E-23
+    CHARACTER input_names(20)*255
 
     REAL*4, DIMENSION (:,:), ALLOCATABLE :: input, output
     INTEGER num_data, num_input, num_output
 
+!===============================
+    input_names(1)='r'
+    input_names(2)='rmaj'
+    input_names(3)='kappa'
+    input_names(4)='taus'
+    input_names(5)='aus'
+    input_names(6)='q'
 !===============================
 
     a=r(nn)
@@ -45,6 +53,8 @@ contains
     ALLOCATE( dti(nn) )
     ALLOCATE( dne(nn) )
     ALLOCATE( dni(nn) )
+    ALLOCATE( dq(nn) )
+    ALLOCATE( dkappa(nn) )
 
     cs = SQRT(1E3*eV*te/mD)
     call GRADIENT(nn,r,dr)
@@ -52,6 +62,8 @@ contains
     call GRADIENT(nn,ti,dti)
     call GRADIENT(nn,ne,dne)
     call GRADIENT(nn,ni,dni)
+    call GRADIENT(nn,q,dq)
+    call GRADIENT(nn,kappa,dkappa)
 
 !===============================
 
@@ -59,18 +71,37 @@ contains
     num_output=2
     ALLOCATE( input(nn,num_input)   )
     ALLOCATE( output(nn,num_output) )
-    input(:,1) = r/a                     !normalized minor radius
-    input(:,2) = rmaj/a                  !normalized major radius
-    input(:,3) = kappa                   !elongation
-    input(:,4) = ti/te                   !temperature ratio
-    input(:,5) = ni/ne                   !density ratio
-    input(:,6) = q                       !safety factor
-    !input(:,7) = -sign(Ip)*rmaj*wt/cs    !vpar
-    !input(:,8) = -a*dte/te               !electron temperature scale length
-    !input(:,9) = -a*dti/ti               !ion temperature scale length
-    !input(:,10) = -a*dne/ne               !electron density scale length
-    !input(:,11) = -a*dni/ni               !ion density scale length
-
+    DO j=1,num_input
+       IF (DEBUG) WRITE(*,*)trim(input_names(j))
+       SELECT CASE (trim(input_names(j)))
+       CASE('r')
+          input(:,j) = r/a                     !normalized minor radius
+       CASE('rmaj')
+          input(:,j) = rmaj/a                  !normalized major radius
+       CASE('kappa')
+          input(:,j) = kappa                   !elongation
+       CASE('dkappa')
+          input(:,j) = dkappa                  !elongation shear
+       CASE('taus')
+          input(:,j) = ti/te                   !temperature ratio
+       CASE('aus')
+          input(:,j) = ni/ne                   !density ratio
+       CASE('q')
+          input(:,j) = q                       !safety factor
+       CASE('dq')
+          input(:,j) = dq                      !safety factor shear
+       CASE('vpar')
+          input(:,j) = -ABS(Ip)/Ip*rmaj*wt/cs  !vpar
+       CASE('lte')
+          input(:,j) = -a*dte/te               !electron temperature scale length
+       CASE('lti')
+          input(:,j) = -a*dti/ti               !ion temperature scale length
+       CASE('lne')
+          input(:,j) = -a*dne/ne               !electron density scale length
+       CASE('lni')
+          input(:,j) = -a*dni/ni               !ion density scale length
+       END SELECT
+    ENDDO
 !===============================
 
     CALL run_net_on_data(nn, num_input, num_output, input, output, debug)
@@ -93,9 +124,9 @@ contains
 !       write(*,*) 'q=',q
 !       write(*,*) 'vol=',vol
 !       write(*,*) 'wt=',wt
-       WRITE(6,*)'dr=',dr
-!       WRITE(6,*)'Qe=',output(:,1)
-!       WRITE(6,*)'Qi=',output(:,2)
+!       WRITE(6,*)'dr=',dr
+       WRITE(6,*)'Qe=',output(:,1)
+       WRITE(6,*)'Qi=',output(:,2)
     ENDIF
 
 !===============================
@@ -106,6 +137,8 @@ contains
     DEALLOCATE( dti )
     DEALLOCATE( dne )
     DEALLOCATE( dni )
+    DEALLOCATE( dq )
+    DEALLOCATE( dkappa )
     DEALLOCATE( input )
     DEALLOCATE( output )
     
