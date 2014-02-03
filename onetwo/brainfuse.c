@@ -22,10 +22,17 @@ int run_net_on_data_(int * num_data, int * num_input, int * num_output, fann_typ
   if (debug) printf("- calculate\n");
   //////////////////////////////
   for(i = 0; i < *num_data; i++){
+    //load
     for(j = 0; j < *num_input; j++){
       calc_in[j]=input[i + j * *num_data];
     }
+    //scale in
+    fann_scale_input(ann,calc_in);
+    //compute
     calc_out = fann_run(ann, calc_in);
+    //scale out
+    fann_scale_output(ann,calc_out);
+    //save
     for(j = 0; j < *num_output; j++){
       output[i + j * *num_data]=calc_out[j];
     }

@@ -1,15 +1,15 @@
-module brainfuse_mod
+MODULE BRAINFUSE_MOD
 
-  integer include_brainfuse
+  INTEGER include_brainfuse
   
-contains
-
+CONTAINS
+!========================
+!========================
   FUNCTION to_lower(strIn) result(strOut)
     IMPLICIT NONE
-    character(len=*), intent(in) :: strIn
-    character(len=len(strIn)) :: strOut
-    integer :: i,j
-
+    CHARACTER(len=*), intent(in) :: strIn
+    CHARACTER(len=len(strIn)) :: strOut
+    INTEGER i,j
     do i = 1, len(strIn)
        j = iachar(strIn(i:i))
        if (j>= iachar("A") .and. j<=iachar("Z") ) then
@@ -18,26 +18,25 @@ contains
           strOut(i:i) = strIn(i:i)
        end if
     end do
-
-end function to_lower
-  
+  END FUNCTION to_lower
+!========================
+!========================
   SUBROUTINE GRADIENT(nn, y, yy)
     IMPLICIT NONE
     INTEGER*4 nn, j
     REAL*8 y(nn), yy(nn)
-
     yy(1) = y(2)-y(1)
     yy(2:nn-1) = (y(3:nn)-y(1:nn-2))/2.
     yy(nn) = y(nn)-y(nn-1)
-
   END SUBROUTINE GRADIENT
-
-  subroutine brainfuse(nn, bt, ip, r, rmaj, kappa, ne, ni, te, ti, q, vol, wt, press)
+!========================
+!========================
+  SUBROUTINE brainfuse(nn, bt, ip, r, rmaj, kappa, ne, ni, te, ti, q, vol, wt, press, Qe, Qi)
     IMPLICIT NONE
     INTEGER*4 debug, nn, j, i, dummy
     PARAMETER (debug=1)
-    REAL*8  bt, ip, r(nn), rmaj(nn), kappa(nn), ne(nn), ni(nn), te(nn), ti(nn), q(nn), vol(nn), wt(nn), press(nn)
-    REAL*8, DIMENSION (:), ALLOCATABLE :: cs, bunit, dte, dti, dne, dni, dr, dq, dkappa, dvol, dwt, rhos
+    REAL*8  bt, ip, r(nn), rmaj(nn), kappa(nn), delta(nn), ne(nn), ni(nn), te(nn), ti(nn), q(nn), vol(nn), wt(nn), press(nn), Qe(nn), Qi(nn)
+    REAL*8, DIMENSION (:), ALLOCATABLE :: cs, bunit, dte, dti, dne, dni, dr, dq, dkappa, ddelta, dvol, dwt, rhos, dpress
     REAL*8 a, mD, eV, pi
     PARAMETER (mD = 3.3475E-27)
     PARAMETER (eV = 1.60217646E-19)
@@ -54,7 +53,7 @@ end function to_lower
 
     IF (debug) WRITE(*,*)'Running brainfuse!'
 
-!===============================
+!========================
     input_names(1)='rmin_loc'
     input_names(2)='rmaj_loc'
     input_names(3)='kappa'
@@ -64,7 +63,7 @@ end function to_lower
 
     output_names(1)='Qe'
     output_names(2)='Qi'
-!===============================
+!========================
 
     a=r(nn)
 
@@ -78,8 +77,10 @@ end function to_lower
     ALLOCATE( dni(nn) )
     ALLOCATE( dq(nn) )
     ALLOCATE( dkappa(nn) )
+    ALLOCATE( ddelta(nn) )
     ALLOCATE( dvol(nn) )
     ALLOCATE( dwt(nn) )
+    ALLOCATE( dpress(nn) )
 
     cs = SQRT(1E3*eV*te/mD)
     rhos=1.022e-4*SQRT(1E3*eV*ti)/mD/Bt/a
@@ -87,14 +88,25 @@ end function to_lower
 
     call GRADIENT(nn,r,dr)
     call GRADIENT(nn,te,dte)
+    dte=dte/dr
     call GRADIENT(nn,ti,dti)
+    dti=dti/dr
     call GRADIENT(nn,ne,dne)
+    dne=dne/dr
     call GRADIENT(nn,ni,dni)
+    dni=dni/dr
     call GRADIENT(nn,q,dq)
+    dq=dq/dr
     call GRADIENT(nn,kappa,dkappa)
+    dkappa=dkappa/dr
+    call GRADIENT(nn,delta,ddelta)
+    ddelta=ddelta/dr
     call GRADIENT(nn,vol,dvol)
+    dvol=dvol/dr
+    call GRADIENT(nn,press,dpress)
+    dpress=dpress/dr
 
-!===============================
+!========================
 
     num_input=6
     num_output=2
@@ -108,21 +120,31 @@ end function to_lower
        CASE('rmaj')
           input(:,j) = rmaj                    !major radius
        CASE('te')
-          input(:,j) = te                      !main electron temperature
+          input(:,j) = te                      !electron temperature
+       CASE('dte')
+          input(:,j) = dte                     !electron temperature gradient
        CASE('ti')
           input(:,j) = ti                      !main ion temperature
+       CASE('dti')
+          input(:,j) = dti                     !main ion temperature gradient
        CASE('ne')
           input(:,j) = ne                      !electron density
+       CASE('dne')
+          input(:,j) = dne                      !electron density gradient
        CASE('ni')
           input(:,j) = ni                      !main ion density
+       CASE('dni')
+          input(:,j) = dni                      !main ion density gradient
        CASE('cs')
           input(:,j) = cs                      !ion sound speed
        CASE('vol')
           input(:,j) = vol                     !volume
        CASE('dvol')
-          input(:,j) = dvol                    !differential volume
+          input(:,j) = dvol                    !volume gradient
        CASE('press')
           input(:,j) = press                   !total pressure
+       CASE('dpress')
+          input(:,j) = dpress                  !total pressure gradient
        CASE('rmin_loc')
           input(:,j) = r/a                     !normalized minor radius
        CASE('rmaj_loc')
@@ -130,9 +152,15 @@ end function to_lower
        CASE('kappa')
           input(:,j) = kappa                   !elongation
        CASE('dkappa')
-          input(:,j) = dkappa                  !elongation shear
+          input(:,j) = dkappa                  !elongation gradient
        CASE('s_kappa_loc')
           input(:,j) = r*dkappa                !normalized elongation shear
+       CASE('delta')
+          input(:,j) = delta                   !triangularity
+       CASE('ddelta')
+          input(:,j) = ddelta                  !triangularity gradient
+       CASE('s_delta_loc')
+          input(:,j) = r*ddelta                !normalized triangularity shear
        CASE('taus')
           input(:,j) = ti/te                   !temperature ratio
        CASE('aus')
@@ -160,15 +188,17 @@ end function to_lower
        CASE('debye')
           input(:,j) = 2.35E-5*SQRT(te/(ne/1E20)) / (rhos*a)     !normalized Debye length
        CASE('qgb')
-          input(:,j) = ne*cs*(te*1E3*eV)*(rhos/a)**2     !normalized Debye length
-       CASE('lte')
+          input(:,j) = ne*cs*(te*1E3*eV)*(rhos/a)**2     !gyrobohm flux
+       CASE('lte','rlts_1')
           input(:,j) = -a*dte/te               !electron temperature scale length
-       CASE('lti')
+       CASE('lti','rlts_2')
           input(:,j) = -a*dti/ti               !ion temperature scale length
-       CASE('lne')
+       CASE('lne','rlns_1')
           input(:,j) = -a*dne/ne               !electron density scale length
-       CASE('lni')
+       CASE('lni','rlns_2')
           input(:,j) = -a*dni/ni               !ion density scale length
+       CASE('p_prime_loc','lp','rlps')
+          input(:,j) = -a*dpress/press         !total pressure scale length
        CASE DEFAULT
           dummy=0
        END SELECT
@@ -179,31 +209,37 @@ end function to_lower
           STOP
        ENDIF
     ENDDO
-!===============================
+!========================
 
     CALL run_net_on_data(nn, num_input, num_output, input, output, debug)
 
-!===============================
+!========================
+
+    DO j=1,num_output
+       dummy=1
+       SELECT CASE (to_lower(trim(output_names(j))))
+       CASE('Qe')
+          Qe=output(:,j)
+       CASE('Qe_Qnorm')
+          Qe=output(:,j)*dvol
+       CASE('Qi')
+          Qi=output(:,j)
+       CASE('Qi_Qnorm')
+          Qi=output(:,j)*dvol
+       CASE DEFAULT
+          dummy=0
+       END SELECT
+       IF (dummy) THEN
+          IF (debug) WRITE(*,*)'BRAINFUSE output variable: ',trim(output_names(j))
+       ELSE
+          WRITE(*,*)'ERROR in BRAINFUSE: output variable`',trim(output_names(j)),'` is not defined!'
+          STOP
+       ENDIF
+    ENDDO
+
+!========================
 
     IF (debug) THEN
-!       WRITE(6,10) nn, num_input, num_output
-!10     FORMAT('nn= ',i4,' num_input= ',i4,' num_output= ',i4)
-!       write(*,*) 'r=',r
-!       write(*,*) 'Bt=',bt
-!       write(*,*) 'Ip=',ip
-!       write(*,*) 'R=',rmaj
-!       write(*,*) 'kappa=',kappa
-!       write(*,*) 'ne=',ne
-!       write(*,*) 'ni=',ni
-!       write(*,*) 'te=',te
-!       write(*,*) 'ti=',ti
-!       write(*,*) 'q=',q
-!       write(*,*) 'vol=',vol
-!       write(*,*) 'wt=',wt
-!       WRITE(6,*)'dr=',dr
-!       WRITE(6,*)'Qe=',output(:,1)
-!       WRITE(6,*)'Qi=',output(:,2)
-
        OPEN(unit=17,file='brainfuse_in.dat',FORM='FORMATTED',STATUS='REPLACE')
        WRITE(17,'(100(2X,A15))')(input_names(j),j=1,num_input)
        DO i=1,nn
@@ -217,7 +253,7 @@ end function to_lower
        ENDDO
        CLOSE(17)
     ENDIF
-!===============================
+!========================
 
     DEALLOCATE( cs )
     DEALLOCATE( rhos )
@@ -229,8 +265,10 @@ end function to_lower
     DEALLOCATE( dni )
     DEALLOCATE( dq )
     DEALLOCATE( dkappa )
+    DEALLOCATE( ddelta )
     DEALLOCATE( dvol )
     DEALLOCATE( dwt )
+    DEALLOCATE( dpress )
     DEALLOCATE( input )
     DEALLOCATE( output )
     

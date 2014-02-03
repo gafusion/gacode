@@ -165,6 +165,7 @@ c
 cOM  brainfuse variables
       REAL*8, DIMENSION (:), ALLOCATABLE :: vol_brain
       REAL*8, DIMENSION (:), ALLOCATABLE :: entot_brain
+      REAL*8, DIMENSION (:), ALLOCATABLE :: Qe_brain,Qi_brain
       REAL*8 dummy_brain
       INTEGER*4 main_ion_brain
 
@@ -3727,6 +3728,9 @@ c---------------------------------------------------------------------------
               entot_brain=entot_brain+en(:,jj)
            ENDDO
 
+           ALLOCATE(Qe_brain(nj))
+           ALLOCATE(Qi_brain(nj))
+
            CALL BRAINFUSE(nj,   ! number of points
      .          btor*1.0e-4,    ! Bt : Toroidal magnetic field on axis [T] with sign
      .          totcur(1),      ! Ip : Plasma current [A] with sign
@@ -3740,11 +3744,16 @@ c---------------------------------------------------------------------------
      .          q,              ! q[j] : safety factor with sign
      .          vol_brain,  ! vol[j] : volume enclosed by each flux surface [m^3]
      .          angrot,         ! wt[j] : toroidal rotation [1/s]
-     .          (ene*te+entot_brain*ti+2./3.*(wbeam+walp))*1.6022e-10 ! press[j] : total pressure [nt/m**2]
+     .          (ene*te+entot_brain*ti+2./3.*(wbeam+walp))*1.6022e-10, ! press[j] : total pressure [nt/m**2]
+     .          Qe_brain,
+     .          Qi_brain
      .          )
-           
+
            DEALLOCATE(entot_brain)
            DEALLOCATE(vol_brain)
+
+           DEALLOCATE(Qe_brain)
+           DEALLOCATE(Qi_brain)
 
         ENDIF  brainfuse_sect
 
