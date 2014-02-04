@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "fann.h"
 
-int run_net_on_data_(int * num_data, int * num_input, int * num_output, fann_type * input, fann_type * output, int *debug){
+int run_net_on_data_(int * num_data, int * num_input, int * num_output, fann_type * input, fann_type * output, char *path, int *debug){
   struct fann *ann;
   fann_type *calc_in, *calc_out;
   int i, j, k;
@@ -10,9 +10,9 @@ int run_net_on_data_(int * num_data, int * num_input, int * num_output, fann_typ
   printf("%d %d %d\n",*num_data,*num_input,*num_output);
 
   //////////////////////////////
-  if (debug) printf("- network\n");
+  if (debug) printf("- network from %s\n",path);
   //////////////////////////////
-  ann = fann_create_from_file("brainfuse.net");
+  ann = fann_create_from_file(path);
   if(!ann){
       printf("Error creating ann --- ABORTING.\n");
       return -1;

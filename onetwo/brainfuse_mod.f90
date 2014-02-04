@@ -1,6 +1,7 @@
 MODULE BRAINFUSE_MOD
 
   INTEGER include_brainfuse
+  CHARACTER*256 brainfuse_path
   
 CONTAINS
 !========================
@@ -158,11 +159,11 @@ CONTAINS
        CASE('ne')
           input(:,j) = ne                      !electron density
        CASE('dne')
-          input(:,j) = dne                      !electron density gradient
+          input(:,j) = dne                     !electron density gradient
        CASE('ni')
           input(:,j) = ni                      !main ion density
        CASE('dni')
-          input(:,j) = dni                      !main ion density gradient
+          input(:,j) = dni                     !main ion density gradient
        CASE('cs')
           input(:,j) = cs                      !ion sound speed
        CASE('vol')
@@ -242,8 +243,8 @@ CONTAINS
        IF (slogi) input(:,j)=SIGN(input(:,j)*0+1,input(:,j))*(LOG10(ABS(input(:,j))+1)-ALOG10(1.))
     ENDDO
 !========================
-
-    CALL run_net_on_data(nn, num_input, num_output, input, output, debug)
+    
+    CALL run_net_on_data(nn, num_input, num_output, input, output, trim(brainfuse_path), debug)
 
 !========================
 

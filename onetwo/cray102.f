@@ -721,7 +721,7 @@ c                                                                              @
      .  set_ti_to_te,te_mult,ti_mult,ang_mult,ene_mult,
      .  include_ntv,c_p,delta_b_sqr,mp_polnum,mp_tornum , !C.K. Pan
      .  he3_frac,he3_thermal_spin_pol,
-     .  include_brainfuse
+     .  include_brainfuse, brainfuse_path
      
 c                                                                          
      %
@@ -2132,7 +2132,8 @@ c                                                                              @
 c                                                                              @
 c                 ONETWO INPUT SWITCHES FOR THE BRAINFUSE MODEL                @
 c    ------------------------------------------------------------------------  @
-      include_brainfuse = 3
+      include_brainfuse = 1
+      brainfuse_path = '/u/meneghini/onetwo/brainfuse.net'
 
 c   ---------------------------- MMM95 MODEL --------------------------------- @
 c   JMP, 3/23/06                                                               @
