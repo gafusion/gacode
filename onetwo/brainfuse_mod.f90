@@ -114,8 +114,9 @@ CONTAINS
     ALLOCATE( dpress(nn) )
 
     cs = SQRT(1E3*eV*te/mD)
-    rhos=1.022e-4*SQRT(1E3*eV*ti)/mD/Bt/a
+    rhos=SQRT(2.*1E3*eV*ti*mD)/(eV*ABS(Bt))/a
     bunit = cs*mD/(eV*rhos*a)
+    q=ABS(q)
 
     call GRADIENT(nn,r,dr)
     call GRADIENT(nn,te,dte)
@@ -164,6 +165,10 @@ CONTAINS
           input(:,j) = ni                      !main ion density
        CASE('dni')
           input(:,j) = dni                     !main ion density gradient
+       CASE('wt')
+          input(:,j) = wt                      !angular velocity
+       CASE('dwt')
+          input(:,j) = dwt                     !angular velocity gradient
        CASE('cs')
           input(:,j) = cs                      !ion sound speed
        CASE('vol')
@@ -213,9 +218,9 @@ CONTAINS
        CASE('betae')
           input(:,j) = 8*pi*ne*te/bunit**2     !electron beta
        CASE('xnue')
-          input(:,j) = 1.33E5*(ne/1E20)/te**1.5 * a/cs     !normalized ei collisionality
+          input(:,j) = 1.33E5*(ne/1E20)/te**1.5*a/cs     !normalized ei collisionality
        CASE('debye')
-          input(:,j) = 2.35E-5*SQRT(te/(ne/1E20)) / (rhos*a)     !normalized Debye length
+          input(:,j) = 2.35E-5*SQRT(te/(ne/1E20))/(rhos*a)     !normalized Debye length
        CASE('qgb')
           input(:,j) = ne*cs*(te*1E3*eV)*(rhos/a)**2     !gyrobohm flux
        CASE('lte','rlts_1')
@@ -240,18 +245,25 @@ CONTAINS
           WRITE(*,*)'ERROR in BRAINFUSE: input variable`',trim(input_names(j)),'` is not defined!'
           STOP
        ENDIF
-       IF (slogi) input(:,j)=SIGN(input(:,j)*0+1,input(:,j))*(LOG10(ABS(input(:,j))+1)-ALOG10(1.))
     ENDDO
 !========================
     
+    DO j=1,num_output
+       IF (slogi) input(:,j)=SIGN(input(:,j)*0+1,input(:,j))*(LOG10(ABS(input(:,j))+1)-ALOG10(1.))
+    ENDDO
+
     CALL run_net_on_data(nn, num_input, num_output, input, output, trim(brainfuse_path), debug)
+
+    DO j=1,num_output
+       IF (slogi) input(:,j)=SIGN(input(:,j)*0+1,input(:,j))*(10**(ABS(input(:,j))+LOG10(1.))-1)
+       IF (slogo) output(:,j)=SIGN(output(:,j)*0+1,output(:,j))*(10**(ABS(output(:,j))+LOG10(1.))-1)
+       IF (logo)  output(:,j)=10**output(:,j)
+    ENDDO
 
 !========================
 
     DO j=1,num_output
        dummy=1
-       IF (slogo) output(:,j)=SIGN(output(:,j)*0+1,output(:,j))*(10**(ABS(output(:,j))+LOG10(1.))-1)
-       IF (logo)  output(:,j)=10**output(:,j)
        SELECT CASE (to_lower(trim(output_names(j))))
        CASE('qe')
           Qe=output(:,j)
