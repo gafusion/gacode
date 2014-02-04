@@ -204,11 +204,11 @@ CONTAINS
        CASE('gamma_e')
           input(:,j) = -dwt*r/q                !gamma E
        CASE('vpar')
-          input(:,j) = -ABS(Ip)/Ip*rmaj*wt/cs  !vpar
+          input(:,j) = -SIGN(Ip*0+1,Ip)*rmaj*wt/cs  !vpar
        CASE('vpar_shear')
-          input(:,j) = -ABS(Ip)/Ip*(-rmaj*dwt)*r/cs  !vpar shear
+          input(:,j) = -SIGN(Ip*0+1,Ip)*(-rmaj*dwt)*r/cs  !vpar shear
        CASE('vexb_shear')
-          input(:,j) = -ABS(Ip)/Ip*(-dwt*r/q)*r/cs   !vper shear
+          input(:,j) = -SIGN(Ip*0+1,Ip)*(-dwt*r/q)*r/cs   !vper shear
        CASE('betae')
           input(:,j) = 8*pi*ne*te/bunit**2     !electron beta
        CASE('xnue')
@@ -239,7 +239,7 @@ CONTAINS
           WRITE(*,*)'ERROR in BRAINFUSE: input variable`',trim(input_names(j)),'` is not defined!'
           STOP
        ENDIF
-       IF (slogi) input(:,j)=input(:,j)/ABS(input(:,j))*(LOG10(ABS(input(:,j))+1)-ALOG10(1.))
+       IF (slogi) input(:,j)=SIGN(input(:,j)*0+1,input(:,j))*(LOG10(ABS(input(:,j))+1)-ALOG10(1.))
     ENDDO
 !========================
 
@@ -249,7 +249,7 @@ CONTAINS
 
     DO j=1,num_output
        dummy=1
-       IF (slogo) output(:,j)=output(:,j)/ABS(output(:,j))*(10**(ABS(output(:,j))+LOG10(1.))-1)
+       IF (slogo) output(:,j)=SIGN(output(:,j)*0+1,output(:,j))*(10**(ABS(output(:,j))+LOG10(1.))-1)
        IF (logo)  output(:,j)=10**output(:,j)
        SELECT CASE (to_lower(trim(output_names(j))))
        CASE('qe')
