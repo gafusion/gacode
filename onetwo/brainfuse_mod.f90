@@ -41,28 +41,58 @@ CONTAINS
     PARAMETER (mD = 3.3475E-27)
     PARAMETER (eV = 1.60217646E-19)
     PARAMETER (pi = 3.14159265359)
-!        _mE = 9.10938291E-31
-!        _c = 3E8
-!        _e0 = 8.8541878176E-12
-!        _Kb = 1.3806505E-23
+
+    INTEGER slogi, slogo, logo
     CHARACTER input_names(20)*255
     CHARACTER output_names(20)*255
-
     REAL*4, DIMENSION (:,:), ALLOCATABLE :: input, output
-    INTEGER num_data, num_input, num_output
+    INTEGER num_input, num_output
+
+!========================
 
     IF (debug) WRITE(*,*)'Running brainfuse!'
 
-!========================
+    num_input=6
+    num_output=2
     input_names(1)='rmin_loc'
     input_names(2)='rmaj_loc'
     input_names(3)='kappa'
     input_names(4)='taus'
-    input_names(5)='aus'
+    input_names(5)='as'
     input_names(6)='q'
-
     output_names(1)='Qe'
     output_names(2)='Qi'
+    slogi = 0
+    slogo = 0
+    logo  = 0
+
+    num_input=19
+    num_output=2
+    input_names(1 )='RMIN_LOC'
+    input_names(2 )='RMAJ_LOC'
+    input_names(3 )='kappa'
+    input_names(4 )='S_KAPPA_LOC'
+    input_names(5 )='RLNS_1'
+    input_names(6 )='RLNS_2'
+    input_names(7 )='RLTS_1'
+    input_names(8 )='RLTS_2'
+    input_names(9 )='P_PRIME_LOC'
+    input_names(10)='XNUE'
+    input_names(11)='DEBYE'
+    input_names(12)='VPAR'
+    input_names(13)='VEXB_SHEAR'
+    input_names(14)='VPAR_SHEAR'
+    input_names(15)='TAUS'
+    input_names(16)='AS'
+    input_names(17)='q'
+    input_names(18)='Q_PRIME_LOC'
+    input_names(19)='RHOS'
+    output_names(1)='Qe_Qnorm'
+    output_names(2)='Qi_Qnorm'
+    slogi = 1
+    slogo = 1
+    logo  = 1
+
 !========================
 
     a=r(nn)
@@ -108,8 +138,6 @@ CONTAINS
 
 !========================
 
-    num_input=6
-    num_output=2
     ALLOCATE( input(nn,num_input)   )
     ALLOCATE( output(nn,num_output) )
     DO j=1,num_input
@@ -163,7 +191,7 @@ CONTAINS
           input(:,j) = r*ddelta                !normalized triangularity shear
        CASE('taus')
           input(:,j) = ti/te                   !temperature ratio
-       CASE('aus')
+       CASE('as')
           input(:,j) = ni/ne                   !density ratio
        CASE('q')
           input(:,j) = q                       !safety factor
@@ -199,6 +227,9 @@ CONTAINS
           input(:,j) = -a*dni/ni               !ion density scale length
        CASE('p_prime_loc','lp','rlps')
           input(:,j) = -a*dpress/press         !total pressure scale length
+       CASE('rhos')
+          input(:,j) = rhos                    !rho
+
        CASE DEFAULT
           dummy=0
        END SELECT
@@ -208,6 +239,7 @@ CONTAINS
           WRITE(*,*)'ERROR in BRAINFUSE: input variable`',trim(input_names(j)),'` is not defined!'
           STOP
        ENDIF
+       IF (slogi) input(:,j)=input(:,j)/ABS(input(:,j))*(LOG10(ABS(input(:,j))+1)-ALOG10(1.))
     ENDDO
 !========================
 
@@ -217,17 +249,21 @@ CONTAINS
 
     DO j=1,num_output
        dummy=1
+       IF (slogo) output(:,j)=output(:,j)/ABS(output(:,j))*(10**(ABS(output(:,j))+LOG10(1.))-1)
+       IF (logo)  output(:,j)=10**output(:,j)
        SELECT CASE (to_lower(trim(output_names(j))))
        CASE('qe')
           Qe=output(:,j)
        CASE('qe_qnorm')
           output(:,j)=output(:,j)*dvol
           Qe=output(:,j)
+          output_names(j)='Qe'
        CASE('qi')
           Qi=output(:,j)
        CASE('qi_qnorm')
           output(:,j)=output(:,j)*dvol
           Qi=output(:,j)
+          output_names(j)='Qi'
        CASE DEFAULT
           dummy=0
        END SELECT

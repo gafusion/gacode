@@ -5929,7 +5929,7 @@ c
           call tspline (psi_jk,rmajavnpsi,npsi,bpar,cs2spline,kpsi,
      .                  ier,tension,aspline,bspline,cspline,dspline,
      .                  espline,fspline,tmax,psir,ravg_r,nj)
-                call tspline (psi_jk,elongx,npsi,bpar,cs2spline,kpsi,
+          call tspline (psi_jk,elongx,npsi,bpar,cs2spline,kpsi,
      .                  ier,tension,aspline,bspline,cspline,dspline,
      .                  espline,fspline,tmax,psir,kappa_nj,nj)
               
