@@ -44,9 +44,10 @@ CONTAINS
     PARAMETER (pi = 3.14159265359)
 
     INTEGER slogi, slogo, logo
-    CHARACTER input_names(20)*255
-    CHARACTER output_names(20)*255
-    REAL*4, DIMENSION (:,:), ALLOCATABLE :: input, output
+    CHARACTER input_names(50)*255
+    CHARACTER output_names(50)*255
+    CHARACTER dbgtbl_names(100)*255
+    REAL*4, DIMENSION (:,:), ALLOCATABLE :: input, output, dbgtbl
     INTEGER num_input, num_output
 
 !========================
@@ -92,56 +93,72 @@ CONTAINS
     output_names(2)='Qi_Qnorm'
     slogi = 1
     slogo = 1
-    logo  = 1
+    logo  = 0
 
 !========================
 
     a=r(nn)
-
-    ALLOCATE( cs(nn) )
-    ALLOCATE( rhos(nn) )
-    ALLOCATE( bunit(nn) )
-    ALLOCATE( dr(nn) )
-    ALLOCATE( dte(nn) )
-    ALLOCATE( dti(nn) )
-    ALLOCATE( dne(nn) )
-    ALLOCATE( dni(nn) )
-    ALLOCATE( dq(nn) )
-    ALLOCATE( dkappa(nn) )
-    ALLOCATE( ddelta(nn) )
-    ALLOCATE( dvol(nn) )
-    ALLOCATE( dwt(nn) )
-    ALLOCATE( dpress(nn) )
-
-    cs = SQRT(1E3*eV*te/mD)
-    rhos=SQRT(2.*1E3*eV*ti*mD)/(eV*ABS(Bt))/a
-    bunit = cs*mD/(eV*rhos*a)
     q=ABS(q)
 
+    ALLOCATE( cs(nn) )
+    cs = SQRT(1E3*eV*te/mD)
+
+    ALLOCATE( rhos(nn) )
+    rhos=SQRT(2.*1E3*eV*ti*mD)/(eV*ABS(Bt))/a
+
+    ALLOCATE( bunit(nn) )
+    bunit = cs*mD/(eV*rhos*a)
+
+    ALLOCATE( dr(nn) )
     call GRADIENT(nn,r,dr)
+
+    ALLOCATE( dte(nn) )
     call GRADIENT(nn,te,dte)
     dte=dte/dr
+
+    ALLOCATE( dti(nn) )
     call GRADIENT(nn,ti,dti)
     dti=dti/dr
+
+    ALLOCATE( dne(nn) )
     call GRADIENT(nn,ne,dne)
     dne=dne/dr
+
+    ALLOCATE( dni(nn) )
     call GRADIENT(nn,ni,dni)
     dni=dni/dr
+
+    ALLOCATE( dq(nn) )
     call GRADIENT(nn,q,dq)
     dq=dq/dr
+
+    ALLOCATE( dkappa(nn) )
     call GRADIENT(nn,kappa,dkappa)
     dkappa=dkappa/dr
+
+    ALLOCATE( ddelta(nn) )
     call GRADIENT(nn,delta,ddelta)
     ddelta=ddelta/dr
+
+    ALLOCATE( dvol(nn) )
     call GRADIENT(nn,vol,dvol)
     dvol=dvol/dr
+
+    ALLOCATE( dwt(nn) )
+    call GRADIENT(nn,wt,dwt)
+    dwt=dwt/dr
+
+    ALLOCATE( dpress(nn) )
     call GRADIENT(nn,press,dpress)
     dpress=dpress/dr
 
 !========================
 
     ALLOCATE( input(nn,num_input)   )
+    input=0.
     ALLOCATE( output(nn,num_output) )
+    output=0.
+
     DO j=1,num_input
        dummy=1
        SELECT CASE (to_lower(trim(input_names(j))))
@@ -235,7 +252,6 @@ CONTAINS
           input(:,j) = -a*dpress/press         !total pressure scale length
        CASE('rhos')
           input(:,j) = rhos                    !rho
-
        CASE DEFAULT
           dummy=0
        END SELECT
@@ -248,14 +264,16 @@ CONTAINS
     ENDDO
 !========================
     
-    DO j=1,num_output
+    DO j=1,num_input
        IF (slogi) input(:,j)=SIGN(input(:,j)*0+1,input(:,j))*(LOG10(ABS(input(:,j))+1)-ALOG10(1.))
     ENDDO
 
-    CALL run_net_on_data(nn, num_input, num_output, input, output, trim(brainfuse_path), debug)
+    CALL run_net_on_data(nn, num_input, num_output, input, output, trim(brainfuse_path)//CHAR(0), debug)
 
-    DO j=1,num_output
+    DO j=1,num_input
        IF (slogi) input(:,j)=SIGN(input(:,j)*0+1,input(:,j))*(10**(ABS(input(:,j))+LOG10(1.))-1)
+    ENDDO
+    DO j=1,num_output
        IF (slogo) output(:,j)=SIGN(output(:,j)*0+1,output(:,j))*(10**(ABS(output(:,j))+LOG10(1.))-1)
        IF (logo)  output(:,j)=10**output(:,j)
     ENDDO
@@ -268,15 +286,11 @@ CONTAINS
        CASE('qe')
           Qe=output(:,j)
        CASE('qe_qnorm')
-          output(:,j)=output(:,j)*dvol
-          Qe=output(:,j)
-          output_names(j)='Qe'
+          Qe=output(:,j)*dvol
        CASE('qi')
           Qi=output(:,j)
        CASE('qi_qnorm')
-          output(:,j)=output(:,j)*dvol
-          Qi=output(:,j)
-          output_names(j)='Qi'
+          Qi=output(:,j)*dvol
        CASE DEFAULT
           dummy=0
        END SELECT
@@ -287,22 +301,33 @@ CONTAINS
           STOP
        ENDIF
     ENDDO
-
+    
 !========================
 
     IF (debug) THEN
-       OPEN(unit=17,file='brainfuse_in.dat',FORM='FORMATTED',STATUS='REPLACE')
-       WRITE(17,'(100(2X,A15))')(input_names(j),j=1,num_input)
+
+       ALLOCATE( dbgtbl(nn,num_input+num_output+1) )
+
+       DO j=1,num_input
+          dbgtbl_names(j)=input_names(j)
+          dbgtbl(:,j)=input(:,j)
+       ENDDO
+       DO j=1,num_output
+          dbgtbl_names(num_input+j)=output_names(j)
+          dbgtbl(:,num_input+j)=output(:,j)
+       ENDDO
+       dbgtbl_names(num_input+num_output+1)='dvol'
+       dbgtbl(:,num_input+num_output+1)=dvol
+
+       OPEN(unit=17,file='brainfuse.dat',FORM='FORMATTED',STATUS='REPLACE')
+       WRITE(17,'(100(2X,A15))')(dbgtbl_names(j),j=1,num_input+num_output+1)
        DO i=1,nn
-          WRITE(17,'(100(1X,e16.9))')(input(i,j),j=1,num_input)
+          WRITE(17,'(100(1X,e16.9))')(dbgtbl(i,j),j=1,num_input+num_output+1)
        ENDDO
        CLOSE(17)
-       OPEN(unit=17,file='brainfuse_out.dat',FORM='FORMATTED',STATUS='REPLACE')
-       WRITE(17,'(100(2X,A15))')(output_names(j),j=1,num_output)
-       DO i=1,nn
-          WRITE(17,'(100(1X,e16.9))')(output(i,j),j=1,num_output)
-       ENDDO
-       CLOSE(17)
+
+       DEALLOCATE( dbgtbl )
+
     ENDIF
 
 !========================
@@ -321,6 +346,7 @@ CONTAINS
     DEALLOCATE( dvol )
     DEALLOCATE( dwt )
     DEALLOCATE( dpress )
+
     DEALLOCATE( input )
     DEALLOCATE( output )
     
