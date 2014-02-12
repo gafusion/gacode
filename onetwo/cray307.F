@@ -166,6 +166,8 @@ cOM  brainfuse variables
       REAL*8, DIMENSION (:), ALLOCATABLE :: vol_brain
       REAL*8, DIMENSION (:), ALLOCATABLE :: entot_brain
       REAL*8, DIMENSION (:), ALLOCATABLE :: Qe_brain,Qi_brain
+      REAL*8, DIMENSION (:), ALLOCATABLE :: Ge_brain,Gi_brain
+      REAL*8, DIMENSION (:), ALLOCATABLE :: Pr_brain
       REAL*8 dummy_brain
       INTEGER*4 main_ion_brain
 
@@ -3730,9 +3732,12 @@ c---------------------------------------------------------------------------
 
            ALLOCATE(Qe_brain(nj))
            ALLOCATE(Qi_brain(nj))
+           ALLOCATE(Ge_brain(nj))
+           ALLOCATE(Gi_brain(nj))
+           ALLOCATE(Pr_brain(nj))
 
            CALL BRAINFUSE(nj,   ! number of points
-     .          btor*1.0e-4,    ! Bt : Toroidal magnetic field on axis [T] with sign
+     .          btgeom*1E-4,    ! Bt : Toroidal magnetic field at geometric center [T] with sign
      .          totcur(1),      ! Ip : Plasma current [A] with sign
      .          r*0.01,         ! r[j] : radius [m];  a=r[nj] minor radius [m]
      .          ravg_r*0.01,    ! R[j] : major radius [m]; R=rmajor+shif(j) [m]
@@ -3746,7 +3751,10 @@ c---------------------------------------------------------------------------
      .          angrot,         ! wt[j] : toroidal rotation [1/s]
      .          (ene*te+entot_brain*ti+2./3.*(wbeam+walp))*1.6022e-10, ! press[j] : total pressure [nt/m**2]
      .          Qe_brain,
-     .          Qi_brain
+     .          Qi_brain,
+     .          Ge_brain,
+     .          Gi_brain,
+     .          Pr_brain
      .          )
 
            DEALLOCATE(entot_brain)
@@ -3754,6 +3762,9 @@ c---------------------------------------------------------------------------
 
            DEALLOCATE(Qe_brain)
            DEALLOCATE(Qi_brain)
+           DEALLOCATE(Ge_brain)
+           DEALLOCATE(Gi_brain)
+           DEALLOCATE(Pr_brain)
 
         ENDIF  brainfuse_sect
 

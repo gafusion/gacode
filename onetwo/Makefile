@@ -219,7 +219,7 @@ all: $(NAME) data_files
 
 $(NAME):           $(OBJECTS) $(OBJECTS_P) $(LIBRARIES) brainfuse.o
 	@echo "loading .... "
-	$(LOAD)  -L /u/meneghini/fann/src/  $(OBJECTS) brainfuse.o $(NETCDF_LIB) $(LIBRARIES) $(FTN90LIB) -lfann
+	$(LOAD)  -L /u/meneghini/fann/src/  $(OBJECTS) brainfuse.o $(NETCDF_LIB) $(LIBRARIES) $(FTN90LIB) -ldoublefann
 	$(PROTECT) $(NAME)
 #	cp $(NAME) $(INSTALLDIR)
 
