@@ -1,7 +1,7 @@
 MODULE BRAINFUSE_MOD
 
-  INTEGER include_brainfuse
-  CHARACTER*256 brainfuse_path
+  INTEGER include_brainfuse     ! convenience switch meant to be used by external routine calling this module
+  CHARACTER*256 brainfuse_path  ! path to the FANN .net file where the neural network topology and weights are specified
   
 CONTAINS
 !========================
@@ -23,6 +23,8 @@ CONTAINS
 !========================
 !========================
   SUBROUTINE GRADIENT(nn, y, yy)
+    ! Gradient computed using central differences in the interior and first differences at the boundaries
+    ! This function is numerically equivalent the Python numpy.gradient function
     IMPLICIT NONE
     INTEGER*4 nn, j
     REAL*8 y(nn), yy(nn)
@@ -32,7 +34,27 @@ CONTAINS
   END SUBROUTINE GRADIENT
 !========================
 !========================
-  SUBROUTINE brainfuse(nn, bt, ip, r, rmaj, kappa, ne, ni, te, ti, q, vol, wt, press, Qe, Qi, Ge, Gi, Pr)
+  SUBROUTINE brainfuse( &
+    nn,    & ! number of points
+    bt,    & ! Bt : Toroidal magnetic field at geometric center [T] (with sign)
+    ip,    & ! Ip : Plasma current [A] (with sign)
+    r,     & ! r[j] : minor radius of each flux surface [m];  a=r[nj] plasma minor radius [m]
+    rmaj,  & ! R[j] : major radius of each flux surface [m];  R=rmajor+shif(j) [m]
+    kappa, & ! kappa[j] : elongation of each flux surface
+    ne,    & ! ne[j] : electron density at each flux surface [m^-3]
+    ni,    & ! ni[j] : main ion density at each flux surface [m^-3]
+    te,    & ! Te[j] : electron temperature at each flux surface [keV]
+    ti,    & ! Ti[j] : main ion temperature at each flux surface [keV]
+    q,     & ! q[j] : safety factor of each flux surface (with sign)
+    vol,   & ! vol[j] : volume enclosed by each flux surface [m^3]
+    wt,    & ! wt[j] : toroidal rotation at each flux surface [1/s]
+    press, & ! press[j] : total pressure [nt/m**2] at each flux surface (including fast ions)
+    Qe,    & ! Qe[j] : (output) electron thermal conductive flux [J/m^2/s]
+    Qi,    & ! Qi[j] : (output) main ion thermal conductive flux [J/m^2/s]
+    Ge,    & ! Ge[j] : (output) electron particle conductive flux [1/m^2/s]
+    Gi,    & ! Gi[j] : (output) main ion particle conductive flux [1/m^2/s]
+    Pr     & ! Pr[j] : (output) rotation conductive flux [kg/s^2]
+    )
     IMPLICIT NONE
     INTEGER*4 debug, nn, j, i, dummy, num_extra
     PARAMETER (debug=1)
@@ -51,7 +73,9 @@ CONTAINS
     INTEGER num_input, num_output
 
 !========================
-
+    ! eventually this part should be directly parsed by the .net file specified in `brainfuse_path`
+    ! for now it is hardwired and changes to the NN input/output arrangements in the .net file
+    ! must be reflected here
     IF (debug) WRITE(*,*)'Running brainfuse!'
 
     num_input=19
