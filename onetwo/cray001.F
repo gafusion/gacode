@@ -34,7 +34,11 @@ c
       character rcs_id*63 
       save      rcs_id
       data      rcs_id /
+<<<<<<< HEAD
      ."$Id: cray001.F,v 1.24 2014/04/11 23:23:16 smithsp Exp $"/
+=======
+     ."$Id: cray001.F,v 1.21 2014/02/13 18:03:20 smithsp Exp $"/
+>>>>>>> 55d741e... updated to CVS version 5.51
 
 
       include 'quit.i'
@@ -109,6 +113,7 @@ D      call MPI_Barrier( MPI_COMM_WORLD,ierr)
                                 ! as defaults.  This is to permit the 
                                 ! new 'sun' cluster for between shot 
                                 ! autoONETWO.
+
 !$OMP parallel
 !$      print *,"OMP  thread number =",omp_get_thread_num()
 !$OMP end parallel
