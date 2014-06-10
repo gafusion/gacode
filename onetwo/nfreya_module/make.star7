@@ -1,0 +1,124 @@
+	                #compile on star with gfortran based mpif90
+			#FORT can be overwritten by command line argument:
+                        #eg gmake FORT=gfortran
+			# USEMPI=1 and MPI2_EXT is set internally
+                        # now so is no longer necessary. 
+                        #The following is supposed to suppres unresolved references: 
+			LINK = -Wl,-noinhibit-exec -Wl,-Map,mapfilename   
+			MACHINEOK = 1
+	                MACHINE = star7
+		 	LIBS      =
+                        #NOTE: acml lib has lapack,blas,plus other routines:       
+                        # CFLAGS should be set to be the C flags that include optimization
+                        CFLAGS          = -c -tp=k8-64e  # -DAdd_  -DNO_IEEE  
+
+ 
+			
+                        ifeq ($(strip $(FORT)),gfortran)
+				MPIBASE    = /u/stjohn/mpich2/gfortran
+                                MPICHDIR   = $(MPIBASE)
+                                MPI_CC     = $(MPICHDIR)/bin/mpicc
+                                AMD64      = 
+                                DEBUG      =  -g  -O  -Wuninitialized -fbounds-check
+ 			        LAPACK     = /usr/lib64/liblapack.so.3.0
+			        LINK = -Wl,-noinhibit-exec -Wl,-Map,mapfilename  
+                                CFLG = 
+				OPTIMIZE  = -O2
+				#OPTIMIZE  = -O 
+                                #OPTIMIZE  = -O4
+				NETCDF_DIR   = /u/stjohn/netcdf/netcdf-4.01-gfortran
+                                NETCDF_INC   = $(NETCDF_DIR)/include
+                                NETCDF_LIB   = $(NETCDF_DIR)/lib/libnetcdf.a
+				SPLINELIB = /p/linux/tools/lib/splinelib_ifort_64.a
+				ifdef   USEMPI
+				    FC  = $(MPICHDIR)/bin/mpif90
+	                            CXX = $(MPICHDIR)/bin/mpicc
+				    INC = ./
+				endif
+				UFILE_LIBS =/u/stjohn/ufile_libs/gfortran/LINUX/lib
+                        endif 
+			
+                        ifeq ($(strip $(FORT)),pgf95-nostar)
+				ACMLBASE = /opt/pgi/linux86-64/11.10/
+                                # make sure pgf90 is same one as in use by mpi.
+				# otherwise linkage problems ensue because mpif90
+                                # uses  pgf90 as defined in PATH but we 
+				# want pgf90 = $(ACMLBASE)/bin/pgf90
+				#export pgf90  $(ACMLBASE)/bin/pgf90
+				MPIBASE =/u/candy/local_software/mpi
+                                MPICHDIR   = $(MPIBASE)
+                                MPI_CC     = $(MPICHDIR)/bin/mpicc
+                                #AMD64      = 
+                                #DEBUG      =  -g  -fpe1  -O0  -traceback
+				DEBUG     = -g -Mbounds -Mchkfpstk -Mchkstk \
+                               	 		  -Mdwarf1  -Mpgicoff \
+						-Ktrap=inv,denorm,divz,ovf,unf,fp  -Mstabs
+				AMD64 = -tp=k8-64  -Mcache_align -DIS_64BIT
+                                LAPACKDIR = $(ACMLBASE)
+                        	LAPACK = $(LAPACKDIR)/lib/libacml.a
+			        LINK = -Wl,-noinhibit-exec -Wl,-Map,mapfilename
+		                OPTIMIZE     = -fast
+                                OPTIMIZE     = -O2
+                                #OPTIMIZE    = -O4
+				NETCDF_DIR   = /u/candy/local_software/netcdf
+                                NETCDF_INC   = $(NETCDF_DIR)/include
+                                NETCDF_LIB   = $(NETCDF_DIR)/lib/libnetcdf.a
+				SPLINELIB = /p/linux/tools/lib/splinelib_ifort_64.a 
+				ifdef   USEMPI
+				    FC  = $(MPICHDIR)/bin/mpif90
+	                            CXX = $(MPICHDIR)/bin/mpicc
+				    INC = ./
+				endif
+				#UFILE_LIBS    =/home/stjohn/ufiles/pgf/lib/
+				UFILE_LIBS    =/u/stjohn/ufile_libs/portland
+                        endif 
+
+
+                        MACHINEOK = 1
+                        LIBS      = /usr/lib64
+
+                        MPI_FC     = $(MPICHDIR)/bin/mpif90
+                        MPI_CXX    = $(MPICHDIR)/bin/mpiCC
+                       # MPI_CC     = $(MPICHDIR)/bin/mpicc_pgcc
+                        INC = 
+                        FTN90LIB = 
+                        CFLG = 
+                        #OPTIMIZE = -fast 
+                        MSG = 
+
+
+                        ifndef  USEMPI
+                                FC = $(FC_NOMPI) 
+                                CXX =$(CXX_NOMPI)
+                                CC  =$(CC_NOMPI)
+                                INC = $(NETCDF_INC)
+                                MPI_LIB =
+				MPI_INC = 
+                        else
+                                ifndef MPI2_EXT
+                                        FFLAGS = -DUSEMPI 
+                                else
+                                        FFLAGS = -DUSEMPI -DMPI2_EXT 
+                                endif
+                                FC  = $(MPI_FC)
+                                CC  = $(MPI_CC)
+                                CXX = $(MPI_CXX)
+                        	MPI_LIB  = $(MPICHDIR)/lib/libmpich.a
+                        	MPI_INC  = $(MPICHDIR)/include
+                                INC = $(MPI_INC) 
+                        endif
+
+ 
+                        ifeq ($(OPT),debug)
+                                OPTION = $(DEBUG)
+                                DBG = _debug
+                        else
+                                OPTION = $(OPTIMIZE)
+                                DBG= 
+                        endif
+
+
+                        COMPILE   = $(FC)  $(AMD64)  -I$(INC) -I$(NETCDF_INC) $(OPTION) $(LISTING) -c
+                        LOAD = $(COMP)
+
+

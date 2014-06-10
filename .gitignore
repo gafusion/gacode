@@ -55,7 +55,6 @@ onetwo/sources_o12.pdf
 onetwo/python
 onetwo/oepcom.blk
 onetwo/nubplt
-onetwo/nfreya_module
 onetwo/nbspec.dat
 onetwo/trplot
 onetwo/set_201
@@ -64,7 +63,6 @@ onetwo/rename_module.py
 onetwo/read_scratch_info
 onetwo/onetwo_libs
 onetwo/mapfilename
-onetwo/nfreya_module
 onetwo/imfit.local
 onetwo/kefit.save
 onetwo/fsplit
