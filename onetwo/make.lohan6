@@ -288,3 +288,4 @@
 		 	 	$(AUTP)  -c  $(OPTION) $(LISTING) $(SPECIAL_nubeam)
 			COMPILE_ntcc = $(FC) -I$(INC)  $(OMP) $(PROF) \
 		  	$(AUTP)   -c  $(OPTION) $(LISTING) $(SPECIAL_ntcc)
+COMP_MOD =./mifort

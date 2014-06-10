@@ -4394,7 +4394,6 @@
 !----------------------------------------------------------------------
       
 
-
     USE  neutral_beams,        ONLY : de_tk
 
 
@@ -4402,6 +4401,7 @@
     INTEGER nsend
 
 
+#ifdef USEMPI
            CALL MPI_BCAST(de_tk,1,MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,mpiierr)
  
            nsend = ke*kb
@@ -4414,7 +4414,7 @@
 
            CALL MPI_BCAST(sgxn,nsend,MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,mpiierr)
           
-    
+#endif    
       RETURN
 
       END SUBROUTINE distribute_xsct

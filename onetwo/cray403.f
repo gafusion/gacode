@@ -8,7 +8,7 @@ c
       character rcs_id*63
       save      rcs_id
       data      rcs_id /
-     ."$Id: cray403.f,v 1.7 2003/07/02 23:09:55 stjohn Exp $"/
+     ."$Id: cray403.f,v 1.8 2014/03/26 17:10:43 stjohn Exp $"/
 c
 c     source file cray403.f contains routines, based on those in the the
 c     "Numerical Recipes" books, used to do integrals related to neutron
@@ -127,7 +127,11 @@ c
       end
 
       subroutine qgaus1 (func, a, b, ss)
-c
+c------------------------------------------------------
+c -- fixed abscissa 10 point Guass quadrature
+c -- is used for qguas* routines, see Piessens,et all,
+c -- Quadpack, Springer,1980.
+c----------------------------------------------------HSJ
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
       external           func

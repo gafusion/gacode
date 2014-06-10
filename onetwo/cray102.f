@@ -544,7 +544,7 @@ c
       character rcs_id*63 
       save      rcs_id
       data      rcs_id /
-     ."$Id: cray102.f,v 1.267 2013/12/12 18:37:01 stjohn Exp $"/
+     ."$Id: cray102.f,v 1.269 2014/04/29 17:38:59 stjohn Exp $"/
 c
 c ----------------------------------------------------------------------
 c 1) initializes input variables to their default values and reads
@@ -701,7 +701,8 @@ c                                                                              @
      .  random_pert,freeze_alpha_exp,conv_skip,te_range_check,
      .  q0_max,q0_radius,q0_mult, runid, write_profiles,analysis_check,
      .  write_glf_namelist,newtonvb,use_avg_chi,test_xptor,
-     .  itte_dv,itti_dv,itenp_dv,itene_dv,itangrot_dv,dv_delt,jion_clamp,
+     .  itte_dv,itti_dv,itenp_dv,itene_dv,itangrot_dv,dv_delt,
+     .  jion_clamp,
      .  nalp_thresh,nb_thresh, dn0out,nlfbmflr,bp0_ic,r_elm,t_elms,
      .  t_elme,etam_elm,itot_elm,vloop_bc,vloop_bc_time,vloopvb,
      .  use_pedestal,pedestal_path,pedestal_models,include_paleo, 
@@ -3304,7 +3305,7 @@ c            if the change in a profile is greater than relmax,even if         @
 c            that profile is not run in simulation mode. In particular if      @
 c            you run in total analysis mode (i.e., all itran(i) =0) then       @
 c            no profiles are transported but the change in                     @
-c            input profiles and beams may still cut doewn the time step.       @
+c            input profiles and beams may still cut down the time step.       @
 c            The neutral density equation has to be solved even in this        @
 c            case and may also result in a decreased time step.                @
 c            Set relmax to a large number to avoid this as appropriate.        @
@@ -10209,14 +10210,19 @@ c    .    call bc_zone(enein,knotsene,
 c    .      renein, bparene,j,ksplin, kbctim,bctime,
 c    .      nbctim,fix_edge_ni,kj,nj,nout,
 c    .      profiles_bcondspl(j),roa,ni_var_edge) 
-      IF(fix_edge_ni(1) .GE. 1)THEN
+c      IF(fix_edge_ni(1) .GE. 1.0)THEN
+       IF(fix_edge_ni(1) .GT. 2.0)THEN ! assumes grid pt number is input
          ni_index = fix_edge_ni(1)
       ELSE
+         ni_index =0
          DO j=nj,1,-1
-            if(roa(j) .lt. fix_edge_ni(1))ni_index = j+1
+            if(roa(j) .le. fix_edge_ni(1)
+     .      .AND.  ni_index == 0 )ni_index = j+1 ! assumes rhoa val is input
          ENDDO
       ENDIF
+
 cjmp.den end
+      !call stop("test",1)
 
       end if
 

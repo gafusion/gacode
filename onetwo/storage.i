@@ -3,7 +3,8 @@ c --- INCLUDE file storage.i
 c
       integer   kstore,kstorest
       real *8 xdum,ydum,zdum,wdum,vdum,sdum,tdum,udum,rdum
-      parameter (kstore   =  2000)                ! must be .ge. nconmax
+c      parameter (kstore   =  2000)                ! must be .ge. nconmax
+      parameter (kstore   =  6000)                ! must be .ge. nconmax
       parameter (kstorest = 10000)
 c
 c --- the following arrays are volatile. that is, they may be used by

@@ -810,8 +810,6 @@
         qconde(1:nj)     = qconde(1:nj)/convert
         qcondi           = get_values(pwrden%qcondi)
         qcondi(1:nj)     = qcondi(1:nj)/convert
-        qcondi           = get_values(pwrden%qcondi)
-        qcondi(1:nj)     = qcondi(1:nj)/convert
         qconve           = get_values(pwrden%qconve)
         qconve(1:nj)     = qconve(1:nj)/convert
         qconvi           = get_values(pwrden%qconvi)
@@ -1600,7 +1598,7 @@
            ! convective term in toroidal rotation:
            profile%flux_conv(nion_ncd+4)         = zero_Vector(nj)
            profile%flux_conv(nion_ncd+4)%data(1) = zeroc
-           DO jj=2,nj-1
+           DO j=2,nj-1
               profile%flux_conv(nion_ncd+4)%data(j)= (fluxangc(j-1)+fluxangc(j))*0.5_DP
            ENDDO
            profile%flux_conv(nion_ncd+4)%data(nj)= profile%flux_conv(nion_ncd+4)%data(nj-1)

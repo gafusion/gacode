@@ -33,7 +33,7 @@ c
       character rcs_id*63
       save      rcs_id
       data      rcs_id /
-     ."$Id: cray208.f,v 1.68 2013/09/03 18:53:21 stjohn Exp $"/
+     ."$Id: cray208.f,v 1.69 2014/04/29 18:15:38 stjohn Exp $"/
 c
 c***********************************************************************
 c**                                                                   **
@@ -1014,6 +1014,7 @@ c
       dx    =  0.0
       dy    =  0.0
       arcl  =  0.02
+      arcl  =  0.001 ! 999,
       taxis =  5.0
       tlim  = 30.0
       a     = (tlim - taxis) / (psivlcpy(1) - psivlcpy(npsi))
@@ -1037,7 +1038,9 @@ c      do 50 j=1,npsi-1               ! npsi is magnetic axis
          if (j .eq. 1)  iconvg = 1
          dang     =    a * (psivlcpy(j) - psivlcpy(npsi)) + bincp
          dang     = dang * (isetarcl + 1)
+         dang     = 0.1  ! 999,
          bperr    = 0.01
+         bperr    = 1.e-3 ! 999,
 c
          if (j .eq. 1) then
             if (use_efit_cntr .eq. 1) then
@@ -2434,8 +2437,11 @@ c --- trace the contour corresponding to the plasma boundary
 c --- psi(r,z) = psibdry:
 c
          dang    = 5.0
+         dang    = 0.1 ! 999,
          arcl    = 0.02
+         arcl    = 0.001 ! 999,
          bperr   = 0.05
+         bperr    = 1.e-3 ! 999,
          iauto   = 1
          xsearch = 0.0
          ysearch = 0.0
@@ -4495,10 +4501,13 @@ c --- trace each contour of psir(j) and do the flux surface integrals:
 c
       iauto     = 1
       dang      = 5.0
+      dang      = 0.1 ! 999,
       bperr     = 0.05
+      bperr     = 1.e-3 ! 999,
       dr        = SQRT (drdz)
       dz        = dr
-      arcl      = 0.02    ! 0.02 meters
+      arcl      = 0.02     ! 0.02 meters
+      arcl      = 0.001    ! 0.001 meters ! 999,
       rm2inv(1) = (rmajor/rmagax)**2
       delta_psi=psir(nj-1)-psir(nj)
       do 50 j=2,nj

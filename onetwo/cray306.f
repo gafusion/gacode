@@ -777,7 +777,7 @@ c
       character rcs_id*63
       save      rcs_id
       data      rcs_id /
-     ."$Id: cray306.f,v 1.112 2013/09/03 18:53:21 stjohn Exp $"/
+     ."$Id: cray306.f,v 1.114 2014/04/29 16:51:55 stjohn Exp $"/
 c
 c ----------------------------------------------------------------------
 c --- subroutine TPORT is driver for transport portion of ONETWO code.
@@ -1148,7 +1148,7 @@ c
 
       beam_iteration = .false.
 
-c      write(888,FMT='("use_nubeam = ",l5 )')use_nubeam  ! 8888899999
+
 
       beam_startup: if(use_nubeam) then
 c-----
@@ -1158,16 +1158,12 @@ c-----
                      last_mon_index = nubeam_index
                      nubeam_mon_set = .TRUE.
                descrip_mon(nubeam_index) = "Nubeam elapsed  time"
-c               write(888,FMT='("start nubeam_indexset in c306 ",i5)')
-c     .                nubeam_index  ! 88888889999999
+
              ENDIF
              start_timer(nubeam_index) =.TRUE.
              stop_timer(nubeam_index)  =.FALSE.
              CALL collect_stats(nubeam_index)
              start_timer(nubeam_index) =.FALSE.        
-c             write(888,FMT='("start nubeam ",1pe14.6,x,i5)')
-c     .             elapsed_time(nubeam_index),nubeam_index  ! 88888889999999
-c-----
            nubeam_evolve = 1
            !using nubeam, if this is not a nubeam restart case then
            !we cant get the beam consistent with the thermal ion
@@ -1236,6 +1232,7 @@ c
 c
                 if (tportvb .gt. 0)
      .              print *,'calling fluxx  during beam iterations'
+
                 call fluxx
                 if (tportvb .gt. 0)
      .             print *,'done fluxx  during beam iterations'
@@ -1380,6 +1377,7 @@ c
       print *,'calling source  beam iterations are done'
 
       call source
+      call fluxx    ! this call is needed in case no time steps are taken
 
       if(bp0_ic(1:LEN_TRIM(bp0_ic)) == bp0_icv(2))then !bp0_icv(2) = 'analytic'
          call reinit_bp0
@@ -1507,7 +1505,6 @@ c      skipping inital call to out HSJ 7/27/2011
       if (timmax .le. time0)  ilastp = 1
 
       if(myid .eq. 0)call out                     ! initial time point
-  
  2160 ihead = 1
       if (tportvb .ge. 1)  write (*, '(" calling   TRPLOT A at time = ",
      .                                   1pe14.6)') time
@@ -1711,6 +1708,7 @@ c          cparam =0.0 !only implemented for glf23 and typ at this time
       if(glf_debug .gt. 0)  call STOP('sub TPORT: glf_debug stop',0)
 
       call source
+      call fluxx
 
       if(write_glf_namelist .eq. 3) return ! return to get iterdb file written
 c              stop would be cleaner but doesnt write iterdb file
@@ -2720,10 +2718,7 @@ c
      .                     write (*, '(" calling   OUT")')
  
       if (   iprt .eq. 1)THEN 
-c      write(940,FMT='("c306,line 2677 ,totrf =",1pe12.4)')totrf ! 888888889999
-c      write(940,FMT ='("c306 currf(nj/2) =",1pe12.4)')currf(nj/2) ! 888889999
-         call out
-c      write(940,FMT='("c306,line 2679 ,totrf =",1pe12.4)')totrf ! 888888889999
+         call out             ! cray308.f
          call Statefile_proc
       endif
 
@@ -2927,9 +2922,8 @@ c
 
       if (timav .eq. 0.0)  go to 6100
       if (dtsum .eq. 0.0)  go to 6100
-c      write(940,FMT='("c306,line 2883 ,totrf =",1pe12.4)')totrf ! 888888889999
-      if (timav .lt. 0.0)  call out
 
+      if (timav .lt. 0.0)  call out
       dtsumi = 1.0 / dtsum
       do 6020 j=1,nj
       do 6010 k=1,nk

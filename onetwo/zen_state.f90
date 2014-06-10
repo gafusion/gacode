@@ -143,6 +143,7 @@
 ! --- i.e., search for smallest zeff that will work
 !
          if (ier .eq. 1) then
+             izenstop = 1
              jer     = j
              ier     = 0
              ntry    = 10

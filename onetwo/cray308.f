@@ -37,7 +37,7 @@ c
       character rcs_id*63
       save      rcs_id
       data      rcs_id /
-     ."$Id: cray308.f,v 1.68 2013/12/12 18:37:01 stjohn Exp $"/
+     ."$Id: cray308.f,v 1.71 2014/05/08 17:48:12 stjohn Exp $"/
 c
 c --- this subroutine prints out results at selected times
 c
@@ -1155,6 +1155,9 @@ c
 c
 c write out energy fluxes (keV/cm**2-s)
 c
+
+      call visc_flux ! HSJ 5/5/14 load qomegapi and flxangce
+                     ! for initial time.
       call header (nout,timet,t)
       write (nout,1010)
       write (nout,1016)
@@ -1175,6 +1178,8 @@ c
       write (nout, 1070) j,jp,ra(j),conde,conve,flux(nion+1,j),
      .                   condi,convi,omegapi(j),flxangce(j),
      .                                          flux(nion+2,j)
+
+ 
   110 continue
 c
 c  write out header information
@@ -1379,7 +1384,7 @@ c
       dudr(k,j) = du/dr(j)              ! at time point theta
  120  continue                          ! get all gradients first HSJ
       do k=1,nk                         ! now apply these new gradientsa
-         ! flux(k,j) = 0.0              ! HSJ corected 8/9/10
+         ! flux(k,j) = 0.0              ! HSJ corrected 8/9/10
          if (itran(k) .eq.1) then       ! see below for analysis mode
            flux(k,j) = 0.0              ! HSJ corected 8/9/10
            do i=1,nk
@@ -1401,6 +1406,7 @@ c --- if itran(nion+1),itran(nion+2) =0 then conde and/or condi
 c --- are not used so the following is o.k. ... HSJ
 c --- conde,condi,conve,convi on half grid
 c
+ 
       do j=1,nj-1
         k = nion + 1                  ! for te
         conde(j) = flux(k,j)          ! used only if itran(nion+1) = 1
@@ -1409,7 +1415,12 @@ c
         conve(j)  = five_halfs_te * (MAX (fluxe(j), zero) * temm +
      .                     MIN (fluxe(j), zero) * tepp)
         if (no_te_convection .eq. 1) conve(j) = 0.0
-        flux(k,j) =  conde(j) + conve(j)
+c        flux(k,j) =   conde(j) + conve(j)      ! disable 4/7/14 HSJ
+        IF(itran(k) == 0)THEN
+            conde(j) = flux(k,j) - conve(j)      ! enable 4/7/14 HSJ
+        ELSE
+            flux(k,j) =   conde(j) + conve(j)  
+        ENDIF
 c
         k = nion + 2            ! for ti
         condi(j)  = flux(k,j)   ! used only if itran(nion+2) = 1
@@ -1418,7 +1429,13 @@ c
         convi(j)  = five_halfs_ti * (MAX (fluxi(j), zero)*timm +
      .                     MIN (fluxi(j), zero)*tipp)
         if (no_ti_convection .eq. 1)  convi(j) = 0.0
-        flux(k,j) = condi(j) + convi(j)
+c         flux(k,j) = condi(j) + convi(j)      ! disable 4/7/14 HSJ
+        IF(itran(k) == 0)THEN
+            condi(j) = flux(k,j)-convi(j) -omegapi(j) - flxangce(j)  
+        ELSE
+            flux(k,j) = condi(j) + convi(j) 
+        ENDIF
+
 c
         if (iangrot .eq. 1) then
 c
@@ -1446,7 +1463,6 @@ c
           qangc   (j) = 0.0
         end if
       end do
-
 
 
 c
@@ -1483,7 +1499,6 @@ c
 c --- calculate divergence of convection terms for te,ti,and rotation,
 c --- for analysis or simulation mode
 c
-*%%%% write (6, *) '%%%% in subroutine PSOURC, calling DIVFLX'
       call divflx (conve,conveb,hcap,r,ra,drr,1,nj,1,qconve)
       call divflx (convi,convib,hcap,r,ra,drr,1,nj,1,qconvi)
       call divflx (fluxangc,fluxangc(nj),hcap,r,ra,drr,1,nj,1,qangc)
@@ -1677,7 +1692,7 @@ c --- note: if itran(nk) = 1 we use the flux calculated at the beginning
 c --- of this routine. if itran(nk) = 0 we recalculate the flux from its
 c --- divergence below.
 c
-      if (iangrot .ne. 0) then
+      iangne0 : if (iangrot .ne. 0) then 
 c
 c --- calculate the divergence of the angular momentum flux
 c ---   = (1.0 / (hcap*r)) * (d/dr)(hcap*r*flux)
@@ -1775,30 +1790,10 @@ c --- is recalculated in the ion energy table output below if
 c --- itran(nion+2) = 0)
 c --- quantities related to ion energy flux
 c
-          if (angrcple .ne. 0.0) then
-            do 3460 j=1,nj-1
-              angrota    = (theta*(u(nk,j)+u(nk,j+1))+onemt *
-     .                     (usave(nk,j) + usave(nk,j+1))) * 0.5
-              omegapi(j) = angrcple*kevperg*angrota*fluxangv(j)
-c
-c --- viscous heating term in w/cm**3
-c
-              vischeat(j) = -fluxangv(j)*jouperg*angrcple*dudr(nk,j)
-              flxangce(j) = 0.5 * angrcple*angrota*kevperg*fluxangc(j)
- 3460         flux(nion+2,j) = flux(nion+2,j)+omegapi(j)+flxangce(j)
-              call extrap (ra(nj-2),ra(nj-1),r(nj),flux(nion+2,nj-2),
-     .                     flux(nion+2,nj-1),fluxb(nion+2))
-              call extrap (ra(nj-2),ra(nj-1),r(nj),
-     .                     flxangce(j-2),flxangce(j-1),flxangce(nj))
-              call extrap (ra(nj-2),ra(nj-1),r(nj),omegapi(nj-2),
-     .                     omegapi(nj-1),omegapib)
-              omegapi(nj) = omegapib
-              call divflx (omegapi,omegapib,hcap,r,ra,drr,1,nj,1,
-     .                     qomegapi)
-              call divflx (flxangce,flxangce(nj),hcap,r,ra,drr,1,nj,1,
-     .                     qangce)
-              end if
-      end if
+
+          if (angrcple .ne. 0.0)call visc_flux
+
+      end if  iangne0 
 
 
 
@@ -1935,9 +1930,14 @@ c
      .  dpedt(j) = 1.5*(eneav1(j)*uav(k,j)-eneav0(j)*uav0(k,j))*dtsumi
       if (itran(k) .eq. 1)  go to 510
       qconde(j) = -qdelt(j)-qexch(j)+qohm(j)-qione(j)-qrad(j)+qbeame(j)
-     .  + qrfe(j)+qfuse(j)+qe2d(j)-dpedt(j)-qconve(j)
-     .  - omegale(j)
+     .  + qrfe(j)+qfuse(j)+qe2d(j)
+     .  -omegale(j) -dpedt(j) -qconve(j)  
+c     Note qconde is equivalent to 
+c         s(nion+1,j)  -dpedt(j) -qconve(j) 
+c               here s includes  -qdelt(j)
+c      s(nion+1,j) is equal to ssdum:
 
+   
 
       if (itimav .eq. 1 .and. w2mix .gt. 0.0)  qconde(j) =
      .                                         qconde(j) + qsawe(j)
@@ -1955,7 +1955,7 @@ c
       !dflux(j)  = qconde(j) + dpedt(j) + qconve(j) 
       !dflux(j)   = qconde(j) + dpedt(j)
       !dflux(j)  = ss(j) - dpedt(j)
-      dflux(j)   = ss(j) -  qdelt(J)
+      dflux(j)   = ss(j) -  qdelt(j)
   515 j1prt     = ((j-1)/jprt) * jprt
       if (j1prt .ne. j-1 .and. j .ne. nj)  go to 520
       qd        = -qdelt(j)
@@ -1978,10 +1978,10 @@ c
      .                   qg,qohmj,qie,qr,qomegaj
 
   520 continue
+
 c
 
        CALL flxcal (dflux,drr,hcap,nj,r,ra,anal_eng_flux_e)
-
 
       write (nout, 1125)
       write (nout, 1121)
@@ -2109,7 +2109,7 @@ c
 
       dpidt_tot(j) = 0.0
 
-      ss   (j) = s(k,j)
+      ss(j) = s(k,j)
 
       if (itimav .eq. 1 .and. w3mix .gt. 0.0)  ss(j) = ss(j)+qsawi(j)
 
@@ -2130,6 +2130,9 @@ c
 c --- add terms due to toroidal rotation
 c
       if ((iangrot .ne. 0) .and. (angrcple .ne. 0.0)) then
+
+
+
         dtavg = 0.0
         if (   dtt .ne. 0.0)  dtavg = 1.0 / dtt
         if (itimav .eq. 1  )  dtavg = dtsumi
@@ -2155,6 +2158,8 @@ c
         wdnidt(j)   = sum*angrcple*kevperg
         aniwdwdt(j) = angterm*angrcple*kevperg
         dpidt_tot(j)    = dpidt_tot(j) + wdnidt(j) + aniwdwdt(j)
+
+
 c
 c --- 6.2415064e8 converts from erg/cm**3*sec to keV/(cm**3*sec)
 c
@@ -2168,6 +2173,15 @@ c
      .          + qrfi(j)+qfusi(j)+qi2d(j)-dpidt_tot(j)-qconvi(j)
      .          + (omegale(j)-qomegapi(j)-qangce(j)+sprcxe(j)
      .          + spreimpe(j)+sprcxree(j))*iangrot
+c    NOTE:   qcondi is equivalent to 
+c                = s(nion+2,j) -dpidt_tot(j) -qconvi(j)
+c                             -qomegapi(j)-qangce(j)    
+
+
+
+ 
+
+
       if (itimav .eq. 1 .and. w3mix .gt. 0.0)  qcondi(j) =
      .                                         qcondi(j) + qsawi(j)
       if (                    w3mix .lt. 0.0)  qcondi(j) =
@@ -2188,7 +2202,6 @@ c
       !dflux(j)  = ss(j) - dpidt_tot(j)
        dflux(j)  = ss(j) + qdelt(j)
   615 qneut(j) = qioni(j) - qcx(j)
-*%%%% write (6, *) '%%%% in subroutine PSOURC, just executed label 615'
       j1prt = ((j-1)/jprt)*jprt
       if (j1prt .ne. j-1 .and. j .ne. nj)  go to 620
       qcv       = qconvi(j) 
@@ -2208,54 +2221,15 @@ c
       write (nqik, 1155) j,r(j),roa(j),dpidtj,qcondj,qcv,qdeltj,
      .                   qexchj,qionij,qc,qpi,qomegaj
   620 continue
- 
- 
-c       do j=1,nj
-c          dflux(j) = qcondi(j) + dpidt_tot(j) + qconvi(j)
-c       ENDDO
-c       CALL flxcal (dflux,drr,hcap,nj,r,ra,anal_eng_flux_i)
-c       WRITE(999,FMT='("qcondi(j) + dpidt_tot(j) + qconvi(j)")')
-c       WRITE(999,FMT='(4(2x,1pe12.2))') 
-c     .           anal_eng_flux_i(nj/2),dpidt_tot(nj/2),
-c     . qdelt(nj/2),ss(nj/2),dflux(nj/2),qconvi(nj/2)
+      
 
-c       do j=1,nj
-c          dflux(j) = qcondi(j) + dpidt_tot(j) 
-c       ENDDO
-c       CALL flxcal (dflux,drr,hcap,nj,r,ra,anal_eng_flux_i)
-c       WRITE(999,FMT='("qcondi(j) + dpidt_tot(j) ")')
-c       WRITE(999,FMT='(4(2x,1pe12.2))') 
-c     .           anal_eng_flux_i(nj/2),dpidt_tot(nj/2),
-c     . qdelt(nj/2),ss(nj/2),dflux(nj/2),qconvi(nj/2)
-
-c      do j=1,nj
-c          dflux(j) = ss(j) - dpidt_tot(j)
-c       ENDDO
-c       CALL flxcal (dflux,drr,hcap,nj,r,ra,anal_eng_flux_i)
-c       WRITE(999,FMT='("ss -dpidt_tot")')
-c       WRITE(999,FMT='(4(2x,1pe12.2))') 
-c     .           anal_eng_flux_i(nj/2),dpidt_tot(nj/2),
-c     . qdelt(nj/2),ss(nj/2),dflux(nj/2),qconvi(nj/2)
-
-c       do j=1,nj
-c          dflux(j) = ss(j)
-c       ENDDO
-c       CALL flxcal (dflux,drr,hcap,nj,r,ra,anal_eng_flux_i)
-c       WRITE(999,FMT='("ss")')
-c       WRITE(999,FMT='(4(2x,1pe12.2))') 
-c     .           anal_eng_flux_i(nj/2),dpidt_tot(nj/2),
-c     . qdelt(nj/2),ss(nj/2),dflux(nj/2),qconvi(nj/2)
 
        do j=1,nj
-          dflux(j)  = ss(j) + qdelt(j)
+c          dflux(j)  = ss(j) + qdelt(j)
+           dflux(j)  = ss(j) -dpidt_tot(j)
        ENDDO
        CALL flxcal (dflux,drr,hcap,nj,r,ra,anal_eng_flux_i)
-c       WRITE(999,FMT='("ss(j) + qdelt(j) ")')
-c       WRITE(999,FMT='(5(2x,1pe12.2))') 
-c     .           anal_eng_flux_i(nj/2),dpidt_tot(nj/2),
-c     . qdelt(nj/2),ss(nj/2),dflux(nj/2),qconvi(nj/2)
-
-
+ 
 c
 
       write (nout, 1135)
@@ -2373,8 +2347,7 @@ c
       pbe =           pbeame(nj)  * 1.0e-6
       pbi =           pbeami(nj)  * 1.0e-6
       prf = (prfe(nj) + prfi(nj)) * 1.0e-6 
-      write(173,fmt='("c308,l2376, pbi =",x,1pe12.4)')pbi ! 888888999
-      write(173,fmt='("c308,l2376, pbe =",x,1pe12.4)')pbe ! 888888999
+
 c
 c ----------------------------------------------------------------------
 c --- print out energy terms related to angular rotation
@@ -3496,6 +3469,8 @@ c the following  format block also appers in sub P_Nfreya_output
      .                 3(1x,'W/cm**3',5x,'elec',4x,'ions',7x))
  8220 format (1x,i4,f6.1,f5.1,3(2x,1pe12.3,0p2f8.3,2x))
 *%%%%      write (6, *) '%%%% exiting  subroutine PSOURC'
+
+
       return
 c
       end

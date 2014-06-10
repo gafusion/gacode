@@ -186,7 +186,17 @@ ifeq ($(strip $(FORT)),pgf95)
   /f/mdsplus/linux64/mdsplus/lib/libMdsIpShr.a \
   /f/mdsplus/linux64/mdsplus/lib/libTdiShr.a \
   $(UFILE_LIBS)/libgeneric_dummy.a 
-#  $(UFILE_LIBS)/libhdf_dummy.a  
+#  $(UFILE_LIBS)/libhdf_dummy.a 
+
+  UFILE_LIBS =  /p/linux/nubeam/201405/ntcc/lib
+  UFILE_LIBRARIES  = $(UFILE_LIBS)/libuflib.a         \
+  $(UFILE_LIBS)/libufhdf.a        \
+  $(UFILE_LIBS)/libmdstransp.a    \
+  $(UFILE_LIBS)/libvaxonly.a      \
+  $(UFILE_LIBS)/libportlib.a      \
+  $(UFILE_LIBS)/libmds_sub.a      \
+  $(UFILE_LIBS)/libmdstransp.a /f/mdsplus/linux64/lib64/libMdsLib.so
+ 
 endif
 
 ifeq ($(strip $(FORT)),ifort) 

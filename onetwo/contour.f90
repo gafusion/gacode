@@ -5,7 +5,8 @@
 ! --- rplasbdry, zplasbdry holds the given fixed boundary
 ! --- for the fixed boundary equilibrium calculations
 !
-      integer ,parameter :: nconmax = 2000, nrplas = 1500 ! see kstore (storage.i)
+!      integer ,parameter :: nconmax = 2000, nrplas = 1500 ! see kstore (storage.i)
+       integer ,parameter :: nconmax = 6000, nrplas = 6000 ! see kstore (storage.i)
 !
       integer *4 ::        nplasbdry, ncontr, nboundpts
       real *8, dimension(:) ::                                   &

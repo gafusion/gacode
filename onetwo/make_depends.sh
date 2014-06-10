@@ -44,7 +44,7 @@ do
       
       
       # Add the dependency to make_depends
-      echo "$basen.o:" $ext_mods >> make_depends
+      echo "$basen.o:" $ext_mods "$f" >> make_depends
       nmod=`echo "$mods" | wc -c`
       if [ $nmod -eq 1 ] 
       then

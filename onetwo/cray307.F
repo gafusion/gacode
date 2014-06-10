@@ -73,7 +73,7 @@ c
       character rcs_id*63
       save      rcs_id
       data      rcs_id /
-     ."$Id: cray307.F,v 1.35 2013/09/19 16:29:15 stjohn Exp $"/
+     ."$Id: cray307.F,v 1.37 2014/05/08 17:48:11 stjohn Exp $"/
 c
 c     This subroutine calculates transport (or diffusion) coefficients.
 c     Note that the logic in TPORT is such that
@@ -1948,7 +1948,7 @@ c
      .                             + wrebut*xkirebut(j)
                 if (iangrot .ne. 0)
      .          d(nion+4,nion+4,j) = d(nion+4,nion+4,j)
-     .                             +wrebut*xkangrl(j)*dmassden(j)*rmajor**2
+     .                          +wrebut*xkangrl(j)*dmassden(j)*rmajor**2
                 xkerebut(j)        = xkerebut(j) + xkeneo(j)
                 xkirebut(j)        = xkirebut(j) + xkineo(j)
                 xchierl(j)         = xchierl(j)  + xkeneo(j)/enea
@@ -4298,6 +4298,7 @@ c
           xkangrot(j) = 0.0 !toroidal rotation excluded by user
         endif
       end do
+
 c
 ****  write (ncrt, '(a, i7)') ' DIFFUS_COUNTER =', diffus_counter
 ****  if (ip_chi2_counter .ge. 2951)  call STOP ('DIFFUS: debug', 992)!
@@ -4995,6 +4996,8 @@ c
      .                                            paleo_pinch_mult
 
       USE flx
+      USE tordlrot,                        ONLY : aniwdwdt,wdnidt,
+     .                                            qomegapi,qangce  ! HSJ 4/7/14
       USE glf23!jmp.snu
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
@@ -5106,6 +5109,7 @@ c     flux proportional to the fast ion density gradient, but it is
 c     included as a source term instead (PAP 10/89))
 c
       
+
       DO  j=1,nj  ! may 2d terms to qdelt_l, see impsrc
          qdelt_l(j) = qdimpl(j)*(u(nk-iangrot-2,j)-u(nk-iangrot-1,j))
       ENDDO
@@ -5134,16 +5138,24 @@ c
           ENDDO
        ENDIF
 
-
       i = nion+2
       IF(itran(i) == 0)THEN                   ! analysis mode for ti
          dflux(:) = zeroc
          DO l=1,nion
             dflux(:) = dflux(:)+ dpidt(:,l)
          ENDDO
+
+         call rot_terms
+
+         dflux(:) = 1.5*dflux(:) + wdnidt(:)+aniwdwdt(:)  ! hsj 4/7/14
+
+ 
          dflux(:) = s(i,:) - dflux(:) + qdelt_l(:) 
 
+
          CALL  flxcal (dflux,drr,hcap,nj,r,ra,fluxp)
+c        note that flux(nion+2,:) = condi+convi+ omegapi+flxangce
+
          flux(i,:) = fluxp(:)
 
       ELSE
@@ -5293,9 +5305,9 @@ c --- the source that would be required in order for the given
 c --- te and ti profiles to be in steady state. these calculations
 c --- are not used elsewhere in the code
 c
-      call divflx(flux,fluxb,hcap,r,ra,drr,nion+1,nj,kk,ydum)   ! for te
-      call divflx(flux,fluxb,hcap,r,ra,drr,nion+2,nj,kk,zdum)   ! for ti
-
+c      call divflx(flux,fluxb,hcap,r,ra,drr,nion+1,nj,kk,ydum)   ! for te
+c      call divflx(flux,fluxb,hcap,r,ra,drr,nion+2,nj,kk,zdum)   ! for ti
+ 
       return
 c
       end
@@ -5998,6 +6010,115 @@ c     .                 +pratio*(ell31+aone*ell34)*tiph)
 c  return,{nustare:nustare, sigma:sigma, jbootc:jbootc}
       return
       end
+
+
+        SUBROUTINE  rot_terms
+c  -------------------------------------------------------------------
+c       Determine wdnidt and aniwdwdt
+c  ---------------------------------------------------------HSJ-4/7/14
+        USE param,               ONLY : kj
+        USE solcon,              ONLY : dtsumi,dtt
+        USE io,                  ONLY : itimav
+        USE numbrs,              ONLY : nprim,nion,nk,nj
+        USE soln,                ONLY : u,usave,uav,uav0
+        USE ions,                ONLY : atw
+        USE constnts,            ONLY : xmassp,kevperg
+        USE geom,                ONLY : r2capi
+        USE tordlrot,            ONLY : angrcple,wdnidt,aniwdwdt
+        IMPLICIT none
+        REAL*8 dtavg,sum,avg1,avg0,dndt,angterm,dnt
+        REAL*8 amassden(kj) ! move this to ions module
+        INTEGER jin,k,i
+
+        DO jin=1,nj
+           amassden(jin) = 0.0D0
+           DO k =1,nion
+              amassden(jin) = amassden(jin) +atw(k)*u(k,jin)
+           ENDDO
+           amassden(jin) = amassden(jin) * xmassp 
+
+           dtavg = 0.0D0
+           if (   dtt .ne. 0.0D0)  dtavg = 1.0D0 / dtt
+           if (itimav .eq. 1  )  dtavg = dtsumi
+           sum = 0.0D0
+
+           DO i=1,nion
+              avg1 = u(i,jin)
+              avg0 = usave(i,jin)
+              if (itimav .eq. 1)  avg1 = uav(i,jin)
+              if (itimav .eq. 1)  avg0 = uav0(i,jin)
+              IF (i .LE. nprim)THEN
+                 dndt = (avg1-avg0)*dtavg*atw(i)
+                 sum  = sum + dndt
+              ENDIF
+           ENDDO
+
+           avg1 = u(nk,jin)
+           avg0 = usave(nk,jin)
+           if (itimav .eq. 1)  avg1 = uav (nk,jin)
+           if (itimav .eq. 1)  avg0 = uav0(nk,jin)
+           dnt         = (avg1-avg0)*dtavg
+           sum         = sum * 0.5D0 * r2capi(jin)*avg1**2*xmassp
+           angterm     = amassden(jin)*r2capi(jin)*avg1*dnt
+           wdnidt(jin)   = sum*angrcple*kevperg
+           aniwdwdt(jin) = angterm*angrcple*kevperg
+
+        ENDDO
+
+        RETURN
+        END
+
+
+        SUBROUTINE visc_flux
+c  -------------------------------------------------------------------
+c       Determine energy fluxes associated with rotation
+c  ---------------------------------------------------------HSJ-5/5/14
+        USE bd_condtn,           ONLY : fluxb
+        USE constnts,            ONLY : kevperg,jouperg
+        USE flx,                 ONLY : flux
+        USE geom,                ONLY : hcap
+        USE mesh,                ONLY : r,ra,drr
+        USE numbrs,              ONLY : nprim,nion,nk,nj
+        USE solcon,              ONLY : theta
+        USE soln,                ONLY : u,usave,uav,uav0
+        USE tcoef,               ONLY : dudr
+        USE tordlrot,            ONLY : angrcple,omegapi,fluxangv,
+     .                                  vischeat,flxangce,qangce,
+     .                                  qomegapi,fluxangc
+
+        IMPLICIT none
+        REAL*8 angrota,omegapib,onemt
+        INTEGER j
+
+          onemt = 1.D0 - theta
+          if (angrcple .ne. 0.0) then
+            DO j=1,nj-1
+                angrota    = (theta*(u(nk,j)+u(nk,j+1))+onemt *
+     .                     (usave(nk,j) + usave(nk,j+1))) * 0.5
+                omegapi(j) = angrcple*kevperg*angrota*fluxangv(j)
+c --- viscous heating term in w/cm**3:
+                vischeat(j) = -fluxangv(j)*jouperg*angrcple*dudr(nk,j)
+                flxangce(j) = 0.5*angrcple*angrota*kevperg*fluxangc(j)
+c                flux(nion+2,j) = flux(nion+2,j)+omegapi(j)+flxangce(j)
+
+            ENDDO 
+
+              call extrap (ra(nj-2),ra(nj-1),r(nj),flux(nion+2,nj-2),
+     .                     flux(nion+2,nj-1),fluxb(nion+2))
+              call extrap (ra(nj-2),ra(nj-1),r(nj),
+     .                     flxangce(j-2),flxangce(j-1),flxangce(nj))
+              call extrap (ra(nj-2),ra(nj-1),r(nj),omegapi(nj-2),
+     .                     omegapi(nj-1),omegapib)
+              omegapi(nj) = omegapib
+
+              call divflx (omegapi,omegapib,hcap,r,ra,drr,1,nj,1,
+     .                     qomegapi)
+              call divflx (flxangce,flxangce(nj),hcap,r,ra,drr,1,nj,1,
+     .                     qangce)
+           end if
+
+        RETURN
+        END SUBROUTINE visc_flux
 
 
       subroutine sauter  (jhirsh, j, nion, fcapa, enea, tea, ena, tia,

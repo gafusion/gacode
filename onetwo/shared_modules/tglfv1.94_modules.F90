@@ -781,7 +781,7 @@
 !
 ! namelist ....................................................
 
-      NAMELIST /tglfin/ adiabatic_elec_tg, find_width_tg, new_eikonal_tg, &
+      NAMELIST /tglfin_nml/ adiabatic_elec_tg, find_width_tg, new_eikonal_tg, &
         nbasis_max_tg, nbasis_min_tg, nxgrid_tg, ibranch_tg, ns_tg, &
         nmodes_tg, iflux_tg, ky_tg, width_max_tg, width_min_tg, &
         nwidth_tg, park_tg, ghat_tg, gchat_tg, &

@@ -616,8 +616,9 @@
                    ENDIF
                  ENDDO  ! loop over grid points 
               ENDIF     ! time_deriv_in_flux
-
+#ifndef NFREYA
               CALL impsrc   ! load qdelt if not loaded 
+#endif
               stot(:) = s(ndep_var,:) - td(:)  ! td == 0 if time_deriv_in_flux = false
               IF(ndep_var == nion+1)stot(:) = stot(:) -qdelt(:) 
               IF(ndep_var == nion+2)stot(:) = stot(:) +qdelt(:)              

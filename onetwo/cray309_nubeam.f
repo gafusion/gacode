@@ -338,7 +338,7 @@ c
       character rcs_id*63
       save      rcs_id
       data      rcs_id /
-     ."$Id: cray309_nubeam.f,v 1.15 2013/12/30 16:43:38 smithsp Exp $"/
+     ."$Id: cray309_nubeam.f,v 1.17 2014/04/29 17:07:42 stjohn Exp $"/
 c
 c ----------------------------------------------------------------------
 c     This subroutine prepares an input file for mcgo
@@ -1745,7 +1745,7 @@ c----------------------------NTV Torque---------------C.K.Pan--03/01/2010------
 c ------ A single mp_polnum,mp_tornum perturbation    
 c ------ delta_b : Tesla
             bmn_theta_a_sqr = delta_b_sqr*real(mp_polnum)/2.0 
-            delta_b_o_b_sqr = 2.0*bmn_theta_a_sqr/(DABS(btor)*1.0e-4)**2.0
+            delta_b_o_b_sqr = 2.0*bmn_theta_a_sqr/(DABS(btor)*1.0e-4)**2
      .                    *(r(j)/r(nj))**(2.0*real(mp_polnum)-2.0)
            
 c ------ Effective inverse aspect ratio
@@ -2611,9 +2611,6 @@ c
                   stop_timer(p_nf_index)  =.FALSE.
                   CALL collect_stats(p_nf_index)
                   start_timer(p_nf_index) =.FALSE.
-c        write(888,FMT='("start p_nf  2595",1pe14.6,x,i5)')
-c     .                   elapsed_time(p_nf_index),p_nf_index ! 88888889999999
-
                 ! use enx (andd ennub)  for density change monitor due to beam fuelling and
                 ! inital digout of thermal density profile:
                 CALL load_enx (ibion,nj,iother,nneu,id,it,enx)
@@ -2959,6 +2956,7 @@ c     .                                  sbeam(1:3),enbeam(1:3)
           ENDIF
    
       elseif( .not. use_nubeam)then  beamif 
+ 
 c -------------------------------------------------------------------------------
 c            the old single pulse beam calcs
 c            calculate the particle and energy sources due to neutral beams
@@ -3083,12 +3081,10 @@ c
 c
 c     if iborb =3 freya will only be used to generate an
 c     initial fast ion birth deposition distribution that mcgo will sample.
-
       call freya (nbeams,atw, codeid, kappa,nw,nh,nion,p,rmhdgrid,
      .     rin,rmax,zmhdgrid,zax,zmin,zmax,pbeam,ebeam,iexcit,enbeams,
      .     time,time0)
  
-
       imslmd = 'postnub'
 c      write(6,FMT='("calling postnub")') ! 8888889999
       call postnub
@@ -4173,8 +4169,6 @@ c     .        time,factor,model ! 8888888999999
        stop_timer(ech_index)  =.TRUE.
        CALL collect_stats(ech_index)
        stop_timer(ech_index)  =.FALSE.
-c        write(888,FMT='("stop ech 4146",1pe14.6,x,i5)')
-c     .             elapsed_time(ech_index),ech_index  ! 88888889999999
        go to 2661
 
 
@@ -4922,7 +4916,6 @@ c
 
 
 
-
 c ----------------------------------------------------------------------
 c calculate effective source (G/cm-s) in Faraday's law due to
 c   beam-driven and rf-driven current;
@@ -5336,6 +5329,7 @@ c
       return
 c
       end
+
 
       subroutine source_mod_stab(flag,njin,xke,xki,xkw)
 c ----------------------------------------------------------------

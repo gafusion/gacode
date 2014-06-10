@@ -1373,6 +1373,7 @@ c
             delta_psi=(-psimag+psilim)/nxeqd
             arcl   = 2.00   ! 2.0 cm arc length
             bperr  = 0.05   ! 5% rel. change in bp along contour allowed
+            bperr  = 1.e-3  ! 999,
             dx     = xdum(2)-xdum(1)
             dy     = ydum(2)-ydum(1)
             iauto  = 1
@@ -5015,7 +5016,7 @@ c
       character rcs_id*63
       save      rcs_id
       data      rcs_id /
-     ."$Id: cray207.f,v 1.84 2013/09/11 16:45:18 stjohn Exp $"/
+     ."$Id: cray207.f,v 1.85 2014/04/29 18:15:45 stjohn Exp $"/
 c
 c ----------------------------------------------------------------------
 c  driver for 1-1/2-d runs (codeid .ne.  'onedee')

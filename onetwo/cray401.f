@@ -24,7 +24,7 @@ c
       character rcs_id*63
       save      rcs_id
       data      rcs_id /
-     ."$Id: cray401.f,v 1.140 2013/12/12 18:37:01 stjohn Exp $"/
+     ."$Id: cray401.f,v 1.141 2014/02/05 22:31:47 smithsp Exp $"/
 c
 c ----------------------------------------------------------------------
 c     this subroutine generates the matrices a, b, and c (and em and w)
@@ -9408,10 +9408,14 @@ c
       call extrap (ra(nj-2),ra(nj-1),r(nj),convi(nj-2),
      .             convi(nj-1),convib)
 
-      call divflx (conde,condeb,hcap,r,ra,drr,1,nj,1,qconde)
-      call divflx (conve,conveb,hcap,r,ra,drr,1,nj,1,qconve)
-      call divflx (condi,condib,hcap,r,ra,drr,1,nj,1,qcondi)
-      call divflx (convi,convib,hcap,r,ra,drr,1,nj,1,qconvi)
+      if (itran(nion+1) .eq. 1) then
+        call divflx (conde,condeb,hcap,r,ra,drr,1,nj,1,qconde)
+        call divflx (conve,conveb,hcap,r,ra,drr,1,nj,1,qconve)
+      endif
+      if (itran(nion+2) .eq. 1) then
+        call divflx (condi,condib,hcap,r,ra,drr,1,nj,1,qcondi)
+        call divflx (convi,convib,hcap,r,ra,drr,1,nj,1,qconvi)
+      endif
 c
 c     calculate dpedt and dpidt_tot and sum for total.
 c

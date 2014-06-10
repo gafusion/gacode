@@ -1691,18 +1691,18 @@ SUBROUTINE iter_dbase_nc
 
 
      !toroidal rotation flux:
-     base_label = '* flux associated with toroidal rotation :  '
+     base_label = '* flux associated with toroidal rotation '
      CALL netcdf_err( nf90_def_var(ncid, "rot_flux", nf90_double,    &
           DIMIDS = (/idim_rho/),VARID=id_rotflux))
-     CALL netcdf_err( nf90_put_att(ncid,id_rotflux,'long_name',label ))
+     CALL netcdf_err( nf90_put_att(ncid,id_rotflux,'long_name',base_label ))
      CALL netcdf_err(  nf90_put_att(ncid,id_rotflux,'units',       &
           'kg/(second^2)'))
 
      !toroidal rotation convective flux:
-     base_label = '* convective flux associated with toroidal rotation :  '
+     base_label = '* convective flux associated with toroidal rotation '
      CALL netcdf_err( nf90_def_var(ncid, "rot_flux_conv", nf90_double,    &
           DIMIDS = (/idim_rho/),VARID=id_rotflux_conv))
-     CALL netcdf_err( nf90_put_att(ncid,id_rotflux_conv,'long_name',label ))
+     CALL netcdf_err( nf90_put_att(ncid,id_rotflux_conv,'long_name',base_label ))
      CALL netcdf_err(  nf90_put_att(ncid,id_rotflux_conv,'units',       &
           'kg/(second^2)'))
 

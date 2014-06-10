@@ -1089,7 +1089,8 @@
     
       INTEGER(I4B) j,k,ksp,kit,nsp,njnewm1,njnew, &
                    jold,njoldinm1,njoldin,njold,njoldm1
-      REAL(DP),DIMENSION(k,ksp, kit:-kit)  :: array
+!      REAL(DP),DIMENSION(k,ksp, kit:-kit)  :: array
+      REAL(DP),DIMENSION(k,ksp, -kit:kit)  :: array  ! 999,
       REAL(DP),DIMENSION(njnew)      :: out   ! temp array
       REAL(DP) df,drold,drx
 
@@ -3082,14 +3083,14 @@
       USE io_gcnmp,                                           ONLY : nlog
 
       USE common_constants,                                   ONLY : zeroc,joupkev
-
+      USE MPI_data,                                           ONLY : master,myid  ! for debug
        REAL(DP),DIMENSION(nj_local) :: work
        REAL(DP),DIMENSION(nj_local-1) ::rold_zc
 
       INTEGER(i4B)k, nj_local,oknf,ngW20,jj,njnew,nold,j,njoldin, nsp,kit,ksp
 
 
-
+      njnew = nj_local ; nold = nj_local ! added
       IF(.NOT. mmm_loaded_ze)THEN
          ! if using _zct values then load  _ze values for output
          njnew = nj_local ; nold = nj_local
@@ -3156,7 +3157,7 @@
       ALLOCATE(diffuse%mmm_vflux(ngW20))    
       IF(ASSOCIATED(diffuse%mmm_vconv))DEALLOCATE(diffuse%mmm_vconv)
       ALLOCATE(diffuse%mmm_vconv(ngW20+2))    
-
+ 
         DO jj =1,ngW20+2
            IF(jj .LE. ngW20)THEN
               work(:)                  = mmm_omegaW20_ze(jj,:)
@@ -3165,7 +3166,6 @@
               diffuse%mmm_gammaW20(jj) = new_Vector(nj_local,work)
               work(:)                  = mmm_vflux_ze(jj,:)
               diffuse%mmm_vflux(jj)    = new_Vector(nj_local,work)
- 
               ! If the flux was based on diffusivity type assumption we have to
               ! use the following output for Consistency:
               IF(jj == 1 .AND. use_mmm_flux(3) == 0)THEN ! ion thermal flux
@@ -3207,7 +3207,7 @@
                  ENDIF
                  diffuse%mmm_vflux(jj)    = new_Vector(nj_local,work)
               ENDIF
- 
+       if(myid == master) write(6,FMT='("mmm_load_statefile_vectors,line3215")')
               IF(jj == 3 .AND. use_mmm_flux(2) == 0)THEN ! elect thermal
                  k = SIZE(mmm_e_flux_zc,1)
                  njoldin = k+1
@@ -3217,11 +3217,12 @@
                        work(j) =  joupkev*0.5_DP*(mmm_e_flux_zc(j-1,3,0) + mmm_e_flux_zc(j,3,0))
                     ENDDO
                     work(nj_local) = joupkev*mmm_e_flux_zc(k,3,0)
-
+       if(myid == master) write(6,FMT='("mmm_load_statefile_vectors,line3225")')
                  ELSE
                     nsp = 3      ! elct thermal flux
                     ksp = SIZE(mmm_e_flux_zc,2)
                     kit = SIZE(mmm_e_flux_zc,3)
+       if(myid == master) write(6,FMT='("mmm_load_statefile_vectors,line3230")')
                     CALL mmm_flux_processing(njoldin,njnew,mmm_e_flux_zc,k,ksp,kit,nsp,work)
                     !lerrno = 62
                     !CALL terminate(lerrno,nlog)
@@ -3230,7 +3231,7 @@
                     diffuse%mmm_vflux(jj)    = new_Vector(nj_local,work)
  
               ENDIF
-  
+ 
               IF(jj == 4 .AND. use_mmm_flux(1) == 0)THEN ! impurity particle flux
                  k = SIZE(mmm_p_flux_zc,1)
                  njoldin = k+1
@@ -3250,13 +3251,11 @@
                  diffuse%mmm_vflux(jj)    = new_Vector(nj_local,work)
               ENDIF
            ENDIF
-
+       if(myid == master) write(6,FMT='("mmm_load_statefile_vectors,line3259")')
 
            work(:)                     = mmm_vconv_ze(jj,:)
            diffuse%mmm_vconv(jj)       = new_Vector(nj_local,work)
-
         ENDDO
-
       RETURN 
 
     END SUBROUTINE mmm_load_statefile_vectors
