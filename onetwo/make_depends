@@ -1,0 +1,1037 @@
+#cray001.F
+cray001.o: adaptive.mod constnts.mod ext_prog_info.mod io.mod mcgo.mod param.mod staebler.mod cray001.F
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray001.F
+#cray101.f
+cray101.o: bd_condtn.mod events.mod ext_prog_info.mod extra.mod flags.mod flxav.mod fusion.mod geom.mod ifs.mod io_gcnmp.mod io.mod ions.mod island.mod iterdbmd.mod limiter.mod machin.mod mcgo.mod mesh.mod mhdbcdtn.mod mhdcom.mod mhdgrid.mod mhdpar.mod mixcom.mod neut.mod nub2.mod nub.mod numbrs.mod oloss_dat.mod param.mod pelcom.mod pellet_mod.mod rf.mod solcon.mod soln2d.mod soln.mod sourc.mod staebler.mod statistics.mod tfact.mod tordlrot.mod transp.mod weiland.mod yoka.mod zeffcom.mod cray101.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray101.f
+#cray102.f
+cray102.o: adaptive.mod aid_newton.mod allocate_err.mod bd_condtn.mod cer.mod constnts.mod contour.mod echdat_module.mod ename.mod events.mod ext_prog_info.mod extra.mod fdyimp.mod file_proc.mod flags.mod flxav.mod fusion.mod gcnmp_input.mod geom.mod glf23.mod gpsi.mod grid_class.mod ifs.mod io.mod ions.mod island.mod iterdbmd.mod kinetic_efit.mod limiter.mod machin.mod mcgo.mod mesh.mod mhdbcdtn.mod mhdcom.mod mhdgrid.mod mhdpar.mod mixcom.mod mmm95_mod.mod neut.mod nfreya_namelist.mod nonlin.mod nub2.mod nub3.mod nub4.mod nub.mod numbrs.mod paleocl.mod param.mod pelcom.mod p_nfreya_12_interface.mod p_nfreya_rpc_interface.mod rad_loss.mod replace_imsl.mod rf.mod rhog.mod shapctr.mod solcon_gcnmp.mod solcon.mod soln2d.mod soln.mod sourc.mod staebler.mod tcoef.mod tdem.mod tfact.mod tmpcom.mod toq_12_interface.mod tordlrot.mod transp.mod verbose.mod weiland.mod xptor_sim.mod yoka.mod zeffcom.mod zen_state.mod cray102.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray102.f
+#cray202.f
+cray202.o: bicube.mod constnts.mod contour.mod gpsi.mod io.mod limiter.mod mhdbcdtn.mod mhdcom.mod mhdgrid.mod mhdpar.mod numbrs.mod param.mod replace_imsl.mod rhog.mod toq_12_interface.mod cray202.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray202.f
+#cray203.f
+cray203.o: bicube.mod constnts.mod gpsi.mod io.mod mhdcom.mod mhdgrid.mod mhdpar.mod nub.mod param.mod replace_imsl.mod cray203.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray203.f
+#cray204.f
+cray204.o: bd_condtn.mod constnts.mod contour.mod etc.mod extra.mod flags.mod flxav.mod fusion.mod geom.mod io.mod ions.mod iterdbmd.mod machin.mod mesh.mod mhdpar.mod neo2d.mod neut.mod nub2.mod nub.mod numbrs.mod param.mod psig.mod rhog.mod solcon.mod soln.mod sourc.mod tcoef.mod tordlrot.mod yoka.mod cray204.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray204.f
+#cray205.f
+cray205.o: bd_condtn.mod cer.mod constnts.mod contour.mod etc.mod extra.mod flxav.mod geom.mod io.mod ions.mod iterdbmd.mod machin.mod mesh.mod mhdpar.mod neut.mod nub2.mod nub.mod numbrs.mod param.mod psig.mod rhog.mod solcon.mod soln.mod sourc.mod tcoef.mod tordlrot.mod yoka.mod cray205.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray205.f
+#cray206.f
+cray206.o: bd_condtn.mod bicube.mod constnts.mod contour.mod etc.mod extra.mod flags.mod flxav.mod geom.mod gpsi.mod grid_class.mod io.mod limiter.mod machin.mod mesh.mod mhdbcdtn.mod mhdcom.mod mhdgrid.mod mhdpar.mod neo2d.mod numbrs.mod param.mod psig.mod replace_imsl.mod rhog.mod solcon.mod soln2d.mod soln.mod statistics.mod tdem.mod tension_spline.mod tordlrot.mod cray206.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray206.f
+#cray207.f
+cray207.o: bd_condtn.mod bicube.mod constnts.mod contour.mod etc.mod extra.mod flxav.mod flx.mod fusion.mod gcnmp_input.mod geom.mod gpsi.mod io.mod ions.mod iterdbmd_gcnmp.mod iterdbmd.mod kinetic_efit.mod limiter.mod machin.mod mesh.mod mhdbcdtn.mod mhdcom.mod mhdgrid.mod mhdpar.mod neo2d.mod neo2dp.mod neut.mod nub2.mod nub.mod numbrs.mod param.mod pelcom.mod psig.mod replace_imsl.mod rf.mod rhog.mod set_12_gcnmp_vars.mod shapctr.mod smthspline.mod solcon.mod soln2d.mod soln.mod sourc.mod tfact.mod tmpcom.mod tordlrot.mod transp.mod cray207.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray207.f
+#cray208.f
+cray208.o: bicube.mod cer.mod constnts.mod contour.mod etc.mod extra.mod flags.mod flxav.mod geom.mod gpsi.mod ifs.mod io.mod limiter.mod machin.mod mesh.mod metrics.mod mhdbcdtn.mod mhdcom.mod mhdgrid.mod mhdpar.mod neo2dp.mod numbrs.mod param.mod psig.mod replace_imsl.mod rhog.mod shapctr.mod solcon.mod soln2d.mod soln.mod tfact.mod cray208.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray208.f
+#cray209.f
+cray209.o: bd_condtn.mod bicube.mod cer.mod constnts.mod contour.mod ename.mod eq_pfprim.mod etc.mod extra.mod flxav.mod fusion.mod geom.mod gpsi.mod ifs.mod io.mod ions.mod kinetic_efit.mod limiter.mod machin.mod mesh.mod metrics.mod mhdbcdtn.mod mhdcom.mod mhdgrid.mod mhdpar.mod mixcom.mod neo2d.mod neo2dp.mod neut.mod nrtype.mod nub2.mod nub.mod numbrs.mod param.mod psig.mod replace_imsl.mod rf.mod rhog.mod shapctr.mod solcon.mod soln2d.mod soln.mod tdem.mod toq_12_interface.mod tordlrot.mod yoka.mod cray209.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray209.f
+#cray302.f
+cray302.o: bd_condtn.mod bicube.mod cer.mod constnts.mod contour.mod etc.mod extra.mod flx.mod geom.mod gpsi.mod ifs.mod io.mod ions.mod limiter.mod machin.mod mesh.mod mhdgrid.mod mhdpar.mod mixcom.mod neo2d.mod neutral_beams.mod nub2.mod nub4.mod nub.mod numbrs.mod oloss_dat.mod param.mod p_nfreya_12_interface.mod replace_imsl.mod rf.mod rhog.mod solcon.mod soln.mod sourc.mod staebler.mod tcoef.mod tfact.mod tordlrot.mod transp.mod weiland.mod cray302.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray302.f
+#cray303.f
+cray303.o: cer.mod fusion.mod geom.mod ions.mod machin.mod mesh.mod metrics.mod mhdpar.mod neo2d.mod nub2.mod numbrs.mod param.mod replace_imsl.mod soln.mod tfact.mod tordlrot.mod cray303.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray303.f
+#cray304.f
+cray304.o: cer.mod extra.mod fusion.mod geom.mod ions.mod machin.mod mesh.mod metrics.mod mhdpar.mod neo2d.mod nub2.mod numbrs.mod param.mod soln.mod tcoef.mod tordlrot.mod cray304.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray304.f
+#cray306.f
+cray306.o: aid_newton.mod bd_condtn.mod extra.mod flags.mod fusion.mod gcnmp_interface.mod geom.mod glf23.mod gpsi.mod io.mod ions.mod island.mod kinetic_efit.mod machin.mod mesh.mod mhdgrid.mod mhdpar.mod mixcom.mod monitr.mod nbi_restart.mod neut.mod nonlin.mod nub2.mod nub4.mod nub.mod numbrs.mod oloss_dat.mod param.mod pelcom.mod pellet_mod.mod p_nfreya_12_interface.mod rf.mod rhog.mod solcon.mod soln2d.mod soln.mod sourc.mod statistics.mod tfact.mod tordlrot.mod transp.mod verbose.mod xptor_sim.mod cray306.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray306.f
+#cray307.F
+cray307.o: aid_newton.mod bd_condtn.mod common_constants.mod constnts.mod extra.mod flags.mod flxav.mod flx.mod fusion.mod geom.mod glf23.mod gpsi.mod ifs.mod io.mod ions.mod island.mod kapisn_module.mod machin.mod mesh.mod mhdgrid.mod mhdpar.mod mmm95_mod.mod neo2d.mod neut.mod nrtype.mod nub2.mod nub.mod numbrs.mod paleocl.mod param.mod psig.mod rhog.mod solcon_gcnmp.mod solcon.mod soln2d.mod soln.mod sourc.mod staebler.mod tcoef.mod tfact.mod tordlrot.mod transp.mod verbose.mod weiland.mod zeffcom.mod cray307.F
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray307.F
+#cray308.f
+cray308.o: bd_condtn.mod constnts.mod extra.mod flags.mod flxav.mod flx.mod fusion.mod geom.mod glf23.mod gpsi.mod ifs.mod io.mod ions.mod machin.mod mesh.mod mhdpar.mod mixcom.mod neo2d.mod neut.mod nub2.mod nub.mod numbrs.mod paleocl.mod param.mod pelcom.mod p_nfreya_12_interface.mod rf.mod rhog.mod solcon.mod soln.mod sourc.mod staebler.mod tcoef.mod tfact.mod tordlrot.mod weiland.mod yoka.mod zeffcom.mod cray308.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray308.f
+#cray309_nubeam.f
+cray309_nubeam.o: adaptive.mod aid_newton.mod bd_condtn.mod bicube.mod cfactrs.mod common_constants.mod constnts.mod echdat_module.mod ename.mod events.mod extra.mod flags.mod flxav.mod flx.mod fusion.mod geom.mod gpsi.mod io.mod ions.mod limiter.mod machin.mod mcgo.mod mesh.mod mhdgrid.mod mhdpar.mod mixcom.mod nbi_restart.mod neo2d.mod neut.mod neutral_beams.mod nfreya_namelist.mod nrtype.mod nub2.mod nub3.mod nub4.mod nub.mod numbrs.mod param.mod pelcom.mod plasma_properties.mod p_nfreya_12_interface.mod p_nfreya_rpc_interface.mod psig.mod rad_loss.mod replace_imsl.mod restore_12.mod rf.mod rhog.mod solcon_gcnmp.mod solcon.mod soln2d.mod soln.mod sourc.mod statistics.mod tcoef.mod tfact.mod thermalization.mod tmpcom.mod tordlrot.mod transp.mod verbose.mod xptor_sim.mod yoka.mod cray309_nubeam.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray309_nubeam.f
+#cray311.f
+cray311.o: geom.mod io.mod ions.mod mesh.mod neucg.mod neut.mod numbrs.mod param.mod replace_imsl.mod solcon.mod soln.mod sourc.mod verbose.mod cray311.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray311.f
+#cray321u.f
+cray321u.o: bicube.mod constnts.mod contour.mod cpub_dat.mod d01bff_dat.mod ext_prog_info.mod flxav.mod fusion.mod geom.mod gpsi.mod io.mod ions.mod limiter.mod machin.mod mcgo.mod mesh.mod mhdbcdtn.mod mhdcom.mod mhdgrid.mod mhdpar.mod neo2dp.mod neut.mod nub2.mod nub3.mod nub4.mod nub.mod numbrs.mod oloss_dat.mod param.mod psig.mod replace_imsl.mod rhog.mod solcon.mod soln2d.mod soln.mod tordlrot.mod transp.mod verbose.mod cray321u.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray321u.f
+#cray331.f
+cray331.o: bicube.mod constnts.mod contour.mod echdat_module.mod ename.mod ext_prog_info.mod extra.mod file_proc.mod flxav.mod fusion.mod geom.mod gpsi.mod io.mod ions.mod limiter.mod machin.mod mesh.mod mhdcom.mod mhdgrid.mod mhdpar.mod nub2.mod numbrs.mod param.mod precision_mod.mod replace_imsl.mod rf.mod rhog.mod solcon.mod soln2d.mod soln.mod cray331.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray331.f
+#cray341.f90
+cray341.o: events.mod fusion.mod geom.mod io.mod ions.mod machin.mod mesh.mod neut.mod nub2.mod nub.mod numbrs.mod param.mod pelcom.mod prl_mod.mod solcon.mod soln.mod sourc.mod spec_kind_mod.mod cray341.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo pellet_mod.mod | tr A-Z a-z | cut -d. -f1` cray341.f90
+pellet_mod.mod: events.mod fusion.mod geom.mod io.mod ions.mod machin.mod mesh.mod neut.mod nub2.mod nub.mod numbrs.mod param.mod pelcom.mod prl_mod.mod solcon.mod soln.mod sourc.mod spec_kind_mod.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray341.f90
+#cray352.f
+cray352.o: contour.mod ename.mod ext_prog_info.mod io.mod mhdpar.mod param.mod replace_imsl.mod solcon.mod cray352.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray352.f
+#cray401.f
+cray401.o: adaptive.mod aid_newton.mod bd_condtn.mod colrate.mod constnts.mod contour.mod etc.mod events.mod ext_prog_info.mod extra.mod fdyimp.mod flags.mod flxav.mod flx.mod fusion.mod geom.mod glf23.mod gpsi.mod ifs.mod io.mod ions.mod island.mod limiter.mod machin.mod mcgo.mod mesh.mod mhdcom.mod mhdgrid.mod mhdpar.mod neo2d.mod neut.mod nonlin.mod nrtype.mod nub2.mod nub4.mod nub.mod numbrs.mod paleocl.mod param.mod pelcom.mod plasma_properties.mod p_nfreya_12_interface.mod psig.mod rad_loss.mod replace_imsl.mod rf.mod rhog.mod solcon_gcnmp.mod solcon.mod soln2d.mod soln.mod sourc.mod tcoef.mod tdem.mod tfact.mod tmpcom.mod tordlrot.mod transp.mod verbose.mod yoka.mod zeffcom.mod zen_state.mod cray401.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray401.f
+#cray402.f
+cray402.o: colrate.mod common_constants.mod constnts.mod contour.mod flags.mod fusion.mod geom.mod ions.mod limiter.mod machin.mod mesh.mod mhdcom.mod mhdpar.mod neut.mod nub2.mod nub.mod numbrs.mod param.mod solcon.mod soln.mod sourc.mod tdem.mod tmpcom.mod tordlrot.mod verbose.mod cray402.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray402.f
+#cray403.f
+cray403.o: numbrs.mod param.mod soln.mod cray403.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray403.f
+#cray404.f
+cray404.o: flx.mod geom.mod ions.mod machin.mod mesh.mod monitr.mod neo2d.mod numbrs.mod param.mod soln.mod weiland.mod cray404.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray404.f
+#cray501.f
+cray501.o: adaptive.mod geom.mod ifs.mod mesh.mod mhdpar.mod neo2d.mod numbrs.mod param.mod replace_imsl.mod solcon.mod soln2d.mod soln.mod verbose.mod cray501.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray501.f
+#cray504.f
+cray504.o: param.mod cray504.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray504.f
+#cray601.f
+cray601.o: aid_newton.mod allocate_err.mod com.mod copy.mod flags.mod ifs.mod io.mod ions.mod machin.mod mesh.mod mhdpar.mod nonlin.mod numbrs.mod param.mod solcon.mod soln2d.mod soln.mod staebler.mod tcoef.mod terminate.mod tordlrot.mod verbose.mod cray601.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray601.f
+#cray700.f
+cray700.o: aid_newton.mod com.mod copy.mod flags.mod ifs.mod machin.mod mesh.mod nonlin.mod numbrs.mod param.mod solcon.mod tcoef.mod terminate.mod tordlrot.mod cray700.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray700.f
+#callglf2d.f
+callglf2d.o: callglf2d.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO callglf2d.f
+#writeglf2d.f
+writeglf2d.o: writeglf2d.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO writeglf2d.f
+#glf2d.F
+glf2d.o: glf2d.F
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO glf2d.F
+#r8tomsqz.F
+r8tomsqz.o: r8tomsqz.F
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO r8tomsqz.F
+#method_lines.f
+method_lines.o: adaptive.mod aid_newton.mod bd_condtn.mod extra.mod flags.mod flx.mod fusion.mod geom.mod gpsi.mod io.mod ions.mod island.mod machin.mod mesh.mod mhdgrid.mod mhdpar.mod mixcom.mod m_lines.mod neut.mod nonlin.mod nub2.mod nub.mod numbrs.mod ode_pkg.mod oloss_dat.mod param.mod pelcom.mod replace_imsl.mod rf.mod rhog.mod solcon.mod soln2d.mod soln.mod sourc.mod tcoef.mod tfact.mod tmpcom.mod tordlrot.mod verbose.mod method_lines.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO method_lines.f
+#com.f90
+com.o: com.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo com.mod | tr A-Z a-z | cut -d. -f1` com.f90
+com.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO com.f90
+#copy.f90
+copy.o: copy.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo copy.mod | tr A-Z a-z | cut -d. -f1` copy.f90
+copy.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO copy.f90
+#terminate.f90
+terminate.o: terminate.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo terminate.mod | tr A-Z a-z | cut -d. -f1` terminate.f90
+terminate.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO terminate.f90
+#allocate_err.f90
+allocate_err.o: allocate_err.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo allocate_err.mod | tr A-Z a-z | cut -d. -f1` allocate_err.f90
+allocate_err.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO allocate_err.f90
+#aid_newton.f90
+aid_newton.o: aid_newton.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo aid_newton.mod | tr A-Z a-z | cut -d. -f1` aid_newton.f90
+aid_newton.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO aid_newton.f90
+#m_lines.f90
+m_lines.o: m_lines.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo m_lines.mod | tr A-Z a-z | cut -d. -f1` m_lines.f90
+m_lines.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO m_lines.f90
+#glf23.f90
+glf23.o: param.mod glf23.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo glf23.mod | tr A-Z a-z | cut -d. -f1` glf23.f90
+glf23.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO glf23.f90
+#nubeam_12.f
+nubeam_12.o: transp.mod nubeam_12.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO nubeam_12.f
+#transp.f90
+transp.o: beam_structure.mod fast_ion_diffusion.mod nrtype.mod transp.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo transp.mod | tr A-Z a-z | cut -d. -f1` transp.f90
+transp.mod: beam_structure.mod fast_ion_diffusion.mod nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO transp.f90
+#xpload_module.f90
+xpload_module.o: xpload_module.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo xpload_module.mod | tr A-Z a-z | cut -d. -f1` xpload_module.f90
+xpload_module.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO xpload_module.f90
+#shared_modules/string_util.F90
+string_util.o: error_handler.mod grid_class.mod io_gcnmp.mod mesh.mod nrtype.mod shared_modules/string_util.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo string_util.mod | tr A-Z a-z | cut -d. -f1` shared_modules/string_util.F90
+string_util.mod: error_handler.mod grid_class.mod io_gcnmp.mod mesh.mod nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/string_util.F90
+#get_nboutput.f90
+get_nboutput.o: get_nboutput.f90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO get_nboutput.f90
+#mesh.f90
+mesh.o: param.mod mesh.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo mesh.mod | tr A-Z a-z | cut -d. -f1` mesh.f90
+mesh.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO mesh.f90
+#verbose.f90
+verbose.o: verbose.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo verbose.mod | tr A-Z a-z | cut -d. -f1` verbose.f90
+verbose.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO verbose.f90
+#adaptive.f90
+adaptive.o: param.mod adaptive.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo adaptive.mod | tr A-Z a-z | cut -d. -f1` adaptive.f90
+adaptive.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO adaptive.f90
+#ename.f90
+ename.o: solcon.mod yoka.mod ename.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo ename.mod | tr A-Z a-z | cut -d. -f1` ename.f90
+ename.mod: solcon.mod yoka.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO ename.f90
+#shared_modules/nub.F90
+nub.o: nrtype.mod param.mod shared_modules/nub.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo nub.mod | tr A-Z a-z | cut -d. -f1` shared_modules/nub.F90
+nub.mod: nrtype.mod param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/nub.F90
+#nub2.f90
+nub2.o: param.mod nub2.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo nub2.mod | tr A-Z a-z | cut -d. -f1` nub2.f90
+nub2.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO nub2.f90
+#fusion.f90
+fusion.o: param.mod fusion.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo fusion.mod | tr A-Z a-z | cut -d. -f1` fusion.f90
+fusion.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO fusion.f90
+#sourc.f90
+sourc.o: param.mod sourc.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo sourc.mod | tr A-Z a-z | cut -d. -f1` sourc.f90
+sourc.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO sourc.f90
+#param.f90
+param.o: param.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo param.mod | tr A-Z a-z | cut -d. -f1` param.f90
+param.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO param.f90
+#contour.f90
+contour.o: contour.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo contour.mod | tr A-Z a-z | cut -d. -f1` contour.f90
+contour.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO contour.f90
+#shared_modules/mhdpar.f90
+mhdpar.o: param.mod shared_modules/mhdpar.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo mhdpar.mod | tr A-Z a-z | cut -d. -f1` shared_modules/mhdpar.f90
+mhdpar.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/mhdpar.f90
+#limiter.f90
+limiter.o: limiter.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo limiter.mod | tr A-Z a-z | cut -d. -f1` limiter.f90
+limiter.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO limiter.f90
+#tdem.f90
+tdem.o: contour.mod limiter.mod mhdpar.mod param.mod tdem.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tdem.mod | tr A-Z a-z | cut -d. -f1` tdem.f90
+tdem.mod: contour.mod limiter.mod mhdpar.mod param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO tdem.f90
+#solcon.f90
+solcon.o: param.mod solcon.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo solcon.mod | tr A-Z a-z | cut -d. -f1` solcon.f90
+solcon.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO solcon.f90
+#ions.f90
+ions.o: param.mod ions.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo ions.mod | tr A-Z a-z | cut -d. -f1` ions.f90
+ions.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO ions.f90
+#soln.f90
+soln.o: param.mod soln.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo soln.mod | tr A-Z a-z | cut -d. -f1` soln.f90
+soln.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO soln.f90
+#neut.f90
+neut.o: param.mod neut.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo neut.mod | tr A-Z a-z | cut -d. -f1` neut.f90
+neut.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO neut.f90
+#ext_prog_info.f90
+ext_prog_info.o: io.mod mhdpar.mod ext_prog_info.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo ext_prog_info.mod | tr A-Z a-z | cut -d. -f1` ext_prog_info.f90
+ext_prog_info.mod: io.mod mhdpar.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO ext_prog_info.f90
+#rfmod.f90
+rfmod.o: ename.mod fusion.mod io.mod ions.mod nub2.mod nub.mod numbrs.mod param.mod solcon.mod soln.mod rfmod.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo rf.mod | tr A-Z a-z | cut -d. -f1` rfmod.f90
+rf.mod: ename.mod fusion.mod io.mod ions.mod nub2.mod nub.mod numbrs.mod param.mod solcon.mod soln.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO rfmod.f90
+#xptor_sim.f90
+xptor_sim.o: xptor_sim.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo xptor_sim.mod | tr A-Z a-z | cut -d. -f1` xptor_sim.f90
+xptor_sim.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO xptor_sim.f90
+#io.f90
+io.o: param.mod io.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo io.mod | tr A-Z a-z | cut -d. -f1` io.f90
+io.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO io.f90
+#mhdgrid.f90
+mhdgrid.o: mhdpar.mod mhdgrid.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo mhdgrid.mod | tr A-Z a-z | cut -d. -f1` mhdgrid.f90
+mhdgrid.mod: mhdpar.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO mhdgrid.f90
+#extra.f90
+extra.o: param.mod extra.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo extra.mod | tr A-Z a-z | cut -d. -f1` extra.f90
+extra.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO extra.f90
+#yoka.f90
+yoka.o: param.mod yoka.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo yoka.mod | tr A-Z a-z | cut -d. -f1` yoka.f90
+yoka.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO yoka.f90
+#numbrs.f90
+numbrs.o: param.mod numbrs.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo numbrs.mod | tr A-Z a-z | cut -d. -f1` numbrs.f90
+numbrs.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO numbrs.f90
+#toq_12_interface.f90
+toq_12_interface.o: ext_prog_info.mod io.mod mhdpar.mod toq_12_interface.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo toq_12_interface.mod | tr A-Z a-z | cut -d. -f1` toq_12_interface.f90
+toq_12_interface.mod: ext_prog_info.mod io.mod mhdpar.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO toq_12_interface.f90
+#machin.f90
+machin.o: param.mod machin.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo machin.mod | tr A-Z a-z | cut -d. -f1` machin.f90
+machin.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO machin.f90
+#nub4.f90
+nub4.o: param.mod nub4.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo nub4.mod | tr A-Z a-z | cut -d. -f1` nub4.f90
+nub4.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO nub4.f90
+#tfact.f90
+tfact.o: param.mod tfact.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tfact.mod | tr A-Z a-z | cut -d. -f1` tfact.f90
+tfact.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO tfact.f90
+#ufiles_12.f90
+ufiles_12.o: beam_structure.mod fast_ion_diffusion.mod fusion.mod geom.mod io.mod ions.mod nbnamelist.mod nub3.mod nub.mod numbrs.mod param.mod periodic_table_mod.mod p_nfreya_12_interface.mod solcon.mod string_util.mod tordlrot.mod transp.mod ufiles_12.f90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO ufiles_12.f90
+#shared_modules/beam_structure.F90
+beam_structure.o: allocate_err.mod nrtype.mod shared_modules/beam_structure.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo beam_structure.mod | tr A-Z a-z | cut -d. -f1` shared_modules/beam_structure.F90
+beam_structure.mod: allocate_err.mod nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/beam_structure.F90
+#d01bff_dat.f90
+d01bff_dat.o: d01bff_dat.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo d01bff_dat.mod | tr A-Z a-z | cut -d. -f1` d01bff_dat.f90
+d01bff_dat.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO d01bff_dat.f90
+#cpub_dat.f90
+cpub_dat.o: cpub_dat.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo cpub_dat.mod | tr A-Z a-z | cut -d. -f1` cpub_dat.f90
+cpub_dat.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cpub_dat.f90
+#colrate.f90
+colrate.o: colrate.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo colrate.mod | tr A-Z a-z | cut -d. -f1` colrate.f90
+colrate.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO colrate.f90
+#flags.f90
+flags.o: param.mod flags.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo flags.mod | tr A-Z a-z | cut -d. -f1` flags.f90
+flags.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO flags.f90
+#nubeam_driver.f90
+nubeam_driver.o: constnts.mod ename.mod ext_prog_info.mod geom.mod io.mod ions.mod machin.mod nbnamelist.mod neut.mod nub2.mod nub4.mod nub.mod numbrs.mod param.mod restore_12.mod solcon.mod soln.mod sourc.mod tordlrot.mod transp.mod nubeam_driver.f90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO nubeam_driver.f90
+#dnubeam_driver.f90
+dnubeam_driver.o: beam_structure.mod constnts.mod dnubeam_mod.mod ename.mod ext_prog_info.mod extra.mod fusion.mod geom.mod io_gcnmp.mod io.mod ions.mod machin.mod nbnamelist.mod neut.mod nub2.mod nub4.mod nub.mod numbrs.mod param.mod plasma_properties.mod solcon.mod soln.mod sourc.mod tordlrot.mod transp.mod dnubeam_driver.f90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO dnubeam_driver.f90
+#tordlrot.f90
+tordlrot.o: param.mod tordlrot.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tordlrot.mod | tr A-Z a-z | cut -d. -f1` tordlrot.f90
+tordlrot.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO tordlrot.f90
+#constnts.f90
+constnts.o: constnts.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo constnts.mod | tr A-Z a-z | cut -d. -f1` constnts.f90
+constnts.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO constnts.f90
+#load_12.f90
+load_12.o: fusion.mod machin.mod mesh.mod nub.mod numbrs.mod param.mod sourc.mod string_util.mod transp.mod verbose.mod load_12.f90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO load_12.f90
+#nub3.f90
+nub3.o: param.mod nub3.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo nub3.mod | tr A-Z a-z | cut -d. -f1` nub3.f90
+nub3.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO nub3.f90
+#shared_modules/nbnamelist.F90
+nbnamelist.o: nrtype.mod numbrs.mod param.mod transp.mod shared_modules/nbnamelist.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo nbnamelist.mod | tr A-Z a-z | cut -d. -f1` shared_modules/nbnamelist.F90
+nbnamelist.mod: nrtype.mod numbrs.mod param.mod transp.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/nbnamelist.F90
+#geom.f90
+geom.o: param.mod geom.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo geom.mod | tr A-Z a-z | cut -d. -f1` geom.f90
+geom.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO geom.f90
+#events.f90
+events.o: file_proc.mod io.mod mhdcom.mod mhdpar.mod nrtype.mod param.mod rf.mod solcon.mod tdem.mod events.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo events.mod | tr A-Z a-z | cut -d. -f1` events.f90
+events.mod: file_proc.mod io.mod mhdcom.mod mhdpar.mod nrtype.mod param.mod rf.mod solcon.mod tdem.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO events.f90
+#soln2d.f90
+soln2d.o: mhdpar.mod soln2d.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo soln2d.mod | tr A-Z a-z | cut -d. -f1` soln2d.f90
+soln2d.mod: mhdpar.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO soln2d.f90
+#shared_modules/tcoef.F90
+tcoef.o: nf_param.mod nrtype.mod param.mod shared_modules/tcoef.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tcoef.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tcoef.F90
+tcoef.mod: nf_param.mod nrtype.mod param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tcoef.F90
+#bd_condtn.f90
+bd_condtn.o: common_constants.mod nrtype.mod param.mod bd_condtn.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo bd_condtn.mod | tr A-Z a-z | cut -d. -f1` bd_condtn.f90
+bd_condtn.mod: common_constants.mod nrtype.mod param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO bd_condtn.f90
+#ohacd.f90
+ohacd.o: bd_condtn.mod constnts.mod extra.mod fusion.mod geom.mod io.mod ions.mod machin.mod mesh.mod mixcom.mod nub2.mod numbrs.mod param.mod rf.mod solcon.mod soln2d.mod soln.mod sourc.mod tcoef.mod tfact.mod tordlrot.mod verbose.mod ohacd.f90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO ohacd.f90
+#mixcom.f90
+mixcom.o: param.mod mixcom.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo mixcom.mod | tr A-Z a-z | cut -d. -f1` mixcom.f90
+mixcom.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO mixcom.f90
+#psig.f90
+psig.o: mhdpar.mod nrtype.mod psig.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo psig.mod | tr A-Z a-z | cut -d. -f1` psig.f90
+psig.mod: mhdpar.mod nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO psig.f90
+#kin_efit.f90
+kin_efit.o: bd_condtn.mod constnts.mod extra.mod fusion.mod geom.mod ions.mod machin.mod mesh.mod mhdcom.mod nrtype.mod nub2.mod nub.mod numbrs.mod param.mod psig.mod rhog.mod solcon.mod soln.mod sourc.mod yoka.mod kin_efit.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo kinetic_efit.mod | tr A-Z a-z | cut -d. -f1` kin_efit.f90
+kinetic_efit.mod: bd_condtn.mod constnts.mod extra.mod fusion.mod geom.mod ions.mod machin.mod mesh.mod mhdcom.mod nrtype.mod nub2.mod nub.mod numbrs.mod param.mod psig.mod rhog.mod solcon.mod soln.mod sourc.mod yoka.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO kin_efit.f90
+#rhog.f90
+rhog.o: nrtype.mod param.mod rhog.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo rhog.mod | tr A-Z a-z | cut -d. -f1` rhog.f90
+rhog.mod: nrtype.mod param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO rhog.f90
+#mhdcom.f90
+mhdcom.o: mhdpar.mod mhdcom.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo mhdcom.mod | tr A-Z a-z | cut -d. -f1` mhdcom.f90
+mhdcom.mod: mhdpar.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO mhdcom.f90
+#paleocl.f90
+paleocl.o: aid_newton.mod constnts.mod extra.mod geom.mod io.mod ions.mod machin.mod mesh.mod numbrs.mod param.mod soln.mod sourc.mod tcoef.mod paleocl.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo paleocl.mod | tr A-Z a-z | cut -d. -f1` paleocl.f90
+paleocl.mod: aid_newton.mod constnts.mod extra.mod geom.mod io.mod ions.mod machin.mod mesh.mod numbrs.mod param.mod soln.mod sourc.mod tcoef.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO paleocl.f90
+#ifs.f90
+ifs.o: mhdpar.mod param.mod ifs.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo ifs.mod | tr A-Z a-z | cut -d. -f1` ifs.f90
+ifs.mod: mhdpar.mod param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO ifs.f90
+#nonlin.f90
+nonlin.o: param.mod nonlin.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo nonlin.mod | tr A-Z a-z | cut -d. -f1` nonlin.f90
+nonlin.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO nonlin.f90
+#mcgo.f90
+mcgo.o: param.mod mcgo.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo mcgo.mod | tr A-Z a-z | cut -d. -f1` mcgo.f90
+mcgo.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO mcgo.f90
+#staebler.f90
+staebler.o: param.mod staebler.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo staebler.mod | tr A-Z a-z | cut -d. -f1` staebler.f90
+staebler.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO staebler.f90
+#nbi_restart.f90
+nbi_restart.o: ename.mod fusion.mod mhdcom.mod nub2.mod nub.mod numbrs.mod param.mod solcon.mod soln.mod sourc.mod tordlrot.mod transp.mod verbose.mod nbi_restart.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo nbi_restart.mod | tr A-Z a-z | cut -d. -f1` nbi_restart.f90
+nbi_restart.mod: ename.mod fusion.mod mhdcom.mod nub2.mod nub.mod numbrs.mod param.mod solcon.mod soln.mod sourc.mod tordlrot.mod transp.mod verbose.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO nbi_restart.f90
+#toq_12.f90
+toq_12.o: bicube.mod constnts.mod contour.mod ename.mod etc.mod ext_prog_info.mod extra.mod flxav.mod fusion.mod geom.mod gpsi.mod io.mod ions.mod limiter.mod machin.mod mesh.mod metrics.mod mhdcom.mod mhdgrid.mod mhdpar.mod neo2d.mod neo2dp.mod nub2.mod nub.mod numbrs.mod param.mod psig.mod rf.mod rhog.mod shapctr.mod solcon.mod soln2d.mod soln.mod toq_12_interface.mod tordlrot.mod yoka.mod toq_12.f90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO toq_12.f90
+#shared_modules/bicube.f90
+bicube.o: mhdpar.mod shared_modules/bicube.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo bicube.mod | tr A-Z a-z | cut -d. -f1` shared_modules/bicube.f90
+bicube.mod: mhdpar.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/bicube.f90
+#shapctr.f90
+shapctr.o: mhdpar.mod shapctr.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo shapctr.mod | tr A-Z a-z | cut -d. -f1` shapctr.f90
+shapctr.mod: mhdpar.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shapctr.f90
+#flxav.f90
+flxav.o: flxav.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo flxav.mod | tr A-Z a-z | cut -d. -f1` flxav.f90
+flxav.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO flxav.f90
+#metrics.f90
+metrics.o: mhdpar.mod metrics.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo metrics.mod | tr A-Z a-z | cut -d. -f1` metrics.f90
+metrics.mod: mhdpar.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO metrics.f90
+#neo2d.f90
+neo2d.o: param.mod neo2d.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo neo2d.mod | tr A-Z a-z | cut -d. -f1` neo2d.f90
+neo2d.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO neo2d.f90
+#neo2dp.f90
+neo2dp.o: mhdpar.mod neo2dp.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo neo2dp.mod | tr A-Z a-z | cut -d. -f1` neo2dp.f90
+neo2dp.mod: mhdpar.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO neo2dp.f90
+#fast_ion_diffusion.f90
+fast_ion_diffusion.o: fast_ion_diffusion.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo fast_ion_diffusion.mod | tr A-Z a-z | cut -d. -f1` fast_ion_diffusion.f90
+fast_ion_diffusion.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO fast_ion_diffusion.f90
+#restore_12.f90
+restore_12.o: nrtype.mod param.mod restore_12.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo restore_12.mod | tr A-Z a-z | cut -d. -f1` restore_12.f90
+restore_12.mod: nrtype.mod param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO restore_12.f90
+#load_restart_12.f90
+load_restart_12.o: geom.mod numbrs.mod restore_12.mod soln.mod sourc.mod tordlrot.mod load_restart_12.f90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO load_restart_12.f90
+#iterdbmd.f90
+iterdbmd.o: nrtype.mod iterdbmd.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo iterdbmd.mod | tr A-Z a-z | cut -d. -f1` iterdbmd.f90
+iterdbmd.mod: nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO iterdbmd.f90
+#shared_modules/nrtype.F90
+nrtype.o: shared_modules/nrtype.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo nrtype.mod | tr A-Z a-z | cut -d. -f1` shared_modules/nrtype.F90
+nrtype.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/nrtype.F90
+#etc.f90
+etc.o: nrtype.mod param.mod etc.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo etc.mod | tr A-Z a-z | cut -d. -f1` etc.f90
+etc.mod: nrtype.mod param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO etc.f90
+#cer.f90
+cer.o: mhdpar.mod nrtype.mod param.mod cer.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo cer.mod | tr A-Z a-z | cut -d. -f1` cer.f90
+cer.mod: mhdpar.mod nrtype.mod param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cer.f90
+#flx.f90
+flx.o: param.mod flx.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo flx.mod | tr A-Z a-z | cut -d. -f1` flx.f90
+flx.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO flx.f90
+#monitr.f90
+monitr.o: param.mod monitr.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo monitr.mod | tr A-Z a-z | cut -d. -f1` monitr.f90
+monitr.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO monitr.f90
+#ode_pkg.f90
+ode_pkg.o: ode_pkg.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo ode_pkg.mod | tr A-Z a-z | cut -d. -f1` ode_pkg.f90
+ode_pkg.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO ode_pkg.f90
+#tmpcom.f90
+tmpcom.o: param.mod tmpcom.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tmpcom.mod | tr A-Z a-z | cut -d. -f1` tmpcom.f90
+tmpcom.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO tmpcom.f90
+#oloss.f90
+oloss.o: param.mod oloss.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo oloss_dat.mod | tr A-Z a-z | cut -d. -f1` oloss.f90
+oloss_dat.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO oloss.f90
+#smthspline.f90
+smthspline.o: nrtype.mod smthspline.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo smthspline.mod | tr A-Z a-z | cut -d. -f1` smthspline.f90
+smthspline.mod: nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO smthspline.f90
+#shared_modules/rw_iterdb.F90
+rw_iterdb.o: bc_values_gcnmp.mod common_constants.mod curden_terms.mod dep_var.mod error_handler.mod fast_ion_data_gcnmp.mod fdyimp.mod fusion_gcnmp.mod gcnmp_version.mod glf23_gcnmp.mod grid_class.mod io_gcnmp.mod io.mod ions_gcnmp.mod iterdbmd_gcnmp.mod iterdbmd.mod mpi_data.mod neutral_beams.mod neutral_data.mod nf_param.mod nrtype.mod plasma_properties.mod pl_freq.mod shot_info.mod solcon_gcnmp.mod source_terms_gcnmp.mod tglfin.mod vector_class.mod shared_modules/rw_iterdb.F90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/rw_iterdb.F90
+#mmm95_ntcc.f
+mmm95_ntcc.o: mmm95_ntcc.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO mmm95_ntcc.f
+#mmm95_mod.f90
+mmm95_mod.o: mmm95_mod.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo mmm95_mod.mod | tr A-Z a-z | cut -d. -f1` mmm95_mod.f90
+mmm95_mod.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO mmm95_mod.f90
+#nubeam_sub.f90
+nubeam_sub.o: nubeam_sub.f90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO nubeam_sub.f90
+#periodic_table_mod.f90
+periodic_table_mod.o: periodic_table_mod.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo periodic_table_mod.mod | tr A-Z a-z | cut -d. -f1` periodic_table_mod.f90
+periodic_table_mod.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO periodic_table_mod.f90
+#eq_pfprim.f90
+eq_pfprim.o: constnts.mod geom.mod io.mod machin.mod mhdcom.mod numbrs.mod param.mod rhog.mod soln.mod eq_pfprim.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo eq_pfprim.mod | tr A-Z a-z | cut -d. -f1` eq_pfprim.f90
+eq_pfprim.mod: constnts.mod geom.mod io.mod machin.mod mhdcom.mod numbrs.mod param.mod rhog.mod soln.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO eq_pfprim.f90
+#confinement_factors.f90
+confinement_factors.o: bd_condtn.mod extra.mod fusion.mod ions.mod machin.mod nrtype.mod numbrs.mod soln.mod yoka.mod confinement_factors.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo cfactrs.mod | tr A-Z a-z | cut -d. -f1` confinement_factors.f90
+cfactrs.mod: bd_condtn.mod extra.mod fusion.mod ions.mod machin.mod nrtype.mod numbrs.mod soln.mod yoka.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO confinement_factors.f90
+#rad_loss.f90
+rad_loss.o: nrtype.mod rad_loss.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo rad_loss.mod | tr A-Z a-z | cut -d. -f1` rad_loss.f90
+rad_loss.mod: nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO rad_loss.f90
+#iterdb_v1.29.f
+iterdb_v1.29.o: constnts.mod contour.mod etc.mod extra.mod flxav.mod geom.mod io.mod ions.mod iterdbmd.mod machin.mod mesh.mod mhdpar.mod neut.mod nub2.mod nub.mod numbrs.mod param.mod psig.mod rhog.mod solcon.mod soln.mod sourc.mod tcoef.mod tordlrot.mod yoka.mod iterdb_v1.29.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO iterdb_v1.29.f
+#Statefile_proc.f90
+Statefile_proc.o: file_proc.mod gcnmp_input.mod iterdbmd_gcnmp.mod iterdbmd.mod mhdcom.mod nrtype.mod numbrs.mod set_12_gcnmp_vars.mod solcon.mod soln2d.mod Statefile_proc.f90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO Statefile_proc.f90
+#shared_modules/rw_iterdb_netcdf.F90
+rw_iterdb_netcdf.o: bc_values_gcnmp.mod common_constants.mod curden_terms.mod dep_var.mod error_handler.mod fast_ion_data_gcnmp.mod fdyimp.mod fusion_gcnmp.mod gcnmp_version.mod glf23_gcnmp.mod grid_class.mod io_gcnmp.mod io.mod ions_gcnmp.mod iterdbmd_gcnmp.mod mpi_data.mod neutral_beams.mod neutral_data.mod nf_param.mod nrtype.mod plasma_properties.mod pl_freq.mod shot_info.mod solcon_gcnmp.mod source_terms_gcnmp.mod tglfin.mod vector_class.mod shared_modules/rw_iterdb_netcdf.F90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/rw_iterdb_netcdf.F90
+#shared_modules/vector_class.f90
+vector_class.o: nrtype.mod shared_modules/vector_class.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo vector_class.mod | tr A-Z a-z | cut -d. -f1` shared_modules/vector_class.f90
+vector_class.mod: nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/vector_class.f90
+#shared_modules/plasma_prop.f90
+plasma_prop.o: ions_gcnmp.mod nrtype.mod vector_class.mod shared_modules/plasma_prop.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo plasma_properties.mod | tr A-Z a-z | cut -d. -f1` shared_modules/plasma_prop.f90
+plasma_properties.mod: ions_gcnmp.mod nrtype.mod vector_class.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/plasma_prop.f90
+#shared_modules/shot_info.f90
+shot_info.o: nrtype.mod shared_modules/shot_info.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo shot_info.mod | tr A-Z a-z | cut -d. -f1` shared_modules/shot_info.f90
+shot_info.mod: nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/shot_info.f90
+#shared_modules/grid_class.F90
+grid_class.o: common_constants.mod error_handler.mod io_gcnmp.mod io.mod mpi_data.mod nrtype.mod plasma_properties.mod solcon_gcnmp.mod tension_spline.mod vector_class.mod shared_modules/grid_class.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo grid_class.mod | tr A-Z a-z | cut -d. -f1` shared_modules/grid_class.F90
+grid_class.mod: common_constants.mod error_handler.mod io_gcnmp.mod io.mod mpi_data.mod nrtype.mod plasma_properties.mod solcon_gcnmp.mod tension_spline.mod vector_class.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/grid_class.F90
+#shared_modules/error_handler.F90
+error_handler.o: io_gcnmp.mod io.mod mpi_data.mod nrtype.mod shared_modules/error_handler.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo error_handler.mod | tr A-Z a-z | cut -d. -f1` shared_modules/error_handler.F90
+error_handler.mod: io_gcnmp.mod io.mod mpi_data.mod nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/error_handler.F90
+#shared_modules/MPI_data.F90
+MPI_data.o: common_constants.mod nrtype.mod solcon_gcnmp.mod shared_modules/MPI_data.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo mpi_data.mod | tr A-Z a-z | cut -d. -f1` shared_modules/MPI_data.F90
+mpi_data.mod: common_constants.mod nrtype.mod solcon_gcnmp.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/MPI_data.F90
+#shared_modules/fast_ion_data_gcnmp.f90
+fast_ion_data_gcnmp.o: nrtype.mod shared_modules/fast_ion_data_gcnmp.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo fast_ion_data_gcnmp.mod | tr A-Z a-z | cut -d. -f1` shared_modules/fast_ion_data_gcnmp.f90
+fast_ion_data_gcnmp.mod: nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/fast_ion_data_gcnmp.f90
+#shared_modules/neutral_data.f90
+neutral_data.o: nrtype.mod shared_modules/neutral_data.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo neutral_data.mod | tr A-Z a-z | cut -d. -f1` shared_modules/neutral_data.f90
+neutral_data.mod: nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/neutral_data.f90
+#shared_modules/curden_terms.F90
+curden_terms.o: common_constants.mod dep_var.mod grid_class.mod ions_gcnmp.mod nrtype.mod numbrs.mod shared_modules/curden_terms.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo curden_terms.mod | tr A-Z a-z | cut -d. -f1` shared_modules/curden_terms.F90
+curden_terms.mod: common_constants.mod dep_var.mod grid_class.mod ions_gcnmp.mod nrtype.mod numbrs.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/curden_terms.F90
+#shared_modules/dep_var_gcnmp.f90
+dep_var_gcnmp.o: common_constants.mod nrtype.mod shared_modules/dep_var_gcnmp.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo dep_var.mod | tr A-Z a-z | cut -d. -f1` shared_modules/dep_var_gcnmp.f90
+dep_var.mod: common_constants.mod nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/dep_var_gcnmp.f90
+#shared_modules/solcon_gcnmp.f90
+solcon_gcnmp.o: common_constants.mod nrtype.mod shared_modules/solcon_gcnmp.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo solcon_gcnmp.mod | tr A-Z a-z | cut -d. -f1` shared_modules/solcon_gcnmp.f90
+solcon_gcnmp.mod: common_constants.mod nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/solcon_gcnmp.f90
+#shared_modules/io_gcnmp.f90
+io_gcnmp.o: nrtype.mod shared_modules/io_gcnmp.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo io_gcnmp.mod | tr A-Z a-z | cut -d. -f1` shared_modules/io_gcnmp.f90
+io_gcnmp.mod: nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/io_gcnmp.f90
+#shared_modules/ions_gcnmp.f90
+ions_gcnmp.o: nrtype.mod shared_modules/ions_gcnmp.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo ions_gcnmp.mod | tr A-Z a-z | cut -d. -f1` shared_modules/ions_gcnmp.f90
+ions_gcnmp.mod: nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/ions_gcnmp.f90
+#shared_modules/source_terms_gcnmp.f90
+source_terms_gcnmp.o: common_constants.mod grid_class.mod ions_gcnmp.mod nrtype.mod plasma_properties.mod solcon_gcnmp.mod vector_class.mod shared_modules/source_terms_gcnmp.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo source_terms_gcnmp.mod | tr A-Z a-z | cut -d. -f1` shared_modules/source_terms_gcnmp.f90
+source_terms_gcnmp.mod: common_constants.mod grid_class.mod ions_gcnmp.mod nrtype.mod plasma_properties.mod solcon_gcnmp.mod vector_class.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/source_terms_gcnmp.f90
+#shared_modules/gcnmp_version.f90
+gcnmp_version.o: nrtype.mod shared_modules/gcnmp_version.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo gcnmp_version.mod | tr A-Z a-z | cut -d. -f1` shared_modules/gcnmp_version.f90
+gcnmp_version.mod: nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/gcnmp_version.f90
+#shared_modules/fdyimp.f90
+fdyimp.o: common_constants.mod grid_class.mod io_gcnmp.mod nrtype.mod shared_modules/fdyimp.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo fdyimp.mod | tr A-Z a-z | cut -d. -f1` shared_modules/fdyimp.f90
+fdyimp.mod: common_constants.mod grid_class.mod io_gcnmp.mod nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/fdyimp.f90
+#shared_modules/iterdbmd_gcnmp.f90
+iterdbmd_gcnmp.o: nrtype.mod solcon_gcnmp.mod shared_modules/iterdbmd_gcnmp.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo iterdbmd_gcnmp.mod | tr A-Z a-z | cut -d. -f1` shared_modules/iterdbmd_gcnmp.f90
+iterdbmd_gcnmp.mod: nrtype.mod solcon_gcnmp.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/iterdbmd_gcnmp.f90
+#set_12_gcnmp_vars.f90
+set_12_gcnmp_vars.o: bc_values_gcnmp.mod bd_condtn.mod bicube.mod common_constants.mod constnts.mod contour.mod curden_terms.mod dep_var.mod etc.mod extra.mod fast_ion_data_gcnmp.mod fdyimp.mod flags.mod flxav.mod flx.mod fusion_gcnmp.mod fusion.mod geom.mod glf23_gcnmp.mod gpsi.mod grid_class.mod io.mod ions_gcnmp.mod ions.mod iterdbmd.mod limiter.mod machin.mod mesh.mod mhdbcdtn.mod mhdcom.mod mhdgrid.mod mhdpar.mod neo2d.mod neut.mod neutral_beams.mod neutral_data.mod nrtype.mod nub2.mod nub.mod numbrs.mod param.mod pelcom.mod plasma_properties.mod pl_freq.mod p_nfreya_12_interface.mod psig.mod rad_loss.mod replace_imsl.mod rhog.mod shot_info.mod solcon_gcnmp.mod solcon.mod soln.mod source_terms_gcnmp.mod sourc.mod tcoef.mod tension_spline.mod tglfin.mod tordlrot.mod transp.mod vector_class.mod yoka.mod zen_state.mod set_12_gcnmp_vars.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo set_12_gcnmp_vars.mod | tr A-Z a-z | cut -d. -f1` set_12_gcnmp_vars.f90
+set_12_gcnmp_vars.mod: bc_values_gcnmp.mod bd_condtn.mod bicube.mod common_constants.mod constnts.mod contour.mod curden_terms.mod dep_var.mod etc.mod extra.mod fast_ion_data_gcnmp.mod fdyimp.mod flags.mod flxav.mod flx.mod fusion_gcnmp.mod fusion.mod geom.mod glf23_gcnmp.mod gpsi.mod grid_class.mod io.mod ions_gcnmp.mod ions.mod iterdbmd.mod limiter.mod machin.mod mesh.mod mhdbcdtn.mod mhdcom.mod mhdgrid.mod mhdpar.mod neo2d.mod neut.mod neutral_beams.mod neutral_data.mod nrtype.mod nub2.mod nub.mod numbrs.mod param.mod pelcom.mod plasma_properties.mod pl_freq.mod p_nfreya_12_interface.mod psig.mod rad_loss.mod replace_imsl.mod rhog.mod shot_info.mod solcon_gcnmp.mod solcon.mod soln.mod source_terms_gcnmp.mod sourc.mod tcoef.mod tension_spline.mod tglfin.mod tordlrot.mod transp.mod vector_class.mod yoka.mod zen_state.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO set_12_gcnmp_vars.f90
+#shared_modules/neo_tport.f90
+neo_tport.o: common_constants.mod curden_terms.mod dep_var.mod error_handler.mod grid_class.mod io_gcnmp.mod ions_gcnmp.mod mpi_data.mod neutral_beams.mod nrtype.mod plasma_properties.mod solcon_gcnmp.mod source_terms_gcnmp.mod shared_modules/neo_tport.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo neo_tport.mod | tr A-Z a-z | cut -d. -f1` shared_modules/neo_tport.f90
+neo_tport.mod: common_constants.mod curden_terms.mod dep_var.mod error_handler.mod grid_class.mod io_gcnmp.mod ions_gcnmp.mod mpi_data.mod neutral_beams.mod nrtype.mod plasma_properties.mod solcon_gcnmp.mod source_terms_gcnmp.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/neo_tport.f90
+#shared_modules/glf_tport_gcnmp.F90
+glf_tport_gcnmp.o: common_constants.mod curden_terms.mod dep_var.mod error_handler.mod glf23_gcnmp.mod grid_class.mod io_gcnmp.mod ions_gcnmp.mod mpi_data.mod neutral_beams.mod nrtype.mod plasma_properties.mod solcon_gcnmp.mod tension_spline.mod vector_class.mod shared_modules/glf_tport_gcnmp.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo glf_tport_gcnmp.mod | tr A-Z a-z | cut -d. -f1` shared_modules/glf_tport_gcnmp.F90
+glf_tport_gcnmp.mod: common_constants.mod curden_terms.mod dep_var.mod error_handler.mod glf23_gcnmp.mod grid_class.mod io_gcnmp.mod ions_gcnmp.mod mpi_data.mod neutral_beams.mod nrtype.mod plasma_properties.mod solcon_gcnmp.mod tension_spline.mod vector_class.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/glf_tport_gcnmp.F90
+#shared_modules/gcnmp_namelist.F90
+gcnmp_namelist.o: bc_values_gcnmp.mod common_constants.mod curden_terms.mod error_handler.mod forcebal_data_mod.mod fusion_gcnmp.mod glf23_gcnmp.mod glf_tport_gcnmp.mod grid_class.mod io_gcnmp.mod ions_gcnmp.mod mmm_in.mod modmmm7_1.mod mpi_data.mod neo_tport.mod nrtype.mod plasma_properties.mod solcon_gcnmp.mod source_terms_gcnmp.mod string_util.mod tglfin.mod turb_tport.mod vector_class.mod shared_modules/gcnmp_namelist.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo gcnmp_namelist.mod | tr A-Z a-z | cut -d. -f1` shared_modules/gcnmp_namelist.F90
+gcnmp_namelist.mod: bc_values_gcnmp.mod common_constants.mod curden_terms.mod error_handler.mod forcebal_data_mod.mod fusion_gcnmp.mod glf23_gcnmp.mod glf_tport_gcnmp.mod grid_class.mod io_gcnmp.mod ions_gcnmp.mod mmm_in.mod modmmm7_1.mod mpi_data.mod neo_tport.mod nrtype.mod plasma_properties.mod solcon_gcnmp.mod source_terms_gcnmp.mod string_util.mod tglfin.mod turb_tport.mod vector_class.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/gcnmp_namelist.F90
+#gcnmp_interface.f90
+gcnmp_interface.o: aid_newton.mod bc_values_gcnmp.mod ext_prog_info.mod gcnmp_input.mod gcnmp_namelist.mod glf23.mod io_gcnmp.mod io.mod ions_gcnmp.mod iterdbmd_gcnmp.mod iterdbmd.mod nonlin.mod nrtype.mod numbrs.mod pelcom.mod set_12_gcnmp_vars.mod solcon_gcnmp.mod solcon.mod soln2d.mod sourc.mod string_util.mod tfact.mod verbose.mod gcnmp_interface.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo gcnmp_interface.mod | tr A-Z a-z | cut -d. -f1` gcnmp_interface.f90
+gcnmp_interface.mod: aid_newton.mod bc_values_gcnmp.mod ext_prog_info.mod gcnmp_input.mod gcnmp_namelist.mod glf23.mod io_gcnmp.mod io.mod ions_gcnmp.mod iterdbmd_gcnmp.mod iterdbmd.mod nonlin.mod nrtype.mod numbrs.mod pelcom.mod set_12_gcnmp_vars.mod solcon_gcnmp.mod solcon.mod soln2d.mod sourc.mod string_util.mod tfact.mod verbose.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO gcnmp_interface.f90
+#shared_modules/glf23_gcnmp.f90
+glf23_gcnmp.o: nrtype.mod shared_modules/glf23_gcnmp.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo glf23_gcnmp.mod | tr A-Z a-z | cut -d. -f1` shared_modules/glf23_gcnmp.f90
+glf23_gcnmp.mod: nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/glf23_gcnmp.f90
+#shared_modules/bc_values_gcnmp.F90
+bc_values_gcnmp.o: common_constants.mod curden_terms.mod dep_var.mod error_handler.mod grid_class.mod io_gcnmp.mod ions_gcnmp.mod mesh.mod mpi_data.mod nrtype.mod numbrs.mod plasma_properties.mod solcon_gcnmp.mod source_terms_gcnmp.mod vector_class.mod shared_modules/bc_values_gcnmp.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo bc_values_gcnmp.mod | tr A-Z a-z | cut -d. -f1` shared_modules/bc_values_gcnmp.F90
+bc_values_gcnmp.mod: common_constants.mod curden_terms.mod dep_var.mod error_handler.mod grid_class.mod io_gcnmp.mod ions_gcnmp.mod mesh.mod mpi_data.mod nrtype.mod numbrs.mod plasma_properties.mod solcon_gcnmp.mod source_terms_gcnmp.mod vector_class.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/bc_values_gcnmp.F90
+#gcnmp_input.f90
+gcnmp_input.o: nrtype.mod param.mod solcon_gcnmp.mod gcnmp_input.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo gcnmp_input.mod | tr A-Z a-z | cut -d. -f1` gcnmp_input.f90
+gcnmp_input.mod: nrtype.mod param.mod solcon_gcnmp.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO gcnmp_input.f90
+#get_next_io_unit.F90
+get_next_io_unit.o: error_handler.mod io_gcnmp.mod mpi_data.mod nrtype.mod get_next_io_unit.F90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO get_next_io_unit.F90
+#getargs.f90
+getargs.o: error_handler.mod gcnmp_version.mod io_gcnmp.mod nrtype.mod getargs.f90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO getargs.f90
+#shared_modules/tspline.f90
+tspline.o: error_handler.mod io_gcnmp.mod nrtype.mod shared_modules/tspline.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tension_spline.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tspline.f90
+tension_spline.mod: error_handler.mod io_gcnmp.mod nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tspline.f90
+#gpsi.f90
+gpsi.o: nrtype.mod param.mod gpsi.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo gpsi.mod | tr A-Z a-z | cut -d. -f1` gpsi.f90
+gpsi.mod: nrtype.mod param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO gpsi.f90
+#weiland.f90
+weiland.o: nrtype.mod param.mod weiland.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo weiland.mod | tr A-Z a-z | cut -d. -f1` weiland.f90
+weiland.mod: nrtype.mod param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO weiland.f90
+#island.f90
+island.o: nrtype.mod island.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo island.mod | tr A-Z a-z | cut -d. -f1` island.f90
+island.mod: nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO island.f90
+#mhdbcdtn.f90
+mhdbcdtn.o: mhdpar.mod nrtype.mod mhdbcdtn.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo mhdbcdtn.mod | tr A-Z a-z | cut -d. -f1` mhdbcdtn.f90
+mhdbcdtn.mod: mhdpar.mod nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO mhdbcdtn.f90
+#zeffcom.f90
+zeffcom.o: nrtype.mod zeffcom.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo zeffcom.mod | tr A-Z a-z | cut -d. -f1` zeffcom.f90
+zeffcom.mod: nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO zeffcom.f90
+#check_en_bc.f90
+check_en_bc.o: bd_condtn.mod common_constants.mod io.mod mesh.mod nrtype.mod numbrs.mod param.mod check_en_bc.f90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO check_en_bc.f90
+#set_initial_profiles.f90
+set_initial_profiles.o: bd_condtn.mod common_constants.mod flags.mod fusion.mod gpsi.mod io.mod ions.mod iterdbmd.mod mesh.mod nrtype.mod nub2.mod numbrs.mod param.mod psig.mod rf.mod solcon.mod soln.mod sourc.mod string_util.mod tordlrot.mod set_initial_profiles.f90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO set_initial_profiles.f90
+#zen_state.f90
+zen_state.o: bd_condtn.mod common_constants.mod flags.mod fusion.mod io.mod ions.mod nrtype.mod nub2.mod numbrs.mod param.mod solcon.mod soln.mod verbose.mod zen_state.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo zen_state.mod | tr A-Z a-z | cut -d. -f1` zen_state.f90
+zen_state.mod: bd_condtn.mod common_constants.mod flags.mod fusion.mod io.mod ions.mod nrtype.mod nub2.mod numbrs.mod param.mod solcon.mod soln.mod verbose.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO zen_state.f90
+#pelcom.f90
+pelcom.o: nrtype.mod pelcom.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo pelcom.mod | tr A-Z a-z | cut -d. -f1` pelcom.f90
+pelcom.mod: nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO pelcom.f90
+#shared_modules/fusion_gcnmp.f90
+fusion_gcnmp.o: common_constants.mod dep_var.mod fast_ion_data_gcnmp.mod grid_class.mod ions_gcnmp.mod nrtype.mod solcon_gcnmp.mod source_terms_gcnmp.mod shared_modules/fusion_gcnmp.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo fusion_gcnmp.mod | tr A-Z a-z | cut -d. -f1` shared_modules/fusion_gcnmp.f90
+fusion_gcnmp.mod: common_constants.mod dep_var.mod fast_ion_data_gcnmp.mod grid_class.mod ions_gcnmp.mod nrtype.mod solcon_gcnmp.mod source_terms_gcnmp.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/fusion_gcnmp.f90
+#shared_modules/gcnmp_namelist_defaults.f90
+gcnmp_namelist_defaults.o: bc_values_gcnmp.mod common_constants.mod curden_terms.mod dep_var.mod error_handler.mod fusion_gcnmp.mod glf23_gcnmp.mod grid_class.mod io_gcnmp.mod ions_gcnmp.mod mmm_in.mod mpi_data.mod neo_tport.mod nrtype.mod plasma_properties.mod solcon_gcnmp.mod source_terms_gcnmp.mod tglfin.mod turb_tport.mod shared_modules/gcnmp_namelist_defaults.f90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/gcnmp_namelist_defaults.f90
+#shared_modules/tglfin.f90
+tglfin.o: nrtype.mod tglf_tgv194.mod shared_modules/tglfin.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglfin.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglfin.f90
+tglfin.mod: nrtype.mod tglf_tgv194.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglfin.f90
+#shared_modules/tglf_input_defaults.f90
+tglf_input_defaults.o: common_constants.mod nrtype.mod solcon_gcnmp.mod tglfin.mod shared_modules/tglf_input_defaults.f90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglf_input_defaults.f90
+#pnpoly.f90
+pnpoly.o: pnpoly.f90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO pnpoly.f90
+#shared_modules/tglf_modules.f90
+tglf_modules.o: shared_modules/tglf_modules.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglf_closure.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglf_modules.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglf_coeff.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglf_modules.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglf_dimensions.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglf_modules.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglf_eigen.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglf_modules.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglf_hermite.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglf_modules.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglf_interface.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglf_modules.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglf_kyspectrum.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglf_modules.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglf_sgrid.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglf_modules.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglf_species.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglf_modules.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglf_xgrid.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglf_modules.f90
+tglf_closure.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglf_modules.f90
+tglf_coeff.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglf_modules.f90
+tglf_dimensions.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglf_modules.f90
+tglf_eigen.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglf_modules.f90
+tglf_hermite.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglf_modules.f90
+tglf_interface.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglf_modules.f90
+tglf_kyspectrum.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglf_modules.f90
+tglf_sgrid.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglf_modules.f90
+tglf_species.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglf_modules.f90
+tglf_xgrid.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglf_modules.f90
+#shared_modules/compact_schemes.f90
+compact_schemes.o: common_constants.mod error_handler.mod io_gcnmp.mod mpi_data.mod nrtype.mod shared_modules/compact_schemes.f90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/compact_schemes.f90
+#shared_modules/kapisn.F90
+kapisn.o: common_constants.mod dep_var.mod extra.mod ifs.mod ions_gcnmp.mod ions.mod machin.mod mesh.mod neo2d.mod neo_tport.mod nrtype.mod numbrs.mod plasma_properties.mod soln.mod tcoef.mod tfact.mod tordlrot.mod vector_class.mod shared_modules/kapisn.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo kapisn_module.mod | tr A-Z a-z | cut -d. -f1` shared_modules/kapisn.F90
+kapisn_module.mod: common_constants.mod dep_var.mod extra.mod ifs.mod ions_gcnmp.mod ions.mod machin.mod mesh.mod neo2d.mod neo_tport.mod nrtype.mod numbrs.mod plasma_properties.mod soln.mod tcoef.mod tfact.mod tordlrot.mod vector_class.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/kapisn.F90
+#shared_modules/rw_iterdb_netcdf_mod.F90
+rw_iterdb_netcdf_mod.o: bc_values_gcnmp.mod cer.mod common_constants.mod curden_terms.mod dep_var.mod error_handler.mod fast_ion_data_gcnmp.mod fdyimp.mod gcnmp_version.mod grid_class.mod io_gcnmp.mod io.mod ions_gcnmp.mod iterdbmd_gcnmp.mod mpi_data.mod neutral_beams.mod neutral_data.mod nrtype.mod plasma_properties.mod shot_info.mod solcon_gcnmp.mod source_terms_gcnmp.mod tglfin.mod vector_class.mod shared_modules/rw_iterdb_netcdf_mod.F90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/rw_iterdb_netcdf_mod.F90
+#prl_mod.f90
+prl_mod.o: spec_kind_mod.mod prl_mod.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo prl_mod.mod | tr A-Z a-z | cut -d. -f1` prl_mod.f90
+prl_mod.mod: spec_kind_mod.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO prl_mod.f90
+#file_proc.f90
+file_proc.o: echdat_module.mod io.mod nrtype.mod solcon.mod file_proc.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo file_proc.mod | tr A-Z a-z | cut -d. -f1` file_proc.f90
+file_proc.mod: echdat_module.mod io.mod nrtype.mod solcon.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO file_proc.f90
+#echdat_module.F90
+echdat_module.o: error_handler.mod io_gcnmp.mod io.mod nrtype.mod param.mod rf.mod echdat_module.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo echdat_module.mod | tr A-Z a-z | cut -d. -f1` echdat_module.F90
+echdat_module.mod: error_handler.mod io_gcnmp.mod io.mod nrtype.mod param.mod rf.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO echdat_module.F90
+#shared_modules/turb_tport.f90
+turb_tport.o: nrtype.mod solcon_gcnmp.mod shared_modules/turb_tport.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo turb_tport.mod | tr A-Z a-z | cut -d. -f1` shared_modules/turb_tport.f90
+turb_tport.mod: nrtype.mod solcon_gcnmp.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/turb_tport.f90
+#shared_modules/neutral_beams.F90
+neutral_beams.o: common_constants.mod ions_gcnmp.mod nf_param.mod nrtype.mod plasma_properties.mod shared_modules/neutral_beams.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo neutral_beams.mod | tr A-Z a-z | cut -d. -f1` shared_modules/neutral_beams.F90
+neutral_beams.mod: common_constants.mod ions_gcnmp.mod nf_param.mod nrtype.mod plasma_properties.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/neutral_beams.F90
+#shared_modules/nfreya_namelist.F90
+nfreya_namelist.o: bc_values_gcnmp.mod common_constants.mod curden_terms.mod error_handler.mod grid_class.mod io_gcnmp.mod io.mod ions_gcnmp.mod mpi_data.mod neutral_beams.mod nf_param.mod nrtype.mod nub.mod plasma_properties.mod p_nfreya_12_interface.mod solcon_gcnmp.mod source_terms_gcnmp.mod string_util.mod shared_modules/nfreya_namelist.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo nfreya_namelist.mod | tr A-Z a-z | cut -d. -f1` shared_modules/nfreya_namelist.F90
+nfreya_namelist.mod: bc_values_gcnmp.mod common_constants.mod curden_terms.mod error_handler.mod grid_class.mod io_gcnmp.mod io.mod ions_gcnmp.mod mpi_data.mod neutral_beams.mod nf_param.mod nrtype.mod nub.mod plasma_properties.mod p_nfreya_12_interface.mod solcon_gcnmp.mod source_terms_gcnmp.mod string_util.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/nfreya_namelist.F90
+#shared_modules/nf_param.f90
+nf_param.o: shared_modules/nf_param.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo nf_param.mod | tr A-Z a-z | cut -d. -f1` shared_modules/nf_param.f90
+nf_param.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/nf_param.f90
+#shared_modules/consts.f90
+consts.o: nrtype.mod shared_modules/consts.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo common_constants.mod | tr A-Z a-z | cut -d. -f1` shared_modules/consts.f90
+common_constants.mod: nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/consts.f90
+#P_Nfreya_12_interface.f90
+P_Nfreya_12_interface.o: common_constants.mod events.mod fusion.mod io_gcnmp.mod ions.mod neutral_beams.mod nrtype.mod nub2.mod nub3.mod nub.mod param.mod solcon.mod tordlrot.mod transp.mod P_Nfreya_12_interface.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo p_nfreya_12_interface.mod | tr A-Z a-z | cut -d. -f1` P_Nfreya_12_interface.f90
+p_nfreya_12_interface.mod: common_constants.mod events.mod fusion.mod io_gcnmp.mod ions.mod neutral_beams.mod nrtype.mod nub2.mod nub3.mod nub.mod param.mod solcon.mod tordlrot.mod transp.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO P_Nfreya_12_interface.f90
+#P_Nfreya_rpc_interface.f90
+P_Nfreya_rpc_interface.o: common_constants.mod error_handler.mod ext_prog_info.mod file_proc.mod gcnmp_input.mod io_gcnmp.mod iterdbmd_gcnmp.mod iterdbmd.mod nfreya_namelist.mod nrtype.mod p_nfreya_12_interface.mod solcon_gcnmp.mod solcon.mod string_util.mod transp.mod P_Nfreya_rpc_interface.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo p_nfreya_rpc_interface.mod | tr A-Z a-z | cut -d. -f1` P_Nfreya_rpc_interface.f90
+p_nfreya_rpc_interface.mod: common_constants.mod error_handler.mod ext_prog_info.mod file_proc.mod gcnmp_input.mod io_gcnmp.mod iterdbmd_gcnmp.mod iterdbmd.mod nfreya_namelist.mod nrtype.mod p_nfreya_12_interface.mod solcon_gcnmp.mod solcon.mod string_util.mod transp.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO P_Nfreya_rpc_interface.f90
+#shared_modules/thermalization.f90
+thermalization.o: common_constants.mod constnts.mod error_handler.mod io_gcnmp.mod nrtype.mod shared_modules/thermalization.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo thermalization.mod | tr A-Z a-z | cut -d. -f1` shared_modules/thermalization.f90
+thermalization.mod: common_constants.mod constnts.mod error_handler.mod io_gcnmp.mod nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/thermalization.f90
+#Nfreya_output.f90
+Nfreya_output.o: common_constants.mod geom.mod io.mod mesh.mod nrtype.mod nub2.mod nub.mod numbrs.mod param.mod plasma_properties.mod p_nfreya_12_interface.mod transp.mod yoka.mod Nfreya_output.f90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO Nfreya_output.f90
+#shared_modules/dnubeam_mod.F90
+dnubeam_mod.o: io_gcnmp.mod io.mod nrtype.mod param.mod shared_modules/dnubeam_mod.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo dnubeam_mod.mod | tr A-Z a-z | cut -d. -f1` shared_modules/dnubeam_mod.F90
+dnubeam_mod.mod: io_gcnmp.mod io.mod nrtype.mod param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/dnubeam_mod.F90
+#shared_modules/P_Nfreya_nubeam_namelist.F90
+P_Nfreya_nubeam_namelist.o: dnubeam_mod.mod nrtype.mod numbrs.mod param.mod shared_modules/P_Nfreya_nubeam_namelist.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo p_nfreya_nubeam_namelist.mod | tr A-Z a-z | cut -d. -f1` shared_modules/P_Nfreya_nubeam_namelist.F90
+p_nfreya_nubeam_namelist.mod: dnubeam_mod.mod nrtype.mod numbrs.mod param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/P_Nfreya_nubeam_namelist.F90
+#shared_modules/mmm_in.F90
+mmm_in.o: common_constants.mod curden_terms.mod dep_var.mod error_handler.mod grid_class.mod io_gcnmp.mod ions_gcnmp.mod modmmm7_1.mod mpi_data.mod neutral_beams.mod nrtype.mod plasma_contours.mod plasma_properties.mod solcon_gcnmp.mod vector_class.mod shared_modules/mmm_in.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo mmm_in.mod | tr A-Z a-z | cut -d. -f1` shared_modules/mmm_in.F90
+mmm_in.mod: common_constants.mod curden_terms.mod dep_var.mod error_handler.mod grid_class.mod io_gcnmp.mod ions_gcnmp.mod modmmm7_1.mod mpi_data.mod neutral_beams.mod nrtype.mod plasma_contours.mod plasma_properties.mod solcon_gcnmp.mod vector_class.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/mmm_in.F90
+#shared_modules/modmmm7_1.f90
+modmmm7_1.o: nrtype.mod w20mod.mod shared_modules/modmmm7_1.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo modmmm7_1.mod | tr A-Z a-z | cut -d. -f1` shared_modules/modmmm7_1.f90
+modmmm7_1.mod: nrtype.mod w20mod.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/modmmm7_1.f90
+#shared_modules/w20mod.f90
+w20mod.o: nrtype.mod shared_modules/w20mod.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo w20mod.mod | tr A-Z a-z | cut -d. -f1` shared_modules/w20mod.f90
+w20mod.mod: nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/w20mod.f90
+#shared_modules/plasma_contours.f90
+plasma_contours.o: bicubic_spline.mod common_constants.mod error_handler.mod grid_class.mod io_gcnmp.mod mpi_data.mod nrtype.mod plasma_properties.mod vector_class.mod shared_modules/plasma_contours.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo plasma_contours.mod | tr A-Z a-z | cut -d. -f1` shared_modules/plasma_contours.f90
+plasma_contours.mod: bicubic_spline.mod common_constants.mod error_handler.mod grid_class.mod io_gcnmp.mod mpi_data.mod nrtype.mod plasma_properties.mod vector_class.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/plasma_contours.f90
+#shared_modules/bicubic_spline.f90
+bicubic_spline.o: error_handler.mod io_gcnmp.mod nrtype.mod shared_modules/bicubic_spline.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo bicubic_spline.mod | tr A-Z a-z | cut -d. -f1` shared_modules/bicubic_spline.f90
+bicubic_spline.mod: error_handler.mod io_gcnmp.mod nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/bicubic_spline.f90
+#shared_modules/forcebal_data_mod.f90
+forcebal_data_mod.o: spec_kind_mod.mod shared_modules/forcebal_data_mod.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo forcebal_data_mod.mod | tr A-Z a-z | cut -d. -f1` shared_modules/forcebal_data_mod.f90
+forcebal_data_mod.mod: spec_kind_mod.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/forcebal_data_mod.f90
+#spec_kind_mod.f
+spec_kind_mod.o: spec_kind_mod.f
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo spec_kind_mod.mod | tr A-Z a-z | cut -d. -f1` spec_kind_mod.f
+spec_kind_mod.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO spec_kind_mod.f
+#shared_modules/set_eqdsk_statefile_values.f90
+set_eqdsk_statefile_values.o: constnts.mod cubic_spline.mod flxav.mod gpsi.mod grid_class.mod mhdcom.mod nrtype.mod plasma_properties.mod psig.mod vector_class.mod shared_modules/set_eqdsk_statefile_values.f90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/set_eqdsk_statefile_values.f90
+#shared_modules/cubic_spline_class.f90
+cubic_spline_class.o: common_constants.mod nrtype.mod shared_modules/cubic_spline_class.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo cubic_spline.mod | tr A-Z a-z | cut -d. -f1` shared_modules/cubic_spline_class.f90
+cubic_spline.mod: common_constants.mod nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/cubic_spline_class.f90
+#shared_modules/line_av_den.F90
+line_av_den.o: bicubic_spline.mod common_constants.mod cubic_spline.mod grid_class.mod io_gcnmp.mod mpi_data.mod nrtype.mod plasma_properties.mod solcon_gcnmp.mod vector_class.mod shared_modules/line_av_den.F90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/line_av_den.F90
+#shared_modules/set_forcebal_input.F90
+set_forcebal_input.o: common_constants.mod error_handler.mod forcebal_data_mod.mod grid_class.mod io_gcnmp.mod ions_gcnmp.mod mpi_data.mod neutral_beams.mod nrtype.mod plasma_properties.mod shot_info.mod solcon_gcnmp.mod spec_kind_mod.mod shared_modules/set_forcebal_input.F90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/set_forcebal_input.F90
+#shared_modules/load_input.F90
+load_input.o: bc_values_gcnmp.mod common_constants.mod dep_var.mod error_handler.mod gcnmp_namelist.mod gcnmp_version.mod grid_class.mod io_gcnmp.mod ions_gcnmp.mod iterdbmd_gcnmp.mod mpi_data.mod neutral_beams.mod nrtype.mod plasma_properties.mod plasma_shape.mod solcon_gcnmp.mod shared_modules/load_input.F90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/load_input.F90
+#shared_modules/scale_profiles.f90
+scale_profiles.o: bc_values_gcnmp.mod common_constants.mod error_handler.mod grid_class.mod io_gcnmp.mod ions_gcnmp.mod mpi_data.mod nrtype.mod plasma_properties.mod tension_spline.mod vector_class.mod shared_modules/scale_profiles.f90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/scale_profiles.f90
+#shared_modules/plasma_shape.F90
+plasma_shape.o: common_constants.mod error_handler.mod io_gcnmp.mod io.mod mpi_data.mod nrtype.mod plasma_properties.mod vector_class.mod shared_modules/plasma_shape.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo plasma_shape.mod | tr A-Z a-z | cut -d. -f1` shared_modules/plasma_shape.F90
+plasma_shape.mod: common_constants.mod error_handler.mod io_gcnmp.mod io.mod mpi_data.mod nrtype.mod plasma_properties.mod vector_class.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/plasma_shape.F90
+#shared_modules/get_tot_pressure.f90
+get_tot_pressure.o: common_constants.mod dep_var.mod error_handler.mod fast_ion_data_gcnmp.mod grid_class.mod io_gcnmp.mod ions_gcnmp.mod neutral_beams.mod nrtype.mod plasma_properties.mod vector_class.mod shared_modules/get_tot_pressure.f90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/get_tot_pressure.f90
+#shared_modules/mmm_input_defaults.F90
+mmm_input_defaults.o: common_constants.mod error_handler.mod io_gcnmp.mod mmm_in.mod modmmm7_1.mod nrtype.mod shared_modules/mmm_input_defaults.F90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/mmm_input_defaults.F90
+#shared_modules/replace_imsl.F90
+replace_imsl.o: bicube.mod bicubic_spline.mod cubic_spline.mod error_handler.mod io_gcnmp.mod m_refsor.mod nrtype.mod shared_modules/replace_imsl.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo replace_imsl.mod | tr A-Z a-z | cut -d. -f1` shared_modules/replace_imsl.F90
+replace_imsl.mod: bicube.mod bicubic_spline.mod cubic_spline.mod error_handler.mod io_gcnmp.mod m_refsor.mod nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/replace_imsl.F90
+#shared_modules/m_refsor.f90
+m_refsor.o: nrtype.mod shared_modules/m_refsor.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo m_refsor.mod | tr A-Z a-z | cut -d. -f1` shared_modules/m_refsor.f90
+m_refsor.mod: nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/m_refsor.f90
+#shared_modules/tglfv1.94_modules.F90
+tglfv1.94_modules.o: shared_modules/tglfv1.94_modules.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglf_closurev194.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglfv1.94_modules.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglf_coeffv194.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglfv1.94_modules.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglf_dimensionsv194.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglfv1.94_modules.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglf_eigenv194.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglfv1.94_modules.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglf_globalv194.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglfv1.94_modules.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglf_hermitev194.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglfv1.94_modules.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglf_kyspectrumv194.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglfv1.94_modules.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglf_max_dimensionsv194.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglfv1.94_modules.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglf_mpiv194.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglfv1.94_modules.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglf_nuei_coeffv194.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglfv1.94_modules.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglf_sgridv194.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglfv1.94_modules.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglf_speciesv194.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglfv1.94_modules.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglf_tgv194.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglfv1.94_modules.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo tglf_xgridv194.mod | tr A-Z a-z | cut -d. -f1` shared_modules/tglfv1.94_modules.F90
+tglf_closurev194.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglfv1.94_modules.F90
+tglf_coeffv194.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglfv1.94_modules.F90
+tglf_dimensionsv194.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglfv1.94_modules.F90
+tglf_eigenv194.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglfv1.94_modules.F90
+tglf_globalv194.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglfv1.94_modules.F90
+tglf_hermitev194.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglfv1.94_modules.F90
+tglf_kyspectrumv194.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglfv1.94_modules.F90
+tglf_max_dimensionsv194.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglfv1.94_modules.F90
+tglf_mpiv194.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglfv1.94_modules.F90
+tglf_nuei_coeffv194.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglfv1.94_modules.F90
+tglf_sgridv194.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglfv1.94_modules.F90
+tglf_speciesv194.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglfv1.94_modules.F90
+tglf_tgv194.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglfv1.94_modules.F90
+tglf_xgridv194.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/tglfv1.94_modules.F90
+#shared_modules/allocate_plasma_freq.f90
+allocate_plasma_freq.o: grid_class.mod ions_gcnmp.mod nrtype.mod plasma_properties.mod vector_class.mod shared_modules/allocate_plasma_freq.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo pl_freq.mod | tr A-Z a-z | cut -d. -f1` shared_modules/allocate_plasma_freq.f90
+pl_freq.mod: grid_class.mod ions_gcnmp.mod nrtype.mod plasma_properties.mod vector_class.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/allocate_plasma_freq.f90
+#shared_modules/Collect_stats.f90
+Collect_stats.o: error_handler.mod io_gcnmp.mod nrtype.mod shared_modules/Collect_stats.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo statistics.mod | tr A-Z a-z | cut -d. -f1` shared_modules/Collect_stats.f90
+statistics.mod: error_handler.mod io_gcnmp.mod nrtype.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO shared_modules/Collect_stats.f90
+#neucg.f90
+neucg.o: param.mod neucg.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo neucg.mod | tr A-Z a-z | cut -d. -f1` neucg.f90
+neucg.mod: param.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO neucg.f90
+#precision_mod.f90
+precision_mod.o: precision_mod.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo precision_mod.mod | tr A-Z a-z | cut -d. -f1` precision_mod.f90
+precision_mod.mod:
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO precision_mod.f90
