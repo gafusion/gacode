@@ -1,0 +1,4 @@
+mmm_in.o: common_constants.mod curden_terms.mod dep_var.mod error_handler.mod grid_class.mod io_gcnmp.mod ions_gcnmp.mod modmmm7_1.mod mpi_data.mod neutral_beams.mod nrtype.mod plasma_contours.mod plasma_properties.mod solcon_gcnmp.mod vector_class.mod /u/smithsp/source/gacode_onetwo/onetwo/shared_modules/mmm_in.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo mmm_in.mod | tr A-Z a-z | cut -d. -f1` /u/smithsp/source/gacode_onetwo/onetwo/shared_modules/mmm_in.F90
+mmm_in.mod: common_constants.mod curden_terms.mod dep_var.mod error_handler.mod grid_class.mod io_gcnmp.mod ions_gcnmp.mod modmmm7_1.mod mpi_data.mod neutral_beams.mod nrtype.mod plasma_contours.mod plasma_properties.mod solcon_gcnmp.mod vector_class.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO /u/smithsp/source/gacode_onetwo/onetwo/shared_modules/mmm_in.F90

@@ -18,12 +18,13 @@ include ../shared/install/make.inc.$(GACODE_PLATFORM)
 PROTECT   = chmod 755
 DELETE    = rm -f
 RENAME    = mv
+ARCHIVE   = ar rv
 
 include ../shared/install/make.inc.$(GACODE_PLATFORM)
 #These should be in the preceding platform dependent included makefile
 TSPLINE_LIB   = /p/linux/tools/lib
 SPLINE_LIB    = splinelib_pgf_64.a
-LAPACK = -L/c/source/PGI/pgi/linux86-64/13.2/lib -llapack
+LAPACK = -L/c/source/PGI/pgi/linux86-64/13.2/lib  -llapack -lblas
 UFILE_LIBS =  /p/linux/nubeam/201405/ntcc/lib
 UFILE_LIBRARIES  = $(UFILE_LIBS)/libuflib.a         \
 $(UFILE_LIBS)/libufhdf.a        \
@@ -32,11 +33,12 @@ $(UFILE_LIBS)/libvaxonly.a      \
 $(UFILE_LIBS)/libportlib.a      \
 $(UFILE_LIBS)/libmds_sub.a      \
 $(UFILE_LIBS)/libmdstransp.a /f/mdsplus/linux64/lib64/libMdsLib.so
-FC = /opt/pgi/linux86-64/13.2/bin/pgf90
+FC = pgf90 #/opt/pgi/linux86-64/13.2/bin/pgf90
+CC = pgcc
 #FC =  /opt/pgi/linux86-64/11.10/bin/pgf90
 COMPILE   = $(FC) $(OMP) $(PROF)\
   $(AUTP) -c $(OPTION) $(LISTING) $(SPECIAL)
-
+COMP_MOD = ./mifort
 #End platform dependent
 LOAD      = $(FC)  -o $(NAME) 
 include ./make.objects # Defines OBJECTS
@@ -44,8 +46,8 @@ include ./make.objects # Defines OBJECTS
 LIBS = onetwo_libs
 PORTLIB = portlib
 
-LIBRARIES = onetwo_libs/portlib.a onetwo_libs/cortlib.a   \
-	    onetwo_libs/method_lines_library.a  $(LAPACK) \
+LIBRARIES = onetwo_libs/method_lines_library.a   \
+            onetwo_libs/portlib.a onetwo_libs/cortlib.a   \
 	    $(UFILE_LIBRARIES)  $(TSPLINE_LIB)/$(SPLINE_LIB)
 
 
@@ -62,7 +64,7 @@ all: $(NAME)
 
 $(NAME):           $(OBJECTS) $(OBJECTS_P) $(LIBRARIES)
 	@echo "loading .... "
-	$(LOAD)  -L /u/meneghini/fann/src/  $(OBJECTS) $(NETCDF_LIB) $(LIBRARIES) $(FTN90LIB) -ldoublefann
+	$(LOAD)  -L /u/meneghini/fann/src/  $(OBJECTS)  $(LIBRARIES) $(LAPACK) $(NETCDF) $(FTN90LIB) -ldoublefann
 	$(PROTECT) $(NAME)
 #	cp $(NAME) $(INSTALLDIR)
 
@@ -93,31 +95,21 @@ make.includes: make.objects
 	@python ./make_includes.py -path $(VPATH) -obj $(OBJECTS) $(OBJECTS_P)
 include make.includes
 
-#make_depends: make_depends.sh make.objects
-#	@echo "Running make_depends.sh."
-#	@./make_depends.sh "$(OBJECTS)"
-#include make_depends
+$(LIBS)/%.a: $(LIBS)/%.o
+	$(DELETE)  $@
+	$(ARCHIVE) $@   $<
 
-$(LIBS)/method_lines_library.a: $(LIBS)/method_lines_library.o
-	$(DELETE)  $(LIBS)/method_lines_library.a
-	$(ARCHIVE) $(LIBS)/method_lines_library.a   $(LIBS)/method_lines_library.o
 $(LIBS)/method_lines_library.o: $(LIBS)/method_lines_library.f
 	cd         $(LIBS) ; \
-	$(COMPILE) $(LIBS)/method_lines_library.f
+	$(COMPILE) method_lines_library.f
 
-$(LIBS)/cortlib.a: $(LIBS)/cortlib.o
-	$(DELETE)  $(LIBS)/cortlib.a
-	$(ARCHIVE) $(LIBS)/cortlib.a   $(LIBS)/cortlib.o
 $(LIBS)/cortlib.o: $(LIBS)/cortlib.c
 	cd         $(LIBS) ; \
-	$(PGCC)  -c    $(LIBS)/cortlib.c
+	$(CC)  -c    cortlib.c
 
-$(LIBS)/$(PORTLIB).a: $(LIBS)/$(PORTLIB).o
-	$(DELETE)  $(LIBS)/$(PORTLIB).a
-	$(ARCHIVE) $(LIBS)/$(PORTLIB).a   $(LIBS)/$(PORTLIB).o
 $(LIBS)/$(PORTLIB).o: $(LIBS)/$(PORTLIB).F
 	cd         $(LIBS) ; \
-	$(COMPILE) -I../ $(LIBS)/$(PORTLIB).F
+	$(COMPILE) -I../ $(PORTLIB).F #$(LIBS)/$(PORTLIB).F
 
 
 .PHONY:	clean

@@ -1,0 +1,2 @@
+cray206.o: bd_condtn.mod bicube.mod constnts.mod contour.mod etc.mod extra.mod flags.mod flxav.mod geom.mod gpsi.mod grid_class.mod io.mod limiter.mod machin.mod mesh.mod mhdbcdtn.mod mhdcom.mod mhdgrid.mod mhdpar.mod neo2d.mod numbrs.mod param.mod psig.mod replace_imsl.mod rhog.mod solcon.mod soln2d.mod soln.mod statistics.mod tdem.mod tension_spline.mod tordlrot.mod cray206.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray206.f

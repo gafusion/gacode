@@ -1,0 +1,2 @@
+cray331.o: bicube.mod constnts.mod contour.mod echdat_module.mod ename.mod ext_prog_info.mod extra.mod file_proc.mod flxav.mod fusion.mod geom.mod gpsi.mod io.mod ions.mod limiter.mod machin.mod mesh.mod mhdcom.mod mhdgrid.mod mhdpar.mod nub2.mod numbrs.mod param.mod precision_mod.mod replace_imsl.mod rf.mod rhog.mod solcon.mod soln2d.mod soln.mod cray331.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray331.f

@@ -1,0 +1,2 @@
+cray306.o: aid_newton.mod bd_condtn.mod extra.mod flags.mod fusion.mod gcnmp_interface.mod geom.mod glf23.mod gpsi.mod io.mod ions.mod island.mod kinetic_efit.mod machin.mod mesh.mod mhdgrid.mod mhdpar.mod mixcom.mod monitr.mod nbi_restart.mod neut.mod nonlin.mod nub2.mod nub4.mod nub.mod numbrs.mod oloss_dat.mod param.mod pelcom.mod pellet_mod.mod p_nfreya_12_interface.mod rf.mod rhog.mod solcon.mod soln2d.mod soln.mod sourc.mod statistics.mod tfact.mod tordlrot.mod transp.mod verbose.mod xptor_sim.mod cray306.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray306.f

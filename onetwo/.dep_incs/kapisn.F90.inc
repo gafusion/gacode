@@ -1,0 +1,4 @@
+kapisn.o: common_constants.mod dep_var.mod extra.mod ifs.mod ions_gcnmp.mod ions.mod machin.mod mesh.mod neo2d.mod neo_tport.mod nrtype.mod numbrs.mod plasma_properties.mod soln.mod tcoef.mod tfact.mod tordlrot.mod vector_class.mod /u/smithsp/source/gacode_onetwo/onetwo/shared_modules/kapisn.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo kapisn_module.mod | tr A-Z a-z | cut -d. -f1` /u/smithsp/source/gacode_onetwo/onetwo/shared_modules/kapisn.F90
+kapisn_module.mod: common_constants.mod dep_var.mod extra.mod ifs.mod ions_gcnmp.mod ions.mod machin.mod mesh.mod neo2d.mod neo_tport.mod nrtype.mod numbrs.mod plasma_properties.mod soln.mod tcoef.mod tfact.mod tordlrot.mod vector_class.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO /u/smithsp/source/gacode_onetwo/onetwo/shared_modules/kapisn.F90

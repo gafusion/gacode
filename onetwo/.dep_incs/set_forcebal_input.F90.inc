@@ -1,0 +1,2 @@
+set_forcebal_input.o: common_constants.mod error_handler.mod forcebal_data_mod.mod grid_class.mod io_gcnmp.mod ions_gcnmp.mod mpi_data.mod neutral_beams.mod nrtype.mod plasma_properties.mod shot_info.mod solcon_gcnmp.mod spec_kind_mod.mod /u/smithsp/source/gacode_onetwo/onetwo/shared_modules/set_forcebal_input.F90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO /u/smithsp/source/gacode_onetwo/onetwo/shared_modules/set_forcebal_input.F90

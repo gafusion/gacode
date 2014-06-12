@@ -1,0 +1,2 @@
+cray209.o: bd_condtn.mod bicube.mod cer.mod constnts.mod contour.mod ename.mod eq_pfprim.mod etc.mod extra.mod flxav.mod fusion.mod geom.mod gpsi.mod ifs.mod io.mod ions.mod kinetic_efit.mod limiter.mod machin.mod mesh.mod metrics.mod mhdbcdtn.mod mhdcom.mod mhdgrid.mod mhdpar.mod mixcom.mod neo2d.mod neo2dp.mod neut.mod nrtype.mod nub2.mod nub.mod numbrs.mod param.mod psig.mod replace_imsl.mod rf.mod rhog.mod shapctr.mod solcon.mod soln2d.mod soln.mod tdem.mod toq_12_interface.mod tordlrot.mod yoka.mod cray209.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray209.f

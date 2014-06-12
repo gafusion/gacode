@@ -1,0 +1,2 @@
+gcnmp_namelist_defaults.o: bc_values_gcnmp.mod common_constants.mod curden_terms.mod dep_var.mod error_handler.mod fusion_gcnmp.mod glf23_gcnmp.mod grid_class.mod io_gcnmp.mod ions_gcnmp.mod mmm_in.mod mpi_data.mod neo_tport.mod nrtype.mod plasma_properties.mod solcon_gcnmp.mod source_terms_gcnmp.mod tglfin.mod turb_tport.mod /u/smithsp/source/gacode_onetwo/onetwo/shared_modules/gcnmp_namelist_defaults.f90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO /u/smithsp/source/gacode_onetwo/onetwo/shared_modules/gcnmp_namelist_defaults.f90

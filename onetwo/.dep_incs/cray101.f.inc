@@ -1,0 +1,2 @@
+cray101.o: bd_condtn.mod events.mod ext_prog_info.mod extra.mod flags.mod flxav.mod fusion.mod geom.mod ifs.mod io_gcnmp.mod io.mod ions.mod island.mod iterdbmd.mod limiter.mod machin.mod mcgo.mod mesh.mod mhdbcdtn.mod mhdcom.mod mhdgrid.mod mhdpar.mod mixcom.mod neut.mod nub2.mod nub.mod numbrs.mod oloss_dat.mod param.mod pelcom.mod pellet_mod.mod rf.mod solcon.mod soln2d.mod soln.mod sourc.mod staebler.mod statistics.mod tfact.mod tordlrot.mod transp.mod weiland.mod yoka.mod zeffcom.mod cray101.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray101.f

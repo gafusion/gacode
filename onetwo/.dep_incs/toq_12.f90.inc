@@ -1,0 +1,2 @@
+toq_12.o: bicube.mod constnts.mod contour.mod ename.mod etc.mod ext_prog_info.mod extra.mod flxav.mod fusion.mod geom.mod gpsi.mod io.mod ions.mod limiter.mod machin.mod mesh.mod metrics.mod mhdcom.mod mhdgrid.mod mhdpar.mod neo2d.mod neo2dp.mod nub2.mod nub.mod numbrs.mod param.mod psig.mod rf.mod rhog.mod shapctr.mod solcon.mod soln2d.mod soln.mod toq_12_interface.mod tordlrot.mod yoka.mod toq_12.f90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO toq_12.f90

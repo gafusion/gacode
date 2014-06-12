@@ -1,0 +1,4 @@
+gcnmp_interface.o: aid_newton.mod bc_values_gcnmp.mod ext_prog_info.mod gcnmp_input.mod gcnmp_namelist.mod glf23.mod io_gcnmp.mod io.mod ions_gcnmp.mod iterdbmd_gcnmp.mod iterdbmd.mod nonlin.mod nrtype.mod numbrs.mod pelcom.mod set_12_gcnmp_vars.mod solcon_gcnmp.mod solcon.mod soln2d.mod sourc.mod string_util.mod tfact.mod verbose.mod gcnmp_interface.f90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo gcnmp_interface.mod | tr A-Z a-z | cut -d. -f1` gcnmp_interface.f90
+gcnmp_interface.mod: aid_newton.mod bc_values_gcnmp.mod ext_prog_info.mod gcnmp_input.mod gcnmp_namelist.mod glf23.mod io_gcnmp.mod io.mod ions_gcnmp.mod iterdbmd_gcnmp.mod iterdbmd.mod nonlin.mod nrtype.mod numbrs.mod pelcom.mod set_12_gcnmp_vars.mod solcon_gcnmp.mod solcon.mod soln2d.mod sourc.mod string_util.mod tfact.mod verbose.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO gcnmp_interface.f90
