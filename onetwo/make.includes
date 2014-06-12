@@ -1,271 +1,222 @@
-# $Id: make.includes,v 1.137 2013/05/08 00:45:36 stjohn Exp $
-
-INCLUDES_cray001 = adaptive.mod fusion.mod mcgo.mod  nub2.o param.mod \
-                   quit.i ext_prog_info.o mesh.mod constnts.mod staebler.mod \
-		   io.mod
-INCLUDES_cray101 =   co2.i events.mod extra.mod \
-                   flags.mod flxav.mod fusion.mod geom.mod ifs.mod bd_condtn.o io.o ions.mod \
-                   io.mod island.mod iterdbmd.mod limiter.mod machin.mod mcgo.mod mesh.mod \
-                    mhdcom.mod mhdgrid.o mhdpar.mod mixcom.mod neut.mod \
-                   nub.o nub2.o numbrs.mod oloss_dat.mod param.mod pckcom.i pelcom.mod\
-                   rf.mod shay.i solcon.mod soln.mod soln2d.mod sourc.mod staebler.mod \
-                   storage.i sxrcom.i tfact.mod tordlrot.mod weiland.mod yoka.mod \
-                   zeffcom.mod quit.i transp.mod  param.mod ext_prog_info.o       \
-	 	   mmm95_mod.mod mhdbcdtn.mod  io_gcnmp.mod Collect_stats.o 
-INCLUDES_cray102 = adaptive.mod       \
-                   cer.mod co2.i constnts.mod contour.mod ename.mod events.mod extra.mod \
-                   fitparms.i fixbdry.i flags.mod flxav.mod fusion.mod geom.mod glf23.o \
-                   glf.m ifs.mod imsl.i bd_condtn.o io.o ions.mod island.mod iterdbmd.mod \
-                   limiter.mod machin.mod mcgo.mod mesh.mod  mhdcom.mod \
-                   mhdgrid.o mhdpar.mod mixcom.mod mod_gbohm.i neut.mod nub.o nub2.o \
-                   nub3.o numbrs.mod param.mod pckcom.i pelcom.mod rebut.i rfmod.o \
-                   rhog.mod shapctr.mod shape.i shay.i gpsi.mod solcon.mod soln.mod \
-                   soln2d.mod sourc.mod spare.i staebler.mod storage.i sxrcom.i \
-                   tcoef.mod tdem.mod tfact.mod tmpcom.mod tordlrot.mod verbose.mod \
-                   wedgerf.i  weiland.mod yoka.mod zeffcom.mod  gauss_info.i \
-                   nub4.mod  nonlin.mod aid_newton.o quit.i allocate_err.o \
-                   transp.mod  ext_prog_info.o param.mod paleocl.o \
-		   xptor_sim.mod  toq_12_interface.o string_util.mod mhdbcdtn.mod \
-		   kinetic_efit.mod rad_loss.mod gcnmp_input.o zen_state.o \
-	           echdat_module.o P_Nfreya_12_interface.o nfreya_namelist.o \
-	  	   P_Nfreya_rpc_interface.o replace_imsl.mod Collect_stats.o
-
-INCLUDES_cray202 = bicube.mod constnts.mod contour.mod fitparms.i \
-                   fixbdry.i io.o limiter.mod  mhdcom.mod \
-                   mhdgrid.o mhdpar.mod numbrs.mod param.mod rhog.mod gpsi.mod \
-		   toq_12_interface.o mhdbcdtn.mod replace_imsl.mod
-INCLUDES_cray203 = bicube.mod constnts.mod fitparms.i io.o mhdcom.mod \
-                   mhdgrid.o mhdpar.mod nub.o param.mod shape.i gpsi.mod storage.i 
-INCLUDES_cray204 = constnts.mod contour.mod etc.mod extra.mod \
-                   flxav.mod geom.mod io.o ions.mod iterdbmd.mod machin.mod mesh.mod \
-                   mhdpar.mod neut.mod nub.o nub2.o numbrs.mod param.mod psig.mod rhog.mod \
-                   solcon.mod soln.mod sourc.mod storage.i tcoef.mod tordlrot.mod yoka.mod \
-		   neo2d.mod bd_condtn.mod
-INCLUDES_cray205 = cer.mod constnts.mod contour.mod etc.mod extra.mod \
-                   flxav.mod geom.mod io.o ions.mod iterdbmd.mod machin.mod mesh.mod \
-                   mhdpar.mod  \
-                   neut.mod nub.o nub2.o numbrs.mod param.mod psig.mod rhog.mod \
-                   solcon.mod soln.mod sourc.mod storage.i tcoef.mod \
-                   tordlrot.mod yoka.mod bd_condtn.mod
-INCLUDES_cray206 =   bicube.mod constnts.mod contour.mod \
-                   etc.mod extra.mod flags.mod flxav.mod geom.mod io.o limiter.mod \
-                   machin.mod mesh.mod  mhdcom.mod mhdgrid.o mhdpar.mod \
-                    \
-                   neo2d.mod numbrs.mod param.mod psig.mod rhog.mod gpsi.mod solcon.mod \
-                   soln.mod soln2d.mod storage.i tdem.mod tordlrot.mod mhdbcdtn.mod
-INCLUDES_cray207 =   bicube.mod  constnts.mod \
-                   contour.mod etc.mod extra.mod flx.mod flxav.mod fusion.mod geom.mod \
-                   imsl.i bd_condtn.o io.o ions.mod io.mod iterdbmd.mod limiter.mod \
-                   machin.mod mesh.mod  mhdcom.mod mhdgrid.o mhdpar.mod \
-                   neo2d.mod neo2dp.mod neut.mod nub.o nub2.o numbrs.mod param.mod \
-                   pckcom.i pelcom.mod psig.mod rfmod.o rhog.mod shapctr.mod gpsi.mod \
-                   solcon.mod soln.mod soln2d.mod sourc.mod storage.i tfact.mod      \
-		   tmpcom.mod mhdbcdtn.mod \
-                   tordlrot.mod  iterdbmd.mod smthspline.mod gcnmp_input.mod
-INCLUDES_cray208 = bicube.mod cer.mod constnts.mod contour.mod etc.mod extra.mod \
-                   flxav.mod geom.mod ifs.mod imsl.i io.o  limiter.mod \
-                   machin.mod mesh.mod metrics.mod  mhdcom.mod mhdgrid.o \
-                   mhdpar.mod neo2dp.mod numbrs.mod param.mod psig.mod rhog.mod shapctr.mod \
-                   shape.i gpsi.mod solcon.mod soln.mod soln2d.mod spare.i storage.i \
-                   tfact.mod  mhdbcdtn.mod
-INCLUDES_cray209 =   bicube.mod cer.mod constnts.mod \
-                   contour.mod ename.mod etc.mod extra.mod flxav.mod fusion.mod geom.mod \
-                   ifs.mod imsl.i bd_condtn.o io.o ions.mod io.mod limiter.mod \
-                   machin.mod mesh.mod metrics.mod  mhdcom.mod mhdgrid.o \
-                   mhdpar.mod mixcom.mod neo2d.mod neo2dp.mod neut.mod nub.o nub2.o \
-                   numbrs.mod param.mod psig.mod rfmod.o rhog.mod shapctr.mod gpsi.mod \
-                   solcon.mod soln.mod soln2d.mod storage.i tordlrot.mod yoka.mod \
-                   eq_pfprim.mod mhdbcdtn.mod
-INCLUDES_cray302 =   bicube.mod cer.mod constnts.mod \
-                   contour.mod etc.mod extra.mod flx.mod geom.mod ifs.mod io.o ions.mod \
-                   limiter.mod machin.mod mesh.mod mhdgrid.o mhdpar.mod mixcom.mod \
-                   mixx.i neo2d.mod nub.o nub2.o numbrs.mod oloss_dat.mod param.mod \
-                   rebut.i rfmod.o rhog.mod gpsi.mod solcon.mod soln.mod sourc.mod \
-                   staebler.mod storage.i tcoef.mod tfact.mod tordlrot.mod weiland.mod
-INCLUDES_cray303 = cer.mod fusion.mod geom.mod houlberg.i ions.mod \
-                   machin.mod mesh.mod metrics.mod mhdpar.mod neo2d.mod nub2.o numbrs.mod \
-                   param.mod soln.mod storage.i tfact.mod tordlrot.mod replace_imsl.mod
-INCLUDES_cray304 = cer.mod fusion.mod geom.mod houlberg.i ions.mod \
-                   machin.mod mesh.mod metrics.mod mhdpar.mod neo2d.mod nub2.o numbrs.mod \
-                   param.mod soln.mod storage.i tfact.mod tordlrot.mod
-INCLUDES_cray306 =   delben.i extra.mod flags.mod flx.mod \
-                   fusion.mod geom.mod imsl.i bd_condtn.o io.o ions.mod io.mod \
-                   island.mod machin.mod mesh.mod mhdgrid.o mhdpar.mod mixcom.mod \
-                   monitr.mod neut.mod nub.o nub2.o numbrs.mod  oloss_dat.mod \
-                   param.mod pelcom.mod rebut.i rfmod.o rhog.mod gpsi.mod solcon.mod \
-                   soln.mod soln2d.mod sourc.mod sxrcom.i tcoef.mod tfact.mod  \
-	           tordlrot.mod aid_newton.o \
-                   verbose.mod nub4.mod nonlin.mod quit.i  paleocl.mod  \
-		   xptor_sim.mod kinetic_efit.mod nbi_restart.mod \
-		   gcnmp_interface.mod
-INCLUDES_cray307 =     co2.i exptlprof.i \
-		   extra.mod flags.mod flx.mod flxav.mod fusion.mod geom.mod glf23.o glf.m \
-		   ifs.mod bd_condtn.o io.o ions.mod island.mod machin.mod mesh.mod mhdgrid.o \
-                   mhdpar.mod mod_gbohm.i neo2d.mod neut.mod nub.o nub2.o numbrs.mod \
-                   param.mod psig.mod rebut.i rhog.mod shay.i gpsi.mod solcon.mod \
-                   soln.mod soln2d.mod sourc.mod staebler.mod storage.i sxrcom.i \
-                   tcoef.mod tfact.mod tordlrot.mod verbose.mod weiland.mod zeffcom.mod \
-		   sauter.i aid_newton.o  paleocl.o mmm95_ntcc.o mmm95_mod.mod kapisn.o
-ifdef PARALLEL_12
-INCLUDES_P_cray307 = mpi12.o
-else
-INCLUDES_P_cray307 = 
-endif
-INCLUDES_cray308 =   co2.i constnts.mod exptlprof.i \
-                   extra.mod flags.mod flx.mod flxav.mod fusion.mod geom.mod ifs.mod imsl.i \
-                   bd_condtn.o io.o ions.mod machin.mod mesh.mod mhdpar.mod mixcom.mod \
-                   neo2d.mod neut.mod nub.o nub2.o numbrs.mod param.mod pelcom.mod \
-                   rebut.i rfmod.o rhog.mod shay.i gpsi.mod solcon.mod soln.mod sourc.mod \
-                   staebler.mod storage.i sxrcom.i tcoef.mod tfact.mod tordlrot.mod \
-                   weiland.mod yoka.mod zeffcom.mod
-INCLUDES_cray309 = adaptive.mod   bicube.mod constnts.mod \
-                   extra.mod flags.mod flx.mod flxav.mod fusion.mod geom.mod imsl.i \
-                   bd_condtn.o io.o ions.mod limiter.mod machin.mod mcgo.mod mesh.mod \
-                   mhdgrid.o mhdpar.mod mixcom.mod neo2d.mod neut.mod nub.o nub2.o \
-                   nub3.o numbrs.mod param.mod pelcom.mod psig.mod rfmod.o rhog.mod gpsi.mod \
-                   solcon.mod soln.mod soln2d.mod sourc.mod storage.i tcoef.mod tfact.mod \
-                   tmpcom.mod tordlrot.mod verbose.mod yoka.mod nub4.mod sauter.i aid_newton.o \
-		   xptor_sim.mod restore_12.mod solcon_gcnmp.o \
-		   cfactrs.mod rad_loss.mod events.mod echdat_module.o \
-		   P_Nfreya_12_interface.o plasma_prop.o thermalization.o \
-                   P_Nfreya_rpc_interface.o bd_condtn.o Collect_stats.o
-
-INCLUDES_cray311 = geom.mod io.o ions.mod mesh.mod neucg.mod neut.mod \
-                   numbrs.mod param.mod solcon.mod soln.mod sourc.mod verbose.mod
-INCLUDES_cray321 = bicube.mod  constnts.mod contour.mod \
-                   flxav.mod fusion.mod geom.mod io.o ions.mod limiter.mod machin.mod \
-                   mcgo.mod mesh.mod  mhdcom.mod mhdgrid.o mhdpar.mod \
-                   neo2dp.mod neut.mod nub.o nub2.o nub3.o numbrs.mod oloss_dat.mod \
-                   param.mod psig.mod rhog.mod gpsi.mod solcon.mod soln.mod soln2d.mod \
-                   storage.i tordlrot.mod verbose.mod gauss_info.i \
-	           beam_plot_dat.i nub4.mod d01bff_dat.mod cpub_dat.mod mhdbcdtn.mod
-INCLUDES_cray331 = ename.mod extra.mod ichcom.i ichp2.i \
-                   ichpar.i io.o machin.mod mhdpar.mod numbrs.mod param.mod rhog.mod \
-                   gpsi.mod  ext_prog_info.o precision_mod.o sourc.mod constnts.mod \
-		   file_proc.mod events.mod
-INCLUDES_cray341 = events.mod fusion.mod geom.mod io.o ions.mod \
-                   machin.mod mesh.mod neut.mod nub.o nub2.o numbrs.mod param.mod \
-                   pelcom.mod solcon.mod soln.mod sourc.mod
-INCLUDES_cray352 = contour.mod ename.mod param.mod replace_imsl.mod
-INCLUDES_cray401 = adaptive.mod       \
-                   co2.i colrate.mod constnts.mod contour.mod delben.i etc.mod \
-                   events.mod extra.mod flags.mod flx.mod flxav.mod fusion.mod geom.mod \
-                   ifs.mod imsl.i bd_condtn.o io.o ions.mod island.mod limiter.mod \
-                   machin.mod mcgo.mod mesh.mod mhdcom.mod mhdgrid.o mhdpar.mod neo2d.mod \
-                   neut.mod nub.o nub2.o nub4.mod numbrs.mod ohml.i param.mod pelcom.mod \
-                   rebut.i rfmod.o rhog.mod gpsi.mod solcon.mod soln.mod soln2d.mod \
-                   sourc.mod storage.i sxrcom.i tcoef.mod tdem.mod tfact.mod tmpcom.mod \
-                   tordlrot.mod verbose.mod yoka.mod zeffcom.mod nonlin.mod sauter.i \
-		   psig.mod rad_loss.mod  replace_imsl.mod
-
-INCLUDES_cray402 = colrate.mod constnts.mod contour.mod flags.mod \
-                   fusion.mod geom.mod ions.mod limiter.mod machin.mod mesh.mod mhdcom.mod \
-                   mhdpar.mod neut.mod nub.o nub2.o numbrs.mod ohml.i param.mod \
-                   solcon.mod soln.mod sourc.mod storage.i tdem.mod tmpcom.mod \
-                   tordlrot.mod verbose.mod
-INCLUDES_cray403 = numbrs.mod param.mod soln.mod
-INCLUDES_cray404 = flx.mod geom.mod ions.mod machin.mod mesh.mod \
-                   monitr.mod neo2d.mod numbrs.mod param.mod soln.mod weiland.mod
-INCLUDES_cray501 = adaptive.mod geom.mod ifs.mod  mesh.mod mhdpar.mod \
-                   neo2d.mod numbrs.mod param.mod solcon.mod soln.mod soln2d.mod storage.i \
-                   verbose.mod
-INCLUDES_glf2d   = glf.m  f77_dcomplx.h 
-INCLUDES_cray504 = houlberg.i param.mod
-
-
-INCLUDES_cray601 = param.mod flags.mod numbrs.mod soln.mod soln2d.mod \
-                   tordlrot.mod nonlin.mod  mesh.mod solcon.mod \
-		   tcoef.mod io.o com.o copy.o terminate.o \
-		   allocate_err.o aid_newton.o
-
-INCLUDES_cray700 = aid_newton.o nonlin.mod ifs.mod
-
-INCLUDES_iterdb_gcnmp = constnts.o contour.o etc.o extra.o \
-                        flxav.o geom.o io.o ions.o iterdbmd.o machin.o mesh.o \
-                        mhdpar.o neut.o nub.o nub2.o numbrs.o param.o psig.o rhog.o \
-                        solcon.o soln.o sourc.o tcoef.o tordlrot.o yoka.o \
-		        neo2d.o  solcon_gcnmp.o io_gcnmp.o nf_param.o iterdbmd_gcnmp.o \
-            grid_class.o source_terms_gcnmp.o neutral_beams.o curden_terms.o \
-            bc_values_gcnmp.o fdyimp.o fusion_gcnmp.o  allocate_plasma_freq.o
-
-INCLUDES_iterdb_v129.f = constnts.mod contour.mod etc.mod extra.mod \
-                        flxav.mod geom.mod io.o ions.mod iterdbmd.mod machin.mod mesh.mod \
-                        mhdpar.mod neut.mod nub.o nub2.o numbrs.mod param.mod psig.mod rhog.mod \
-                        solcon.mod soln.mod sourc.mod storage.i tcoef.mod tordlrot.mod yoka.mod \
-		        neo2d.mod 
-
-INCLUDES_IMFIT_ITERDB = constnts.mod contour.mod etc.mod extra.mod \
-                        flxav.mod geom.mod io.o ions.mod iterdbmd.mod machin.mod mesh.mod \
-                        mhdpar.mod neut.mod nub.o nub2.o numbrs.mod param.mod psig.mod rhog.mod \
-                        solcon.mod soln.mod sourc.mod storage.i tcoef.mod tordlrot.mod yoka.mod \
-		        neo2d.mod 
-
-INCLUDES_MODULES = com.o copy.o terminate.o allocate_err.o aid_newton.o
-
-INCLUDES_method_lines = param.mod   extra.mod aid_newton.o \
-	  	flags.mod fusion.mod geom.mod  imsl.i bd_condtn.o  \
-	  	io.o io.mod ions.mod island.mod machin.mod mesh.mod mixcom.mod \
-	  	oloss_dat.mod neut.mod nub.o nub2.o numbrs.mod pelcom.mod rfmod.o soln.mod \
-	  	solcon.mod sourc.mod sxrcom.i tfact.mod tordlrot.mod mhdpar.mod \
-	  	mhdgrid.o rebut.i rhog.mod gpsi.mod soln2d.mod verbose.mod \
-		 adaptive.mod nonlin.mod m_lines.o flx.mod ode_pkg.mod
-
-INCLUDES_cfactrs = nrtype.mod numbrs.mod ions.mod soln.mod  machin.mod \
-                   bd_condtn.mod  extra.mod  yoka.mod fusion.mod
-
-INCLUDES_nubeam_12 = param.mod transp.mod solcon.mod xpload_module.mod
-
-INCLUDES_set_nbi   = nbi_types.mod transp.mod
-
-INCLUDES_set_nbdims  =  transp.mod  
-
-INCLUDES_set_nbprofs  =  transp.mod soln.mod neut.mod  # nbi_types.mod
-
-INCLUDES_get_nboutput = transp.mod param.mod numbrs.mod mesh.mod \
-	                nub2.mod nub.mod fusion.mod sourc.mod verbose.mod \
-		        machin.mod
-INCLUDES_ufiles_12 =    string_util.mod nbnamelist.mod fast_ion_diffusion.mod \
-                        periodic_table_mod.o nubeam_sub.o P_Nfreya_rpc_interface.o
-
-INCLUDES_nbi_set =  
-INCLUDES_nb_start = #nbi_com_mod.o #nbi_idhdr.o
-INCLUDES_nubeam_driver = param.mod transp.mod solcon.mod xpload_module.mod \
-		         load_12.o nbnamelist.mod restore_12.mod \
-			 load_restart_12.o nbnamelist_post_201112.inc \
-			 dnubeam_mod.o io.o plasma_prop.o
-
-INCLUDES_ohacd  =  soln.mod geom.mod mesh.mod numbrs.mod tfact.mod \
-		   sourc.mod tcoef.mod  ions.mod  nub2.mod  fusion.mod \
-		   soln2d.mod  solcon.mod  \
-		   rf.mod  extra.mod  constnts.mod  machin.mod
-INCLUDES_kin_efit  = param.mod  solcon.mod  soln.mod  yoka.mod       \
-                      rhog.mod ions.mod numbrs.mod nub.mod nub2.mod  \
-		      machin.mod geom.mod bd_condtn.mod psig.mod  
-
-INCLUDES_nbi_restart = transp.mod nub2.mod numbrs.mod verbose.mod \
-			tordlrot.mod
-INCLUDES_toq_12  = bicube.mod imsl.i etc.mod flxav.mod io.mod neo2d.mod \
-			neo2dp.mod gpsi.mod shapctr.mod metrics.mod  
-			
-INCLUDES_eq_pfprim  = param.mod rhog.mod numbers.mod constnts soln.mod \
-	 	      machin.mod geom.mod io.mod
-INCLUDES_netcdf_read =  nrtype.o plasma_prop.o\
-			shot_info.o grid_class.o error_handler.o \
-		        fast_ion_data_gcnmp.o neutral_data.o dep_var_gcnmp.o \
-			curden_terms.o bc_values_gcnmp.o gcnmp_version.o \
-			fdyimp.o iterdbmd_gcnmp.o neo_tport.o \
-			glf_tport_gcnmp.o  tspline.o etc.o \
-		        neo2d.o consts.o io_gcnmp.o neutral_beams.o nf_param.o
-INCLUDES_zen_state =    nrtype.o param.o numbrs.o ions.o consts.o io.o solcon.o \
-			verbose.o bd_condtn.o soln.o flags.o fusion.o nub2.o
-INCLUDES_kapisn    =    nrtype.o dep_var_gcnmp.o numbrs.o
-
-INCLUDES_P_nfreya    =    nrtype.o nf_param.o error_handler.o plasma_prop.o\
-		  	  solcon_gcnmp.o consts.o  neutral_beams.o \
-			  source_terms_gcnmp.o P_Nfreya_12_interface.o \
-			  string_util.o io.o nub.o
-INCLUDES_FDYIMP = grid_class.mod
-INCLUDES_cfactors = bd_condtn.mod
-INCLUDES_GCNMP_VERSION = nrtype.mod
-INCLUDES_pl_freq     =    nrtype.o plasma_prop.o vector_class.o grid_class.o \
-	                  ions_gcnmp.o
+include .dep_incs/cray001.F.inc
+include .dep_incs/cray101.f.inc
+include .dep_incs/cray102.f.inc
+include .dep_incs/cray202.f.inc
+include .dep_incs/cray203.f.inc
+include .dep_incs/cray204.f.inc
+include .dep_incs/cray205.f.inc
+include .dep_incs/cray206.f.inc
+include .dep_incs/cray207.f.inc
+include .dep_incs/cray208.f.inc
+include .dep_incs/cray209.f.inc
+include .dep_incs/cray302.f.inc
+include .dep_incs/cray303.f.inc
+include .dep_incs/cray304.f.inc
+include .dep_incs/cray306.f.inc
+include .dep_incs/cray307.F.inc
+include .dep_incs/cray308.f.inc
+include .dep_incs/cray309_nubeam.f.inc
+include .dep_incs/cray311.f.inc
+include .dep_incs/cray321u.f.inc
+include .dep_incs/cray331.f.inc
+include .dep_incs/cray341.f90.inc
+include .dep_incs/cray352.f.inc
+include .dep_incs/cray401.f.inc
+include .dep_incs/cray402.f.inc
+include .dep_incs/cray403.f.inc
+include .dep_incs/cray404.f.inc
+include .dep_incs/cray501.f.inc
+include .dep_incs/cray504.f.inc
+include .dep_incs/cray601.f.inc
+include .dep_incs/cray700.f.inc
+include .dep_incs/callglf2d.f.inc
+include .dep_incs/writeglf2d.f.inc
+include .dep_incs/glf2d.F.inc
+include .dep_incs/r8tomsqz.F.inc
+include .dep_incs/method_lines.f.inc
+include .dep_incs/com.f90.inc
+include .dep_incs/copy.f90.inc
+include .dep_incs/terminate.f90.inc
+include .dep_incs/allocate_err.f90.inc
+include .dep_incs/aid_newton.f90.inc
+include .dep_incs/m_lines.f90.inc
+include .dep_incs/glf23.f90.inc
+include .dep_incs/nubeam_12.f.inc
+include .dep_incs/transp.f90.inc
+include .dep_incs/xpload_module.f90.inc
+include .dep_incs/string_util.F90.inc
+include .dep_incs/get_nboutput.f90.inc
+include .dep_incs/mesh.f90.inc
+include .dep_incs/verbose.f90.inc
+include .dep_incs/adaptive.f90.inc
+include .dep_incs/ename.f90.inc
+include .dep_incs/nub.F90.inc
+include .dep_incs/nub2.f90.inc
+include .dep_incs/fusion.f90.inc
+include .dep_incs/sourc.f90.inc
+include .dep_incs/param.f90.inc
+include .dep_incs/contour.f90.inc
+include .dep_incs/mhdpar.f90.inc
+include .dep_incs/limiter.f90.inc
+include .dep_incs/tdem.f90.inc
+include .dep_incs/solcon.f90.inc
+include .dep_incs/ions.f90.inc
+include .dep_incs/soln.f90.inc
+include .dep_incs/neut.f90.inc
+include .dep_incs/ext_prog_info.f90.inc
+include .dep_incs/rfmod.f90.inc
+include .dep_incs/xptor_sim.f90.inc
+include .dep_incs/io.f90.inc
+include .dep_incs/mhdgrid.f90.inc
+include .dep_incs/extra.f90.inc
+include .dep_incs/yoka.f90.inc
+include .dep_incs/numbrs.f90.inc
+include .dep_incs/toq_12_interface.f90.inc
+include .dep_incs/machin.f90.inc
+include .dep_incs/nub4.f90.inc
+include .dep_incs/tfact.f90.inc
+include .dep_incs/ufiles_12.f90.inc
+include .dep_incs/beam_structure.F90.inc
+include .dep_incs/d01bff_dat.f90.inc
+include .dep_incs/cpub_dat.f90.inc
+include .dep_incs/colrate.f90.inc
+include .dep_incs/flags.f90.inc
+include .dep_incs/nubeam_driver.f90.inc
+include .dep_incs/dnubeam_driver.f90.inc
+include .dep_incs/tordlrot.f90.inc
+include .dep_incs/constnts.f90.inc
+include .dep_incs/load_12.f90.inc
+include .dep_incs/nub3.f90.inc
+include .dep_incs/nbnamelist.F90.inc
+include .dep_incs/geom.f90.inc
+include .dep_incs/events.f90.inc
+include .dep_incs/soln2d.f90.inc
+include .dep_incs/tcoef.F90.inc
+include .dep_incs/bd_condtn.f90.inc
+include .dep_incs/ohacd.f90.inc
+include .dep_incs/mixcom.f90.inc
+include .dep_incs/psig.f90.inc
+include .dep_incs/kin_efit.f90.inc
+include .dep_incs/rhog.f90.inc
+include .dep_incs/mhdcom.f90.inc
+include .dep_incs/paleocl.f90.inc
+include .dep_incs/ifs.f90.inc
+include .dep_incs/nonlin.f90.inc
+include .dep_incs/mcgo.f90.inc
+include .dep_incs/staebler.f90.inc
+include .dep_incs/nbi_restart.f90.inc
+include .dep_incs/toq_12.f90.inc
+include .dep_incs/bicube.f90.inc
+include .dep_incs/shapctr.f90.inc
+include .dep_incs/flxav.f90.inc
+include .dep_incs/metrics.f90.inc
+include .dep_incs/neo2d.f90.inc
+include .dep_incs/neo2dp.f90.inc
+include .dep_incs/fast_ion_diffusion.f90.inc
+include .dep_incs/restore_12.f90.inc
+include .dep_incs/load_restart_12.f90.inc
+include .dep_incs/iterdbmd.f90.inc
+include .dep_incs/nrtype.F90.inc
+include .dep_incs/etc.f90.inc
+include .dep_incs/cer.f90.inc
+include .dep_incs/flx.f90.inc
+include .dep_incs/monitr.f90.inc
+include .dep_incs/ode_pkg.f90.inc
+include .dep_incs/tmpcom.f90.inc
+include .dep_incs/oloss.f90.inc
+include .dep_incs/smthspline.f90.inc
+include .dep_incs/rw_iterdb.F90.inc
+include .dep_incs/mmm95_ntcc.f.inc
+include .dep_incs/mmm95_mod.f90.inc
+include .dep_incs/nubeam_sub.f90.inc
+include .dep_incs/periodic_table_mod.f90.inc
+include .dep_incs/eq_pfprim.f90.inc
+include .dep_incs/confinement_factors.f90.inc
+include .dep_incs/rad_loss.f90.inc
+include .dep_incs/iterdb_v1.29.f.inc
+include .dep_incs/Statefile_proc.f90.inc
+include .dep_incs/rw_iterdb_netcdf.F90.inc
+include .dep_incs/vector_class.f90.inc
+include .dep_incs/plasma_prop.f90.inc
+include .dep_incs/shot_info.f90.inc
+include .dep_incs/grid_class.F90.inc
+include .dep_incs/error_handler.F90.inc
+include .dep_incs/MPI_data.F90.inc
+include .dep_incs/fast_ion_data_gcnmp.f90.inc
+include .dep_incs/neutral_data.f90.inc
+include .dep_incs/curden_terms.F90.inc
+include .dep_incs/dep_var_gcnmp.f90.inc
+include .dep_incs/solcon_gcnmp.f90.inc
+include .dep_incs/io_gcnmp.f90.inc
+include .dep_incs/ions_gcnmp.f90.inc
+include .dep_incs/source_terms_gcnmp.f90.inc
+include .dep_incs/gcnmp_version.f90.inc
+include .dep_incs/fdyimp.f90.inc
+include .dep_incs/iterdbmd_gcnmp.f90.inc
+include .dep_incs/set_12_gcnmp_vars.f90.inc
+include .dep_incs/neo_tport.f90.inc
+include .dep_incs/glf_tport_gcnmp.F90.inc
+include .dep_incs/gcnmp_namelist.F90.inc
+include .dep_incs/gcnmp_interface.f90.inc
+include .dep_incs/glf23_gcnmp.f90.inc
+include .dep_incs/bc_values_gcnmp.F90.inc
+include .dep_incs/gcnmp_input.f90.inc
+include .dep_incs/get_next_io_unit.F90.inc
+include .dep_incs/getargs.f90.inc
+include .dep_incs/tspline.f90.inc
+include .dep_incs/gpsi.f90.inc
+include .dep_incs/weiland.f90.inc
+include .dep_incs/island.f90.inc
+include .dep_incs/mhdbcdtn.f90.inc
+include .dep_incs/zeffcom.f90.inc
+include .dep_incs/check_en_bc.f90.inc
+include .dep_incs/set_initial_profiles.f90.inc
+include .dep_incs/zen_state.f90.inc
+include .dep_incs/pelcom.f90.inc
+include .dep_incs/fusion_gcnmp.f90.inc
+include .dep_incs/gcnmp_namelist_defaults.f90.inc
+include .dep_incs/tglfin.f90.inc
+include .dep_incs/tglf_input_defaults.f90.inc
+include .dep_incs/pnpoly.f90.inc
+include .dep_incs/tglf_modules.f90.inc
+include .dep_incs/compact_schemes.f90.inc
+include .dep_incs/kapisn.F90.inc
+include .dep_incs/rw_iterdb_netcdf_mod.F90.inc
+include .dep_incs/prl_mod.f90.inc
+include .dep_incs/file_proc.f90.inc
+include .dep_incs/echdat_module.F90.inc
+include .dep_incs/turb_tport.f90.inc
+include .dep_incs/neutral_beams.F90.inc
+include .dep_incs/nfreya_namelist.F90.inc
+include .dep_incs/nf_param.f90.inc
+include .dep_incs/consts.f90.inc
+include .dep_incs/P_Nfreya_12_interface.f90.inc
+include .dep_incs/P_Nfreya_rpc_interface.f90.inc
+include .dep_incs/thermalization.f90.inc
+include .dep_incs/Nfreya_output.f90.inc
+include .dep_incs/dnubeam_mod.F90.inc
+include .dep_incs/P_Nfreya_nubeam_namelist.F90.inc
+include .dep_incs/mmm_in.F90.inc
+include .dep_incs/modmmm7_1.f90.inc
+include .dep_incs/w20mod.f90.inc
+include .dep_incs/plasma_contours.f90.inc
+include .dep_incs/bicubic_spline.f90.inc
+include .dep_incs/forcebal_data_mod.f90.inc
+include .dep_incs/spec_kind_mod.f.inc
+include .dep_incs/set_eqdsk_statefile_values.f90.inc
+include .dep_incs/cubic_spline_class.f90.inc
+include .dep_incs/line_av_den.F90.inc
+include .dep_incs/set_forcebal_input.F90.inc
+include .dep_incs/load_input.F90.inc
+include .dep_incs/scale_profiles.f90.inc
+include .dep_incs/plasma_shape.F90.inc
+include .dep_incs/get_tot_pressure.f90.inc
+include .dep_incs/mmm_input_defaults.F90.inc
+include .dep_incs/replace_imsl.F90.inc
+include .dep_incs/m_refsor.f90.inc
+include .dep_incs/tglfv1.94_modules.F90.inc
+include .dep_incs/allocate_plasma_freq.f90.inc
+include .dep_incs/Collect_stats.f90.inc
+include .dep_incs/neucg.f90.inc
+include .dep_incs/precision_mod.f90.inc
+include .dep_incs/brainfuse_mod.f90.inc

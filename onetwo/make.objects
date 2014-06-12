@@ -1,6 +1,4 @@
-# $Id: make.objects,v 1.126 2014/01/20 18:11:21 smithsp Exp $
-
-OBJECTS   = cray001.o cray101.o cray102.o cray202.o cray203.o cray204.o \
+OBJECTS   := cray001.o cray101.o cray102.o cray202.o cray203.o cray204.o \
             cray205.o cray206.o cray207.o cray208.o cray209.o cray302.o \
             cray303.o cray304.o cray306.o cray307.o cray308.o cray309_nubeam.o \
             cray311.o cray321u.o cray331.o cray341.o cray352.o cray401.o \
@@ -26,7 +24,6 @@ OBJECTS   = cray001.o cray101.o cray102.o cray202.o cray203.o cray204.o \
 	    iterdbmd.o nrtype.o etc.o cer.o  flx.o  monitr.o ode_pkg.o   \
 	    tmpcom.o oloss.o smthspline.o rw_iterdb.o\
 	    mmm95_ntcc.o mmm95_mod.o \
-	    brainfuse_mod.o \
 	    nubeam_sub.o periodic_table_mod.o \
 	    eq_pfprim.o confinement_factors.o rad_loss.o iterdb_v1.29.o \
 	    Statefile_proc.o  rw_iterdb_netcdf.o \
@@ -50,28 +47,11 @@ OBJECTS   = cray001.o cray101.o cray102.o cray202.o cray203.o cray204.o \
             cubic_spline_class.o line_av_den.o set_forcebal_input.o load_input.o \
 	    scale_profiles.o plasma_shape.o get_tot_pressure.o mmm_input_defaults.o \
 	    replace_imsl.o  m_refsor.o tglfv1.94_modules.o allocate_plasma_freq.o \
-	    Collect_stats.o neucg.o precision_mod.o
-#  utils.o
+	    Collect_stats.o neucg.o precision_mod.o brainfuse.o brainfuse_mod.o 
+
 
 
 
 ifdef PARALLEL_12
 OBJECTS_P = mpi12.o onetwo_parallel.o onetwo_slave.o glf_slave.o
 endif
-        
-
-
-            #nbi_dimensions_mod.o nbi_getprofiles.o  precision_mod.o
-            #eqi_frho.o eqi_binget.o eq_rgetf.o r4_eq_rgetf.o  \
-            #ezspline_mod.o ezcdf_genput.o ezcdf_inqint.o nbi_set.o 
-            #nbi_idhdr.o nbo_load.o nbo_load1.o nbfinish.o xstraln_init.o
-            #nbstart.o nbatom.o depall.o  dep.o orball.o orbit.o nbigc.o 
-            #bmzini.o   nbi_com_mod.o   neucg.o 
-#note if an f90 module contains subroutines its *.o form must be included
-#here in order to get a linkage.
-#	    eq_flxint.o	
-# nbi_datchk.o nbi_datchki.o \
-#	    nbi_datchkb.o  eqm_uaxis.o r4_eqm_uaxis.o
-
-
-

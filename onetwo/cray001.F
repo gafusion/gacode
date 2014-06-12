@@ -34,11 +34,7 @@ c
       character rcs_id*63 
       save      rcs_id
       data      rcs_id /
-<<<<<<< HEAD
      ."$Id: cray001.F,v 1.24 2014/04/11 23:23:16 smithsp Exp $"/
-=======
-     ."$Id: cray001.F,v 1.21 2014/02/13 18:03:20 smithsp Exp $"/
->>>>>>> 55d741e... updated to CVS version 5.51
 
 
       include 'quit.i'
