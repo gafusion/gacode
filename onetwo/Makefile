@@ -33,12 +33,13 @@ $(UFILE_LIBS)/libvaxonly.a      \
 $(UFILE_LIBS)/libportlib.a      \
 $(UFILE_LIBS)/libmds_sub.a      \
 $(UFILE_LIBS)/libmdstransp.a /f/mdsplus/linux64/lib64/libMdsLib.so
-FC = pgf90 #/opt/pgi/linux86-64/13.2/bin/pgf90
+FC = pgf90 
 CC = pgcc
-#FC =  /opt/pgi/linux86-64/11.10/bin/pgf90
 COMPILE   = $(FC) $(OMP) $(PROF)\
   $(AUTP) -c $(OPTION) $(LISTING) $(SPECIAL)
 COMP_MOD = ./mifort
+FANN_DIR = /task/imd/local64/
+FANN = -L$(FANN_DIR)/lib -ldoublefann -Wl,-rpath,$(FANN_DIR)/lib
 #End platform dependent
 LOAD      = $(FC)  -o $(NAME) 
 include ./make.objects # Defines OBJECTS
@@ -64,12 +65,11 @@ all: $(NAME)
 
 $(NAME):           $(OBJECTS) $(OBJECTS_P) $(LIBRARIES)
 	@echo "loading .... "
-	$(LOAD)  -L /u/meneghini/fann/src/  $(OBJECTS)  $(LIBRARIES) $(LAPACK) $(NETCDF) $(FTN90LIB) -ldoublefann
+	$(LOAD)    $(OBJECTS)  $(LIBRARIES) $(LAPACK) $(FANN) $(NETCDF) $(FTN90LIB) -ldoublefann
 	$(PROTECT) $(NAME)
-#	cp $(NAME) $(INSTALLDIR)
 
 brainfuse.o: brainfuse.c
-	gcc -c -g -I/u/meneghini/fann/src/include brainfuse.c
+	gcc -c -g -I$(FANN_DIR)/include brainfuse.c
 
 #JMP START
 
