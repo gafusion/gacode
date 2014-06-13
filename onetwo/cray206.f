@@ -1115,7 +1115,6 @@ c
       integer*4    intg4a
       real*4       real4a
       real*8       real8a
-      external     LENGTH  ! return trimmed length of a character string
 c
       xdimeqd = real_tdem(1)                       ! meters
       ydimeqd = real_tdem(2)
@@ -1130,13 +1129,12 @@ c
 c
 
       if (nj .ne. njeqd) then
-        len = LENGTH (eqdskin)
         write (ncrt,'(" subroutine SET_CDF_INIT detected an error:" /
      .                " nj in file ",a,2x,i3 /
      .                " nj in Onetwo ",i3 /
      .                " The value of nj in inone must be changed to"
      .                " match the value in file ",a)')
-     .                  eqdskin(1:len),njeqd,nj,eqdskin
+     .                  TRIM(eqdskin),njeqd,nj,eqdskin
         call STOP ('subroutine SET_CDF_INIT: unspecified crud', 239)
       end if
       if (nw .ne. nxeqd) then

@@ -18,7 +18,6 @@ include ../shared/install/make.inc.$(GACODE_PLATFORM)
 PROTECT   = chmod 755
 DELETE    = rm -f
 RENAME    = mv
-ARCHIVE   = ar rv
 
 include ../shared/install/make.inc.$(GACODE_PLATFORM)
 #These should be in the preceding platform dependent included makefile
@@ -97,19 +96,16 @@ include make.includes
 
 $(LIBS)/%.a: $(LIBS)/%.o
 	$(DELETE)  $@
-	$(ARCHIVE) $@   $<
+	$(ARCH) $@   $<
 
 $(LIBS)/method_lines_library.o: $(LIBS)/method_lines_library.f
-	cd         $(LIBS) ; \
-	$(COMPILE) method_lines_library.f
+	$(COMPILE) $< -o $@
 
 $(LIBS)/cortlib.o: $(LIBS)/cortlib.c
-	cd         $(LIBS) ; \
-	$(CC)  -c    cortlib.c
+	$(CC) -c $< -o $@
 
 $(LIBS)/$(PORTLIB).o: $(LIBS)/$(PORTLIB).F
-	cd         $(LIBS) ; \
-	$(COMPILE) -I../ $(PORTLIB).F #$(LIBS)/$(PORTLIB).F
+	$(COMPILE) $< -o $@
 
 
 .PHONY:	clean

@@ -855,7 +855,7 @@ c     Brief description to be added to file:
       ltitle='Profile data passed from ONETWO to GENRAY'
 
 c
-      call ncaptc(ncid,NCGLOBAL,'title',NCCHAR,length_char(ltitle),
+      call ncaptc(ncid,NCGLOBAL,'title',NCCHAR,LEN_TRIM(ltitle),
      +     ltitle,istatus)
 
 
@@ -937,7 +937,7 @@ c$$$      write (igenray, 1001)  (zeff(j), j=1,nj)
 
       vid=ncvid(ncid,'eqdsk_name',istatus)
 c     Add 1 to get blank into variable [See NetCDF manual].
-      ll=length_char(eqdsk_name)+1
+      ll=len_trim(eqdsk_name)+1
       if (ll.gt.256) then
          write(*,*)'call_genray: eqdsk_name length too great'
          stop
@@ -1364,18 +1364,6 @@ c
       return
 c
       end   !end call_genray
-c     
-c     
-      integer function length_char(string)
-c     Returns length of string, ignoring trailing blanks,
-c     using the fortran intrinsic len().
-      character*(*) string
-      do i=len(string),1,-1
-         if(string(i:i) .ne. ' ') goto 20
-      enddo
- 20   length_char=i
-      return
-      end
 c
 c
       subroutine cgbco (abd, lda, n, ml, mu, ipvt, rcond, z)
@@ -1905,8 +1893,8 @@ c
 
 c     do not include mesh.i as there are conflicts below, see for example ra, - HSJ
 c
-      external     LENGTH, FLUSH
-      integer      LENGTH, rf_output
+      external     FLUSH
+      integer      rf_output
       logical      first_time,ex
       character*8  codeid, ntitle(5)
       character*12 cgmfile, glogfile, tlogfile, gafit_log, toray_log,
@@ -2198,9 +2186,9 @@ c
  1001   format (/ ' ---- ', a,' started, output not redirected' /)
       else
         write  (ncrt , 1000)  program(1:len_toray_to_run), 
-     .                             glogfile(1:LENGTH(glogfile))
+     .                             TRIM(glogfile)
         write  (nitre, 1000)  program(1:len_toray_to_run),
-     .                             glogfile(1:LENGTH(glogfile))
+     .                             TRIM(glogfile)
  1000   format (/ ' ---- ', a,' started, output directed to "', a, '"')
       end if
 c
@@ -2285,9 +2273,9 @@ c
         write  (nitre, 1001)  program(1:len_toray_to_run)
       else
         write  (ncrt , 1000)  program(1:len_toray_to_run), 
-     .                         tlogfile(1:LENGTH(tlogfile))
+     .                         TRIM(tlogfile)
         write  (nitre, 1000)  program(1:len_toray_to_run),
-     .                         tlogfile(1:LENGTH(tlogfile))
+     .                         TRIM(tlogfile)
       end if
 c
       if (ISHELL (program(1:len_toray_to_run)

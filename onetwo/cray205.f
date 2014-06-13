@@ -243,9 +243,6 @@ c     F90 automatic (temporary) arrays:
       logical    monotonic
       character  starflag*2, title*39, headerline*132
 c
-      integer    LENGTH
-      external   LENGTH
-c
       integer    rcode                                ! error code
       integer    dim_njtime(2), dim_plasbdrytime(2)   ! variable shape
       integer    dim_njprimtime(3), dim_njimptime(3), dim_njneutime(3)
@@ -292,8 +289,8 @@ c                                                         .. define mode
       else                        ! READ from existing file
         niterdb = NCOPN (iterdbfilename, NCNOWRIT, rcode)
         if (rcode .ne. 0) go to 3 ! no error, continue
-    2   write  (ncrt, 4)  iterdbfilename(1:LENGTH(iterdbfilename))
-        write  (nout, 4)  iterdbfilename(1:LENGTH(iterdbfilename))
+    2   write  (ncrt, 4)  TRIM(iterdbfilename)
+        write  (nout, 4)  TRIM(iterdbfilename)
     4   format (                                                      /
      .      ' ERROR: subroutine ITER_DBASE1 has encountered an error' /
      .      '        the ITER database file "', a, '" cannot be opened')

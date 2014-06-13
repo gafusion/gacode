@@ -225,7 +225,6 @@ c
       character  starflag*2, headerline*132
 c
       integer    LENGTH
-      external   LENGTH
 c
 c      equivalence (aspline(1)    , xdum(1))
 c      equivalence (bspline(1)    , xdum(kpsi+1))
@@ -263,8 +262,8 @@ c
         open (unit = niterdb, file = iterdbfilename, status = 'OLD',
      .        err = 2)
         go to 3
-    2   write  (ncrt, 4)  iterdbfilename(1:LENGTH(iterdbfilename))
-        write  (nout, 4)  iterdbfilename(1:LENGTH(iterdbfilename))
+    2   write  (ncrt, 4)  TRIM(iterdbfilename)
+        write  (nout, 4)  TRIM(iterdbfilename)
     4   format (                                                     /
      .      ' ERROR: subroutine ITER_DBASE has encountered an error' /
      .      '        the ITER database file "', a, '" cannot be opened')

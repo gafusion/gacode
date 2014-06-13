@@ -2537,8 +2537,6 @@ D      real *8 ,DIMENSION(:),ALLOCATABLE:: t_vx, t_vy, t_vz
 
 
 c
-      external LENGTH
-c
 c ----------------------------------------------------------------------
 c general FREYA initialization
 c ----------------------------------------------------------------------
@@ -3372,20 +3370,20 @@ c
            if (read_mcgo_file(ib) .eq. 0)
      .         call prep_mcgo (ib, bpow, ke, enbeams)
            if (spawn_mcgo .gt. 0) then ! spawn_mcgo is set in sub INIT
-                 spawn_command = mcgo_path(1:LENGTH(mcgo_path      )) //
+                 spawn_command = TRIM(mcgo_path) //
      .       '/mcgo < ' 
-     .      // mcgo_input_file(ib)(1:LENGTH(mcgo_input_file))
+     .      // TRIM(mcgo_input_file(ib))
              if (freyavb .gt. 0)
      .           write(ncrt,'(''spawning mcgo:'',/,
      .           2x,a,2x,
      .           /,''  with beam number '',i3,//)')
-     .           spawn_command(1:LENGTH(spawn_command)),ib
+     .           TRIM(spawn_command),ib
 c
 c           call mcgo with the two files,
 c           mcgo_input_12(ib) and mcgo_input_file2(ib), for each beam:
 c
             write (ncrt, '(a)') 'mcgo_path = ' // mcgo_path
-            if (ISHELL (spawn_command(1:LENGTH(spawn_command))) .ne. 0)
+            if (ISHELL (TRIM(spawn_command)) .ne. 0)
      .      call STOP ('subroutine FREYA: failure of spawned MCGO', 270)
 c
            end if

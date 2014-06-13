@@ -22,26 +22,6 @@ c
 c
       end
 
-      subroutine AMINMX (a, i1, i2, i3, a1, a2)
-c
-c --- replacement for this LIBMATH subroutine in UNICOS ----------------
-c
-      implicit none
-c
-      integer  i1, i2, i3, i, i0
-      real*8   a(*), a1, a2
-c
-      a1 = a(i1)
-      a2 = a(i1)
-      i0 = i1 + i3
-      do i=i0,i2,i3
-        a1 = MIN (a(i), a1)
-        a2 = MAX (a(i), a2)
-      end do
-      return
-c
-      end
-
       subroutine COPY_TEXT_FILE (oldfile, newfile)
 c
 c --- copy one 80-column-wide text file to another ---------------------
@@ -92,27 +72,6 @@ c
       if (trace)  write (*, '( / '' ---- entering '', a   )')  routine
       status  =  UNLINK (file)
       if (trace)  write (*, '(   '' ----  exiting '', a / )')  routine
-      return
-c
-      end
-
-      real*8 function D1MACH (item)
-c
-c --- return machine-dependent floating point constants ----------------
-c
-      implicit none
-c
-      integer  item
-      real*8   rmach(5)
-      save     rmach
-c
-      data     rmach(1) / z'0010000000000000' /,
-     .         rmach(2) / z'7fefffffffffffff' /,
-     .         rmach(3) / z'3ca0000000000000' /,
-     .         rmach(4) / z'3cb0000000000000' /,
-     .         rmach(5) / z'3fd34413509f79ff' /
-c
-      D1MACH = rmach(item)
       return
 c
       end
@@ -171,7 +130,6 @@ c
       logical         opened
       integer         unit, pointer, iostat, LENGTH
       character       name*128, record*133
-      external                               LENGTH
 c
       routine = 'EMPTY_AND_RECORD_POINTER'
       if (trace)  write (*, '( / '' ---- entering '', a   )')  routine
@@ -188,7 +146,7 @@ c
         pointer = 0
         read (unit, '(a)', iostat = iostat) record
         do while (iostat .eq. 0)
-          pointer = pointer + LENGTH (record)
+          pointer = pointer + LEN_TRIM (record)
           read (unit, '(a)', iostat = iostat) record
         end do
         backspace unit
@@ -197,31 +155,6 @@ c
    10   format (/ ' ---- WARNING from routine ', a         /
      .            '      unit number ', i2, ' is not open' /)
       end if
-c
-      if (trace)  write (*, '(   '' ----  exiting '', a / )')  routine
-      return
-c
-      end
-
-      subroutine FLUSH (unit, status)
-c
-c --- flush the I/O buffer of a file (if unit is open) -----------------
-c
-      implicit none
-c
-      real     * 8    banktime
-      logical                   trace
-      character*32                     routine
-      common /portee/ banktime, trace, routine
-c
-      integer         unit, status
-c
-      routine = 'FLUSH'
-      if (trace)  write (*, '( / '' ---- entering '', a   )')  routine
-c
-c --- no functionality yet; return success status
-c
-      status = 0
 c
       if (trace)  write (*, '(   '' ----  exiting '', a / )')  routine
       return
@@ -243,36 +176,6 @@ c
 c
       end
 
-      subroutine GET_PROGRAM_INFO (name, owner,group,size, date, status)
-c
-c --- get some information about the current program file --------------
-c
-      implicit none
-c
-      real     * 8    banktime
-      logical                   trace
-      character*32                     routine
-      common /portee/ banktime, trace, routine
-c
-      character       name*(*),     CTIME*24, date*24
-      external        STAT, GETARG, CTIME
-      integer         STAT, stat_block(12), owner, group, size, status
-c
-      routine = 'GET_PROGRAM_INFO'
-      if (trace)  write (*, '( / '' ---- entering '', a   )')  routine
-c
-      call GETARG (0, name)
-      status  = STAT (name, stat_block)
-      owner   =             stat_block( 5)
-      group   =             stat_block( 6)
-      size    =             stat_block( 8)
-      date    =      CTIME (stat_block(10))
-c
-      if (trace)  write (*, '(   '' ----  exiting '', a / )')  routine
-      return
-c
-      end
-
       integer function ISHELL (command)
 c
 c --- replacement for this function in UNICOS --------------------------
@@ -286,30 +189,6 @@ c
         ISHELL =  0
       else
         ISHELL = -1
-      end if
-      return
-c
-      end
-
-      integer function LENGTH (string)
-c
-c --- return trimmed (no trailing spaces or tabs) length of a string ---
-c
-      implicit none
-c
-      character  last*1, string*(*)
-c
-      LENGTH = LEN (string)
-      if (LENGTH .ne. 0) then
-        last = string(LENGTH:LENGTH)
-        do while (last .eq. ' ' .or. last .eq. '	')
-          LENGTH = LENGTH - 1
-          if (LENGTH .ne. 0) then
-            last = string(LENGTH:LENGTH)
-          else
-            last = '#'
-          end if
-        end do
       end if
       return
 c
@@ -337,7 +216,7 @@ c
       data            flag1/'i='/,flag2/'o='/,flag3/'q='/,flag4/'y='/,
      .                flag5/'t='/,flag_t1/'-trace'/,flag_t2/'/trace'/,
      .                trace/.false./, bankmins/1.0/
-      external        LENGTH, GETARG
+      external        GETARG
 c
       routine = 'LINKETTE'
       if (trace)  write (*, '( / '' ---- entering '', a   )')  routine
@@ -355,7 +234,7 @@ c
 #ifndef PARALLEL_12 
       iarg   = 1
       call GETARG (iarg, argument)
-      nchars =   LENGTH (argument)
+      nchars =   LEN_TRIM (argument)
       do while (nchars .gt. 0)
         if      (INDEX (argument, flag1) .eq. 1) then
           file1 = argument(3:)
@@ -372,7 +251,7 @@ c
         else if (       argument .eq. flag_t2  ) then
           trace = .true.
         else
-          write  (*, 10)  routine, argument(1:LENGTH (argument))
+          write  (*, 10)  routine, TRIM(argument)
    10     format (/ ' ---- WARNING from routine ', a /
      .              '      command-line argument "', a,
      .                  '" was not recognized; it will be ignored' /)
@@ -380,7 +259,7 @@ c
         iarg = iarg + 1
         if (iarg .le. 8) then
           call GETARG (iarg, argument)
-          nchars =   LENGTH (argument)
+          nchars =   LEN_TRIM (argument)
         else
           nchars = -1
         end if
@@ -487,45 +366,6 @@ c
      .saved_seed = seed
       saved_seed = MOD (16807.0d0*saved_seed, big_minus_1)
       RANDOM12     = saved_seed / big
-      return
-c
-      end
-
-      real*4 function R1MACH (item)
-c
-c --- return machine-dependent floating point constants ----------------
-c
-      implicit none
-c
-      integer  item
-      real*4   rmach(5)
-      save     rmach
-c
-      data     rmach(1) / z'00800000' /,
-     .         rmach(2) / z'7f7fffff' /,
-     .         rmach(3) / z'33800000' /,
-     .         rmach(4) / z'34000000' /,
-     .         rmach(5) / z'3e9a209b' /
-c
-      R1MACH = rmach(item)
-      return
-c
-      end
-
-      subroutine SECOND (seconds)
-c
-c --- replacement for this subroutine in UNICOS ------------------------
-c
-      implicit none
-c
-      real*8  seconds
-      real*4  ETIME, times(2)
-c
-c --- return elapsed CPU time
-c
-cjmp.ibm     seconds = DBLE (ETIME (times))
-cjmp.ibm     call cpu_time_12(seconds) !jmp.ibm      
-      call cpu_time(seconds)
       return
 c
       end
@@ -661,29 +501,5 @@ c number in its argument.
 
       subroutine giveupus(unitno)
 c dummy replacement for Basis's giveupus, which gives up io unit-no. unitno.
-      return
-      end
-
-      subroutine kaboom(arg)
-c dummy replacement for Basis's kaboom, which returns to the controller
-c and clears the stack.
-      return
-      end
-
-      subroutine ruthere
-c dummy replacement for Basis's ruthere, which checks for and handles ctrl-c.
-      return
-      end
-
-      subroutine execuser(f)
-c dummy replacement for Basis's execuser, which executes script-function f.
-      character*(*) f
-      return
-      end
-
-      subroutine parsestr(str)
-c dummy replacement for Basis's parsestr, which (recursively) calls the
-c parser with command-string str.
-      character*(*) str
       return
       end

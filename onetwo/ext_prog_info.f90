@@ -2257,7 +2257,7 @@ CONTAINS
 !
             IMPLICIT NONE
             INTEGER NCRT,NOUT
-            INTEGER, EXTERNAL :: LENGTH
+            INTEGER :: LENGTH
 
             CALL get_hostname(ncrt,nout)
             SELECT CASE (host_index)
@@ -2295,7 +2295,7 @@ CONTAINS
                          &'for the cross section files')
             END SELECT
 
-            nchars_12    =   LENGTH  (onetwo_xsct)
+            nchars_12    =   LEN_TRIM  (onetwo_xsct)
 
         END SUBROUTINE get_xsect_path
 

@@ -556,7 +556,6 @@ c      USE  io,                        ONLY : ioftn, iopntr, nunits
 c      include 'small.i'
 
 c
-      external  LENGTH
       logical   opened
       integer   pointer
       character record*132
@@ -761,7 +760,7 @@ c      print *, 'prepar, rewinding units'
           nchars = 0
           do while (nchars .lt. iopntr(i))
             read (iunit, '(a)')  record
-            nchars = nchars + LENGTH (record)
+            nchars = nchars + LEN_TRIM (record)
           end do
         end if
 ****    call POSTEXT (iunit, iopntr(i), icount)
@@ -1463,13 +1462,12 @@ c
       equivalence                                  (bpcontr(1), zdum(1))
 c
       logical    eqtype
-      integer    LENGTH, asize
+      integer    length, asize
       character  eqdsrce*13, tempname*64
-      external   LENGTH
 c
       imslmd = 'reqdsk'
 c
-      asize = LENGTH (eqdskin)          ! number of characters in eqdskin
+      asize = LEN_TRIM(eqdskin)          ! number of characters in eqdskin
       write (tempname, '(a)') eqdskin(1:asize)
       call myopen (nrguess, tempname, 2, length, iread)
       if (iread .ne. 1) then

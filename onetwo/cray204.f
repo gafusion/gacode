@@ -233,9 +233,6 @@ c
       character  starflag*2, headerline*132
       character  label*132,asc_time*24,st_asc_time*24,tlabel*196
 c
-      integer    LENGTH
-      external   LENGTH
-
       data icall/0/, convert/1.60217733e-10/ ! keV/sec/cm*3 > watts/m**3
       save icall   , convert
 c
@@ -262,8 +259,8 @@ c
         open (unit = niterdb, file = iterdbfilename, status = 'OLD',
      .        err = 2)
         go to 3
-    2   write  (ncrt, 4)  iterdbfilename(1:LENGTH(iterdbfilename))
-        write  (nout, 4)  iterdbfilename(1:LENGTH(iterdbfilename))
+    2   write  (ncrt, 4)  TRIM(iterdbfilename)
+        write  (nout, 4)  TRIM(iterdbfilename)
     4   format (                                                     /
      .      ' ERROR: subroutine ITER_DBASE has encountered an error' /
      .      '        the ITER database file "', a, '" cannot be opened')

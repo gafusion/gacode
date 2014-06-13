@@ -565,15 +565,12 @@ D      include 'mpif.h'               !required for MPI
 
 
       include 'mod_gbohm.i'
-c      include 'pelcom.i'
       include 'quit.i'
       include 'sxrcom.i'
 
       include 'storage.i'
       include 'rebut.i'    ! to get wrebut into common block
 
-c      include 'mhdbcdtn.i'
-c      include 'zerocom.i'
       include 'pckcom.i'
 
 
@@ -590,13 +587,9 @@ c      include 'zerocom.i'
 c
       integer  sizel,userid(2),beam_restart_file_length,
      .         taskl,
-     .         GETUID,
-     .         LENGTH
-      external LENGTH,               ! character string length function
-     .         RANDOM12,             ! portable random number generator
+     .         GETUID
+      external RANDOM12,             ! portable random number generator
      .         GETUID                ! get user's identification number
-c     .         GETENV,               ! get value of environment variable
-c                                    lf95 wont allow this as an external
       logical fcd_path
                                              
       integer  strleng         ! length of onetwo (below)
@@ -7985,7 +7978,7 @@ c
       if (IABS (iborb) .eq. 3) then
         ibslow = 1                                     ! needed for MCGO
         call GETENV (mcgo_env_path_name, mcgo_path)
-        if (LENGTH (mcgo_path) .eq. 0) then
+        if (LEN_TRIM (mcgo_path) .eq. 0) then
           call STOP ('subroutine INIT: MCGO_PATH not set', 280)
         end if
         print *, ' MCGO_PATH = ', mcgo_path
@@ -8382,7 +8375,7 @@ c
            if (iborb .eq. -3) then
              spawn_mcgo = 0  !used to sense mcgo  file writes 
              do ib = 1,nbeams
-               if (LENGTH (mcgo_output_file(ib)) .gt. 0) then
+               if (LEN_TRIM (mcgo_output_file(ib)) .gt. 0) then
                  read_mcgo_file(ib) = 1
                end if
              end do
@@ -10984,9 +10977,8 @@ c
       if (nlimiter .le. 0) then
         if (ifixshap .eq. 1 .and. irguess .lt. 0)  go to 4997
         ierr = 1
-        sizel = LENGTH (eqdskin)
-        write  (nout, 7105)  eqdskin(1:sizel)
-        write  (ncrt, 7105)  eqdskin(1:sizel)
+        write  (nout, 7105)  TRIM(eqdskin)
+        write  (ncrt, 7105)  TRIM(eqdskin)
  7105   format (/ ' ERROR: limiter points were not found in input' /
      .                8x, 'eqdsk file "', a, '"'                   /)
         go to 4997

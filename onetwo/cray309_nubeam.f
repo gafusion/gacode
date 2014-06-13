@@ -375,7 +375,6 @@ c      include 'soln.i'
       equivalence(dumy_en(1),wdum(5*kj+1))
       character apostrophe*1
       parameter (apostrophe = CHAR (39))
-      external LENGTH
 c
       if (kstore .lt. 5*kj)
      .  call STOP ('subroutine PREP_MCGO: kstore too small', 276)
@@ -478,7 +477,7 @@ c---zfrac,etc.
       write(nmcgo1,'(2x,"iprmion =",i5,"  icenez =",i5)')iprmion_mcgo,
      .                                                     icenez_mcgo
       write(nmcgo1,98)(apostrophe,
-     .           mcgo_name(j)(1:LENGTH(mcgo_name(j))),apostrophe,j=1,i)
+     .           TRIM(mcgo_name(j)),apostrophe,j=1,i)
  98   format (2x, "namei = ",(5(2x,3a,2x)))
 c
 c     if nion = 3 then mcgo assumes two primary ions and one impurity.
@@ -600,8 +599,7 @@ c
 ****  write(nmcgo1,'(4x,"mb = ",i5," ebkev = ",4(2x,1pe12.4))')
 **** .                             nbeams,(ebkev(j),j=1,nbeams)
       write(nmcgo1,'(4x,''mcgo_input_file2 = '',3a)')apostrophe,
-     . mcgo_input_file2(onetwo_beam)(1:LENGTH(mcgo_input_file2)),
-     .                                                 apostrophe
+     . TRIM(mcgo_input_file2(onetwo_beam)),apostrophe
 ****  if (nbeams .gt. 1)
 **** .  write(nmcgo1,'(4x,''mcgo_input_file2(2) = '',3a)')apostrophe,
 **** .  mcgo_input_file2(2)(1:LENGTH(mcgo_input_file2)),apostrophe
