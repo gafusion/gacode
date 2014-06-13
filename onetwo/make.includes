@@ -219,4 +219,4 @@ include .dep_incs/allocate_plasma_freq.f90.inc
 include .dep_incs/Collect_stats.f90.inc
 include .dep_incs/neucg.f90.inc
 include .dep_incs/precision_mod.f90.inc
-include .dep_incs/brainfuse_mod.f90.inc
+include .dep_incs/brainfuse_mod.F90.inc

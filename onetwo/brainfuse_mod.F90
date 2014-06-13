@@ -6,7 +6,8 @@ MODULE BRAINFUSE_MOD
 CONTAINS
 !========================
 !========================
-  FUNCTION to_lower(strIn) result(strOut)
+#ifndef ONETWO
+  FUNCTION to_lower_case(strIn) result(strOut)
     IMPLICIT NONE
     CHARACTER(len=*), intent(in) :: strIn
     CHARACTER(len=len(strIn)) :: strOut
@@ -19,7 +20,8 @@ CONTAINS
           strOut(i:i) = strIn(i:i)
        end if
     end do
-  END FUNCTION to_lower
+  END FUNCTION to_lower_case
+#endif
 !========================
 !========================
   SUBROUTINE GRADIENT(nn, y, yy)
@@ -55,6 +57,9 @@ CONTAINS
     Gi,    & ! Gi[j] : (output) main ion particle conductive flux [1/m^2/s]
     Pr     & ! Pr[j] : (output) rotation conductive flux [kg/s^2]
     )
+#ifdef ONETWO
+    USE string_util, ONLY: to_lower_case
+#endif
     IMPLICIT NONE
     INTEGER*4 debug, nn, j, i, dummy, num_extra
     PARAMETER (debug=1)
@@ -174,7 +179,7 @@ CONTAINS
 
     DO j=1,num_input
        dummy=1
-       SELECT CASE (to_lower(trim(input_names(j))))
+       SELECT CASE (to_lower_case(trim(input_names(j))))
        CASE('r')
           input(:,j) = r                       !minor radius
        CASE('rmaj')
@@ -305,7 +310,7 @@ CONTAINS
 
     DO j=1,num_output
        dummy=1
-       SELECT CASE (to_lower(trim(output_names(j))))
+       SELECT CASE (to_lower_case(trim(output_names(j))))
 
        CASE('qe')
           Qe=output(:,j)
@@ -338,7 +343,8 @@ CONTAINS
        IF (dummy) THEN
           IF (debug) WRITE(*,*)'BRAINFUSE output variable: ',trim(output_names(j))
        ELSE
-          WRITE(*,*)'ERROR in BRAINFUSE: output variable`',trim(output_names(j)),'` is not defined!'
+          WRITE(*,*)'ERROR in BRAINFUSE: output variable`',&
+            trim(output_names(j)),'` is not defined!'
           STOP
        ENDIF
     ENDDO
@@ -367,9 +373,11 @@ CONTAINS
        dbgtbl(:,num_input+num_output+2)=bt
 
        OPEN(unit=17,file='brainfuse.dat',FORM='FORMATTED',STATUS='REPLACE')
-       WRITE(17,'(100(2X,A15))')(dbgtbl_names(j),j=1,num_input+num_output+num_extra)
+       WRITE(17,'(100(2X,A15))') & 
+          (dbgtbl_names(j),j=1,num_input+num_output+num_extra)
        DO i=1,nn
-          WRITE(17,'(100(1X,e16.9))')(dbgtbl(i,j),j=1,num_input+num_output+num_extra)
+          WRITE(17,'(100(1X,e16.9))') & 
+            (dbgtbl(i,j),j=1,num_input+num_output+num_extra)
        ENDDO
        CLOSE(17)
 
