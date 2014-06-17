@@ -24,16 +24,26 @@ CONTAINS
 #endif
 !========================
 !========================
-  SUBROUTINE GRADIENT(nn, y, yy)
+  FUNCTION GRADIENT(y)
+    IMPLICIT NONE
+    INTEGER*4 :: nn
+    REAL*8, INTENT(in) :: y(:)
+    REAL*8 :: GRADIENT(SIZE(y))
+    nn = size(y)
+    GRADIENT(1) = y(2)-y(1)
+    GRADIENT(2:nn-1) = (y(3:nn)-y(1:nn-2))/2.
+    GRADIENT(nn) = y(nn)-y(nn-1)
+  END FUNCTION GRADIENT
+!  SUBROUTINE GRADIENT(nn, y, yy)
     ! Gradient computed using central differences in the interior and first differences at the boundaries
     ! This function is numerically equivalent the Python numpy.gradient function
-    IMPLICIT NONE
-    INTEGER*4 nn, j
-    REAL*8 y(nn), yy(nn)
-    yy(1) = y(2)-y(1)
-    yy(2:nn-1) = (y(3:nn)-y(1:nn-2))/2.
-    yy(nn) = y(nn)-y(nn-1)
-  END SUBROUTINE GRADIENT
+!    IMPLICIT NONE
+!    INTEGER*4 nn, j
+!    REAL*8 y(nn), yy(nn)
+!    yy(1) = y(2)-y(1)
+!    yy(2:nn-1) = (y(3:nn)-y(1:nn-2))/2.
+!    yy(nn) = y(nn)-y(nn-1)
+!  END SUBROUTINE GRADIENT
 !========================
 !========================
   SUBROUTINE brainfuse( &
@@ -128,47 +138,37 @@ CONTAINS
     bunit = cs*mD/(eV*rg)
 
     ALLOCATE( dr(nn) )
-    call GRADIENT(nn,r,dr)
+    dr = GRADIENT(r)
 
     ALLOCATE( dte(nn) )
-    call GRADIENT(nn,te,dte)
-    dte=dte/dr
+    dte = GRADIENT(te)/dr
 
     ALLOCATE( dti(nn) )
-    call GRADIENT(nn,ti,dti)
-    dti=dti/dr
+    dti = GRADIENT(ti)/dr
 
     ALLOCATE( dne(nn) )
-    call GRADIENT(nn,ne,dne)
-    dne=dne/dr
+    dne = GRADIENT(ne)/dr
 
     ALLOCATE( dni(nn) )
-    call GRADIENT(nn,ni,dni)
-    dni=dni/dr
+    dni = GRADIENT(ni)/dr
 
     ALLOCATE( dq(nn) )
-    call GRADIENT(nn,q,dq)
-    dq=dq/dr
+    dq = GRADIENT(q)/dr
 
     ALLOCATE( dkappa(nn) )
-    call GRADIENT(nn,kappa,dkappa)
-    dkappa=dkappa/dr
+    dkappa = GRADIENT(kappa)/dr
 
     ALLOCATE( ddelta(nn) )
-    call GRADIENT(nn,delta,ddelta)
-    ddelta=ddelta/dr
+    ddelta = GRADIENT(delta)/dr
 
     ALLOCATE( dvol(nn) )
-    call GRADIENT(nn,vol,dvol)
-    dvol=dvol/dr
+    dvol = GRADIENT(vol)/dr
 
     ALLOCATE( dwt(nn) )
-    call GRADIENT(nn,wt,dwt)
-    dwt=dwt/dr
+    dwt = GRADIENT(wt)/dr
 
     ALLOCATE( dpress(nn) )
-    call GRADIENT(nn,press,dpress)
-    dpress=dpress/dr
+    dpress = GRADIENT(press)/dr
 
 !========================
 
