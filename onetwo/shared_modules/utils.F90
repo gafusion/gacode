@@ -886,3 +886,27 @@ END SUBROUTINE null_pointers
       RETURN
       END SUBROUTINE to_lower_case
 
+
+integer function getfreeunit(unit)
+  ! This is a simple function to search for an available unit.
+  ! LUN_MIN and LUN_MAX define the range of possible LUNs to check.
+  ! The UNIT value is returned by the function, and also by the optional
+  ! argument. This allows the function to be used directly in an OPEN
+  ! statement, and optionally save the result in a local variable.
+  ! If no units are available, -1 is returned.
+  integer, intent(out), optional :: unit
+  ! local
+  integer, parameter :: LUN_MIN=10, LUN_MAX=1000
+  logical :: opened
+  integer :: lun
+  ! begin
+  getfreeunit=-1
+  do lun=LUN_MIN,LUN_MAX
+    inquire(unit=lun,opened=opened)
+    if (.not. opened) then
+      getfreeunit=lun
+      exit
+    end if
+  end do
+  if (present(unit)) unit=getfreeunit
+end function getfreeunit
