@@ -210,11 +210,6 @@ c
       USE etc
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: iterdb_v1.29.f,v 1.5 2011/12/09 20:07:57 stjohn Exp $"/
-
       include 'storage.i'
 
 c

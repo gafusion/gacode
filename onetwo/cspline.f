@@ -4,10 +4,6 @@ cProlog
 c
       implicit none
 c
-      character rcs_id*63
-      save rcs_id
-      data rcs_id/
-     &"$Id: cspline.f,v 1.1 2003/02/19 22:32:37 stjohn Exp $"/
 c
       integer i, n, nmax, k
       doubleprecision p, sig, qn, un

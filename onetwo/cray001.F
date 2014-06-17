@@ -31,10 +31,6 @@ c
       implicit none
 c
       integer*4 mpiIerror,myid,ierr,omp_get_thread_num
-      character rcs_id*63 
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray001.F,v 1.24 2014/04/11 23:23:16 smithsp Exp $"/
 
 
       include 'quit.i'

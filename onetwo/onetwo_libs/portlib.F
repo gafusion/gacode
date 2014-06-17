@@ -492,8 +492,6 @@ c
       end
       subroutine freeus(unitno)
 c
-c     $Id: portlib.F,v 1.2 2007/04/09 20:57:02 parkjm Exp $
-c
 c dummy replacement for Basis's freeus, which returns a free unit-
 c number in its argument.
       return

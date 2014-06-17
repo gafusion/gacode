@@ -71,11 +71,6 @@ c
       USE island
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray307.F,v 1.37 2014/05/08 17:48:11 stjohn Exp $"/
-c
 c     This subroutine calculates transport (or diffusion) coefficients.
 c     Note that the logic in TPORT is such that
 c     DIFFUS, FLUXX and SOURCE are always called at the time stored

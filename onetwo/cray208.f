@@ -30,11 +30,6 @@ c---------------------------------------------------------------------
 c
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray208.f,v 1.69 2014/04/29 18:15:38 stjohn Exp $"/
-c
 c***********************************************************************
 c**                                                                   **
 c**     MAIN PROGRAM:  MHD FITTING CODE                               **

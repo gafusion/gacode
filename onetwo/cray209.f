@@ -23,11 +23,6 @@ c
       USE etc
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray209.f,v 1.84 2014/02/27 23:05:47 smithsp Exp $"/
-c
       dimension dpdpsi(nj),psir(nj),press(nj)
       real *8 , dimension(:),allocatable :: dpressdrho 
 c

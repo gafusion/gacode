@@ -542,11 +542,6 @@ cJMP  USE nbi_dimensions
 
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63 
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray102.f,v 1.269 2014/04/29 17:38:59 stjohn Exp $"/
-c
 c ----------------------------------------------------------------------
 c 1) initializes input variables to their default values and reads
 c    the overriding input file normally named "inone"

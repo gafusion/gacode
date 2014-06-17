@@ -241,12 +241,6 @@ c
 
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
-
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray101.f,v 1.80 2013/07/19 20:50:18 stjohn Exp $"/
-c
 c --- plotcodeid is passed to graphics postprocessor TRPLOT and checked
 c --- there to ensure we don't use incompatible versions of ONETWO and
 c --- plot codes. plotcodeid does NOT have to match versid, but

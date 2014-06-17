@@ -774,11 +774,6 @@ c
 
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray306.f,v 1.114 2014/04/29 16:51:55 stjohn Exp $"/
-c
 c ----------------------------------------------------------------------
 c --- subroutine TPORT is driver for transport portion of ONETWO code.
 c --- evolve the transport equations from t = time to t = time + dteq if

@@ -214,11 +214,6 @@ c
      .                                dnidt
       USE fusion,             ONLY  : enalp,walp
       implicit  integer (i-n), real*8 (a-h, o-z)
-c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray204.f,v 1.46 2010/06/05 00:13:08 stjohn Exp $"/
 
       include 'storage.i'
 

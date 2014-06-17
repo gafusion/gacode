@@ -335,32 +335,12 @@ c
       USE neo2d
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray309_nubeam.f,v 1.17 2014/04/29 17:07:42 stjohn Exp $"/
-c
 c ----------------------------------------------------------------------
 c     This subroutine prepares an input file for mcgo
 c     Note that mcgo also uses file eqdskin
 c     Also note that Mcgo expects mks input in some quantities
 c --------------------------------------------------------HSJ-8/28/98---
 c
-c      include 'param.i'
-c      include 'geom.i'
-c      include 'io.i'
-c      include 'ions.i'
-c      include 'limiter.i'
-c      include 'machin.i'
-c      include 'mesh.i'
-c      include 'neo2d.i'
-c      include 'neut.i'
-c      include 'nub.i'
-c      include 'nub2.i'
-c      include 'numbrs.i'
-c      include 'mcgo.i'
-c      include 'rhog.i'
-c      include 'soln.i'
       include 'storage.i'
       parameter (kmcgo = kprim+kimp+2)
       dimension enn_mcgo(kj),rgrid_mcgo(kj),rm2_mf(kj),eps_mf(kj),

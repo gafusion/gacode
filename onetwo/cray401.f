@@ -21,11 +21,6 @@ c
       USE glf23 !jmp.snu
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray401.f,v 1.141 2014/02/05 22:31:47 smithsp Exp $"/
-c
 c ----------------------------------------------------------------------
 c     this subroutine generates the matrices a, b, and c (and em and w)
 c     and the vector g (and vminus and vplus) for mesh point j.

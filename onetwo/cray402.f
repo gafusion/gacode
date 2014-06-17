@@ -3,11 +3,6 @@ c
       USE colrate
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray402.f,v 1.33 2013/12/12 18:37:01 stjohn Exp $"/
-c
 c ----------------------------------------------------------------------
 c --- subroutine AZIMUTH_INTEGRAL constructs a table of
 c ---         Integral from -1 to 1 {sigma(Erel)*vrel*P_n(Zeta)}

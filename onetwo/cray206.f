@@ -25,11 +25,6 @@ c
       USE bicube
       USE replace_imsl,                 ONLY : my_icsccu,my_icsevu
       implicit  integer (i-n), real*8 (a-h, o-z)
-c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray206.f,v 1.56 2013/09/03 18:53:21 stjohn Exp $"/
 
       dimension zeta(*),rho(*),v_dep(*),v_dep_out(*),
      .          zeta_loc(*),csp(kj,3)

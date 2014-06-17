@@ -5013,11 +5013,6 @@ c      USE  io,                         ONLY : ioftn, iopntr, nunits
       USE pelcom
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray207.f,v 1.85 2014/04/29 18:15:45 stjohn Exp $"/
-c
 c ----------------------------------------------------------------------
 c  driver for 1-1/2-d runs (codeid .ne.  'onedee')
 c

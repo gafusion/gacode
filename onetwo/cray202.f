@@ -778,11 +778,6 @@ c
       USE gpsi
       USE mhdbcdtn
       implicit  integer (i-n), real*8 (a-h, o-z)
-c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray202.f,v 1.37 2013/05/08 00:45:33 stjohn Exp $"/
 c      parameter (ipassmax = 60, itermaxp = 200)
       parameter (ipassmax = 120, itermaxp = 1000)
 c

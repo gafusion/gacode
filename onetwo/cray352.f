@@ -99,11 +99,6 @@ c
       USE ext_prog_info ,only : fastcd_path
       implicit none
 c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray352.f,v 1.21 2012/06/21 17:50:25 stjohn Exp $"/
-c
       character*(*) codeid, eqdskin
       integer nscr
       real*8  freq,pin

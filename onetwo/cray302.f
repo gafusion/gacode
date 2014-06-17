@@ -16,11 +16,6 @@ c
       USE tcoef
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray302.f,v 1.66 2012/06/21 17:50:25 stjohn Exp $"/
-c
 c     This subroutine constrains the plasma pressure gradient to be
 c     no greater than that allowed for marginal stability to ideal
 c     ballooning modes.  This is achieved by increasing the electron
@@ -425,25 +420,7 @@ c
       USE staebler
       USE cer
       implicit  integer (i-n), real*8 (a-h, o-z)
-c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray302.f,v 1.66 2012/06/21 17:50:25 stjohn Exp $"/
-c      include 'param.i'
-c      include 'extra.i'
-c      include 'ions.i'
-c      include 'mesh.i'
-c      include 'machin.i'
-c      include 'numbrs.i'
-c      include 'soln.i'
-c      include 'staebler.i'
       include 'storage.i'
-c      include 'tfact.i'
-c      include 'tordlrot.i'
-c      include 'geom.i'
-c      include 'mhdpar.i'
-c      include 'cer.i'
 c
 c     ----------------------------------------------------------------------
 c     Declare local variables

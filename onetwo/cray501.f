@@ -130,15 +130,7 @@ c
       USE adaptive
       implicit none
 c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray501.f,v 1.18 2013/05/08 00:45:35 stjohn Exp $"/
-c
-c      include 'param.i'
-c      include 'adaptive.i'    ! include_adaptive
       include 'storage.i'
-c      include 'verbose.i'
 c
       logical    not_converged
       integer    iloop_max

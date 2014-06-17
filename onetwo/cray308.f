@@ -34,11 +34,6 @@ c
       USE pelcom
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray308.f,v 1.71 2014/05/08 17:48:12 stjohn Exp $"/
-c
 c --- this subroutine prints out results at selected times
 c
 

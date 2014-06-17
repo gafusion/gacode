@@ -421,15 +421,6 @@ c
       USE numbrs
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray321u.f,v 1.8 2014/04/29 16:32:56 stjohn Exp $"/
-c      include 'param.i'
-c      include 'io.i'
-c      include 'numbrs.i'
-c      include 'ions.i'
-c
       dimension ebkev(kb),vbeam(ke,kb),zne(kz),zni(kz,kion)
       dimension zte(kz),zti0(kz),zzi(kz,kion)
       dimension sgxn(kcmp1,kz,kbe,ksge),sgxnmi(ke,kb)

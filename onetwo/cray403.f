@@ -5,11 +5,6 @@ c
       USE numbrs
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray403.f,v 1.8 2014/03/26 17:10:43 stjohn Exp $"/
-c
 c     source file cray403.f contains routines, based on those in the the
 c     "Numerical Recipes" books, used to do integrals related to neutron
 c     rates
@@ -19,10 +14,6 @@ c     from nkt to nk
 c
 ****  dimension  u(kk,*), usave(kk,*), itran(*)
       dimension itran(*)
-c
-c      include 'param.i'
-c      include 'soln.i'
-c      include 'numbrs.i'
 c
       kt = nkt + 1
       do 40 k=nk,1,-1

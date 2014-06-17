@@ -1,6 +1,5 @@
 c
 c --- INCLUDE file delben.i
-c     $Id: delben.i,v 1.4 2000/07/31 20:38:09 stjohn Exp $
 c
 c --- NOTE that common block /DELBEN/ is now properly data-aligned.
 c               PLEASE maintain this when you make modifications. ... JF

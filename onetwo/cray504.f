@@ -104,11 +104,6 @@ c
       USE param
       IMPLICIT NONE
 c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray504.f,v 1.6 2003/02/19 22:32:37 stjohn Exp $"/
-c
 c      include 'param.i'
       include 'houlberg.i'
 c     INCLUDE 'pamx_mi.inc'

@@ -1722,11 +1722,6 @@ c-----------------------------------------------------------HSJ
 c
       implicit none
 c
-      character rcs_id*63
-      save rcs_id
-      data rcs_id/
-     &"$Id: cray331.f,v 1.101 2013/09/03 18:53:21 stjohn Exp $"/
-c
       integer i, n, nmax, k
       doubleprecision p, sig, qn, un
       parameter (nmax = 129)
@@ -1881,12 +1876,8 @@ c
 
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
       CHARACTER ech_filename*256
       CHARACTER torayinpt*256
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray331.f,v 1.101 2013/09/03 18:53:21 stjohn Exp $"/
 c
 c       parameter (nx_param = 129, ny_param = 129) ! HSJ 10/24/96
 c
