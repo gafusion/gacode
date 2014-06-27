@@ -1,0 +1,219 @@
+                        #USEMPI=1 MPI2_EXT=1 OPT=debug FORT=intel
+	                #compile with  Intel or Portland based mpif90
+			#FORT can be overwritten by command line argument:
+                        #eg gmake FORT=pgf95
+                           
+			# USEMPI=1 and MPI2_EXT is set internally
+                        # now so is no longer necessary. For pgf 
+			#compile use FORT=pgf95 (not pgf90)
+                        #The following is supposed to suppres unresolved references: 
+			LINK = -Wl,-noinhibit-exec -Wl,-Map,mapfilename   
+			MACHINEOK = 1
+	                MACHINE = lohan1
+		 	LIBS      =
+			#MPELIB = /usr/pgi/linux86/6.1/lib/libmpe.a
+                        ACMLBASE = /usr/local/math_libs/acml
+                        #NOTE: acml lib has lapack,blas,plus other routines:       
+                        # CFLAGS should be set to be the C flags that include optimization
+                        CFLAGS          = -c -tp=k8-64e  # -DAdd_  -DNO_IEEE  
+
+			
+                        ifeq ($(strip $(FORT)),ifort)
+				MPIBASE = /task/imd/apps/mpi/mpich2-1.3.2p1/64/
+			   	FC_NOMPI   = /opt/intel/Compiler/11.1/038/bin/intel64/ifort
+                                CC_NOMPI   = /usr/bin/g++
+                                CXX_NOMPI  = /usr/bin/gcc
+                                MPICHDIR   = $(MPIBASE)
+                                MPI_CC     = $(MPICHDIR)/bin/mpicc
+                                AMD64      = 
+                                DEBUG      =  -g -check all -zero  -fpe0  -O0  -traceback
+                                DEBUG      =  -g -check all -fpe1  -O0  -traceback
+ 			        LAPACK    = /opt/intel/fce/11.0/074/mkl/lib/em64t/libmkl_lapack.a  \
+                                            /opt/intel/fce/11.0/074/mkl/lib/em64t/libmkl_em64t.a \
+                                            /opt/intel/fce/11.0/074/lib/intel64/libguide.a\
+                                            /usr/lib64/libpthread.so 
+	                         # libmkl_em64t must be on the link line for mkl math lib:
+			        LINK = -Wl,-noinhibit-exec -Wl,-Map,mapfilename\
+	                                -L/opt/intel/fce/11.0/074/mkl/lib/em64t/ -lmkl_em64t
+                                CFLG = ifort
+                                #staticlink because runtime libs 
+                                #not distributable:
+                                #LINK = -lmpi -L/opt/mpich/ch-p4/lib/ -lmpe
+		                OPTIMIZE  = -fast
+                                OPTIMIZE  = -O2
+                                #OPTIMIZE  = -O4
+	                        NETCDF_DIR  = /usr/local/netcdf_intel
+                                NETCDF_INC = $(NETCDF_DIR)/include
+                                NETCDF_LIB = $(NETCDF_DIR)/lib/libnetcdf.a
+                                SUPERLU_INC = -I/usr/local/math_libs/superlu/SuperLU_DIST_2.1/intel/include/
+                                SUPERLU_INC_C = -I/usr/local/math_libs/superlu/SuperLU_DIST_2.1/intel/include/
+                                SUPERLU_LIB = /usr/local/math_libs/superlu/SuperLU_DIST_2.1/intel/lib/libsuperlu_dist_2.1.a
+				SPLINELIB = /p/linux/tools/lib/splinelib_ifort_64.a
+				ifdef   USEMPI
+				    FC  = $(MPICHDIR)/bin/mpif90
+	                            CXX = $(MPICHDIR)/bin/mpicc
+				    INC = ./
+				endif
+	            		DISLININC = /usr/local/dislin/ifc/real64/
+				UFILE_LIBS    =/usr/local/ufiles/ifort/lib/
+
+                        endif 
+
+			
+                        ifeq ($(strip $(FORT)),gfortran)
+				MPIBASE = /task/imd/apps/mpi/mpich2-1.3.2p1/64/
+			   	#FC_NOMPI   = /opt/intel/Compiler/11.1/038/bin/intel64/ifort
+                                #CC_NOMPI   = /usr/bin/g++
+                                #CXX_NOMPI  = /usr/bin/gcc
+                                MPICHDIR   = $(MPIBASE)
+                                MPI_CC     = $(MPICHDIR)/bin/mpicc
+                                AMD64      = 
+                                DEBUG      =  -g  -fpe1  -O0  -traceback
+ 			        LAPACK    = /opt/intel/fce/11.0/074/mkl/lib/em64t/libmkl_lapack.a  \
+                                            /opt/intel/fce/11.0/074/mkl/lib/em64t/libmkl_em64t.a \
+                                            /opt/intel/fce/11.0/074/lib/intel64/libguide.a\
+                                            /usr/lib64/libpthread.so 
+	                         # libmkl_em64t must be on the link line for mkl math lib:
+			        LINK = -Wl,-noinhibit-exec -Wl,-Map,mapfilename\
+	                                -L/opt/intel/fce/11.0/074/mkl/lib/em64t/ -lmkl_em64t
+                                CFLG = ifort
+                                #staticlink because runtime libs 
+                                #not distributable:
+                                #LINK = -lmpi -L/opt/mpich/ch-p4/lib/ -lmpe
+		                OPTIMIZE  = -fast
+                                OPTIMIZE  = -O2
+                                #OPTIMIZE  = -O4
+	                        NETCDF_DIR  = /usr/local/netcdf_intel
+                                NETCDF_INC = $(NETCDF_DIR)/include
+                                NETCDF_LIB = $(NETCDF_DIR)/lib/libnetcdf.a
+                                SUPERLU_INC = -I/usr/local/math_libs/superlu/SuperLU_DIST_2.1/intel/include/
+                                SUPERLU_INC_C = -I/usr/local/math_libs/superlu/SuperLU_DIST_2.1/intel/include/
+                                SUPERLU_LIB = /usr/local/math_libs/superlu/SuperLU_DIST_2.1/intel/lib/libsuperlu_dist_2.1.a
+				SPLINELIB = /p/linux/tools/lib/splinelib_ifort_64.a
+				ifdef   USEMPI
+				    FC  = $(MPICHDIR)/bin/mpif90
+	                            CXX = $(MPICHDIR)/bin/mpicc
+				    INC = ./
+				endif
+	            		DISLININC = /usr/local/dislin/ifc/real64/
+				UFILE_LIBS    =/usr/local/ufiles/ifort/lib/
+
+                        endif 
+			
+                        ifeq ($(strip $(FORT)),pgf95)
+				ACMLBASE = /home/stjohn/math_libs/acml
+				#MPIBASE = /task/imd/apps/mpi/mpich2-1.3.2p1/64/
+				MPIBASE = /task/imd/apps/mpi/mpich2-1.3.2p1/pgi/64/
+				#MPIBASE =
+			   	#FC_NOMPI   = /opt/intel/Compiler/11.1/038/bin/intel64/ifort
+                                #CC_NOMPI   = /usr/bin/g++
+                                #CXX_NOMPI  = /usr/bin/gcc
+                                MPICHDIR   = $(MPIBASE)
+                                MPI_CC     = $(MPICHDIR)/bin/mpicc
+                                AMD64      = 
+                                DEBUG      =  -g  -fpe1  -O0  -traceback
+                                LAPACKDIR = $(ACMLBASE)/pgi/pgi64
+                        	LAPACK = $(LAPACKDIR)/lib/libacml.a
+			        LINK = -Wl,-noinhibit-exec -Wl,-Map,mapfilename
+                                #staticlink because runtime libs 
+                                #not distributable:
+                                #LINK = -lmpi -L/opt/mpich/ch-p4/lib/ -lmpe
+		                OPTIMIZE     = -fast
+                                OPTIMIZE     = -O2
+                                #OPTIMIZE    = -O4
+	                        #NETCDF_DIR  = /home/stjohn/netcdf-4.1.2_pgf95
+				NETCDF_DIR   = /home/stjohn/netcdf-4.0.1_64_pf95
+                                NETCDF_INC   = $(NETCDF_DIR)/include
+                                NETCDF_LIB   = $(NETCDF_DIR)/lib/libnetcdf.a
+                                SUPERLU_INC  = -I/usr/local/math_libs/superlu/SuperLU_DIST_2.1/intel/include/
+                                SUPERLU_INC_C = -I/usr/local/math_libs/superlu/SuperLU_DIST_2.1/intel/include/
+                                SUPERLU_LIB = /usr/local/math_libs/superlu/SuperLU_DIST_2.1/intel/lib/libsuperlu_dist_2.1.a
+				SPLINELIB = /p/linux/tools/lib/splinelib_ifort_64.a
+				ifdef   USEMPI
+				    FC  = $(MPICHDIR)/bin/mpif90
+	                            CXX = $(MPICHDIR)/bin/mpicc
+				    INC = ./
+				endif
+	            		DISLININC = /usr/local/dislin/ifc/real64/
+				UFILE_LIBS    =/home/stjohn/ufiles/pgf/lib/
+
+                        endif 
+
+
+                        MACHINEOK = 1
+                        LIBS      = /usr/lib64
+                        #MPELIB   = 
+
+
+                        MPI_FC     = $(MPICHDIR)/bin/mpif90
+                        MPI_CXX    = $(MPICHDIR)/bin/mpiCC
+                        MPI_CC     = $(MPICHDIR)/bin/mpicc_pgcc
+
+
+
+                        #acml lib has lapack,blas,plus other routines:
+                        #need to use -mp on link line to get the following
+                        #openMp libacml: (leave out the _mp part to get regular libacml)
+                        #NOTE to get openMP define it in Makefile
+
+                        
+                        INC = 
+
+
+
+                        #set LD_LIBRARY_PATH to /usr/lib64/MPICH/vapi/pgi
+
+                        FTN90LIB = 
+                        CFLG = 
+                        #OPTIMIZE = -fast 
+                        MSG = 
+
+
+                        ifndef  USEMPI
+                                FC = $(FC_NOMPI) 
+                                CXX =$(CXX_NOMPI)
+                                CC  =$(CC_NOMPI)
+                                INC = $(NETCDF_INC)
+                                MPI_LIB =
+				MPI_INC = 
+                        else
+                                ifndef MPI2_EXT
+                                        FFLAGS = -DUSEMPI 
+                                else
+                                        FFLAGS = -DUSEMPI -DMPI2_EXT 
+                                endif
+                                FC  = $(MPI_FC)
+                                CC  = $(MPI_CC)
+                                CXX = $(MPI_CXX)
+                        	MPI_LIB  = $(MPICHDIR)/lib/libmpich.a
+                        	MPI_INC  = $(MPICHDIR)/include
+                                INC = $(MPI_INC) 
+                        endif
+
+                        ifeq ($(OPT),debug)
+				ifeq ($(strip $(FORT)),pgf95)	
+                        		DEBUG     = -g -Mbounds -Mchkfpstk -Mchkstk \
+                               	 		  -Mdwarf1  -Mpgicoff \
+						-Ktrap=inv,denorm,divz,ovf,unf,fp  -Mstabs
+                                	OPTION = $(DEBUG)
+                                	DBG = _debug
+                                	AMD64 = -tp=k8-64  -Mcache_align -DIS_64BIT
+		                else
+	                             	# for intel compiler:
+                                	OPTION = $(DEBUG)
+                                	DBG = _debug
+                                	AMD64 = 
+		                endif
+                        else
+                                OPTION = $(OPTIMIZE)
+                                DBG= 
+                        endif
+
+
+                        COMPILE   = $(FC)  $(AMD64)  -I$(INC) -I$(NETCDF_INC) $(OPTION) $(LISTING) -c
+                        LOAD = $(COMP)
+                        XLIB  = /usr/X11R6/lib64/libX11.so 
+                        #SPLINELIB = /p/linux/tools/lib/splinelib_pgf_64.a
+			DISLIN    = /usr/local/dislin
+			DISLINLIB = $(DISLIN)/libdislnc_d.so
+

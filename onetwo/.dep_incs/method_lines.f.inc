@@ -1,0 +1,2 @@
+method_lines.o: adaptive.mod aid_newton.mod bd_condtn.mod extra.mod flags.mod flx.mod fusion.mod geom.mod gpsi.mod io.mod ions.mod island.mod machin.mod mesh.mod mhdgrid.mod mhdpar.mod mixcom.mod m_lines.mod neut.mod nonlin.mod nub2.mod nub.mod numbrs.mod ode_pkg.mod oloss_dat.mod param.mod pelcom.mod replace_imsl.mod rf.mod rhog.mod solcon.mod soln2d.mod soln.mod sourc.mod tcoef.mod tfact.mod tmpcom.mod tordlrot.mod verbose.mod method_lines.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO method_lines.f

@@ -61,7 +61,8 @@ c
       USE flx
       USE neo2d
       USE kapisn_module,               ONLY : kapisn_driver
-      USE mmm95_mod !JMP      
+      USE mmm95_mod !JMP
+      USE brainfuse_mod !OM
       USE glf23 !jmp.snu
 #ifdef PARALLEL_12
       USE mpi12 !jmp.snu.par
@@ -69,11 +70,6 @@ c
       USE weiland
       USE island
       implicit  integer (i-n), real*8 (a-h, o-z)
-c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray307.F,v 1.32 2013/01/23 19:24:32 stjohn Exp $"/
 c
 c     This subroutine calculates transport (or diffusion) coefficients.
 c     Note that the logic in TPORT is such that
@@ -159,6 +155,16 @@ c
      .   etaphim, etaparm, etaperm, exchm,
      .   fc, akappa1, akappa2, alpha_neo, vstar_sign, corot,
      .   pgeo_local, rdrho_local, rdrho_local_p1,zval
+
+c
+cOM  brainfuse variables
+      REAL*8, DIMENSION (:), ALLOCATABLE :: vol_brain
+      REAL*8, DIMENSION (:), ALLOCATABLE :: entot_brain
+      REAL*8, DIMENSION (:), ALLOCATABLE :: Qe_brain,Qi_brain
+      REAL*8, DIMENSION (:), ALLOCATABLE :: Ge_brain,Gi_brain
+      REAL*8, DIMENSION (:), ALLOCATABLE :: Pr_brain
+      REAL*8 dummy_brain
+      INTEGER*4 main_ion_brain
 
 c
 cJMP  mmm variables
@@ -1948,7 +1954,7 @@ c
      .                             + wrebut*xkirebut(j)
                 if (iangrot .ne. 0)
      .          d(nion+4,nion+4,j) = d(nion+4,nion+4,j)
-     .                             +wrebut*xkangrl(j)*dmassden(j)*rmajor**2
+     .                          +wrebut*xkangrl(j)*dmassden(j)*rmajor**2
                 xkerebut(j)        = xkerebut(j) + xkeneo(j)
                 xkirebut(j)        = xkirebut(j) + xkineo(j)
                 xchierl(j)         = xchierl(j)  + xkeneo(j)/enea
@@ -3695,6 +3701,69 @@ c
         endif  glf_sect  !end glf23 block
 
 c---------------------------------------------------------------------------
+c     BRAINFUSE OM 24/01/14
+c---------------------------------------------------------------------------
+        brainfuse_sect:    IF(include_brainfuse .EQ. 1 )THEN
+
+           !check if IP has a sign
+           !check units of angrot
+
+           !calculate volume
+           fact = volfac * hcap *1E-6
+           ALLOCATE(vol_brain(nj))
+           vol_brain=vol_brain*0+1
+           DO jj=1,nj
+              CALL TRAPV(r,vol_brain,fact,nj-jj+1,dummy_brain)
+              vol_brain(nj-jj+1)=dummy_brain
+           ENDDO
+
+           ! loop to find index of deuterium and calculate total ion density
+           ALLOCATE(entot_brain(nj))
+           entot_brain=0
+           DO jj=1,nprim
+              IF(atw(jj) .EQ. 2.) main_ion_brain=jj
+              entot_brain=entot_brain+en(:,jj)
+           ENDDO
+
+           ALLOCATE(Qe_brain(nj))
+           ALLOCATE(Qi_brain(nj))
+           ALLOCATE(Ge_brain(nj))
+           ALLOCATE(Gi_brain(nj))
+           ALLOCATE(Pr_brain(nj))
+
+           CALL BRAINFUSE(nj,   ! number of points
+     .          btgeom*1E-4,    ! Bt : Toroidal magnetic field at geometric center [T] with sign
+     .          totcur(1),      ! Ip : Plasma current [A] with sign
+     .          r*0.01,         ! r[j] : radius [m];  a=r[nj] minor radius [m]
+     .          ravg_r*0.01,    ! R[j] : major radius [m]; R=rmajor+shif(j) [m]
+     .          kappa_nj,       ! kappa[j] : elongation
+     .          ene*1E6,        ! ne[j] : electron density [m^-3]
+     .          en(:,main_ion_brain)*1E6,   ! ni[j] : ion density [m^-3]
+     .          te,             ! Te[j] : electron temperature [keV]
+     .          ti,             ! Ti[j]: ion temperature [keV]
+     .          q,              ! q[j] : safety factor with sign
+     .          vol_brain,  ! vol[j] : volume enclosed by each flux surface [m^3]
+     .          angrot,         ! wt[j] : toroidal rotation [1/s]
+     .          (ene*te+entot_brain*ti+2./3.*(wbeam+walp))*1.6022e-10, ! press[j] : total pressure [nt/m**2]
+     .          Qe_brain,
+     .          Qi_brain,
+     .          Ge_brain,
+     .          Gi_brain,
+     .          Pr_brain
+     .          )
+
+           DEALLOCATE(entot_brain)
+           DEALLOCATE(vol_brain)
+
+           DEALLOCATE(Qe_brain)
+           DEALLOCATE(Qi_brain)
+           DEALLOCATE(Ge_brain)
+           DEALLOCATE(Gi_brain)
+           DEALLOCATE(Pr_brain)
+
+        ENDIF  brainfuse_sect
+
+c---------------------------------------------------------------------------
 c     MMM95 JMP 3/23/06
 c---------------------------------------------------------------------------
 
@@ -4298,6 +4367,7 @@ c
           xkangrot(j) = 0.0 !toroidal rotation excluded by user
         endif
       end do
+
 c
 ****  write (ncrt, '(a, i7)') ' DIFFUS_COUNTER =', diffus_counter
 ****  if (ip_chi2_counter .ge. 2951)  call STOP ('DIFFUS: debug', 992)!
@@ -4863,15 +4933,17 @@ c --- New fusion calcs, 1/25/96 HSJ
 c
       if (fusionvb .gt. 0)  write (*, '(" calling THERMONUCLEAR_RATE")')
  
- 
+   
       call thermonuclear_rate (ddfusn,ddpfus,dtnfus,ttnfus,
-     .                         hdpfus,
+     .                         he3dpfus,
      .                         thermal_thermal_ddntot,
      .                         thermal_thermal_ddptot,
      .                         thermal_thermal_dtntot,
      .                         thermal_thermal_tt2ntot,
-     .                         thermal_thermal_hdptot,
-     .                         iddfus,ti,en,kj,nj,
+     .                         thermal_thermal_he3dptot,
+     .                         iddfus,
+     .                         idhe3fus,ihe,ihei,he3_frac,
+     .                         ti,en,kj,nj,
      .                         id,idt,it,fd,volfac,hcap,r)
  
 
@@ -4888,8 +4960,8 @@ c
        call beam_beam_rate (time, time0, timmax, totcur(1))
        if (beam_beam_long_calc .lt. 0)
      .   call beam_beam_approx_rate(time,time0,timmax)
-       if (fusionvb .gt. 0)  write (*, '(" beam-thermal d(d,n)he3",
-     .                                " from DDFUST =", 1pe14.3)') ddbmt
+c       if (fusionvb .gt. 0)  write (*, '(" beam-thermal d(d,n)he3",
+c     .                                " from DDFUST =", 1pe14.3)') ddbmt
        if (fusionvb .gt. 0)  write (*, '(" d(d,n)he3 from ",
      .                "BEAM_THERMAL_FUS", 1pe14.3)') beam_thermal_ddntot
 
@@ -4922,6 +4994,13 @@ c
        ddptot = thermal_thermal_ddptot + beam_thermal_ddptot
      .          + beam_beam_ddptot
 c
+c
+c --- total He3(d,p)He4 rate
+c     NOTE: beam_beam_he3 is not programmed since we assume single species beam
+      beam_beam_he3dptot =0.0D0
+      he3dptot = thermal_thermal_he3dptot + beam_thermal_he3dptot
+     .           + beam_beam_he3dptot
+
        qdd = ddntot*3270.0               ! 3.27 MeV for d(d,n)he3
      .     + ddptot*4030.0               ! 4.03 MeV for d(d,p)t
 c
@@ -4930,15 +5009,20 @@ c
        qdd = qdd*1.602e-16 ! watts, divide by input power elsewhere
        qdt = qdt*1.602e-16
        qtt = qtt*1.602e-16
+       qhe3d = he3dptot *1.602e-16
+       qhe3d = qhe3d*18300.0             ! 18.3 mev for  he3(d,p)He4
+
        call getpow (time, pwrinpt)
        if (pwrinpt .gt. 1.0) then
-         qdd = qdd/pwrinpt
-         qtt = qtt/pwrinpt
-         qdt = qdt/pwrinpt
+         qdd    = qdd/pwrinpt
+         qtt    = qtt/pwrinpt
+         qdt    = qdt/pwrinpt
+         qhe3d  = qhe3d/pwrinpt
        else
-          qdd = 0.0
-          qtt = 0.0
-          qdt = 0.0
+          qdd   = 0.0
+          qtt   = 0.0
+          qdt   = 0.0
+          qhe3d = 0.0
        end if
 
 c
@@ -4981,6 +5065,8 @@ c
      .                                            paleo_pinch_mult
 
       USE flx
+      USE tordlrot,                        ONLY : aniwdwdt,wdnidt,
+     .                                            qomegapi,qangce  ! HSJ 4/7/14
       USE glf23!jmp.snu
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
@@ -5092,6 +5178,7 @@ c     flux proportional to the fast ion density gradient, but it is
 c     included as a source term instead (PAP 10/89))
 c
       
+
       DO  j=1,nj  ! may 2d terms to qdelt_l, see impsrc
          qdelt_l(j) = qdimpl(j)*(u(nk-iangrot-2,j)-u(nk-iangrot-1,j))
       ENDDO
@@ -5120,16 +5207,24 @@ c
           ENDDO
        ENDIF
 
-
       i = nion+2
       IF(itran(i) == 0)THEN                   ! analysis mode for ti
          dflux(:) = zeroc
          DO l=1,nion
             dflux(:) = dflux(:)+ dpidt(:,l)
          ENDDO
+
+         call rot_terms
+
+         dflux(:) = 1.5*dflux(:) + wdnidt(:)+aniwdwdt(:)  ! hsj 4/7/14
+
+ 
          dflux(:) = s(i,:) - dflux(:) + qdelt_l(:) 
 
+
          CALL  flxcal (dflux,drr,hcap,nj,r,ra,fluxp)
+c        note that flux(nion+2,:) = condi+convi+ omegapi+flxangce
+
          flux(i,:) = fluxp(:)
 
       ELSE
@@ -5279,9 +5374,9 @@ c --- the source that would be required in order for the given
 c --- te and ti profiles to be in steady state. these calculations
 c --- are not used elsewhere in the code
 c
-      call divflx(flux,fluxb,hcap,r,ra,drr,nion+1,nj,kk,ydum)   ! for te
-      call divflx(flux,fluxb,hcap,r,ra,drr,nion+2,nj,kk,zdum)   ! for ti
-
+c      call divflx(flux,fluxb,hcap,r,ra,drr,nion+1,nj,kk,ydum)   ! for te
+c      call divflx(flux,fluxb,hcap,r,ra,drr,nion+2,nj,kk,zdum)   ! for ti
+ 
       return
 c
       end
@@ -5840,7 +5935,7 @@ c
           call tspline (psi_jk,rmajavnpsi,npsi,bpar,cs2spline,kpsi,
      .                  ier,tension,aspline,bspline,cspline,dspline,
      .                  espline,fspline,tmax,psir,ravg_r,nj)
-                call tspline (psi_jk,elongx,npsi,bpar,cs2spline,kpsi,
+          call tspline (psi_jk,elongx,npsi,bpar,cs2spline,kpsi,
      .                  ier,tension,aspline,bspline,cspline,dspline,
      .                  espline,fspline,tmax,psir,kappa_nj,nj)
               
@@ -5984,6 +6079,115 @@ c     .                 +pratio*(ell31+aone*ell34)*tiph)
 c  return,{nustare:nustare, sigma:sigma, jbootc:jbootc}
       return
       end
+
+
+        SUBROUTINE  rot_terms
+c  -------------------------------------------------------------------
+c       Determine wdnidt and aniwdwdt
+c  ---------------------------------------------------------HSJ-4/7/14
+        USE param,               ONLY : kj
+        USE solcon,              ONLY : dtsumi,dtt
+        USE io,                  ONLY : itimav
+        USE numbrs,              ONLY : nprim,nion,nk,nj
+        USE soln,                ONLY : u,usave,uav,uav0
+        USE ions,                ONLY : atw
+        USE constnts,            ONLY : xmassp,kevperg
+        USE geom,                ONLY : r2capi
+        USE tordlrot,            ONLY : angrcple,wdnidt,aniwdwdt
+        IMPLICIT none
+        REAL*8 dtavg,sum,avg1,avg0,dndt,angterm,dnt
+        REAL*8 amassden(kj) ! move this to ions module
+        INTEGER jin,k,i
+
+        DO jin=1,nj
+           amassden(jin) = 0.0D0
+           DO k =1,nion
+              amassden(jin) = amassden(jin) +atw(k)*u(k,jin)
+           ENDDO
+           amassden(jin) = amassden(jin) * xmassp 
+
+           dtavg = 0.0D0
+           if (   dtt .ne. 0.0D0)  dtavg = 1.0D0 / dtt
+           if (itimav .eq. 1  )  dtavg = dtsumi
+           sum = 0.0D0
+
+           DO i=1,nion
+              avg1 = u(i,jin)
+              avg0 = usave(i,jin)
+              if (itimav .eq. 1)  avg1 = uav(i,jin)
+              if (itimav .eq. 1)  avg0 = uav0(i,jin)
+              IF (i .LE. nprim)THEN
+                 dndt = (avg1-avg0)*dtavg*atw(i)
+                 sum  = sum + dndt
+              ENDIF
+           ENDDO
+
+           avg1 = u(nk,jin)
+           avg0 = usave(nk,jin)
+           if (itimav .eq. 1)  avg1 = uav (nk,jin)
+           if (itimav .eq. 1)  avg0 = uav0(nk,jin)
+           dnt         = (avg1-avg0)*dtavg
+           sum         = sum * 0.5D0 * r2capi(jin)*avg1**2*xmassp
+           angterm     = amassden(jin)*r2capi(jin)*avg1*dnt
+           wdnidt(jin)   = sum*angrcple*kevperg
+           aniwdwdt(jin) = angterm*angrcple*kevperg
+
+        ENDDO
+
+        RETURN
+        END
+
+
+        SUBROUTINE visc_flux
+c  -------------------------------------------------------------------
+c       Determine energy fluxes associated with rotation
+c  ---------------------------------------------------------HSJ-5/5/14
+        USE bd_condtn,           ONLY : fluxb
+        USE constnts,            ONLY : kevperg,jouperg
+        USE flx,                 ONLY : flux
+        USE geom,                ONLY : hcap
+        USE mesh,                ONLY : r,ra,drr
+        USE numbrs,              ONLY : nprim,nion,nk,nj
+        USE solcon,              ONLY : theta
+        USE soln,                ONLY : u,usave,uav,uav0
+        USE tcoef,               ONLY : dudr
+        USE tordlrot,            ONLY : angrcple,omegapi,fluxangv,
+     .                                  vischeat,flxangce,qangce,
+     .                                  qomegapi,fluxangc
+
+        IMPLICIT none
+        REAL*8 angrota,omegapib,onemt
+        INTEGER j
+
+          onemt = 1.D0 - theta
+          if (angrcple .ne. 0.0) then
+            DO j=1,nj-1
+                angrota    = (theta*(u(nk,j)+u(nk,j+1))+onemt *
+     .                     (usave(nk,j) + usave(nk,j+1))) * 0.5
+                omegapi(j) = angrcple*kevperg*angrota*fluxangv(j)
+c --- viscous heating term in w/cm**3:
+                vischeat(j) = -fluxangv(j)*jouperg*angrcple*dudr(nk,j)
+                flxangce(j) = 0.5*angrcple*angrota*kevperg*fluxangc(j)
+c                flux(nion+2,j) = flux(nion+2,j)+omegapi(j)+flxangce(j)
+
+            ENDDO 
+
+              call extrap (ra(nj-2),ra(nj-1),r(nj),flux(nion+2,nj-2),
+     .                     flux(nion+2,nj-1),fluxb(nion+2))
+              call extrap (ra(nj-2),ra(nj-1),r(nj),
+     .                     flxangce(j-2),flxangce(j-1),flxangce(nj))
+              call extrap (ra(nj-2),ra(nj-1),r(nj),omegapi(nj-2),
+     .                     omegapi(nj-1),omegapib)
+              omegapi(nj) = omegapib
+
+              call divflx (omegapi,omegapib,hcap,r,ra,drr,1,nj,1,
+     .                     qomegapi)
+              call divflx (flxangce,flxangce(nj),hcap,r,ra,drr,1,nj,1,
+     .                     qangce)
+           end if
+
+        RETURN
+        END SUBROUTINE visc_flux
 
 
       subroutine sauter  (jhirsh, j, nion, fcapa, enea, tea, ena, tia,

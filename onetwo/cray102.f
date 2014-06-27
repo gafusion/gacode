@@ -517,6 +517,7 @@ cJMP  USE nbi_dimensions
       USE cer
       USE tmpcom
       USE mmm95_mod !JMP
+      USE brainfuse_mod         !OM
       !USE platform !jmp.ibm.par
       USE rad_loss,                    ONLY : brems_nions          
       USE gpsi
@@ -541,11 +542,6 @@ cJMP  USE nbi_dimensions
 
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63 
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray102.f,v 1.263 2013/05/08 00:45:32 stjohn Exp $"/
-c
 c ----------------------------------------------------------------------
 c 1) initializes input variables to their default values and reads
 c    the overriding input file normally named "inone"
@@ -564,15 +560,12 @@ D      include 'mpif.h'               !required for MPI
 
 
       include 'mod_gbohm.i'
-c      include 'pelcom.i'
       include 'quit.i'
       include 'sxrcom.i'
 
       include 'storage.i'
       include 'rebut.i'    ! to get wrebut into common block
 
-c      include 'mhdbcdtn.i'
-c      include 'zerocom.i'
       include 'pckcom.i'
 
 
@@ -589,13 +582,9 @@ c      include 'zerocom.i'
 c
       integer  sizel,userid(2),beam_restart_file_length,
      .         taskl,
-     .         GETUID,
-     .         LENGTH
-      external LENGTH,               ! character string length function
-     .         RANDOM12,             ! portable random number generator
+     .         GETUID
+      external RANDOM12,             ! portable random number generator
      .         GETUID                ! get user's identification number
-c     .         GETENV,               ! get value of environment variable
-c                                    lf95 wont allow this as an external
       logical fcd_path
                                              
       integer  strleng         ! length of onetwo (below)
@@ -701,7 +690,8 @@ c                                                                              @
      .  random_pert,freeze_alpha_exp,conv_skip,te_range_check,
      .  q0_max,q0_radius,q0_mult, runid, write_profiles,analysis_check,
      .  write_glf_namelist,newtonvb,use_avg_chi,test_xptor,
-     .  itte_dv,itti_dv,itenp_dv,itene_dv,itangrot_dv,dv_delt,jion_clamp,
+     .  itte_dv,itti_dv,itenp_dv,itene_dv,itangrot_dv,dv_delt,
+     .  jion_clamp,
      .  nalp_thresh,nb_thresh, dn0out,nlfbmflr,bp0_ic,r_elm,t_elms,
      .  t_elme,etam_elm,itot_elm,vloop_bc,vloop_bc_time,vloopvb,
      .  use_pedestal,pedestal_path,pedestal_models,include_paleo, 
@@ -717,8 +707,10 @@ c                                                                              @
      .  en_bc_inpt,ren_bc_inpt,iglf_d,fix_edge_ni_bc_inpt,ts_smfactor, 
      .  single_density_simulation,density_mult,set_te_to_ti,
      .  set_ti_to_te,te_mult,ti_mult,ang_mult,ene_mult,
-     .  include_ntv,c_p,delta_b_sqr,mp_polnum,mp_tornum  !C.K. Pan
-    
+     .  include_ntv,c_p,delta_b_sqr,mp_polnum,mp_tornum , !C.K. Pan
+     .  he3_frac,he3_thermal_spin_pol,
+     .  include_brainfuse, brainfuse_path
+     
 c                                                                          
      %
       NAMELIST /namelis2/  beam_thermal_fusion,                                            
@@ -770,7 +762,10 @@ c
      .  enbmin_curray,wrt_kinetic_efit,genray_path,save_genray_io,             %
      .  genray_fi,genraydat,avg_nubeam_torque,fidiff_on,bfr_neutrlz,
      .  nubeam_back_delt,nubeam_fix_t,ifix_nubeam_dt,use_ufile, !JMP
-     .  nubeam_back_average,P_Nfreya_dt,nubeam_version !JMP
+     .  nubeam_back_average,P_Nfreya_dt,nubeam_version,    !JMP
+     .  d_beam_spin_pol,he3_thermal_spin_pol
+
+
 c                                                                      
       NAMELIST /namelis3/                                                      %
      .  ifixshap, mhdmode, xdim, ydim, redge, nlimiter, xlimiter,              %
@@ -2120,6 +2115,15 @@ c ---------------default values added  3/15/01 HSJ ----------------------
       iglf_idt = 0.0   !jmp.den
 
 c   ---------------------------- MMM95 MODEL --------------------------------- @
+c   OM, 24/01/14                                                               @
+c                                                                              @
+c                                                                              @
+c                 ONETWO INPUT SWITCHES FOR THE BRAINFUSE MODEL                @
+c    ------------------------------------------------------------------------  @
+      include_brainfuse = 1
+      brainfuse_path = '/u/meneghini/onetwo/brainfuse.net'
+
+c   ---------------------------- MMM95 MODEL --------------------------------- @
 c   JMP, 3/23/06                                                               @
 c                                                                              @
 c   The model is described in:                                                 @
@@ -3175,6 +3179,7 @@ c                                                                              @
       ene_mult        = 1.0D0
       ang_mult        = 1.0D0
       zeff_mult       = 1.0D0
+      he3_frac        = 0.0D0
 c                             
       do i=1,kbctim                                                            %
         if (i .gt. 1)  pfact = 0.0    ! else logic in SPECIFY won't work       %
@@ -3299,7 +3304,7 @@ c            if the change in a profile is greater than relmax,even if         @
 c            that profile is not run in simulation mode. In particular if      @
 c            you run in total analysis mode (i.e., all itran(i) =0) then       @
 c            no profiles are transported but the change in                     @
-c            input profiles and beams may still cut doewn the time step.       @
+c            input profiles and beams may still cut down the time step.       @
 c            The neutral density equation has to be solved even in this        @
 c            case and may also result in a decreased time step.                @
 c            Set relmax to a large number to avoid this as appropriate.        @
@@ -4004,6 +4009,17 @@ c                second index, kbctime ranges over times in bctime (this
 c                structure is identical to the other profiles inputs such as
 c                tein, described above)
 c                
+c  d_beam_spin_pol  The "spin polarization"  of the deuterium beam.
+c                 This is used to determine the Dbeam(he3,p)He4
+c                 reaction rate. At present this is just a multiplier
+c                 on that reaction rate. The default is 1.0
+c                 Spin polarized cross sections are not in the code yet. 
+c                 NOTE that since this is a simple multiplier a value of zero
+c                 will turn off the fusion rate!!! So 1 really means
+c                 randomized spin using the spin state averaged cross
+c                 section (Bosch and Hale)      HSJ
+c  he3_thermal_spin_pol same as d_beam_spin_pol but for thermal he3 density
+
 c   -----            NEW INPUTS USED ONLY IF time_dep_beam =1 --------
 c% beamoff(i)     the length of time                                           @
 c                all the sources of beam i are off before they turn on again   @
@@ -4892,6 +4908,9 @@ c
       iddcal        = 3                                                        %
       fdbeam        = 0.150e-3    ! isotopic content of d in h                 %
 c                                   this default is for h beams                %
+      d_beam_spin_pol      = 1.0
+      he3_thermal_spin_pol = 1.0
+
       ranseed       = 7**7                                                     %
       npart         = 10000                                                    %
       npart_mcgo    =  3000                                                    %
@@ -7954,7 +7973,7 @@ c
       if (IABS (iborb) .eq. 3) then
         ibslow = 1                                     ! needed for MCGO
         call GETENV (mcgo_env_path_name, mcgo_path)
-        if (LENGTH (mcgo_path) .eq. 0) then
+        if (LEN_TRIM (mcgo_path) .eq. 0) then
           call STOP ('subroutine INIT: MCGO_PATH not set', 280)
         end if
         print *, ' MCGO_PATH = ', mcgo_path
@@ -8351,7 +8370,7 @@ c
            if (iborb .eq. -3) then
              spawn_mcgo = 0  !used to sense mcgo  file writes 
              do ib = 1,nbeams
-               if (LENGTH (mcgo_output_file(ib)) .gt. 0) then
+               if (LEN_TRIM (mcgo_output_file(ib)) .gt. 0) then
                  read_mcgo_file(ib) = 1
                end if
              end do
@@ -9817,6 +9836,8 @@ c
 
 
 
+      rmhdgrid(nw) = -1.0e30          ! used as a flag until reset below
+      zmhdgrid(nh) = -1.0e30
 
 c--------------------------------------------------------------------
 c --- read statefile and  and set profiles (if initialize_from_statefile
@@ -10188,14 +10209,19 @@ c    .    call bc_zone(enein,knotsene,
 c    .      renein, bparene,j,ksplin, kbctim,bctime,
 c    .      nbctim,fix_edge_ni,kj,nj,nout,
 c    .      profiles_bcondspl(j),roa,ni_var_edge) 
-      IF(fix_edge_ni(1) .GE. 1)THEN
+c      IF(fix_edge_ni(1) .GE. 1.0)THEN
+       IF(fix_edge_ni(1) .GT. 2.0)THEN ! assumes grid pt number is input
          ni_index = fix_edge_ni(1)
       ELSE
+         ni_index =0
          DO j=nj,1,-1
-            if(roa(j) .lt. fix_edge_ni(1))ni_index = j+1
+            if(roa(j) .le. fix_edge_ni(1)
+     .      .AND.  ni_index == 0 )ni_index = j+1 ! assumes rhoa val is input
          ENDDO
       ENDIF
+
 cjmp.den end
+      !call stop("test",1)
 
       end if
 
@@ -10211,6 +10237,7 @@ c
       it     = 0
       idt    = 0
       ihe    = 0
+      ihei   = 0    ! He can be primary or imourity
 c
       do i=1,nprim
         if (namep(i) .eq. 'd' )  id  = i
@@ -10218,6 +10245,11 @@ c
         if (namep(i) .eq. 'dt')  idt = i
         if (namep(i) .eq. 'he')  ihe = i
       end do
+
+ 
+      do i=1,nimp
+         if(namei(i) .eq. 'he') ihei = i
+      enddo
 c
 
       call zen
@@ -10798,11 +10830,22 @@ c
         if (id  .ne. 0 .or.  it .ne. 0)  ifus = 2
       end if
 c
- 4130 iddfus = 0
-      if (id  .ne. 0 .and. it .eq. 0)  iddfus = 1
-      if (idt .ne. 0                )  iddfus = 2
-      if (id  .ne. 0 .and. it .ne. 0)  iddfus = 3
-      if (id  .eq. 0 .and. it .ne. 0)  iddfus = 4     ! for completeness
+ 4130 iddfus  = 0
+      idhe3fus = 0
+      if (id  .ne. 0 .and. it .eq. 0)   iddfus   = 1
+      if (idt .ne. 0                )   iddfus   = 2
+      if (id  .ne. 0 .and. it .ne. 0)   iddfus   = 3
+      if (id  .eq. 0 .and. it .ne. 0)   iddfus   = 4     ! for completeness
+      IF(id .ne.   0 .AND. ihe .ne. 0)  idhe3fus = 1     ! prim d and he
+      IF(id .ne.   0 .AND. ihei .ne. 0) idhe3fus = 2     ! prim d impurity he
+      IF(id .ne.   0 .AND. ihe .ne. 0 
+     .                .and. ihei .ne. 0)idhe3fus = 3     ! prim d,he and impurity he
+      IF(idt .ne.  0 .AND. ihe  .ne. 0) idhe3fus = 4     ! prim dt and prim he
+      IF(idt .ne.  0 .AND. ihei .ne. 0) idhe3fus = 5     ! prim dt and imp he
+      IF(idt .ne.  0 .AND. ihe  .ne. 0 
+     .               .AND. ihei .ne. 0)idhe3fus = 6      ! prim dt and he and imp he
+
+
       if (ifus .lt. 0 ) then
         iddfus  = 5
         adjzeff = 1
@@ -10822,8 +10865,8 @@ c
 
 
       if (codeid .eq. 'onedee')  go to 5030
-      rmhdgrid(nw) = -1.0e30          ! used as a flag until reset below
-      zmhdgrid(nh) = -1.0e30
+!      rmhdgrid(nw) = -1.0e30          ! used as a flag until reset below
+!      zmhdgrid(nh) = -1.0e30
       if (irguess .lt. 0 .and. ifixshap .eq. 1)  go to 4980
 c
 c     read the Green's table (also returns mhdgrid in cm):
@@ -10887,6 +10930,15 @@ c
       if (nlimiter .le. 0 .and. mhdmethd .eq. 'tdem'
      .      .AND. .NOT. initialize_from_statefile )call get_cdf_data
 
+c-----------------------------------------------------------------------
+c     make sure xdim,ydim,redge set in inone are overwritten with
+c     values consistent with statefile:
+      IF(initialize_from_statefile)THEN
+            xdim  = rmhdgrid(nw)-rmhdgrid(1)
+            ydim  = zmhdgrid(nh)-zmhdgrid(1)
+            redge = rmhdgrid(1)
+      ENDIF
+c------------------------------------------------------------------------
 c
 c --- if mhdgrid is still not set try to set it now, in cm:
 c
@@ -10920,9 +10972,8 @@ c
       if (nlimiter .le. 0) then
         if (ifixshap .eq. 1 .and. irguess .lt. 0)  go to 4997
         ierr = 1
-        sizel = LENGTH (eqdskin)
-        write  (nout, 7105)  eqdskin(1:sizel)
-        write  (ncrt, 7105)  eqdskin(1:sizel)
+        write  (nout, 7105)  TRIM(eqdskin)
+        write  (ncrt, 7105)  TRIM(eqdskin)
  7105   format (/ ' ERROR: limiter points were not found in input' /
      .                8x, 'eqdsk file "', a, '"'                   /)
         go to 4997

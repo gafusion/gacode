@@ -3359,7 +3359,7 @@ c
 c ----------------------------------------------------------------------
 c
       USE param
-      USE     ions
+      USE ions
       USE soln
       USE numbrs
       USE mesh
@@ -3370,11 +3370,6 @@ c
       USE weiland
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray404.f,v 1.21 2007/07/20 17:31:51 stjohn Exp $"/
-
       real*8       ne_exp, ni_exp, nz_exp
       character*32 weiland_output
       data         weiland_output /'weiland_output'/

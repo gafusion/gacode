@@ -33,6 +33,7 @@ tglf/src/xtglf
 tglf/src/xtglf_mpi
 tgyro/src/tgyro_main
 xptor/driver/xptor
+onetwo/onetwo_129_201
 
 # Onetwo cvs-committed stuff
 onetwo/Doc/*/*.pdf
@@ -47,4 +48,32 @@ onetwo/Doc/*/*.blg
 onetwo/Doc/*/*.ddthermal
 onetwo/Doc/*/*.points
 onetwo/Doc/*/*~
-
+onetwo/*.mod
+onetwo/shared_modules/CVS
+onetwo/test_glf
+onetwo/sources_o12.pdf
+onetwo/python
+onetwo/oepcom.blk
+onetwo/nubplt
+onetwo/nbspec.dat
+onetwo/trplot
+onetwo/set_201
+onetwo/remove_include.py
+onetwo/rename_module.py
+onetwo/read_scratch_info
+onetwo/onetwo_libs
+onetwo/mapfilename
+onetwo/imfit.local
+onetwo/kefit.save
+onetwo/fsplit
+onetwo/env_settings.txt
+onetwo/data
+onetwo/d3d86.dat
+onetwo/IMFIT*
+onetwo/Doc/synopsis
+onetwo/Doc/onetwo_nubeam_interfac
+onetwo/CVS
+onetwo/Doc/CVS
+onetwo/Doc/curray
+onetwo/Doc/manual/CVS
+onetwo/nfreya_module/mapfilename

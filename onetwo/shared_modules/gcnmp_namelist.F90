@@ -42,7 +42,8 @@
                                ion_torrot_fixed_transpt,                         &
                                curden_fixed_transpt,                             &
                                use_input_confinement,frz_tglf,frz_glf,frz_mmm,   &
-                               use_frz_chi,fixed_profile_multiplier
+                               use_frz_chi,fixed_profile_multiplier,             &
+                               time_deriv_in_flux
 
     USE MPI_data,        ONLY : myid,master,parallel_model
 
@@ -63,7 +64,8 @@
 
     USE bc_values_gcnmp, ONLY : u_vloop_bc,mult_den,mult_flux,gammat_bc,    &
                                 axis_bc_type,fix_edge_ni_bc,fix_edge_te_bc, &
-                                fix_edge_ti_bc,fix_edge_rot_bc
+                                fix_edge_ti_bc,fix_edge_rot_bc,robin_bc,    &
+                                conserve_bc_flux,flux_mult_bc 
 
     USE glf23_gcnmp,     ONLY : exbmult_glf,x_alpha_glf,                    &
                                 jroot_glf,limp_glf,ibtflag_glf,irotstab,    &
@@ -177,7 +179,8 @@
       allow_regrid    ,      alpha_slow      ,      ambip_diffusion ,      angrcple        ,  &
       asym_dt_max     ,      asym_time       ,      axis_bc_type    ,      bandwidth       ,  &
       beam_th_mult    ,      betan_ped       ,      cgd             ,      cgexp           ,  &
-      comp_var        ,      constconv_values,      constd_values   ,      consts_values   ,  &
+      comp_var        ,      conserve_bc_flux,                                                &     
+      constconv_values,      constd_values   ,      consts_values   ,                         &
       conve_mult      ,      convi_mult      ,      conv_skip       ,      core_iters_max  ,  &
       create_plot_file,      create_restart_file,   crit_grad       ,      cycle_bandwidth ,  &
       curden_fixed_transpt,                                                                   &
@@ -186,7 +189,7 @@
       elc_eng_fixed_transpt,                                                                  &
       eq_split        ,      exbmult_glf     ,      fdigits         ,      fit_grid        ,  &
       fix_edge_nion_bc,      fix_edge_rot_bc ,      fix_edge_te_bc  ,      fix_edge_ti_bc  ,  &
-      fixed_profile_multiplier, fixt_filename,                                                &
+      fixed_profile_multiplier, fixt_filename,      flux_mult_bc,                             &
       frac_core_points,      freeze_type     ,      frz_tglf        ,      frz_glf         ,  &
       frz_mmm,               fvectol         ,      gamma_bc        ,                         &
       gradtol         ,      ibcur_mult      ,      ibtflag_glf ,   internal_thermal_fusion,  &
@@ -208,11 +211,13 @@
       qfuse_mult_e    ,      qfuse_mult_i    ,      qrad_mult       ,      qrf_mult_e      ,  &
       qrf_mult_i      ,      random_pert     ,      rbsaxis         ,      rconsts_max     ,  &
       rconsts_min     ,      restart_time_incr,     rhon_betan_ped  ,      rhon_spline     ,  &
+      robin_bc        ,                                                                       &
       rpc             ,      run_mhd         ,   save_incr_plot_file,  save_incr_restart_file,&
       sbfuse_mult     ,      select_solver   ,      set_cap1        ,      set_chie_chii   ,  &
       set_parabolic_profiles,single_density_simulation, spline_gsc  ,      ssqrmin         ,  &
       steady_state    ,      steptol         ,      stfuse_mult     ,  switch_iterdb_output,  &
       switch_method   ,      tglfvb          ,      theta           ,      time0           ,  &
+      time_deriv_in_flux,                                                                     &
       time_max        ,      tol_corrector   ,      tot_iters_max   ,      ts_smfactor     ,  &
       t_delay_glf23   ,      use_avg_chi     ,      use_avg_glf_chi ,   use_compact_schemes,  &
       use_constconv   ,      use_constd      ,      use_consts      ,      use_flow_eq     ,  &
@@ -344,7 +349,7 @@
         pellet_freq                   = zeroc
         frac_core_points              = 1.0_DP
         fit_grid                      = .FALSE.
-
+  
 
     !---------------------------------------------------------------------------
     ! set global namelist defaults:
@@ -429,6 +434,7 @@
     IF(ion_den_fixed_transpt )   use_input_confinement     = .TRUE.
     IF(curden_fixed_transpt)     use_input_confinement     = .TRUE.
 
+ 
 
     IF(use_input_confinement)THEN
        set_chie_chii = zeroc

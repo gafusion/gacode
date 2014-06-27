@@ -47,5 +47,7 @@
         LOGICAL fidiff_on,& ! set fast ion diffusion smoothng in P_Nfreya(only)
             bfr_neutrlz      ! fbcur(ffulla,fhalfa in nubeam) specified 
                             ! before/after neutralizer
+       REAL*8 d_beam_spin_pol
+
        END MODULE nub
  

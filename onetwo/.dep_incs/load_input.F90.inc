@@ -1,0 +1,2 @@
+load_input.o: bc_values_gcnmp.mod common_constants.mod dep_var.mod error_handler.mod gcnmp_namelist.mod gcnmp_version.mod grid_class.mod io_gcnmp.mod ions_gcnmp.mod iterdbmd_gcnmp.mod mpi_data.mod neutral_beams.mod nrtype.mod plasma_properties.mod plasma_shape.mod solcon_gcnmp.mod /u/smithsp/source/gacode_onetwo/onetwo/shared_modules/load_input.F90
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO /u/smithsp/source/gacode_onetwo/onetwo/shared_modules/load_input.F90

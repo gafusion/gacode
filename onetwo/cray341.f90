@@ -2270,9 +2270,6 @@ SUBROUTINE propel
 !	real(KIND=rspec) :: ne_f(nprim), iz_f(nprim), amu_f(nprim)
 	real(KIND=rspec), dimension(:, :), allocatable :: e_ef, vc_rf
 	real(KIND=rspec), dimension(:, :, :), allocatable :: den_ref 
-	character(len = 63) :: rcs_id
-	save rcs_id
-	data rcs_id /"$Id: cray341.f90,v 1.4 2009/08/06 21:03:22 wuwen Exp $"/
 	character(len = 63) :: message
 !
 !	include 'param.i'

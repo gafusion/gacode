@@ -920,11 +920,6 @@ c
       USE tmpcom
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: method_lines.f,v 1.43 2012/06/21 17:50:25 stjohn Exp $"/
-c
 c ----------------------------------------------------------------------
 c     this subroutine generates the matrice em  for mesh point j.
 c     the matrices and vectors (all of order nk) are calculated only

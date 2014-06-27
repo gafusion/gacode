@@ -1,0 +1,4 @@
+bc_values_gcnmp.o: common_constants.mod curden_terms.mod dep_var.mod error_handler.mod grid_class.mod io_gcnmp.mod ions_gcnmp.mod mesh.mod mpi_data.mod nrtype.mod numbrs.mod plasma_properties.mod solcon_gcnmp.mod source_terms_gcnmp.mod vector_class.mod /u/smithsp/source/gacode_onetwo/onetwo/shared_modules/bc_values_gcnmp.F90
+	$(COMP_MOD) "$(COMPILE) -I$(NETCDF_INC) -DONETWO" `echo bc_values_gcnmp.mod | tr A-Z a-z | cut -d. -f1` /u/smithsp/source/gacode_onetwo/onetwo/shared_modules/bc_values_gcnmp.F90
+bc_values_gcnmp.mod: common_constants.mod curden_terms.mod dep_var.mod error_handler.mod grid_class.mod io_gcnmp.mod ions_gcnmp.mod mesh.mod mpi_data.mod nrtype.mod numbrs.mod plasma_properties.mod solcon_gcnmp.mod source_terms_gcnmp.mod vector_class.mod
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO /u/smithsp/source/gacode_onetwo/onetwo/shared_modules/bc_values_gcnmp.F90

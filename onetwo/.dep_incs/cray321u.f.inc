@@ -1,0 +1,2 @@
+cray321u.o: bicube.mod constnts.mod contour.mod cpub_dat.mod d01bff_dat.mod ext_prog_info.mod flxav.mod fusion.mod geom.mod gpsi.mod io.mod ions.mod limiter.mod machin.mod mcgo.mod mesh.mod mhdbcdtn.mod mhdcom.mod mhdgrid.mod mhdpar.mod neo2dp.mod neut.mod nub2.mod nub3.mod nub4.mod nub.mod numbrs.mod oloss_dat.mod param.mod psig.mod replace_imsl.mod rhog.mod solcon.mod soln2d.mod soln.mod tordlrot.mod transp.mod verbose.mod cray321u.f
+	$(COMPILE) -I$(NETCDF_INC) -DONETWO cray321u.f

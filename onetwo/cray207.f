@@ -1373,6 +1373,7 @@ c
             delta_psi=(-psimag+psilim)/nxeqd
             arcl   = 2.00   ! 2.0 cm arc length
             bperr  = 0.05   ! 5% rel. change in bp along contour allowed
+            bperr  = 1.e-3  ! 999,
             dx     = xdum(2)-xdum(1)
             dy     = ydum(2)-ydum(1)
             iauto  = 1
@@ -2583,7 +2584,6 @@ c           a reasonable representation of the contour).
 c
 c ------------------------------------------------------------------ HSJ
 c
-
       USE replace_imsl,                   ONLY : my_dbcevl1
 
       implicit  integer (i-n), real*8 (a-h, o-z)
@@ -2624,11 +2624,13 @@ c
       end if
       psiaxd = pds(1)
 c
+ 
       if (psiaxd .lt. psivl) then
-        if (itty .ne. 0)  write (itty, 3)  psiaxd, psivl
+        if (itty .ne. 0)  write (itty, 3)  psiaxd, psivl,xaxd,yaxd
     3   format (/ ' subroutine CNTOUR1,cray207, detects an ERROR:'/
-     .            ' psi on magnetic axis    ', 1pe12.6          /
-     .            ' psi contour to be found ', 1pe12.6          /
+     .            ' psi on magnetic axis    ', 1pe16.8          /
+     .            ' psi contour to be found ', 1pe16.8          /
+     .            ' xaxd,yaxd ',2(1pe16.8,x)
      .            ' must have max psi on axis, non-recoverable' /
      .            ' execution must stop'                         )
         call STOP ('subroutine CNTOUR1: problem #2', 158)
@@ -4292,7 +4294,8 @@ c
 !        nscr = 0
 !        If(save_scratch1 > 0)call getioun(nscr,nscr) 
         call SECOND (timeflx)
-        write (ncrt, '(a)')  ' calling FLUXAV12'
+        write (ncrt, '(a,i5)')  ' calling FLUXAV12,npsi =',npsi
+
         call fluxav12 (psi,rmhdgrid,nw,zmhdgrid,nh,psival,npsi,fpsi,
      .               ffppsival,qpsival,bax,
      .               curaxx,rma,zma,ixcal,btor,rmajor,nscr,iscr, ncrt,
@@ -4439,6 +4442,8 @@ c
      .           ' width = ', f8.1, '  height =', f8.1, '  h/w =', f8.2,
      .        '  volume = ', e12.3, '  magnetic axis ', f8.2, 1x, f8.2 /
      .         ' kappa0 = ', f10.4 //)
+
+
       return
 c
       end
@@ -5008,11 +5013,6 @@ c      USE  io,                         ONLY : ioftn, iopntr, nunits
       USE pelcom
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray207.f,v 1.82 2013/05/08 00:45:33 stjohn Exp $"/
-c
 c ----------------------------------------------------------------------
 c  driver for 1-1/2-d runs (codeid .ne.  'onedee')
 c
@@ -5100,14 +5100,12 @@ c
       kine_message = "before_init"
       call mhd   ! defines tocur, total current for the MHD calculations
 
-
-
       call SECOND (tmhdend)
       timemhd = tmhdend - tmhdstart
-      write  (6, 42)  ' time in MHD module =', timemhd, ' seconds'
+      write  (6, 42)  ' time in MHD-1 module =', timemhd, ' seconds'
+
    42 format (a, f15.1, a)
       write  (nitre, '(a)')  ' done with initial equilibrium'
-
 
 
 
@@ -5227,6 +5225,7 @@ c
 c
 
       call tport                ! do some transport
+
       rbp_save(:) = rbp(:)
 
 c
@@ -5270,6 +5269,7 @@ c
 
 
 
+
 c
 c ------------------------------------------------------------------------------
 c write text or netcdf version of iterdb (onetwo state)  file:
@@ -5277,6 +5277,7 @@ c ------------------------------------------------------------------------------
 c
 
       CALL Statefile_proc
+ 
         go to 1509
 
 c      above call takes the place of the following:

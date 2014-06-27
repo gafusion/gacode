@@ -774,11 +774,6 @@ c
 
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray306.f,v 1.111 2013/07/19 16:55:04 stjohn Exp $"/
-c
 c ----------------------------------------------------------------------
 c --- subroutine TPORT is driver for transport portion of ONETWO code.
 c --- evolve the transport equations from t = time to t = time + dteq if
@@ -1148,7 +1143,7 @@ c
 
       beam_iteration = .false.
 
-c      write(888,FMT='("use_nubeam = ",l5 )')use_nubeam  ! 8888899999
+
 
       beam_startup: if(use_nubeam) then
 c-----
@@ -1158,16 +1153,12 @@ c-----
                      last_mon_index = nubeam_index
                      nubeam_mon_set = .TRUE.
                descrip_mon(nubeam_index) = "Nubeam elapsed  time"
-c               write(888,FMT='("start nubeam_indexset in c306 ",i5)')
-c     .                nubeam_index  ! 88888889999999
+
              ENDIF
              start_timer(nubeam_index) =.TRUE.
              stop_timer(nubeam_index)  =.FALSE.
              CALL collect_stats(nubeam_index)
              start_timer(nubeam_index) =.FALSE.        
-c             write(888,FMT='("start nubeam ",1pe14.6,x,i5)')
-c     .             elapsed_time(nubeam_index),nubeam_index  ! 88888889999999
-c-----
            nubeam_evolve = 1
            !using nubeam, if this is not a nubeam restart case then
            !we cant get the beam consistent with the thermal ion
@@ -1236,6 +1227,7 @@ c
 c
                 if (tportvb .gt. 0)
      .              print *,'calling fluxx  during beam iterations'
+
                 call fluxx
                 if (tportvb .gt. 0)
      .             print *,'done fluxx  during beam iterations'
@@ -1378,9 +1370,10 @@ c
       iborb = iborb_save        ! enable MCGO if it was set on input
       call diffus (xi_include)  !HSJ call added  11/07/03
       print *,'calling source  beam iterations are done'
- 
+
       call source
-      
+      call fluxx    ! this call is needed in case no time steps are taken
+
       if(bp0_ic(1:LEN_TRIM(bp0_ic)) == bp0_icv(2))then !bp0_icv(2) = 'analytic'
          call reinit_bp0
          call curcalc (rbp, fcap, hcap, gcap, r, curden,
@@ -1397,6 +1390,7 @@ c
 c --- check if time0-beamon is sufficiently large that
 c --- asymptotic density was achieved
 c
+
       if (ibslow .eq. 1 .and. (time0 - beamon(1)) .ge. 0.0
      .                                  .and. .not. use_nubeam ) then
         taupbmax = 0.0                      ! fast ion slowing down time
@@ -1429,6 +1423,7 @@ c
         call timederiv (dt, n, hcap, hcap0, dhdt, nj)
       end if
 ****  if (twkfar .gt. 2.0)  implicit_fh = .false.
+
 c
 c ----------------------------------------------------------------------
 c update fast ion quantities
@@ -1486,7 +1481,7 @@ c
 c
 c ----------------------------------- HSJ ---- 1/8/99 ---- end
 c
-
+ 
       call fiziks
 c
 c get the experimental profiles if this is tdem mode
@@ -1505,7 +1500,6 @@ c      skipping inital call to out HSJ 7/27/2011
       if (timmax .le. time0)  ilastp = 1
 
       if(myid .eq. 0)call out                     ! initial time point
-  
  2160 ihead = 1
       if (tportvb .ge. 1)  write (*, '(" calling   TRPLOT A at time = ",
      .                                   1pe14.6)') time
@@ -1563,11 +1557,6 @@ c     the  profiles  read from the file as the inital conditions.
       If(test_xptor .eq. 1)then
          call xptor_init
       endif
-
-
-
-
-
 
 
 
@@ -1714,6 +1703,7 @@ c          cparam =0.0 !only implemented for glf23 and typ at this time
       if(glf_debug .gt. 0)  call STOP('sub TPORT: glf_debug stop',0)
 
       call source
+      call fluxx
 
       if(write_glf_namelist .eq. 3) return ! return to get iterdb file written
 c              stop would be cleaner but doesnt write iterdb file
@@ -2723,10 +2713,7 @@ c
      .                     write (*, '(" calling   OUT")')
  
       if (   iprt .eq. 1)THEN 
-c      write(940,FMT='("c306,line 2677 ,totrf =",1pe12.4)')totrf ! 888888889999
-c      write(940,FMT ='("c306 currf(nj/2) =",1pe12.4)')currf(nj/2) ! 888889999
-         call out
-c      write(940,FMT='("c306,line 2679 ,totrf =",1pe12.4)')totrf ! 888888889999
+         call out             ! cray308.f
          call Statefile_proc
       endif
 
@@ -2930,9 +2917,8 @@ c
 
       if (timav .eq. 0.0)  go to 6100
       if (dtsum .eq. 0.0)  go to 6100
-c      write(940,FMT='("c306,line 2883 ,totrf =",1pe12.4)')totrf ! 888888889999
-      if (timav .lt. 0.0)  call out
 
+      if (timav .lt. 0.0)  call out
       dtsumi = 1.0 / dtsum
       do 6020 j=1,nj
       do 6010 k=1,nk

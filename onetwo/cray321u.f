@@ -421,15 +421,6 @@ c
       USE numbrs
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray321u.f,v 1.5 2013/07/19 16:55:04 stjohn Exp $"/
-c      include 'param.i'
-c      include 'io.i'
-c      include 'numbrs.i'
-c      include 'ions.i'
-c
       dimension ebkev(kb),vbeam(ke,kb),zne(kz),zni(kz,kion)
       dimension zte(kz),zti0(kz),zzi(kz,kion)
       dimension sgxn(kcmp1,kz,kbe,ksge),sgxnmi(ke,kb)
@@ -2010,27 +2001,7 @@ c
 ****  if (ifail1 .eq. 0)  go to 15
 c
       ijob = 1
-c temp test
-      go to 666 ! 888889999
-      ns =4
-      qq(1,1)  = 4.0_Dp
-      qq(2,1)  = 0.0_DP
-      qq(3,1)  = 5._DP
-      qq(4,1)  = 3._DP
-      qq(1,2)  = -5.0_Dp
-      qq(2,2)  = 4.0_DP
-      qq(3,2)  = -3.0_DP
-      qq(4,2)  = 0.0_DP
-      qq(1,3)  = 0.0_DP
-      qq(2,3)  = -3.0_DP
-      qq(3,3)  = 4.0_DP
-      qq(4,3)  = 5.0_DP
-      qq(1,4)  = 3.0_DP
-      qq(2,4)  = -5.0_DP
-      qq(3,4)  = 0.0_DP
-      qq(4,4)  = 4.0_DP
- 666  continue
-c end temp test 
+
       call my_eigrf (qq, ns, ms+1, ijob, w, z, ms+1, work2, ifail1) ! 888889999
       if (ifail1 .eq. 0)  go to 15
       ihxbug = 9 
@@ -2557,8 +2528,6 @@ D      real *8 ,DIMENSION(:),ALLOCATABLE:: t_vx, t_vy, t_vz
 
 
 c
-      external LENGTH
-c
 c ----------------------------------------------------------------------
 c general FREYA initialization
 c ----------------------------------------------------------------------
@@ -2730,7 +2699,7 @@ c
       npart_half  =0.0 !array
       npart_third =0.0 !array
 
-      
+
 c
 c     initialize flux surface quantities
 c
@@ -2909,7 +2878,7 @@ c ----------------------------------------------------------------------
 c begin loop over beam energy components
 c ----------------------------------------------------------------------
 
-
+ 
 
       do 201 ie=1,3
 D      if (freyavb .gt. 0 .and. myid .eq. master)
@@ -3082,7 +3051,7 @@ c
         i = (rpos-r(1))/drpat + 1.0
         j = (zpos-z(1))/dzpat + 1.0
         rzpat(i,j,ie,ib) = rzpat(i,j,ie,ib) + 1.0
-      end if
+      end if 
 c
 c ----------------------------------------------------------------------
 c
@@ -3392,20 +3361,20 @@ c
            if (read_mcgo_file(ib) .eq. 0)
      .         call prep_mcgo (ib, bpow, ke, enbeams)
            if (spawn_mcgo .gt. 0) then ! spawn_mcgo is set in sub INIT
-                 spawn_command = mcgo_path(1:LENGTH(mcgo_path      )) //
+                 spawn_command = TRIM(mcgo_path) //
      .       '/mcgo < ' 
-     .      // mcgo_input_file(ib)(1:LENGTH(mcgo_input_file))
+     .      // TRIM(mcgo_input_file(ib))
              if (freyavb .gt. 0)
      .           write(ncrt,'(''spawning mcgo:'',/,
      .           2x,a,2x,
      .           /,''  with beam number '',i3,//)')
-     .           spawn_command(1:LENGTH(spawn_command)),ib
+     .           TRIM(spawn_command),ib
 c
 c           call mcgo with the two files,
 c           mcgo_input_12(ib) and mcgo_input_file2(ib), for each beam:
 c
             write (ncrt, '(a)') 'mcgo_path = ' // mcgo_path
-            if (ISHELL (spawn_command(1:LENGTH(spawn_command))) .ne. 0)
+            if (ISHELL (TRIM(spawn_command)) .ne. 0)
      .      call STOP ('subroutine FREYA: failure of spawned MCGO', 270)
 c
            end if
@@ -5095,6 +5064,10 @@ c ----------------------------------------------------------------------
 c
       external  RANDOM12                         ! random number generator
       dimension cvec(200)
+      INTEGER itry
+c     itrymax = 50 leads to asymptotic shinethrough values
+c     itrymax = 20 leads to fluctuations in shinethrough at the 0.1% level 
+      INTEGER,parameter :: itrymax = 50  
       data      cvec
      .     /  1.0,  2.0,  3.0,  4.0,  5.0,  6.0,  7.0,  8.0,  9.0, 10.0,
      .       11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0,
@@ -5123,13 +5096,13 @@ c
      .           r(*), vbeam(ke,*), z(*), zangrot(*), e1(ktk), i1(ktk),
      .           sgxntab(ktk)
       data       seed0    /0.0/
+      itry = 0 
 c
 
 
 C     the following assumes that data from previous
 c     particle is saved. this ok only if passed through
 c     argument list. HSJ
-
       if (newpar .eq. 0)  go to 100
 c
 c calculate times for particle to enter and exit toroidal box surrounding plasma
@@ -5143,6 +5116,7 @@ c
       y0 = y0 + vy0*tenter
       z0 = z0 + vz0*tenter
 c
+
 
       if (nebin .ne. 0) then
 c
@@ -5238,19 +5212,26 @@ c
       zpos      = z0
       tt        = tenter
       izone     = mfm1 + 1     ! initially neutral is outside the plasma
-      smin_step = 0.1                           ! 0.1 cm min step or
+      smin_step = 0.01                           ! 0.01 cm min step or
       smin_step = MIN (smin_step, smax/1000.0)  ! make scale-independent
       smin_time = smin_step / SQRT (vx0**2 + vy0**2 + vz0**2)
 c
 c  follow particle into plasma
 c
 * 110 dfac  = -LOG (RANF   (     ))
-
+      calls = 0
   110 dfac  = -LOG (RANDOM12 (seed0))
+      calls = calls + 1.
+      if ( calls .gt. 3e7 ) then
+        write (*,*) 'Too many iterations (3e7) in inject'
+        write (*,*) 'Returning izone .gt. mf'
+        izone = mf + 1
+        return
+      endif
 c
 c     if neutral is not yet in the plasma (izone ge mf) then take steps
 c     of minimum size 1 mm until we enter the plasma. we could find the
-c     exact plasma boundary but that would be overkill. with 1mm step
+c     exact plasma boundary but that would be overkill. with .1mm step
 c     size we certainly are within any physics scales we could resolve
 c     near the plasma edge. this avoids wasting a lot of steps outside
 c     the plasma and will be a significant savings if the cross sections
@@ -5283,10 +5264,20 @@ c  determine zone in which particle collides for general geometry;
 c     use bilinear interpolation away from magnetic axis,
 c     and biquadratic interpolation near the axis.
 c
-        i     = (rpos-r(1))*dri+1.0
-        j     = (zpos-z(1))*dzi+1.0
-        i     = MIN0 (i,mim1)
-        j     = MIN0 (j,mjm1)
+        rtmp  = (rpos-r(1))*dri
+        if (rtmp .ge. huge(1)-1) then
+          i = mim1
+        else
+          i     = (rpos-r(1))*dri+1.0
+          i     = MIN0 (i,mim1)
+        endif
+        ztmp  = (zpos-z(1))*dzi
+        if (ztmp .ge. huge(1)-1) then
+          j = mjm1
+        else
+          j     = (zpos-z(1))*dzi+1.0
+          j     = MIN0 (j,mjm1)
+        endif
         psix  = MIN  (psi(i,j),psi(i+1,j),psi(i,j+1),psi(i+1,j+1))
         ptest = (psix-psiax)*(drutpi/mfm1)**2
         if (ptest .ge. 0.02) then
@@ -5301,13 +5292,23 @@ c
      .              dum)
         end if
         pzone =  MAX (pzone,psiax)
-        izone = SQRT (pzone-psiax)*drutpi + 1.0
+        ztmp = SQRT (pzone-psiax)*drutpi + 1.0
+        if ( ztmp .ge. HUGE(1) -1 ) then
+          izone = mfm1 + 2
+        else 
+          izone = INT(ztmp) !This is implicit type conversion
+        endif
       end if
 c
 c     if particle has psuedo-collision, continue following particle.
 c     if particle has real collision, return.
 c
-      if (izone .gt. mfm1)  go to 110 ! the particle is inside the box..
+      if (izone .gt. mfm1) then 
+            itry = itry +1 
+            IF(itry  .ge. itrymax)go to 140
+            go to 110     ! the particle is inside the box..
+      endif
+
 c                                     ..but still outside the plasma
       if (nebin .ne. 0   ) then
         usq   = (rpos*zangrot(izone))**2
@@ -10020,8 +10021,12 @@ c
       dimension ytab(*)
 c
       xx     = ABS (x-x0)*dxi + 1.0
-      i      = xx
-      i      = MIN0 (i, nxm1)
+      if ( xx .ge. HUGE(1) ) then
+        i = nxm1
+      else
+        i      = xx
+        i      = MIN0 (i, nxm1)
+      endif
       wt     = xx - i
       yinter = (1.0-wt)*ytab(i) + wt*ytab(i+1)
       return

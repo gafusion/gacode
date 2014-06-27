@@ -22,24 +22,24 @@ MODULE colrate
 !     neutron rate is evaluated. hence make these as small as possible
 !     to gain speed.
 !
-      REAL*8           mass_deut, mass_trit, mass_beam
+      REAL*8           mass_deut, mass_trit, mass_beam,mass_he3
 !
-      REAL*8          vth, vf, zetath, zetaf, phif, phith,&
-                      beta, wx, wy, wz, wflowv, vfsq, vthsq, betasq,&
-                      vb, vcrit, vc3a,&
-                      vc3i, vcrit3, z2, expd, expt, expdt, &
-                      vb3, zetab, vc4, ecritlocal, den_neut,&
-                      tauslocal, vcutnterm, acore, taufctr, vbfrac,&
-                      sqpd, svthf, vthf, ztf, vfast_low_lim,&
-                      vfast_up_lim, sigvrddn(n2v,n1v), v1(n1v),&
-                      xzeta(nzeta), wzeta(nzeta), xvtherml(nvtherml),&
-                      wxvtherml(nvtherml), xvfast(nvfast),&
-                      beam_beam_ddnhe3 (1:n2vtble,0:nlegendre),&
-                      beam_beam_ddpt   (1:n2vtble,0:nlegendre),&
-                      beam_beam_dtnhe4 (1:n2vtble,0:nlegendre),&
-                      beam_beam_tt2nhe4(1:n2vtble,0:nlegendre),&
-                      vbeam_beam(n2v), sigvrdtn(n2v,n1v),&
-                      sigvrddp (n2v,n1v), &
+      REAL*8          vth, vf, zetath, zetaf, phif, phith,            &
+                      beta, wx, wy, wz, wflowv, vfsq, vthsq, betasq,  &
+                      vb, vcrit, vc3a, rhe3max,rddnmax,               &
+                      vc3i, vcrit3, z2, expd, expt, expdt,exphe3,     &
+                      vb3, zetab, vc4, ecritlocal, den_neut,          &
+                      tauslocal, vcutnterm, acore, taufctr, vbfrac,   &
+                      sqpd, svthf, vthf, ztf, vfast_low_lim,          &
+                      vfast_up_lim, sigvrddn(n2v,n1v), v1(n1v),       &
+                      xzeta(nzeta), wzeta(nzeta), xvtherml(nvtherml), &
+                      wxvtherml(nvtherml), xvfast(nvfast),            &
+                      beam_beam_ddnhe3 (1:n2vtble,0:nlegendre),       &
+                      beam_beam_ddpt   (1:n2vtble,0:nlegendre),       &
+                      beam_beam_dtnhe4 (1:n2vtble,0:nlegendre),       &
+                      beam_beam_tt2nhe4(1:n2vtble,0:nlegendre),       &
+                      vbeam_beam(n2v), sigvrdtn(n2v,n1v),             &
+                      sigvrddp (n2v,n1v), sigvrdhe3p(n2v,n1v),        &
                       sigvrtt2n(n2v,n1v), v2(n2v), wxvfast(nvfast)
       REAL*8 ::  twopi = 6.283185308 
       REAL*8 ::  umdd  = 5.2175e-16       ! (keV/(cm/sec)**2), for d-d

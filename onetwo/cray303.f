@@ -9,8 +9,6 @@ c ----------------------------------------------------------------------
 c     GETBSMODEL simply returns the value of jhirsh chosen by the user
 c ----------------------------------------------------------------------
 c
-c      include 'param.i'
-c      include 'tfact.i'
 c
       jhirsh_out = jhirsh
       return
@@ -275,20 +273,6 @@ c
       USE neo2d
       USE cer
       implicit  integer (i-n), real*8 (a-h, o-z)
-c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray303.f,v 1.21 2012/06/09 01:00:35 stjohn Exp $"/
-c      include 'param.i'
-c      include 'mhdpar.i'
-c      include 'soln.i'
-c      include 'geom.i'
-c      include 'mesh.i'
-c      include 'neo2d.i'
-c      include 'machin.i'
-c      include 'numbrs.i'
-c      include 'ions.i'
 c
 c More terms for the beam and alpha components, Added 8-21-95 by DFF
 c

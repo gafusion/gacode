@@ -1059,11 +1059,6 @@ c
       USE neucg
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray311.f,v 1.23 2013/05/08 00:45:34 stjohn Exp $"/
-c
 c ----------------------------------------------------------------------
 c     NEUC2
 c

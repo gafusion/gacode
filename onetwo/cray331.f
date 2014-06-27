@@ -604,7 +604,7 @@ c     [Beam is time-dependent, and enbeam 0'ed at each entry to source.]
       enddo
 
       nspecgr=1+nprim+nimp+ibeamcmpt  !electrons, ions, & beam component
-c      print *,'nprim+nimp+ibeamcmpt =',nprim,nimp,ibeamcmpt, nspecgr ! 888889999
+
 c     If one of the primary ion species is 'dt', then split it up into
 c     two species
       ipsplit=0
@@ -613,7 +613,7 @@ c     two species
       enddo
       if (ipsplit.gt.1) STOP 'CALL_GENRAY not configrd for two dt ions'
       nspecgr=nspecgr+ipsplit
-c      print *,'ndt primary    nspecgr,ibsplit =', nspecgr,ibsplit ! 888889999
+
       nion1=nion+ipsplit   !total ion species, except beam components.
 
 c     If the beam species is 'dt', then split it up into two species
@@ -855,7 +855,7 @@ c     Brief description to be added to file:
       ltitle='Profile data passed from ONETWO to GENRAY'
 
 c
-      call ncaptc(ncid,NCGLOBAL,'title',NCCHAR,length_char(ltitle),
+      call ncaptc(ncid,NCGLOBAL,'title',NCCHAR,LEN_TRIM(ltitle),
      +     ltitle,istatus)
 
 
@@ -937,7 +937,7 @@ c$$$      write (igenray, 1001)  (zeff(j), j=1,nj)
 
       vid=ncvid(ncid,'eqdsk_name',istatus)
 c     Add 1 to get blank into variable [See NetCDF manual].
-      ll=length_char(eqdsk_name)+1
+      ll=len_trim(eqdsk_name)+1
       if (ll.gt.256) then
          write(*,*)'call_genray: eqdsk_name length too great'
          stop
@@ -1364,18 +1364,6 @@ c
       return
 c
       end   !end call_genray
-c     
-c     
-      integer function length_char(string)
-c     Returns length of string, ignoring trailing blanks,
-c     using the fortran intrinsic len().
-      character*(*) string
-      do i=len(string),1,-1
-         if(string(i:i) .ne. ' ') goto 20
-      enddo
- 20   length_char=i
-      return
-      end
 c
 c
       subroutine cgbco (abd, lda, n, ml, mu, ipvt, rcond, z)
@@ -1734,11 +1722,6 @@ c-----------------------------------------------------------HSJ
 c
       implicit none
 c
-      character rcs_id*63
-      save rcs_id
-      data rcs_id/
-     &"$Id: cray331.f,v 1.100 2013/05/08 00:45:34 stjohn Exp $"/
-c
       integer i, n, nmax, k
       doubleprecision p, sig, qn, un
       parameter (nmax = 129)
@@ -1893,20 +1876,16 @@ c
 
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
       CHARACTER ech_filename*256
       CHARACTER torayinpt*256
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray331.f,v 1.100 2013/05/08 00:45:34 stjohn Exp $"/
 c
 c       parameter (nx_param = 129, ny_param = 129) ! HSJ 10/24/96
 c
 
 c     do not include mesh.i as there are conflicts below, see for example ra, - HSJ
 c
-      external     LENGTH, FLUSH
-      integer      LENGTH, rf_output
+      external     FLUSH
+      integer      rf_output
       logical      first_time,ex
       character*8  codeid, ntitle(5)
       character*12 cgmfile, glogfile, tlogfile, gafit_log, toray_log,
@@ -1946,6 +1925,7 @@ c
 
 c     get fully qualified name of toray to run:
 c                          toray_to_run(1:len_toray_to_run)
+
       if(first_time)
      . call get_toray(nx_param,ny_param,ktoray,ncrt,nout,
      .          toray_to_run,len_toray_to_run)
@@ -1961,6 +1941,7 @@ c-----------------------------------------------------------------------
 c     decide if gafit should  be  called, label 19 bypasses gafit section:
 c------------------------------------------------------------------------
 c
+
       if(toray_version .lt. toray_version_switch)then
            !old version of toray does not accept igafit input in
            !file toray.in. Hence if toray.in exists we must check to see
@@ -1983,9 +1964,12 @@ c           print * ,'gafsep =',gafsep
          iecall = iecall + 1
          ldata  = 2
          !if(read_toray_in .eq. 0) call rwrt_toray_in
+
          call rwrt_toray_in
+
          read_toray_in = 1
           call rf_mhddat(task)   !writes psiin file
+
 c         call rf_mhd_interface        !write file  mhddat (read  by toray)directly
           print*,'skipping gafit spawn from Onetwo'
           go to 19
@@ -2193,9 +2177,9 @@ c
  1001   format (/ ' ---- ', a,' started, output not redirected' /)
       else
         write  (ncrt , 1000)  program(1:len_toray_to_run), 
-     .                             glogfile(1:LENGTH(glogfile))
+     .                             TRIM(glogfile)
         write  (nitre, 1000)  program(1:len_toray_to_run),
-     .                             glogfile(1:LENGTH(glogfile))
+     .                             TRIM(glogfile)
  1000   format (/ ' ---- ', a,' started, output directed to "', a, '"')
       end if
 c
@@ -2216,6 +2200,7 @@ c     of toray gafit may be run by calling toray (rather than gafit)
 c     This depends on switch igafit in file toray.in.
 c---------------------------------------------------------------------HSJ
    19 call getioun(nscr,nscr)
+
       open (unit = nscr, file = 'echin', status = 'UNKNOWN')
       if (idamp .lt. 0)  idamp = -idamp
 
@@ -2279,9 +2264,9 @@ c
         write  (nitre, 1001)  program(1:len_toray_to_run)
       else
         write  (ncrt , 1000)  program(1:len_toray_to_run), 
-     .                         tlogfile(1:LENGTH(tlogfile))
+     .                         TRIM(tlogfile)
         write  (nitre, 1000)  program(1:len_toray_to_run),
-     .                         tlogfile(1:LENGTH(tlogfile))
+     .                         TRIM(tlogfile)
       end if
 c
       if (ISHELL (program(1:len_toray_to_run)
@@ -4879,6 +4864,8 @@ c ----------------------------------------------------------------------
 c calculate volumes of flux zones for elliptical cross sections
 c ----------------------------------------------------------------------
 c
+
+
           factor = 2.0 * pi**2 * rmajor*kappa*(rminor/ngrid_rfm1)**2
           do 30 i=1,ngrid_rfm1
    30     vol_psi_rf(i) = factor*(i**2-(i-1)**2)
@@ -4910,7 +4897,8 @@ c         get fpsi on rf grid from Fcap (= f(psilim)/f(psi))
           do j=1,nj
              fpsi_rf(j)= cconst/xdum(j) !kg-cm
           enddo
-c          print *,'fpsi-rf line 4889 cray331.f  =',fpsi_rf(1:nj) ! 88899999
+ 
+
 c
 c ----------------------------------------------------------------------
 c flux values are assumed to be in  Kgauss-cm**2
@@ -4982,7 +4970,7 @@ c
                iconvg = 0
              end if
 c
-
+ 
              call cntour (xmagn1,ymagn1,ptrace,rcmin,rcmax,zcmin,
      .                    zcmax,zrcmin,zrcmax,rzcmin,rzcmax,dang,arcl,
      .                    bperr,drx,dry,100.0*xlimiter(nlimiter+1),

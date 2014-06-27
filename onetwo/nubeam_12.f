@@ -76,7 +76,11 @@ c     linearly interpolate between (i) and (i+1)  values to get quantities:
            beam_data%fhalfa(j) = slope *time +intc
 
        enddo
-
+       write(173,fmt='("time,beam_data%nbeam",
+     & x,1pe12.6,x,i3)')time,beam_data%nbeam
+       write(173,fmt='("beam_data%pinja(j) =",5(1pe12.2,x))')
+     & beam_data%pinja(1:beam_data%nbeam)  ! 888888999999
+       !call stop('nubeam_12.f l 79',222)
 
       return
       end subroutine  beam_power_interp

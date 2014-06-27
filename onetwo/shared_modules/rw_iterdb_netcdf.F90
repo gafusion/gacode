@@ -307,13 +307,13 @@ SUBROUTINE iter_dbase_nc
                                         namen,nprim,nimp,nneu,z,zsq,zeff,            &
                                         name_size,fd_thermal,nprimp1
 
-  USE MPI_data,                  ONLY : mpiierr,myid
+  USE MPI_data,                  ONLY : mpiierr,myid,master
 
 
 
   USE solcon_gcnmp,              ONLY : time,eqtime,tGCNMf,tGCNMs
 
-  USE fusion_gcnmp,              ONLY : pfuse_tot
+  USE fusion_gcnmp,              ONLY : pfuse_tot,he3_frac,he3_thermal_spin_pol
 
   USE neutral_data,              ONLY : enn,ennw,volsn,ennv
 
@@ -344,7 +344,8 @@ SUBROUTINE iter_dbase_nc
                                         glf_gamma_net_e_output,glf_anfreq_output,            &
                                         glf_anfreq2_output,glf_anrate_output,                &
                                         glf_anrate2_output,                                  &
-                                        glf_p_output,glf_e_output,glf_m_output
+                                        glf_p_output,glf_e_output,glf_m_output,              &
+                                        glf_eff_chi_output
 
   
   !USE tcoef,                    ONLY : chie_paleo
@@ -363,9 +364,10 @@ SUBROUTINE iter_dbase_nc
        work_nr,               &
        work_nz,               &
        work_bptor
-  REAL(DP), ALLOCATABLE,DIMENSION(:,:)   :: work_nj_nion,work_nj_ntot,work_nj_nionp1
+  REAL(DP), ALLOCATABLE,DIMENSION(:,:)   :: work_nj_nion,work_nj_nionp1
   REAL(DP), ALLOCATABLE,DIMENSION(:,:,:) :: work3d
-
+  INTEGER(I4B), ALLOCATABLE,DIMENSION(:) :: id_glf_eff_chi,id_glf_eff_chi_err
+  
   REAL(DP) elmt
   INTEGER(I4B)  j,jp,jj,ji,jn,ntot,titlen,flag,id_brems_flag,         &
                 id_qrad_tot_flag,id_brems_tot_flag,id_pfuse_tot_flag, &
@@ -385,6 +387,7 @@ SUBROUTINE iter_dbase_nc
 
   INTEGER(I4B) k
   INTEGER(I4B)              &         ! netcdf required values
+       id0,                 &         ! used for intent inout calls below
        rcode,               &
        id_shot,             &
        id_nj,               &
@@ -660,6 +663,16 @@ SUBROUTINE iter_dbase_nc
        id_neutr_ddn_beam_thermal,           &
        id_neutr_ddn_knock,                  &
        id_neutr_ddn_tot,                    &
+       id_p_ddt,                            &
+       id_p_he3d_th,                        &
+       id_p_he3d_beam_th,                   &
+       id_total_p_he3d_beam_th,             &
+       id_total_p_ddt,                      &
+       id_total_p_he3d_th,                  &
+       id_total_p_he3d,                     &
+       id_he3_frac,                         &
+       id_he3_thermal_spin_pol,             &
+       id_d_beam_spin_pol,                  &
        id_total_neutr_ddn_th,               &
        id_total_neutr_ddn_beam_beam,        &
        id_total_neutr_ddn_beam_thermal,     &
@@ -717,7 +730,7 @@ SUBROUTINE iter_dbase_nc
        id_glf_impion_momtm_flux,  id_glf_impion_momtm_flux_er ,   &
        id_glf_elct_partcl_flux, id_glf_elct_partcl_flux_er ,      &
        id_glf_primion_partcl_flux,id_glf_primion_partcl_flux_er , &
-       id_glf_impion_partcl_flux,id_glf_impion_partcl_flux_er,    &                 
+       id_glf_impion_partcl_flux,id_glf_impion_partcl_flux_er,    &               
        id_mmm_gammaDBM,id_mmm_gammaDBM_er,                        &
        id_mmm_omegaDBM,id_mmm_omegaDBM_er,                        &
        id_mmm_xdi,id_mmm_xdi_er,                                  &
@@ -765,6 +778,7 @@ SUBROUTINE iter_dbase_nc
   INTEGER(I4B),PARAMETER :: strlen = 132
   INTEGER(I4B),PARAMETER :: ke_bm     = 3         ! # beam energies
   INTEGER(I4B) ke ! used to check ke_bm
+  INTEGER(I4B) ok
   CHARACTER  starflag*2, headerline*132,line*132,time_str*36
   CHARACTER  (LEN= strlen) label ,tlabel,base_label
   CHARACTER   bc_asc_time*24,st_asc_time*24 
@@ -788,7 +802,7 @@ SUBROUTINE iter_dbase_nc
        USE nrtype,   ONLY : I4B,DP
        IMPLICIT NONE
        INTEGER, INTENT ( in) :: status
-       INTEGER(I4B), OPTIONAL, INTENT(in)     :: flag
+       INTEGER(I4B), OPTIONAL, INTENT(inout)     :: flag
        
      END SUBROUTINE netcdf_err
 
@@ -878,6 +892,15 @@ SUBROUTINE iter_dbase_nc
      !     by reading in fcap_bc, etc.
      !     in demo code just assume time independent for each
      !     slice that the solver is called.
+     ntot = nion + dp4
+     IF(.NOT. ALLOCATED(id_glf_eff_chi))THEN
+         ALLOCATE(id_glf_eff_chi(ntot),id_glf_eff_chi_err(ntot))
+     ELSE
+         IF(SIZE(id_glf_eff_chi) .NE. ntot)THEN
+            DEALLOCATE(id_glf_eff_chi,id_glf_eff_chi_err)
+            ALLOCATE(id_glf_eff_chi(ntot),id_glf_eff_chi_err(ntot))
+         ENDIF
+     ENDIF
      IF(.NOT. ALLOCATED(dfdt))THEN 
         ALLOCATE(dfdt(nj))
         dfdt(:) = zeroc
@@ -901,6 +924,7 @@ SUBROUTINE iter_dbase_nc
 #else
      title = 'ONETWO  netCDF state file '//versid
 #endif
+
      CALL netcdf_err( nf90_put_att(ncid,  NF90_GLOBAL,"title",title))
 
      ! define dimensions:
@@ -915,7 +939,11 @@ SUBROUTINE iter_dbase_nc
 
      CALL netcdf_err( nf90_def_dim(ncid, dim_names(5), nimp, idim_nimp),idim_nimp)                   !"dim_nimp"
 
-     CALL netcdf_err( nf90_def_dim(ncid, dim_names(6), nneu, idim_nneu),idim_nneu)                   !"dim_neu"
+     IF ( nneu > 0 ) THEN 
+        
+        CALL netcdf_err( nf90_def_dim(ncid, dim_names(6), nneu, idim_nneu),idim_nneu)                   !"dim_neu"
+        
+     ENDIF
 
      CALL netcdf_err( nf90_def_dim(ncid, dim_names(7), nbion, idim_nbion),idim_nbion)                 !"dim_fi"
 
@@ -979,7 +1007,6 @@ SUBROUTINE iter_dbase_nc
 
 
      ! define variables:
-
 
      CALL netcdf_err( nf90_def_var(ncid, "shot", nf90_int,id_shot),id_shot)
      CALL netcdf_err(  nf90_put_att(ncid,id_shot,'long_name','shot number'),id_shot )
@@ -1155,7 +1182,7 @@ SUBROUTINE iter_dbase_nc
      CALL netcdf_err(  nf90_put_att(ncid,id_nbeams,'units', dimensionless  ))
 
 
-
+ 
 
      CALL netcdf_err( nf90_def_var(ncid, "namep", nf90_char,        &
           DIMIDS = (/idim_char,idim_nprim/),VARID= id_namep))
@@ -1168,13 +1195,16 @@ SUBROUTINE iter_dbase_nc
      CALL netcdf_err(  nf90_put_att(ncid,id_namei,'long_name',      &
           'name of impurity ion species') )
      CALL netcdf_err(  nf90_put_att(ncid,id_namei,'units', dimensionless  ))
-
-     CALL netcdf_err( nf90_def_var(ncid, "namen", nf90_char,        &
-          DIMIDS = (/idim_char,idim_nneu/),VARID=id_namen))
-     CALL netcdf_err(  nf90_put_att(ncid,id_namen,'long_name',      &
-          'name of neutral species') )
-     CALL netcdf_err(  nf90_put_att(ncid,id_namen,'units', dimensionless  ))
-
+     
+     IF ( nneu > 0 ) THEN
+        
+        CALL netcdf_err( nf90_def_var(ncid, "namen", nf90_char,        &
+             DIMIDS = (/idim_char,idim_nneu/),VARID=id_namen))
+        CALL netcdf_err(  nf90_put_att(ncid,id_namen,'long_name',      &
+             'name of neutral species') )
+        CALL netcdf_err(  nf90_put_att(ncid,id_namen,'units', dimensionless  ))
+     
+     ENDIF
 
      CALL netcdf_err( nf90_def_var(ncid, "nameb", nf90_char,        &
           DIMIDS = (/idim_char,idim_nbion/),VARID=   id_nameb))
@@ -1471,7 +1501,7 @@ SUBROUTINE iter_dbase_nc
      CALL netcdf_err( nf90_put_att(ncid,id_glf_primion_momtm_flux,'long_name',label ))
      CALL netcdf_err(  nf90_put_att(ncid,id_glf_primion_momtm_flux,'units',       &
           'kg/(sec^2)'))
-
+ 
      !glf imp ion  momentum   flux all modes, excludes neoclassical:
      base_label = '* total glf imp ion  momtm flux :  '
      CALL set_label(label,base_label,strlen,'effective impurity')
@@ -1521,7 +1551,6 @@ SUBROUTINE iter_dbase_nc
      CALL netcdf_err( nf90_put_att(ncid,id_glf_anrate2,'long_name',label))
      CALL netcdf_err(  nf90_put_att(ncid,id_glf_anrate2,'units',       &
           'csda'))
- 
 
      base_label = '* glf leading mode frequency:  '
      CALL set_label(label,base_label,strlen,'glf_anfreq')
@@ -1566,6 +1595,64 @@ SUBROUTINE iter_dbase_nc
           '1/(meter^2 second)'))
 
 
+     ! glf eff primary ion  particle  diffusivites:
+
+     DO i=1,nprim
+        label = '* glf effective particle diffusivities,species :'//namep(i)
+        base_label(1:LEN(base_label))=''
+        base_label = "glf_eff_particle_chi_"//namep(i)
+        CALL netcdf_err( nf90_def_var(ncid, base_label, nf90_double,    &
+          DIMIDS = (/idim_rho/),VARID=id_glf_eff_chi(i)))
+        CALL netcdf_err( nf90_put_att(ncid,id_glf_eff_chi(i),'long_name',label ))
+        CALL netcdf_err(  nf90_put_att(ncid,id_glf_eff_chi(i),'units',       &
+          '1/(meter^2 second)'))
+     ENDDO
+
+     DO i=nprim+1,nion
+        label = '* glf effective particle diffusivities,species :'//namei(i-nprim)
+        base_label(1:LEN(base_label))=''
+        base_label = "glf_eff_particle_chi_"//namei(i-nprim)(1:len_trim(namei(i-nprim)))//"_imp"
+
+        CALL netcdf_err( nf90_def_var(ncid, base_label, nf90_double,    &
+          DIMIDS = (/idim_rho/),VARID=id_glf_eff_chi(i)))
+        CALL netcdf_err( nf90_put_att(ncid,id_glf_eff_chi(i),'long_name',label ))
+        CALL netcdf_err(  nf90_put_att(ncid,id_glf_eff_chi(i),'units',       &
+          '1/(meter^2 second)'))
+     ENDDO
+ 
+     i=nion+1
+     label = '* glf effective electron energy diffusivity'
+     CALL netcdf_err( nf90_def_var(ncid, "glf_eff_elect_eng_chi", nf90_double,    &
+          DIMIDS = (/idim_rho/),VARID=id_glf_eff_chi(i)))
+     CALL netcdf_err( nf90_put_att(ncid,id_glf_eff_chi(i),'long_name',label ))
+     CALL netcdf_err(  nf90_put_att(ncid,id_glf_eff_chi(i),'units',       &
+          '1/(meter^2 second)'))
+
+     i=nion+2
+     label = '* glf effective ion energy diffusivity'
+     CALL netcdf_err( nf90_def_var(ncid, "glf_eff_ion_eng_chi", nf90_double,    &
+          DIMIDS = (/idim_rho/),VARID=id_glf_eff_chi(i)))
+     CALL netcdf_err( nf90_put_att(ncid,id_glf_eff_chi(i),'long_name',label ))
+     CALL netcdf_err(  nf90_put_att(ncid,id_glf_eff_chi(i),'units',       &
+          '1/(meter^2 second)'))
+
+     i =nion+3  ! no glf output for Faradays law, put something useful here
+     label = '* glf mag field diffusivity, not set'
+     CALL netcdf_err( nf90_def_var(ncid, "glf_eff_BP_chi", nf90_double,    &
+          DIMIDS = (/idim_rho/),VARID=id_glf_eff_chi(i)))
+     CALL netcdf_err( nf90_put_att(ncid,id_glf_eff_chi(i),'long_name',label ))
+     CALL netcdf_err(  nf90_put_att(ncid,id_glf_eff_chi(i),'units',       &
+          'not set '))
+
+     i = nion+4
+     label = '* glf effective momentum  diffusivity'
+     CALL netcdf_err( nf90_def_var(ncid, "glf_eff_momtm_chi", nf90_double,    &
+          DIMIDS = (/idim_rho/),VARID=id_glf_eff_chi(i)))
+     CALL netcdf_err( nf90_put_att(ncid,id_glf_eff_chi(i),'long_name',label ))
+     CALL netcdf_err(  nf90_put_att(ncid,id_glf_eff_chi(i),'units',       &
+          '1/(meter^2 second)'))
+
+
      !total thermal ion  energy  flux:
      base_label = '* total thermal ion energy flux :  '
      CALL set_label(label,base_label,strlen,'nion')
@@ -1604,18 +1691,18 @@ SUBROUTINE iter_dbase_nc
 
 
      !toroidal rotation flux:
-     base_label = '* flux associated with toroidal rotation :  '
+     base_label = '* flux associated with toroidal rotation '
      CALL netcdf_err( nf90_def_var(ncid, "rot_flux", nf90_double,    &
           DIMIDS = (/idim_rho/),VARID=id_rotflux))
-     CALL netcdf_err( nf90_put_att(ncid,id_rotflux,'long_name',label ))
+     CALL netcdf_err( nf90_put_att(ncid,id_rotflux,'long_name',base_label ))
      CALL netcdf_err(  nf90_put_att(ncid,id_rotflux,'units',       &
           'kg/(second^2)'))
 
      !toroidal rotation convective flux:
-     base_label = '* convective flux associated with toroidal rotation :  '
+     base_label = '* convective flux associated with toroidal rotation '
      CALL netcdf_err( nf90_def_var(ncid, "rot_flux_conv", nf90_double,    &
           DIMIDS = (/idim_rho/),VARID=id_rotflux_conv))
-     CALL netcdf_err( nf90_put_att(ncid,id_rotflux_conv,'long_name',label ))
+     CALL netcdf_err( nf90_put_att(ncid,id_rotflux_conv,'long_name',base_label ))
      CALL netcdf_err(  nf90_put_att(ncid,id_rotflux_conv,'units',       &
           'kg/(second^2)'))
 
@@ -1790,39 +1877,42 @@ SUBROUTINE iter_dbase_nc
      CALL netcdf_err( nf90_put_att(ncid,id_dudtsv,'units','(1 or keV)/(meter^3 sec)'))
 
      !neutral  densities:
-     base_label = '*  neutral density, #/meter^3, species: '
-     CALL set_label(label,base_label,strlen,'nneu')
-     CALL netcdf_err( nf90_def_var(ncid, "enn", nf90_double,    &
-          DIMIDS = (/idim_rho,idim_nneu/),VARID=id_enn))
-     CALL netcdf_err( nf90_put_att(ncid,id_enn,'long_name',label))
-     CALL netcdf_err( nf90_put_att(ncid,id_enn,'units',       &
-          'meter^3'))
+     IF ( nneu > 0 ) THEN 
+         
+        base_label = '*  neutral density, #/meter^3, species: '
+        CALL set_label(label,base_label,strlen,'nneu')
+        CALL netcdf_err( nf90_def_var(ncid, "enn", nf90_double,    &
+             DIMIDS = (/idim_rho,idim_nneu/),VARID=id_enn))
+        CALL netcdf_err( nf90_put_att(ncid,id_enn,'long_name',label))
+        CALL netcdf_err( nf90_put_att(ncid,id_enn,'units',       &
+             '#/meter^3'))
 
-     base_label = '*  neutral density,due to wall source , species: '
-     CALL set_label(label,base_label,strlen,'nneu')
-     CALL netcdf_err( nf90_def_var(ncid, "ennw", nf90_double,    &
-          DIMIDS = (/idim_rho,idim_nneu/),VARID=id_ennw))
-     CALL netcdf_err( nf90_put_att(ncid,id_ennw,'long_name',label))
-     CALL netcdf_err( nf90_put_att(ncid,id_ennw,'units',       &
-          'meter^3'))
+        base_label = '*  neutral density,due to wall source , species: '
+        CALL set_label(label,base_label,strlen,'nneu')
+        CALL netcdf_err( nf90_def_var(ncid, "ennw", nf90_double,    &
+             DIMIDS = (/idim_rho,idim_nneu/),VARID=id_ennw))
+        CALL netcdf_err( nf90_put_att(ncid,id_ennw,'long_name',label))
+        CALL netcdf_err( nf90_put_att(ncid,id_ennw,'units',       &
+             '#/meter^3'))
 
-     base_label = '*  neutral density,due to volume  source , species: '
-     CALL set_label(label,base_label,strlen,'nneu')
-     CALL netcdf_err( nf90_def_var(ncid, "ennv", nf90_double,    &
-          DIMIDS = (/idim_rho,idim_nneu/),VARID=id_ennv))
-     CALL netcdf_err( nf90_put_att(ncid,id_ennv,'long_name',label))
-     CALL netcdf_err( nf90_put_att(ncid,id_ennv,'units',       &
-          'meter^3'))
+        base_label = '*  neutral density,due to volume  source , species: '
+        CALL set_label(label,base_label,strlen,'nneu')
+        CALL netcdf_err( nf90_def_var(ncid, "ennv", nf90_double,    &
+             DIMIDS = (/idim_rho,idim_nneu/),VARID=id_ennv))
+        CALL netcdf_err( nf90_put_att(ncid,id_ennv,'long_name',label))
+        CALL netcdf_err( nf90_put_att(ncid,id_ennv,'units',       &
+             '#/meter^3'))
 
-     base_label = '* volume  source of neutrals , species: '
-     CALL set_label(label,base_label,strlen,'nneu')
-     CALL netcdf_err( nf90_def_var(ncid, "volsn", nf90_double,    &
-          DIMIDS = (/idim_rho,idim_nneu/),VARID=id_volsn))
-     CALL netcdf_err( nf90_put_att(ncid,id_volsn,'long_name',label  ))
-     CALL netcdf_err( nf90_put_att(ncid,id_volsn,'units',       &
-          '#/(meter^3*second)'))
-
-
+        base_label = '* volume  source of neutrals , species: '
+        CALL set_label(label,base_label,strlen,'nneu')
+        CALL netcdf_err( nf90_def_var(ncid, "volsn", nf90_double,    &
+             DIMIDS = (/idim_rho,idim_nneu/),VARID=id_volsn))
+        CALL netcdf_err( nf90_put_att(ncid,id_volsn,'long_name',label  ))
+        CALL netcdf_err( nf90_put_att(ncid,id_volsn,'units',       &
+             '#/(meter^3*second)'))
+     
+     ENDIF !Neutrals
+     
      !z and zsq:
      base_label = '* charge  z ,species : '
      CALL set_label(label,base_label,strlen,'nion')
@@ -1910,7 +2000,7 @@ SUBROUTINE iter_dbase_nc
           '* bootstrap current density, amp/meter**2'))
      CALL netcdf_err(  nf90_put_att(ncid,id_curboot,'units',        &
           'amp/meter^2)'))
-
+ 
      CALL netcdf_err( nf90_def_var(ncid, "curbeam", nf90_double,    &
           DIMIDS = (/idim_rho/),VARID=id_curbeam))
      CALL netcdf_err(  nf90_put_att(ncid,id_curbeam,'long_name',    &
@@ -2762,15 +2852,13 @@ SUBROUTINE iter_dbase_nc
           'kg /( A s^2)'))
  
 
+
     CALL netcdf_err( nf90_def_var(ncid,"pprimnpsi", nf90_double,         &
           DIMIDS = (/idim_npsi/),VARID=id_pprimnpsi))
     CALL netcdf_err(  nf90_put_att(ncid,id_pprimnpsi,'long_name',    &
           '* pprime  on eqdsk psigrid'))
     CALL netcdf_err(  nf90_put_att(ncid,id_pprimnpsi,'units',        &
           ' A/m^3'))
-
-
-
 
 
      CALL netcdf_err( nf90_def_var(ncid,"rplasbdry", nf90_double,         &
@@ -2936,8 +3024,7 @@ SUBROUTINE iter_dbase_nc
      CALL netcdf_err(  nf90_put_att(ncid,id_rcap ,'units',        &
           'meter'))
 
-
-
+ 
      CALL netcdf_err( nf90_def_var(ncid,"rcapi", nf90_double,            &
           DIMIDS = (/idim_rho/),VARID=id_rcapi))
      label = '* rcap i= <1/ R>, 1/m'
@@ -3085,7 +3172,7 @@ SUBROUTINE iter_dbase_nc
      CALL netcdf_err( nf90_put_att(ncid,id_neutr_ddn_beam_thermal,'long_name',label ))
      CALL netcdf_err(  nf90_put_att(ncid,id_neutr_ddn_beam_thermal,'units',        &
           '#/(m^3 sec)'))
-
+ 
 
      label = 'beam - beam neutron rate #/m^3 sec'
      CALL netcdf_err( nf90_def_var(ncid, "neutr_ddn_beam_beam", nf90_double,    &
@@ -3133,6 +3220,59 @@ SUBROUTINE iter_dbase_nc
           '*  total_neutr_ddn : total  neutron rate, 1/sec') )
      CALL netcdf_err(  nf90_put_att(ncid,id_total_neutr_ddn,'units', '1/sec'  ))
 
+
+     !------------------------------------------------------------------------
+     ! aneutronic fusion, d(d,p)t,he3(d,p)he4 profiles and totals:
+     !------------------------------------------------------------------------
+ 
+     label = 'd(d,p)t rate #/(m^3 sec)'
+     CALL netcdf_err( nf90_def_var(ncid, "ddpt", nf90_double,    &
+          DIMIDS = (/idim_rho/),VARID=id_p_ddt))
+     CALL netcdf_err( nf90_put_att(ncid,id_p_ddt,'long_name',label ))
+     CALL netcdf_err(  nf90_put_att(ncid,id_p_ddt,'units',        &
+          '#/(m^3 sec)')) 
+
+     CALL netcdf_err( nf90_def_var(ncid, "ddpt_tot", nf90_double,id_total_p_ddt))
+     CALL netcdf_err(  nf90_put_att(ncid,id_total_p_ddt,'long_name',           &
+          '*  total d(d,p)t reaction rate, 1/sec') )
+
+! --- he3(dp,he4) thermal and beam thermal:
+     label = 'he3(d,p)he4 thermal rate #/(m^3 sec)'
+     CALL netcdf_err( nf90_def_var(ncid, "he3dp_th", nf90_double,    &
+          DIMIDS = (/idim_rho/),VARID=id_p_he3d_th))
+     CALL netcdf_err( nf90_put_att(ncid,id_p_he3d_th,'long_name',label ))
+     CALL netcdf_err(  nf90_put_att(ncid,id_p_he3d_th,'units',        &
+          '#/(m^3 sec)')) 
+     CALL netcdf_err( nf90_def_var(ncid, "he3dp_th_tot", nf90_double,id_total_p_he3d_th))
+     CALL netcdf_err(  nf90_put_att(ncid,id_total_p_he3d_th,'long_name',           &
+          '*  total thermal He3(d,p)He4 reaction rate, 1/sec') )
+
+     label = 'he3(d,p)he4 beam-thermal rate #/(m^3 sec)'
+     CALL netcdf_err( nf90_def_var(ncid, "he3dp_beam_th", nf90_double,    &
+          DIMIDS = (/idim_rho/),VARID=id_p_he3d_beam_th))
+     CALL netcdf_err( nf90_put_att(ncid,id_p_he3d_beam_th,'long_name',label ))
+     CALL netcdf_err(  nf90_put_att(ncid,id_p_he3d_beam_th,'units',        &
+          '#/(m^3 sec)')) 
+
+     CALL netcdf_err( nf90_def_var(ncid, "he3dp_beam_th_tot", nf90_double,id_total_p_he3d_beam_th))
+     CALL netcdf_err(  nf90_put_att(ncid,id_total_p_he3d_beam_th,'long_name',           &
+          '*  total beam thermal He3(d,p)He4 reaction rate, 1/sec') )
+
+     CALL netcdf_err( nf90_def_var(ncid, "he3dp_tot", nf90_double,id_total_p_he3d))
+     CALL netcdf_err(  nf90_put_att(ncid,id_total_p_he3d,'long_name',   &
+          '*  total beam plus thermal He3(d,p)He4 reaction rate, 1/sec') )
+
+     CALL netcdf_err( nf90_def_var(ncid, "he3_frac", nf90_double,id_he3_frac))
+     CALL netcdf_err(  nf90_put_att(ncid,id_he3_frac,'long_name',   &
+          '*  fraction of He that is He3') )
+
+     CALL netcdf_err( nf90_def_var(ncid, "he3_thermal_spin_pol", nf90_double,id_he3_thermal_spin_pol))
+     CALL netcdf_err(  nf90_put_att(ncid,id_he3_thermal_spin_pol,'long_name',   &
+          '* thermal He3 spin polarization relative to magnetic field direction') )
+
+     CALL netcdf_err( nf90_def_var(ncid, "d_beam_spin_pol", nf90_double,id_d_beam_spin_pol))
+     CALL netcdf_err(  nf90_put_att(ncid,id_d_beam_spin_pol,'long_name',   &
+          '*  spin polarization of injected d beam') )
 
      !------------------------------------------------------------------------------
      !neutral beam quantities:
@@ -3408,7 +3548,7 @@ SUBROUTINE iter_dbase_nc
         
 
      ENDIF nb_loop
- 
+
      !------------------------------------------------------------
      !define output for common frequencies:
      !------------------------------------------------------------
@@ -3486,6 +3626,7 @@ SUBROUTINE iter_dbase_nc
                           'rad/sec'))
 
            ELSE
+
               omega_pi_name = 'omega_pi_'//namep(i)
               base_label = '* plasma frequency species :'//namep(i)
               !CALL set_label(label,base_label,strlen,omega_pi_name)
@@ -3541,9 +3682,6 @@ SUBROUTINE iter_dbase_nc
         CALL netcdf_err( nf90_put_att(ncid,id_pe_freq,'long_name',base_label ))
         CALL netcdf_err(  nf90_put_att(ncid,id_pe_freq,'units',       &
                           'rad/sec'))
-
-
-
 
 
 
@@ -3633,7 +3771,11 @@ SUBROUTINE iter_dbase_nc
 
      CALL netcdf_err( nf90_put_var(ncid,id_namei,namei),id_namei)
 
-     CALL netcdf_err( nf90_put_var(ncid,id_namen,namen ),id_namen)
+     IF ( nneu > 0 ) THEN
+     
+        CALL netcdf_err( nf90_put_var(ncid,id_namen,namen ),id_namen)
+     
+     ENDIF
 
      CALL netcdf_err( nf90_put_var(ncid,id_nameb,nameb ),id_nameb)
 
@@ -3792,6 +3934,44 @@ SUBROUTINE iter_dbase_nc
      CALL netcdf_err( nf90_put_var(ncid,id_total_neutr_ddn_knock,fus_prod%total_neutr_ddn_knock),id_total_neutr_ddn_knock)
      CALL netcdf_err( nf90_put_var(ncid,id_total_neutr_ddn,fus_prod%total_neutr_ddn),id_total_neutr_ddn)
 
+! some codes may not have these allocated:
+        IF(.NOT.  ASSOCIATED(fus_prod%p_ddt%data))THEN 
+           fus_prod%p_ddt = zero_vector(nj)
+           fus_prod%total_p_ddt = zeroc
+
+        ENDIF
+        IF(.NOT. ASSOCIATED(fus_prod%p_he3d_th%data))THEN 
+           fus_prod%p_he3d_th = zero_vector(nj)
+           fus_prod%total_p_he3d_th = zeroc
+           fus_prod%total_p_he3d = zeroc
+        ENDIF
+        IF(.NOT. ASSOCIATED(fus_prod%p_he3d_beam_thermal%data))THEN 
+           fus_prod%p_he3d_beam_thermal = zero_vector(nj)
+           fus_prod%total_p_he3d_beam_thermal = zeroc
+           fus_prod%total_p_he3d = zeroc
+        ENDIF
+ 
+
+     work_nj(:) = get_values(fus_prod%p_ddt)
+
+     CALL netcdf_err( nf90_put_var(ncid,id_p_ddt,work_nj),id_p_ddt)
+
+     CALL netcdf_err( nf90_put_var(ncid,id_total_p_ddt,fus_prod%total_p_ddt),id_total_p_ddt)
+
+     work_nj(:) = get_values(fus_prod%p_he3d_th)
+     CALL netcdf_err( nf90_put_var(ncid,id_p_he3d_th,work_nj),id_p_he3d_th)
+     CALL netcdf_err( nf90_put_var(ncid,id_total_p_he3d_th,fus_prod%total_p_he3d_th),id_total_p_he3d_th)
+
+     work_nj(:) = get_values(fus_prod%p_he3d_beam_thermal)
+     CALL netcdf_err( nf90_put_var(ncid,id_p_he3d_beam_th,work_nj),id_p_he3d_beam_th)
+     CALL netcdf_err( nf90_put_var(ncid,id_total_p_he3d_beam_th,fus_prod%total_p_he3d_beam_thermal),id_total_p_he3d_beam_th)
+     CALL netcdf_err( nf90_put_var(ncid,id_total_p_he3d,fus_prod%total_p_he3d),id_total_p_he3d)
+     CALL netcdf_err( nf90_put_var(ncid,id_he3_frac,he3_frac),id_he3_frac)
+     CALL netcdf_err( nf90_put_var(ncid,id_he3_thermal_spin_pol,he3_thermal_spin_pol),id_he3_thermal_spin_pol)
+     CALL netcdf_err( nf90_put_var(ncid,id_d_beam_spin_pol,neut_beam%d_beam_spin_pol),id_d_beam_spin_pol)
+
+
+
      work_nj(:) = glf_p_output(:,1)
      CALL netcdf_err( nf90_put_var(ncid,id_glf_elct_partcl_flux,work_nj),id_glf_elct_partcl_flux)
      work_nj(:) = glf_p_output(:,2)
@@ -3800,7 +3980,8 @@ SUBROUTINE iter_dbase_nc
      CALL netcdf_err( nf90_put_var(ncid,id_glf_impion_partcl_flux,work_nj),id_glf_impion_partcl_flux)
 
 
-
+ 
+ 
 
     !---------------------------------------------------------------------
     ! multimode output (put zeros if multimode was not used)
@@ -4007,6 +4188,7 @@ SUBROUTINE iter_dbase_nc
       ENDIF
 
       DO jj = 1,ngw20
+  !NOTE jj=1,2,3 info is put out as zero by current version of multimode
          work_nj(:) = diffuse%mmm_vconv(jj)%data(:)
          IF(jj == 1) &
          CALL netcdf_err(nf90_put_var(ncid,id_mmm_vconv_ith,work_nj),id_mmm_vconv_ith)
@@ -4027,19 +4209,17 @@ SUBROUTINE iter_dbase_nc
     ! end multimode output (put zeros if multimode was not used)
 
 
-
-     IF( ALLOCATED(work_nj_ntot))DEALLOCATE(work_nj_ntot)
-     ALLOCATE(work_nj_ntot(nj,ntot))
-
      DO j=1,nion
-        work_nj_nion(1:nj,j) = get_values(profile%flux(j))
+        work_nj_nion(1:nj,j) = get_values(profile%flux(j))      ! corrected 7/29/13 HSJ
+     ENDDO
         CALL netcdf_err( nf90_put_var(ncid,id_pflux,work_nj_nion),id_pflux)
-     ENDDO
 
-      DO j=1,nion 
-        work_nj_nion(1:nj,j) = get_values(profile%flux_conv(j))
-        CALL netcdf_err( nf90_put_var(ncid,id_pflux_conv,work_nj_nion),id_pflux_conv)
+     DO j=1,nion 
+        work_nj_nion(1:nj,j) = get_values(profile%flux_conv(j)) ! corrected 7/29/13 HSJ
      ENDDO
+        CALL netcdf_err( nf90_put_var(ncid,id_pflux_conv,work_nj_nion),id_pflux_conv)
+
+ 
 
      work_nj(:) = get_values(profile%flux(nion+1)) 
      CALL netcdf_err( nf90_put_var(ncid,id_e_fluxe,work_nj),id_e_fluxe)
@@ -4055,18 +4235,23 @@ SUBROUTINE iter_dbase_nc
      CALL netcdf_err( nf90_put_var(ncid,id_glf_impion_eng_flux,work_nj),id_glf_impion_eng_flux)
      work_nj(:) = glf_m_output(:,1)
      CALL netcdf_err( nf90_put_var(ncid,id_glf_elct_momtm_flux,work_nj),id_glf_elct_momtm_flux)
+
      work_nj(:) = glf_m_output(:,2)
      CALL netcdf_err( nf90_put_var(ncid,id_glf_primion_momtm_flux,work_nj),id_glf_primion_momtm_flux)
+
      work_nj(:) = glf_m_output(:,3)
      CALL netcdf_err( nf90_put_var(ncid,id_glf_impion_momtm_flux,work_nj),id_glf_impion_momtm_flux)
 
-
+     DO i=1,ntot
+        work_nj(:) = glf_eff_chi_output(:,i)
+        CALL netcdf_err( nf90_put_var(ncid,id_glf_eff_chi(i),work_nj),id_glf_eff_chi(i))
+     ENDDO
 
      CALL netcdf_err( nf90_put_var(ncid,id_glf_etg_flux,glf_etg_output),id_glf_etg_flux)
      CALL netcdf_err( nf90_put_var(ncid,id_glf_gam_net_i,glf_gamma_net_i_output),id_glf_gam_net_i)
      CALL netcdf_err( nf90_put_var(ncid,id_glf_gam_net_e,glf_gamma_net_e_output),id_glf_gam_net_e)
      CALL netcdf_err( nf90_put_var(ncid,id_glf_anfreq,glf_anfreq_output),id_glf_anfreq)
-     CALL netcdf_err( nf90_put_var(ncid,id_glf_anfreq2,glf_anfreq_output),id_glf_anfreq2)
+     CALL netcdf_err( nf90_put_var(ncid,id_glf_anfreq2,glf_anfreq2_output),id_glf_anfreq2)
      CALL netcdf_err( nf90_put_var(ncid,id_glf_anrate,glf_anrate_output),id_glf_anrate)
      CALL netcdf_err( nf90_put_var(ncid,id_glf_anrate2,glf_anrate2_output),id_glf_anrate2)
 
@@ -4111,14 +4296,19 @@ SUBROUTINE iter_dbase_nc
      CALL netcdf_err( nf90_put_var(ncid,id_tglf_m_fluxp,work_nj ),id_tglf_m_fluxp)
      work_nj(:) = tglf_m_output(:,3) ! tglf effective impurity momentum flux
      CALL netcdf_err( nf90_put_var(ncid,id_tglf_m_fluxi,work_nj ),id_tglf_m_fluxi)
+     
+     ! Neutral densities/sources
+     IF ( nneu > 0 ) THEN 
+        
+        CALL netcdf_err( nf90_put_var(ncid,id_enn,enn ),id_enn)
 
-     CALL netcdf_err( nf90_put_var(ncid,id_enn,enn ),id_enn)
+        CALL netcdf_err( nf90_put_var(ncid,id_ennw,ennw ),id_ennw)
 
-     CALL netcdf_err( nf90_put_var(ncid,id_ennw,ennw ),id_ennw)
+        CALL netcdf_err( nf90_put_var(ncid,id_ennv,ennv ),id_ennv)
 
-     CALL netcdf_err( nf90_put_var(ncid,id_ennv,ennv ),id_ennv)
+        CALL netcdf_err( nf90_put_var(ncid,id_volsn,volsn ),id_volsn)
 
-     CALL netcdf_err( nf90_put_var(ncid,id_volsn,volsn ),id_volsn)
+     ENDIF !Neutrals
 
      work_nj = get_values(prtcl_src%stfuse) 
      CALL netcdf_err( nf90_put_var(ncid,id_stfuse,work_nj),id_stfuse)
@@ -4237,14 +4427,7 @@ SUBROUTINE iter_dbase_nc
      ENDIF
      work_nj(1:nj) = get_values(profile%er_tot_nclass)
      CALL netcdf_err( nf90_put_var(ncid,id_er_tot_nclass,work_nj),id_er_tot_nclass)
-! 88888899999
-!   do l1=1,ntot
-!     do l2=1,ntot
-!        do l3 =1,nj
-!           diffuse%dcoef(l1,l2,l3)= 1000*l1 + 100*l2 +l3 ! hash 
-!        enddo
-!     enddo
-!   enddo
+
      CALL netcdf_err( nf90_put_var(ncid,id_d,diffuse%dcoef),id_d)
 
      work_nj(1:nj) = get_values(diffuse%chieinv)
@@ -4635,7 +4818,7 @@ SUBROUTINE iter_dbase_nc
      ! frequencies that are not flux functions are on the rho grid at zma=0
      ! on the outboard side
      !-----------------------------------------------------------------
-
+ 
   IF(.NOT. ALLOCATED(id_plas_freq) .AND. nprimp1 .GT. 1) &
       CALL allocate_plasma_freq
         
@@ -4875,8 +5058,6 @@ SUBROUTINE iter_dbase_nc
 
 
      ! nj,nion are now known  so allocate some arrays: 
-     IF( ALLOCATED(work_nj_ntot))DEALLOCATE(work_nj_ntot)
-     ALLOCATE(work_nj_ntot(nj,ntot))
      IF( ALLOCATED(work_nj_nion))DEALLOCATE(work_nj_nion)
      ALLOCATE(work_nj_nion(nj,nion))
      IF( ALLOCATED(work_nj_nionp1))DEALLOCATE(work_nj_nionp1)
@@ -5115,7 +5296,7 @@ SUBROUTINE iter_dbase_nc
 
 
      CALL netcdf_err( nf90_inq_varid(ncid,"fcap", id_fcap),id_fcap) 
-     CALL netcdf_err( nf90_get_var(ncid,id_fcap,work_nj), -id_fcap)
+     CALL netcdf_err( nf90_get_var(ncid,id_fcap,work_nj), id_fcap)
      mhd_dat%fcap = new_Vector(nj,work_nj)
 
      CALL netcdf_err( nf90_inq_varid(ncid,"gcap", id_gcap),id_gcap) 
@@ -5251,14 +5432,17 @@ SUBROUTINE iter_dbase_nc
         diffuse%chie_paleo = new_Vector(nj,work_nj)
         !chie_paleo(:) = chie_paleo(:)*1.e4_DP !Convert to cm^2/sec
      ENDIF
-     
+
+
+     IF(.NOT. ASSOCIATED(profile%flux)) &
+                        ALLOCATE (profile%flux(ntot)) ! 2d array 
      CALL netcdf_err( nf90_inq_varid(ncid,"p_flux", id_pflux),id_pflux) 
      CALL netcdf_err( nf90_get_var(ncid,id_pflux,work_nj_nion),id_pflux)
      DO jj=1,nion
         profile%flux(jj)  = new_Vector(nj,work_nj_nion(1,jj))
      ENDDO
 
-     
+
      id_pflux_conv_er = izero
      IF(.NOT. ASSOCIATED(profile%flux_conv)) &
                         ALLOCATE (profile%flux_conv(ntot)) ! 2d array 
@@ -5734,6 +5918,79 @@ SUBROUTINE iter_dbase_nc
         glf_m_output(:,3) = work_nj(:)
     ENDIF
 
+    ! read glf eff diffusivites 
+    IF(ALLOCATED(glf_eff_chi_output))DEALLOCATE(glf_eff_chi_output)
+    ALLOCATE(glf_eff_chi_output(ntot,nj))
+    IF(ALLOCATED(id_glf_eff_chi_err))DEALLOCATE(id_glf_eff_chi_err)
+    ALLOCATE(id_glf_eff_chi_err(ntot))
+    IF(ALLOCATED(id_glf_eff_chi))DEALLOCATE(id_glf_eff_chi)
+    ALLOCATE(id_glf_eff_chi(ntot))
+    DO i =1,nprim
+       id_glf_eff_chi_err(i) = izero 
+        base_label(1:LEN(base_label))=''
+        base_label = "glf_eff_particle_chi_"//namep(i)
+       CALL netcdf_err( nf90_inq_varid(ncid,base_label, id_glf_eff_chi(i)),id_glf_eff_chi_err(i)) 
+       IF(id_glf_eff_chi_err(i) .NE. -1)THEN
+           CALL netcdf_err( nf90_get_var(ncid,id_glf_eff_chi(i),work_nj),id_glf_eff_chi(i))
+           glf_eff_chi_output(:,i) = work_nj(:)
+       ELSE
+          glf_eff_chi_output(:,i) = zeroc
+       ENDIF
+     ENDDO
+     DO i = nprim+1,nion
+       id_glf_eff_chi_err(i) = izero 
+        base_label(1:LEN(base_label))=''
+        base_label = "glf_eff_particle_chi_"//namei(i-nprim)
+       CALL netcdf_err( nf90_inq_varid(ncid,base_label, id_glf_eff_chi(i)),id_glf_eff_chi_err(i)) 
+       IF(id_glf_eff_chi_err(i) .NE. -1)THEN
+           CALL netcdf_err( nf90_get_var(ncid,id_glf_eff_chi(i),work_nj),id_glf_eff_chi(i))
+           glf_eff_chi_output(:,i) = work_nj(:)
+       ELSE
+          glf_eff_chi_output(:,i) = zeroc
+       ENDIF
+     ENDDO
+     i =nion+1
+     id_glf_eff_chi_err(i) = izero
+     CALL netcdf_err( nf90_inq_varid(ncid,"glf_eff_elect_eng_chi", id_glf_eff_chi(i)),id_glf_eff_chi_err(i)) 
+     IF(id_glf_eff_chi_err(i) .NE. -1)THEN
+           CALL netcdf_err( nf90_get_var(ncid,id_glf_eff_chi(i),work_nj),id_glf_eff_chi(i))
+           glf_eff_chi_output(:,i) = work_nj(:)
+     ELSE
+          glf_eff_chi_output(:,i) = zeroc
+     ENDIF
+
+     i =nion+2
+     id_glf_eff_chi_err(i) = izero
+     CALL netcdf_err( nf90_inq_varid(ncid,"glf_eff_ion_eng_chi", id_glf_eff_chi(i)),id_glf_eff_chi_err(i)) 
+     IF(id_glf_eff_chi_err(i) .NE. -1)THEN
+           CALL netcdf_err( nf90_get_var(ncid,id_glf_eff_chi(i),work_nj),id_glf_eff_chi(i))
+           glf_eff_chi_output(:,i) = work_nj(:)
+     ELSE
+          glf_eff_chi_output(:,i) = zeroc
+     ENDIF
+
+     i =nion+3  ! glf Bp not set , reads zeros
+     id_glf_eff_chi_err(i) = izero
+     CALL netcdf_err( nf90_inq_varid(ncid,"glf_eff_ion_eng_chi", id_glf_eff_chi(i)),id_glf_eff_chi_err(i)) 
+     IF(id_glf_eff_chi_err(i) .NE. -1)THEN
+           CALL netcdf_err( nf90_get_var(ncid,id_glf_eff_chi(i),work_nj),id_glf_eff_chi(i))
+           glf_eff_chi_output(:,i) = work_nj(:)
+     ELSE
+          glf_eff_chi_output(:,i) = zeroc
+     ENDIF
+
+
+
+     i =nion+4
+     id_glf_eff_chi_err(i) = izero
+     CALL netcdf_err( nf90_inq_varid(ncid,"glf_eff_momtm_chi", id_glf_eff_chi(i)),id_glf_eff_chi_err(i)) 
+     IF(id_glf_eff_chi_err(i) .NE. -1)THEN
+           CALL netcdf_err( nf90_get_var(ncid,id_glf_eff_chi(i),work_nj),id_glf_eff_chi(i))
+           glf_eff_chi_output(:,i) = work_nj(:)
+     ELSE
+          glf_eff_chi_output(:,i) = zeroc
+     ENDIF
+
 
      IF(ALLOCATED(glf_etg_output))DEALLOCATE(glf_etg_output)
      ALLOCATE(glf_etg_output(nj))
@@ -5962,17 +6219,17 @@ SUBROUTINE iter_dbase_nc
      ENDDO
      IF(.NOT. ALLOCATED(enn))ALLOCATE(enn(nj,nneu))
      CALL netcdf_err( nf90_inq_varid(ncid,"enn",id_enn),id_enn)
-     CALL netcdf_err( nf90_get_var(ncid,id_enn,enn),0)
+     CALL netcdf_err( nf90_get_var(ncid,id_enn,enn),id0)
      IF(.NOT. ALLOCATED(ennw))ALLOCATE(ennw(nj,nneu))
      CALL netcdf_err( nf90_inq_varid(ncid,"ennw",id_ennw))
-     CALL netcdf_err( nf90_get_var(ncid,id_ennw,ennw),0)
+     CALL netcdf_err( nf90_get_var(ncid,id_ennw,ennw),id0)
      IF(.NOT. ALLOCATED(ennv))ALLOCATE(ennv(nj,nneu))
      CALL netcdf_err( nf90_inq_varid(ncid,"ennv",id_ennv))
-     CALL netcdf_err( nf90_get_var(ncid,id_ennv,ennv),0)
+     CALL netcdf_err( nf90_get_var(ncid,id_ennv,ennv),id0)
      IF(.NOT. ALLOCATED(volsn))ALLOCATE(volsn(nj,nneu))
      volsn(:,:) = zeroc
      CALL netcdf_err( nf90_inq_varid(ncid,"volsn",id_volsn))
-     CALL netcdf_err( nf90_get_var(ncid,id_volsn,volsn),0)
+     CALL netcdf_err( nf90_get_var(ncid,id_volsn,volsn),id0)
 
      CALL netcdf_err( nf90_inq_varid(ncid,"stfuse",id_stfuse),id_stfuse)
      CALL netcdf_err( nf90_get_var(ncid,id_stfuse,work_nj),id_stfuse)
@@ -7024,6 +7281,107 @@ SUBROUTINE iter_dbase_nc
           CALL netcdf_err( nf90_get_var(ncid,id_total_neutr_ddn,fus_prod%total_neutr_ddn),id_total_neutr_ddn)
      ENDIF
 
+ 
+! --- clear out old values if present
+! --- replace with new ones read in (even if new ones are zero)
+     ok = delete_vector_nf(fus_prod%p_ddt)
+     ok = delete_vector_nf(fus_prod%p_he3d_th)
+     ok = delete_vector_nf(fus_prod%p_he3d_beam_thermal)
+     flag = 0
+     CALL netcdf_err( nf90_inq_varid(ncid,"ddpt", id_p_ddt),flag) 
+ 
+     IF(flag == -1)THEN
+        fus_prod%p_ddt = zero_Vector(nj)
+     ELSE
+        CALL netcdf_err( nf90_get_var(ncid,id_p_ddt,work_nj),id_p_ddt)
+        fus_prod%p_ddt = new_Vector(nj,work_nj)
+     ENDIF
+ 
+     flag = 0
+     CALL netcdf_err( nf90_inq_varid(ncid,"ddpt_tot", id_total_p_ddt),flag) 
+     IF(flag  == -1)THEN
+          fus_prod%total_p_ddt = zeroc
+     ELSE
+          CALL netcdf_err( nf90_get_var(ncid,id_total_p_ddt,fus_prod%total_p_ddt),id_total_p_ddt)
+     ENDIF
+
+
+
+     flag = 0
+     CALL netcdf_err( nf90_inq_varid(ncid,"he3dp_th_tot", id_total_p_he3d_th),flag) 
+     IF(flag  == -1)THEN
+          fus_prod%total_p_he3d_th = zeroc
+     ELSE
+ 
+          CALL netcdf_err( nf90_get_var(ncid,id_total_p_he3d_th,fus_prod%total_p_he3d_th),id_total_p_he3d_th)
+     ENDIF
+ 
+
+     flag = 0
+     CALL netcdf_err( nf90_inq_varid(ncid,"he3dp_beam_th", id_p_he3d_beam_th),flag) 
+ 
+     IF(flag == -1)THEN
+
+        fus_prod%p_he3d_beam_thermal = zero_Vector(nj)
+     ELSE
+
+        CALL netcdf_err( nf90_get_var(ncid,id_p_he3d_beam_th,work_nj),id_p_he3d_beam_th)
+        fus_prod%p_he3d_beam_thermal = new_Vector(nj,work_nj)
+     ENDIF
+     flag = 0
+
+     CALL netcdf_err( nf90_inq_varid(ncid,"he3dp_beam_th_tot", id_total_p_he3d_beam_th),flag) 
+     IF(flag  == -1)THEN
+          fus_prod%total_p_he3d_beam_thermal = zeroc
+     ELSE
+
+          CALL netcdf_err( nf90_get_var(ncid,id_total_p_he3d_beam_th,fus_prod%total_p_he3d_beam_thermal),id_total_p_he3d_beam_th)
+     ENDIF
+
+
+     flag = 0
+     CALL netcdf_err( nf90_inq_varid(ncid,"he3dp_tot", id_total_p_he3d),flag) 
+
+
+     IF(flag  == -1)THEN
+          fus_prod%total_p_he3d = zeroc
+     ELSE
+          CALL netcdf_err( nf90_get_var(ncid,id_total_p_he3d,fus_prod%total_p_he3d),id_total_p_he3d)
+     ENDIF
+
+
+     flag = 0
+     CALL netcdf_err( nf90_inq_varid(ncid,"he3_frac", id_he3_frac),flag) 
+
+
+     IF(flag  == -1)THEN
+          he3_frac = zeroc
+     ELSE
+          CALL netcdf_err( nf90_get_var(ncid,id_he3_frac,he3_frac),id_he3_frac)
+     ENDIF
+
+     flag = 0
+     CALL netcdf_err( nf90_inq_varid(ncid,"he3_thermal_spin_pol", id_he3_thermal_spin_pol),flag) 
+
+
+     IF(flag  == -1)THEN
+          he3_thermal_spin_pol = zeroc
+     ELSE
+          CALL netcdf_err( nf90_get_var(ncid,id_he3_thermal_spin_pol,he3_thermal_spin_pol),id_he3_thermal_spin_pol)
+     ENDIF
+
+     flag = 0
+     CALL netcdf_err( nf90_inq_varid(ncid,"d_beam_spin_pol", id_d_beam_spin_pol),flag) 
+     IF(flag  == -1)THEN
+          neut_beam%d_beam_spin_pol = 1.0
+     ELSE
+          CALL netcdf_err( nf90_get_var(ncid,id_d_beam_spin_pol,neut_beam%d_beam_spin_pol),id_d_beam_spin_pol)
+     ENDIF
+
+
+
+
+
 
      IF(.NOT. ALLOCATED(id_plas_freq)) CALL allocate_plasma_freq  
 
@@ -7200,6 +7558,7 @@ SUBROUTINE iter_dbase_nc
 
 
 
+
   eqtime = time            !equilibirum time. It is assumed that the quatities
   !fcap,gcap,hcap,eps,xhm2,xi11,xi33,xips
   !were calcualted at this time. Hence subrotuine 
@@ -7215,7 +7574,7 @@ SUBROUTINE iter_dbase_nc
 2000 CONTINUE
 
 
-  
+
 
 
   CALL netcdf_err(nf90_close(ncid) )         !close netcdf file
@@ -7228,7 +7587,6 @@ SUBROUTINE iter_dbase_nc
   IF(ALLOCATED(work_nz))DEALLOCATE(work_nz)
   IF(ALLOCATED(work_nj_nion))DEALLOCATE(work_nj_nion)
   IF(ALLOCATED(work_nj_nionP1))DEALLOCATE(work_nj_nionp1)
-  IF(ALLOCATED(work_nj_ntot))DEALLOCATE(work_nj_ntot)
 
   WRITE(nlog,33)time
   WRITE(ncrt,33)time
@@ -7258,12 +7616,13 @@ SUBROUTINE netcdf_err(status,flag)
   INTEGER,PARAMETER                       :: MAXVDIMS = 32  !defined in netcdf  but are not ??? 
   INTEGER(I4B) ,DIMENSION(MAXVDIMS)       :: vdims
   INTEGER(I4B), OPTIONAL, INTENT(inout)   :: flag           ! dont call by value (eq negative number)
-
   CHARACTER(LEN=MAXNCNAM)                 :: varname
   action = 10000
   IF(PRESENT(flag))THEN
         action = flag
   ENDIF
+  !print *,'action =',action ! 88888899999
+  !print *,'status, nf90_noerr  =',status, nf90_noerr ! 88888899999
   IF(status /= nf90_noerr .AND. action .NE.  0 ) THEN
      WRITE(ncrt,FMT='("  netdcf erro = ",i5)')status
      WRITE(nlog,FMT='("  netdcf erro = ",i5)')status
@@ -7288,7 +7647,6 @@ SUBROUTINE netcdf_err(status,flag)
   ELSE IF(status /= nf90_noerr .AND. action ==  0 ) THEN
       flag =  -1
   END IF
-
   RETURN
 
 !3    FORMAT(2x,'READ  error caused by netcdf variable no :',i5,' name: ',a)

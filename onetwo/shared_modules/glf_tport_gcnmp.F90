@@ -71,7 +71,8 @@
                                         glf_anfreq2_output,                      &
                                         glf_anrate,glf_anrate2,                  &
                                         glf_anfreq,glf_anfreq2,                  &
-                                        glf_etg_output
+                                        glf_etg_output,glf_eff_chi_output,         &
+                                        rdrho
 
 
      USE tension_spline,         ONLY :  s_coef,dsp,d2sp,sp,s_bc,bc_0,bc_1,rho_w,&
@@ -110,11 +111,12 @@
                zptej_glf,zptij_glf, rmajor_glf,                                  &
                btor_exp,arho_iglf,etaphim, etaparm,                              &
                etaperm, exchm,zpnej_glf,zpnij_glf,chietemdv,cparam,cparam1,      &
-               rdrho_local, rdrho_local_p1,chiitim,chietem, vstar_sign,          &
+               rdrho_local_p1,chiitim,chietem, vstar_sign,          &
                corot,pgeo_local,fc,akappa1, akappa2, alpha_neo,sum,ane,ani,      &
                dqdrho,drhodq,omci,tea,tia,btsq,u0,tmu0,tiny,tot_den,             &
                diffnem,amassimp_glf,zimp_glf,amassgas_glf,xmassp,diff,charge,    &
                relaxd,enea,ensum,enav,dbetadrho
+
 
 
       INTEGER(i4B) iptrb,idengrad_glf,                                           &
@@ -147,12 +149,14 @@
            glf_anfreq_output(:)          = glf_anfreq(:)
            glf_anfreq2_output(:)         = glf_anfreq2(:)
            glf_etg_output(:)             = etgflux_gf_m(:)
+           CALL set_glf_eff_chi
         ELSE
            glf_anrate_output(:)          = zeroc
            glf_anrate2_output(:)         = zeroc
            glf_anfreq_output(:)          = zeroc
            glf_anfreq2_output(:)         = zeroc
            glf_etg_output(:)             = zeroc
+           glf_eff_chi_output(:,:)         = zeroc
         ENDIF
        END SUBROUTINE  create_glf_output
 
@@ -616,7 +620,7 @@
          INTEGER(I4B) grid_pt , glf_setup,pertrb
 
 
- 
+!         write(173,FMT='("in glf_driver_single_new,grid_point,glf_setup,pertrb =",x,i5,x,i5,x,i5)')grid_pt,glf_setup,pertrb ! 888888899999
          IF(glf_setup ==izero) CALL glf_init(glf_setup) ! set glf params at start of each time step
 
          jmm      = grid_pt-1          ! 0 to nj-1        
@@ -699,7 +703,7 @@
                chi_i_avg(j) = cparam1*chii_m(j)
                !chi_i_avg(j) = MIN(chi_i_avg(j),1.d6) !limit max val here
             ELSE
-               chi_i_avg(j) = 0.0
+               chi_i_avg(j) = 0.0_DP
             ENDIF
 
 
@@ -707,7 +711,7 @@
                chi_e_avg(j) =  cparam1*chie_m(j)
                !chi_e_avg(j) = MIN(chi_e_avg(j),1.d6) !limit max val here
             ELSE
-               chi_e_avg(j) = 0.0
+               chi_e_avg(j) = 0.0_DP
             ENDIF
 
 
@@ -1154,6 +1158,18 @@
                     vphiflux_gf,glf_vphiflux_gf_m,etgflux_gf,                     &
                     glf_etgflux_gf_m,glf_gamma_net_i,glf_gamma_net_e  )
 
+              CALL glf_limit_values (                                             &
+                    jmm,jmaxm,                                                    &
+                    diffnem, chietem,chiitim, etaphim, etaparm,                   &
+                    etaperm,exchm, glf_diff_m, glf_chie_m, glf_chii_m,            &
+                    glf_etaphi_m, glf_etapar_m, glf_etaper_m,                     &
+                    glf_exch_m, glf_egamma_m, glf_egamma_d, glf_gamma_p_m,        &
+                    glf_anrate, glf_anrate2, glf_anfreq, glf_anfreq2,             &
+                    niflux_gf, glf_ni_flux, nimpflux_gf,glf_nimp_flux,            &
+                    tiflux_gf,glf_ti_flux,teflux_gf,glf_te_flux,                  &    
+                    vparflux_gf,glf_vparflux_gf_m,vperflux_gf,glf_vperflux_gf_m,  &
+                    vphiflux_gf,glf_vphiflux_gf_m,etgflux_gf,                     &
+                    glf_etgflux_gf_m,glf_gamma_net_i,glf_gamma_net_e  )
 
  
      !------------------------------------------------------------------------------------------
@@ -1289,8 +1305,10 @@
                                                             glf_anfreq_output,      &
                                                             glf_anfreq2_output,     &
                                                             glf_gamma_net_i_output, &
-                                                            glf_gamma_net_E_output
+                                                            glf_gamma_net_E_output, &
+                                                            glf_eff_chi_output
 
+        USE solcon_gcnmp,                           ONLY :  ntot
 
         IMPLICIT NONE
         INTEGER(I4B) grid_size
@@ -1319,6 +1337,9 @@
               ALLOCATE(glf_gamma_net_i_output(grid_size))
           IF(ALLOCATED(glf_gamma_net_e_output))DEALLOCATE(glf_gamma_net_e_output)
               ALLOCATE(glf_gamma_net_e_output(grid_size))
+          IF(ALLOCATED(glf_eff_chi_output))DEALLOCATE(glf_eff_chi_output)
+              ALLOCATE(glf_eff_chi_output(grid_size,ntot))
+
 
                glf_p_output(:,:)         = zeroc             ! these arrays are sent to the state file
                glf_e_output(:,:)         = zeroc             ! as zeros if glf is not active
@@ -1330,6 +1351,7 @@
                glf_anfreq2_output(:)     = zeroc
                glf_gamma_net_e_output(:) = zeroc
                glf_gamma_net_i_output(:) = zeroc
+               glf_eff_chi_output(:,:)     = zeroc
 
          RETURN
       END SUBROUTINE allocate_glf_output
@@ -1554,6 +1576,7 @@
           IF( .NOT. ALLOCATED(vexb_base))ALLOCATE(vexb_base(nj))
           IF( .NOT. ALLOCATED(vexb_term1))ALLOCATE(vexb_term1(nj))
           IF( .NOT. ALLOCATED(diamag_term))ALLOCATE(diamag_term(nj))
+          IF( .NOT. ALLOCATED(rdrho))ALLOCATE(rdrho(nj))
           IF( .NOT. ALLOCATED(dvexb_base_drho))ALLOCATE(dvexb_base_drho(0:nj-2))
           IF( .NOT. ALLOCATED(ddiamag_drho))ALLOCATE(ddiamag_drho(0:nj-2))
           IF( .NOT. ALLOCATED(dvexb_term1_drho))ALLOCATE(dvexb_term1_drho(0:nj-2))
@@ -1890,7 +1913,7 @@
 
          USE solcon_gcnmp,                                  ONLY : cm_xke,cm_xki,cm_xkw,itran_max 
          USE dep_var,                                       ONLY : dangrot_drho
-
+  USE MPI_data,                      ONLY :  myid,master,mpiierr  ! 888889999 debug only
          IMPLICIT NONE
          INTEGER(I4B) glf_setup
          REAL(DP) denfactor,dra,rhoa,rmina,qa,drhodrrra,csdaa,delta1,vexb_term1a, &
@@ -2215,6 +2238,12 @@
                zpti_glf(j-1)=(-ti_glf(j)+ti_glf(j-1))/(tia*drhogf(j)) ! 1/LTi
                zpne_glf(j-1)=(-ne_glf(j)+ne_glf(j-1))/(ane*drhogf(j)) ! 1/Lne
                zpni_glf(j-1)=(-ni_glf(j)+ni_glf(j-1))/(ani*drhogf(j)) ! 1/Lni
+
+!               zpte_glf(j-1)=ABS((-te_glf(j)+te_glf(j-1))/(tea*drhogf(j))) ! 1/LTe ! 88889999 added ABS()
+!               zpti_glf(j-1)=ABS((-ti_glf(j)+ti_glf(j-1))/(tia*drhogf(j))) ! 1/LTi
+!               zpne_glf(j-1)=ABS((-ne_glf(j)+ne_glf(j-1))/(ane*drhogf(j))) ! 1/Lne
+!               zpni_glf(j-1)=ABS((-ni_glf(j)+ni_glf(j-1))/(ani*drhogf(j))) ! 1/Lni
+              
                dqdrho=-(q(j)-q(j-1))/drhogf(j)
                drhodq=-(rho_glf(j)+rho_glf(j-1))/(q(j)+q(j-1))
                shat_exp(j)=drhodq*dqdrho                                   !(r/q)dq/dr
@@ -2274,18 +2303,18 @@
             !
 
             pgeo_local=drhodr(j)
-            rdrho_local=rmin_glf(j)/arho_iglf/rho_glf(j)
-            rdrho_local_p1=rdrho_local
+            rdrho(j)=rmin_glf(j)/arho_iglf/rho_glf(j)
             ! correct for diamagnetic terms, see Waltz,Phys Plas,4(7)1997,pg2482, eq.(16c)
             ! corrected to divide by (r/Rq) instead of multiply .
 !            angrotp_exp(j)=angrot(j)+ &
 !                 akappa2*3./2.*csda_glf(j)*zpti_glf(j)* &
 !                 tau_glf(j)/rho_glf(j)*q_glf(j)* &
-!                 rhosda_glf(j)*pgeo_local/rdrho_local
+!                 rhosda_glf(j)*pgeo_local/rdrho
 !            angrotp_exp(j)=corot*angrotp_exp(j)
              diamag_term(j)  = corot*akappa2*3./2.*csda_glf(j)*zpti_glf(j)* &
                  tau_glf(j)/rho_glf(j)*q_glf(j)* &
-                 rhosda_glf(j)*pgeo_local/rdrho_local
+                 rhosda_glf(j)*pgeo_local/rdrho(j)
+
             angrotp_exp(j) =  angrot(j)+ diamag_term(j)  ! no corot factor in angrot (see above )
             IF (angrot(j).EQ. zeroc )THEN
                angrotp_exp(j)  = zeroc
@@ -2299,7 +2328,7 @@
             !orginal form (by J.Kinsey)
             !            ve_glf(j)=-tau_glf(j)*csda_glf(j)*arho_iglf*
             !     .         rhosda_glf(j)*(zpni_glf(j)+zpti_glf(j)+(1.-
-            !     .         rdrho_local*rho_glf(j)*arho_iglf/rmajor_glf/q_glf(j))*
+            !     .         rdrho*rho_glf(j)*arho_iglf/rmajor_glf/q_glf(j))*
             !     .         (alpha_neo-1.)*zpti_glf(j))*vstar_sign*pgeo_local
 
             !set ve to value used in callglf2d  HSJ 05/0103:
@@ -2314,29 +2343,30 @@
             !toroidal rotation velocity is a signed quantitiy.
             !This term is identical to eq. 16a in Waltz,
             !phys plas, 4,7,97,2486. HSJ:
-!            ve_glf(j)=ve_glf(j)-rdrho_local*rho_glf(j)* &
+!            ve_glf(j)=ve_glf(j)-rdrho*rho_glf(j)* &
 !                 arho_iglf/rmajor_glf/q_glf(j)*vphim_glf(j)
-            vexb_term1(j) = -corot*rdrho_local*rho_glf(j)* &
+            vexb_term1(j) = -corot*rdrho(j)*rho_glf(j)* &
                  arho_iglf/rmajor_glf/q_glf(j)
             ve_glf(j) = vexb_base(j) + vexb_term1(j)*vphim_glf(j)
 
             vparm_term1(j) = vstar_sign*((1.-alpha_neo)*zpti_glf(j))* &
                  tau_glf(j)*csda_glf(j)*arho_iglf* &
                  rhosda_glf(j)*pgeo_local*rho_glf(j)*arho_iglf &
-                 /rmajor_glf/q_glf(j)*rdrho_local
+                 /rmajor_glf/q_glf(j)*rdrho(j)
              vparm_glf(j) = vphim_glf(j) + vparm_term1(j)
+
 !            vparm_glf(j)= vphim_glf(j) + &
 !                 vstar_sign*((1.-alpha_neo)*zpti_glf(j))* &
 !                 tau_glf(j)*csda_glf(j)*arho_iglf* &
 !                 rhosda_glf(j)*pgeo_local*rho_glf(j)*arho_iglf &
-!                 /rmajor_glf/q_glf(j)*rdrho_local
+!                 /rmajor_glf/q_glf(j)*rdrho
 
 
             vperm_term1(j)=-tau_glf(j)*csda_glf(j)*arho_iglf* &
-                 rhosda_glf(j)*((1.-rdrho_local*rho_glf(j)*arho_iglf/ &
+                 rhosda_glf(j)*((1.-rdrho(j)*rho_glf(j)*arho_iglf/ &
                  rmajor_glf/q_glf(j))*(alpha_neo-1.)*zpti_glf(j))* &
                  vstar_sign*pgeo_local
-!            vperm_glf(j) =vperm_term1(j) - rdrho_local*rho_glf(j)* &
+!            vperm_glf(j) =vperm_term1(j) - rdrho*rho_glf(j)* &
 !                 arho_iglf/rmajor_glf/q_glf(j)* &
 !                 rmajor_glf*angrotp_exp(j)
             vperm_glf(j) = vperm_term1(j) + vexb_term1(j)*vphim_glf(j)
@@ -2344,7 +2374,21 @@
             ! approximate Bp/B with rho/qR0:
             vpolm_glf(j) = vperm_glf(j) -  r(j)/(q_glf(j)*rmajor_glf)*vparm_glf(j)
          ENDDO
- 
+
+            IF(myid == master) THEN
+!              WRITE(173,FMT='("j,vparm,vphim,vpol,vperm,vperm_term1,vexb_term1,diamag_term= ")')
+              DO j=1,nj
+!                 WRITE(173,FMT='(x,i3,x,7(x,1pe12.4))')j,vparm_glf(j),vphim_glf(j),vpolm_glf(j),vperm_glf(j),vperm_term1(j),vexb_term1(j),diamag_term(j)   ! 8888889999
+              ENDDO
+!              WRITE(173,FMT='("j,rho,akappa2, zpti_glf,ti,rdrho =")')
+              DO j=1,nj
+ !               WRITE(173,FMT='(x,i3,5(x,1pe12.4))')j,rho_glf(j),ak2glf(j), ti_glf(j),zpti_glf(j),rdrho(j)
+              ENDDO
+!              WRITE(173,FMT='("rho,tau,q,rhosda,pgeo =")')
+              DO j=1,nj
+ !                WRITE(173,FMT='(x,i3,5(x,1pe12.4))')j,rho_glf(j),tau_glf(j),q_glf(j),rhosda_glf(j),drhodr(j)  ! 8888899999
+              ENDDO
+           ENDIF
  !----------------------------------------------------------------
  ! compute ExB and parallel velocity shear rates
  ! Use perturbative formulas for egamma_exp and gamma_p_exp
@@ -2370,14 +2414,13 @@
             dvpar_term1_drho(j-1)  =  (vparm_term1(j+1)        - vparm_term1(j))/dra
 
             dangrot_drho(j)        =  (angrot(j+1)             - angrot(j))/dra !dangrot_drho(1..nj-1)
-            rdrho_local=rmin_glf(j)/arho_iglf/rho_glf(j)
-            !            rdrho_local_p1=rdrho_local
+            rdrho(j)=rmin_glf(j)/arho_iglf/rho_glf(j)
             rdrho_local_p1=rmin_glf(j+1)/arho_iglf/rho_glf(j+1) 
             ! originals:
             egamma_exp(j)=drhodrrrho(j)*(rho_glf(j)+rho_glf(j+1))/ &
                  (q_glf(j)+q_glf(j+1))*(ve_glf(j+1)*q_glf(j+1)/ &
                  rho_glf(j+1)/rdrho_local_p1-ve_glf(j)*q_glf(j)/ &
-                 rho_glf(j)/rdrho_local)/(rho_glf(j+1)-rho_glf(j))/ &
+                 rho_glf(j)/rdrho(j))/(rho_glf(j+1)-rho_glf(j))/ &
                  arho_iglf/csda_glf(j)
  
             gamma_p_exp(j)=-drhodr(j)*(vparm_glf(j+1)-vparm_glf(j))/ &
@@ -2663,8 +2706,212 @@
 
   END  SUBROUTINE dump_test
 
+  SUBROUTINE set_glf_eff_chi
+  !----------------------------------------------------------------------
+  ! define effective conductivity for glf23 model
+  ! used for output to statefile
+  !----------------------------------------------------------------------
+    USE MPI_data,                      ONLY :  myid,master,mpiierr  ! 888889999 debug only
+    REAL(DP) grade,gradi,enea
+    REAL(DP) enia
+    INTEGER(I4B) j,k
+
+         glf_eff_chi_output(:,:) = zeroc
+
+         DO i=1,ntot
+            DO j=2,SIZE(dudr,2)
+                  IF(i == nion+1)THEN
+                     enea = (ene(j)+ ene(j+1))*0.5_DP
+                     grade = dudr(i,j)*enea
+                     IF(ABS(grade) .GT. 0.00001_DP)&
+                     glf_eff_chi_output(j,i)  = -teflux_gf_m(j)/grade
+                  ELSEIF(i == nion+2)THEN
+                     enia = zeroc
+                     DO k=1,nion
+                        enia = enia+en(j+1,k)+en(j,k)
+                     ENDDO
+                     enia = enia*0.5_DP
+                     gradi = dudr(i,j)*enia
+                     IF(ABS(gradi) .GT. 0.00001_DP)&
+                     glf_eff_chi_output(j,i)  = -tiflux_gf_m(j)/gradi
+                  ELSE
+                     glf_eff_chi_output(j,i)  = zeroc ! not yet programmed
+                  ENDIF
+            ENDDO
+         ENDDO
+
+     RETURN
+
+  END  SUBROUTINE set_glf_eff_chi
+
+ 
 
 
+ 
+  
+
+      SUBROUTINE  glf_limit_values (   &
+        jmm,jmaxm,                     &
+        diffnem,                       & ! ion plasma diffusivity in m**2/sec
+        chietem,                       & ! electron ENERGY diffuivity in m**2/sec
+        chiitim,                       & ! ion      ENERGY diffuivity in m**2/sec
+        etaphim,                       & ! toroidal velocity diffusivity in m**2/sec
+        etaparm,                       & ! parallel velocity diffusivity in m**2/sec
+        etaperm,                       & ! perpendicular velocity diffusivity in m**2/sec
+        exchm,                         & ! turbulent electron to ion ENERGY exchange in MW/m**3
+        diff_m,                        & ! 0:jmaxm values (diffnem)
+        chie_m,                        & ! 0:jmaxm values (chietem)
+        chii_m,                        & ! 0:jmaxm values (chiitim)
+        etaphi_m,                      & ! 0:jmaxm values (etaphim)
+        etapar_m,                      & ! 0:jmaxm values (etaparm)
+        etaper_m,                      & ! 0:jmaxm values (etaperm)
+        exch_m,                        & ! 0:jmaxm values (exchm)
+        egamma_m,                      & !0:jmaxm exb shear rate in units of local csda_m
+        egamma_d,                      & !0:jmaxm exb shear rate delayed by i_delay steps
+        gamma_p_m,                     & !0:jmaxm par. vel. shear rate in units of local csda_m
+        anrate_m,                      & !0:jmaxm leading mode rate in units of local csda_m
+        anrate2_m,                     & !0:jmaxm 2nd mode rate in units of local csda_m
+        anfreq_m,                      & !0:jmaxm leading mode frequency
+        anfreq2_m,                     & !0:jmaxm 2nd mode frequency
+        niflux_gfl,                    &  ! ion particle flux
+        niflux_gf_m,                   &  ! 0:jmaxm
+        nimpflux_gfl,                  &  ! impurity particle flux
+        nimpflux_gf_m,                 &
+        tiflux_gfl,                    & ! ion  energy flux
+        tiflux_gf_m,                   &
+        teflux_gfl,                    & ! electron  energy flux
+        teflux_gf_m,                   &
+        vparflux_gfl,                  & ! parallel viscous stress
+        vparflux_gf_m,                 &
+        vperflux_gfl,                  & ! pependicularr viscous sress
+        vperflux_gf_m,                 &
+        vphiflux_gfl,                  & ! toroidal viscous stress
+        vphiflux_gf_m,                 &
+        etgflux_gfl,                   & ! contribution from high k etg modes to electron energy flux
+        etgflux_gf_m,                  & ! electron temperature gradient mode flux
+        gamma_net_i,                   & ! net growth rate ion modes only
+        gamma_net_e                    & ! net growth rates electron modes only
+        )
+!-----------------------------------------------------------------------------------------
+! apply lower and upper limits to glf output quantites
+!------------------------------------------------------------------------------------------
+      IMPLICIT NONE 
+      INTEGER(I4B) jmaxm,jmm
+      REAL(DP)                                  &
+            diffnem,chietem, chiitim, etaphim,  &
+            etaparm, etaperm, exchm,            &
+            tiflux_gfl,teflux_gfl,              &
+            vparflux_gfl,                       &
+            vperflux_gfl,vphiflux_gfl,          &
+            etgflux_gfl,niflux_gfl,nimflux_gfl
+
+      REAL(DP)                                  & ! zone edge grid [0:nj-1]
+            diff_m(0:jmaxm),chie_m(0:jmaxm),    &
+            chii_m(0:jmaxm),etaphi_m(0:jmaxm),  &
+            etapar_m(0:jmaxm),etaper_m(0:jmaxm),&
+            exch_m(0:jmaxm),gamma_m(0:jmaxm),   &
+            egamma_m(0:jmaxm),                  &
+            egamma_d(0:jmaxm),                  &
+            gamma_p_m(0:jmaxm),                 &
+            anrate_m(0:jmaxm),                  &
+            anrate2_m(0:jmaxm),                 &
+            anfreq_m(0:jmaxm),                  &
+            anfreq2_m(0:jmaxm),                 &
+            niflux_gf_m(0:jmaxm),               &
+            nimpflux_gf_m(0:jmaxm),             &
+            tiflux_gf_m(0:jmaxm),               &
+            teflux_gf_m(0:jmaxm),               &
+            vparflux_gf_m(0:jmaxm),             &
+            vperflux_gf_m(0:jmaxm),             &
+            vphiflux_gf_m(0:jmaxm),             &
+            etgflux_gf_m(0:jmaxm),              &
+            gamma_net_i(0:jmaxm),               &
+            gamma_net_e(0:jmaxm)
+
+
+      REAL(DP)                                  &
+            diffnem_glf_min,diffnem_glf_max,    &
+            chie_glf_max,chie_glf_min,          &
+            chii_glf_max,chii_glf_min,          &
+            etaphim_glf_max,etaphim_glf_min,    &
+            etaparm_glf_max,etaparm_glf_min,    &
+            etaperm_glf_max,etaperm_glf_min,    &
+            niflux_glf_max,niflux_glf_min,      &
+            efluxe_glf_max,efluxe_glf_min,      &
+            efluxi_glf_max,efluxi_glf_min,      &
+            nimpflux_gfl
+
+            diffnem_glf_max  = 25._DP  ;   diffnem_glf_min   = -diffnem_glf_max   ! m^2/sec
+            chie_glf_max     = 25._DP  ;   chie_glf_min      = -chie_glf_max      ! m^2/sec
+            chii_glf_max     = 25._DP  ;   chii_glf_min      = -chii_glf_max      ! m^2/sec
+            etaphim_glf_max  = 25._DP  ;   etaphim_glf_min   = -etaphim_glf_max   ! m^2/sec
+            etaparm_glf_max  = 25._DP  ;   etaparm_glf_min   = -etaparm_glf_max   ! m^2/sec
+            etaperm_glf_max  = 25._DP  ;   etaperm_glf_min   = -etaperm_glf_max   ! m^2/sec
+            niflux_glf_max   =  1.e24_DP   ! fix this
+            niflux_glf_min   = -1.e24_DP
+            efluxe_glf_max   =  ABS(chie_glf_max*ene(jmm+1)*dudr(nion+1,jmm+1))
+            efluxe_glf_min   = -ABS(chie_glf_min*ene(jmm+1)*dudr(nion+1,jmm+1))
+ !           efluxe_glf_min   = 0.0_DP
+            efluxi_glf_max   =  ABS(chii_glf_max*en(jmm+1,1)*dudr(nion+2,jmm+1))
+            efluxi_glf_min   = -ABS(chii_glf_min*en(jmm+1,1)*dudr(nion+2,jmm+1))
+ !           efluxi_glf_min   = 0.0_DP
+
+            diffnem        = MIN(diffnem,diffnem_glf_max)
+            diffnem        = MAX(diffnem,diffnem_glf_min)
+
+            chietem        = MIN(chietem,chie_glf_max)
+            chietem        = MAX(chietem,chie_glf_min)
+
+            chiitim        = MIN(chiitim,chii_glf_max)
+            chiitim        = MAX(chiitim,chii_glf_min)
+
+            etaphim        = MIN(etaphim,etaphim_glf_max) 
+            etaphim        = MAX(etaphim,etaphim_glf_min) 
+                     
+            etaparm        = MIN(etaparm,etaparm_glf_max) 
+            etaparm        = MAX(etaparm,etaparm_glf_min)   
+                     
+            etaperm        = MIN(etaperm,etaperm_glf_max) 
+            etaperm        = MAX(etaperm,etaperm_glf_min)   
+
+            niflux_gfl     = MIN(niflux_gfl,niflux_glf_max)
+            niflux_gfl     = MAX(niflux_gfl,niflux_glf_min)
+
+            nimpflux_gfl   = MIN(nimpflux_gfl,niflux_glf_max)
+            nimpflux_gfl   = MAX(nimpflux_gfl,niflux_glf_min)
+            tiflux_gfl     = MIN(tiflux_gfl,efluxi_glf_max)
+            tiflux_gfl     = MAX(tiflux_gfl,efluxi_glf_min)
+            teflux_gfl     = MIN(teflux_gfl,efluxe_glf_max)
+            teflux_gfl     = MAX(teflux_gfl,efluxe_glf_min)
+            etgflux_gfl    = MIN(etgflux_gfl,efluxe_glf_max)
+            etgflux_gfl    = MAX(etgflux_gfl,efluxe_glf_min)
+ RETURN
+            DO j=0,jmaxm
+               diff_m(j)           = MIN(diff_m(j),diffnem_glf_max)
+               diff_m(j)           = MAX(diff_m(j),diffnem_glf_min)
+               chie_m(j)           = MIN(chie_m(j),chie_glf_max)
+               chie_m(j)           = MAX(chie_m(j),chie_glf_min)
+               chii_m(j)           = MIN(chii_m(j),chii_glf_max)
+               chii_m(j)           = MAX(chii_m(j),chii_glf_min)
+               etaphi_m(j)         = MIN(etaphi_m(j),etaphim_glf_max)
+               etaphi_m(j)         = MAX(etaphi_m(j),etaphim_glf_min)
+               etapar_m(j)         = MIN(etapar_m(j),etaparm_glf_max)
+               etapar_m(j)         = MAX(etapar_m(j),etaparm_glf_min)
+               etaper_m(j)         = MIN(etaper_m(j),etaperm_glf_max)
+               etaper_m(j)         = MAX(etaper_m(j),etaperm_glf_min)
+               niflux_gf_m(j)      = MIN(niflux_gf_m(j),niflux_glf_max)
+               niflux_gf_m(j)      = MAX(niflux_gf_m(j),niflux_glf_min)
+               nimpflux_gf_m(j)    = MIN(nimpflux_gf_m(j),niflux_glf_max)
+               nimpflux_gf_m(j)    = MAX(nimpflux_gf_m(j),niflux_glf_min)
+               tiflux_gf_m(j)      = MIN(tiflux_gf_m(j),efluxi_glf_max)
+               tiflux_gf_m(j)      = MAX(tiflux_gf_m(j),efluxi_glf_min)
+               teflux_gf_m(j)      = MIN(teflux_gf_m(j),efluxe_glf_max)
+               teflux_gf_m(j)      = MAX(teflux_gf_m(j),efluxe_glf_min)
+               etgflux_gf_m(j)     = MIN(etgflux_gf_m(j),efluxe_glf_max)
+               etgflux_gf_m(j)     = MAX(etgflux_gf_m(j),efluxe_glf_min) 
+            ENDDo
+
+  END  SUBROUTINE glf_limit_values 
 
 
    END MODULE glf_tport_gcnmp

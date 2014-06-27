@@ -226,5 +226,5 @@
     IF(.NOT. ASSOCIATED(ni_sc)) ALLOCATE(ni_sc(4))
     RETURN
 
-  END  SUBROUTINE allocate_itran_species
+  END  SUBROUTINE allocate_itran_species 
 #endif

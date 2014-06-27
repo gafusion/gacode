@@ -132,7 +132,7 @@ MODULE kinetic_efit
           kin_efit_namelist = kin_efit_namelist(1:LEN_TRIM(kin_efit_namelist))//dummy
        ENDDO
     ENDIF
-    pnbeam = (1.e6*pbe + pbi) !beam power,watts, absorbed by electrons and ions
+    pnbeam = 1.e6*(pbe + pbi) !beam power,watts, absorbed by electrons and ions
     npress =nj ; nbeam = nj ; nmass = nj ; kzeroj = nj
     DO j=1,nj
        rpress(j) = (-psir(j) + psir(1))/(psir(nj) -psir(1)) !negative [0, -1]

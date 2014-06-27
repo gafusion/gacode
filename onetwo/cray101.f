@@ -241,12 +241,6 @@ c
 
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
-
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray101.f,v 1.80 2013/07/19 20:50:18 stjohn Exp $"/
-c
 c --- plotcodeid is passed to graphics postprocessor TRPLOT and checked
 c --- there to ensure we don't use incompatible versions of ONETWO and
 c --- plot codes. plotcodeid does NOT have to match versid, but
@@ -278,8 +272,6 @@ c
       character *132 line
       character*64  inname, outname, qikname, yokname, options
       character*10 intfile
-c      external     IHOST, LENGTH
-       external     LENGTH
 
       integer len_preplt_to_run
 c
@@ -406,7 +398,7 @@ c       write(888,FMT='("o12_index c101 start =",i5)')o12_index ! 88888999
       timestart =timer()
 c
       if (yokname(1:7) .ne. 'yokfil ') then
-        write  (ncrt, 10) yokname(1:LENGTH(yokname))
+        write  (ncrt, 10) TRIM(yokname)
    10   format (/ ' WARNING: You have requested the "yokfil" output',
      .                     ' file be named "', a, '".'                /
      .            '          However, the "yokfil" file is obsolete',
@@ -432,7 +424,7 @@ c
       open (unit = nin, file = inname, status = 'OLD', iostat = iostat)
 c
       if (iostat .ne. 0) then
-        write  (ncrt, 7000)  inname(1:LENGTH(inname)), nin
+        write  (ncrt, 7000)  TRIM(inname), nin
  7000   format (/ ' ---- ERROR:  file "', a, '" on logical unit', i3   /
      .                     14x, 'cannot be opened, therefore ',
      .                          'execution of ONETWO cannot continue;' /
@@ -1656,8 +1648,7 @@ c
 c
       implicit none
 c
-      external  LENGTH
-      integer   LENGTH, INDEX, ncrt, input, output, nchars, last, i,
+      integer   INDEX, ncrt, input, output, nchars, last, i,
      .          tab_loc,         number_of_delimiters
       parameter                  (number_of_delimiters = 3)
       character comment_delimiter(number_of_delimiters)*1, line*134
@@ -1667,7 +1658,7 @@ c
 c
       do while (.true.)
         read (input, '(a)', end = 10) line
-        nchars = LENGTH (line)
+        nchars = LEN_TRIM(line)
         line   = 'X' // line(1:nchars)
         nchars = nchars+1
         if (nchars .gt. 133) then

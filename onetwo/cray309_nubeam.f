@@ -117,7 +117,7 @@ c      endif
          tdelt: IF(deltat .gt. 3.*time_tol)then
             DO j=1,nj
                slope = (qbeame_nub(j) - qbeame_nubp(j)) /dtime
-               qbeame(j) = qbeame_nub(j) + slope * deltat
+               qbeame(j) = qbeame_nubp(j) + slope * deltat
 
                slope = (qbeami_nub(j) - qbeami_nubp(j)) /dtime
                qbeami(j) = qbeami_nubp(j) + slope * deltat
@@ -335,32 +335,12 @@ c
       USE neo2d
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray309_nubeam.f,v 1.10 2013/07/19 16:55:04 stjohn Exp $"/
-c
 c ----------------------------------------------------------------------
 c     This subroutine prepares an input file for mcgo
 c     Note that mcgo also uses file eqdskin
 c     Also note that Mcgo expects mks input in some quantities
 c --------------------------------------------------------HSJ-8/28/98---
 c
-c      include 'param.i'
-c      include 'geom.i'
-c      include 'io.i'
-c      include 'ions.i'
-c      include 'limiter.i'
-c      include 'machin.i'
-c      include 'mesh.i'
-c      include 'neo2d.i'
-c      include 'neut.i'
-c      include 'nub.i'
-c      include 'nub2.i'
-c      include 'numbrs.i'
-c      include 'mcgo.i'
-c      include 'rhog.i'
-c      include 'soln.i'
       include 'storage.i'
       parameter (kmcgo = kprim+kimp+2)
       dimension enn_mcgo(kj),rgrid_mcgo(kj),rm2_mf(kj),eps_mf(kj),
@@ -375,7 +355,6 @@ c      include 'soln.i'
       equivalence(dumy_en(1),wdum(5*kj+1))
       character apostrophe*1
       parameter (apostrophe = CHAR (39))
-      external LENGTH
 c
       if (kstore .lt. 5*kj)
      .  call STOP ('subroutine PREP_MCGO: kstore too small', 276)
@@ -478,7 +457,7 @@ c---zfrac,etc.
       write(nmcgo1,'(2x,"iprmion =",i5,"  icenez =",i5)')iprmion_mcgo,
      .                                                     icenez_mcgo
       write(nmcgo1,98)(apostrophe,
-     .           mcgo_name(j)(1:LENGTH(mcgo_name(j))),apostrophe,j=1,i)
+     .           TRIM(mcgo_name(j)),apostrophe,j=1,i)
  98   format (2x, "namei = ",(5(2x,3a,2x)))
 c
 c     if nion = 3 then mcgo assumes two primary ions and one impurity.
@@ -600,8 +579,7 @@ c
 ****  write(nmcgo1,'(4x,"mb = ",i5," ebkev = ",4(2x,1pe12.4))')
 **** .                             nbeams,(ebkev(j),j=1,nbeams)
       write(nmcgo1,'(4x,''mcgo_input_file2 = '',3a)')apostrophe,
-     . mcgo_input_file2(onetwo_beam)(1:LENGTH(mcgo_input_file2)),
-     .                                                 apostrophe
+     . TRIM(mcgo_input_file2(onetwo_beam)),apostrophe
 ****  if (nbeams .gt. 1)
 **** .  write(nmcgo1,'(4x,''mcgo_input_file2(2) = '',3a)')apostrophe,
 **** .  mcgo_input_file2(2)(1:LENGTH(mcgo_input_file2)),apostrophe
@@ -916,15 +894,18 @@ c
 c     some fusion stuff:
 c
       if (ifus .ne. 0)THEN
-       write (nunit, '(" QDD = ",f10.2," QDT = ",f10.2,
-     .                  " QTT = ",f10.2)')  qdd, qdt, qtt
-        write (nunit,'(" P DD  =",1pe12.4,"  P DT =",1pe12.4,
-     .         "  P TT =",1pe12.4," W")')pfusdd,pfusdt,pfustt
+       write (nunit, '(" QDD = ",f8.1," QDT = ",f8.1,
+     .                  " QTT = ",f8.1," QHe3d = ",f8.1)') 
+     .                  qdd, qdt, qtt,qhe3d
+        write (nunit,'(" P DD  =",1pe8.2,"  P DT =",1pe8.2,
+     .         "  P TT =",1pe8.2," W","  P He3d ",1pe8.2)')
+     .         pfusdd,pfusdt,pfustt,pfushe3d
       ENDIF
 c    neutron rates
-      write (nunit,'(" D(D,n) = ",1pe12.4, "  D(T,n) = ", 1pe12.4,
-     .               "  T(T,2n) = ",1pe12.4,"   #/sec")')
-     .                       ddntot,dtntot,ttntot
+      write (nunit,'(" D(D,n) = ",1pe10.2,"  D(T,n) = ", 1pe10.2,
+     .               "  T(T,2n) = ",1pe10.2,"  He3(D,p)He4 = " ,
+     .                1pe10.2, "   #/sec")')
+     .                       ddntot,dtntot,ttntot,he3dptot
        paux = pbe + pbi + prf ! MW
        Pbrems      = pradt/1.e6  ! MW
        Palpha      = (3.5/17.6)*pfusdt/1.e6
@@ -1260,10 +1241,13 @@ c
       pfusdt=(thermal_thermal_dtntot+ beam_thermal_dtntot
      .    +beam_beam_dtntot)*17600.0      ! 17.6 MeV for d(t,n)he4
       pfustt=(thermal_thermal_tt2ntot+ beam_thermal_tt2ntot
-     .    +beam_beam_tt2ntot)*11300.0     ! 11.3 MeV for d(d,n)he3
-      pfusdd=pfusdd*1.602e-16 ! watts
-      pfusdt=pfusdt*1.602e-16
-      pfustt=pfustt*1.602e-16
+     .    +beam_beam_tt2ntot)*11330.0     ! 11.33 MeV for t(t,2n)he4
+      pfushe3d = thermal_thermal_he3dptot*18330.0  ! 18.33 Mev he3(dp)he4
+                                                   !(p 14.7,he4 3.6)
+      pfushe3d = pfushe3d*1.602e-16
+      pfusdd   = pfusdd*1.602e-16 ! watts
+      pfusdt   = pfusdt*1.602e-16
+      pfustt   = pfustt*1.602e-16
 c
       write (nunit, '(" thermal-thermal d(d,n)he3  rate per second",
      .                  1pe12.3 /
@@ -1272,20 +1256,25 @@ c
      .                " thermal-thermal t(t,2n)he4 rate per second",
      .                  1pe12.3 /
      .                " thermal-thermal d(d,p)t    rate per second",
+     .                  1pe12.3 /
+     .                " thermal_thermal he3(d,p)he4 rate per second",
      .                  1pe12.3)')  thermal_thermal_ddntot,
      .                              thermal_thermal_dtntot,
      .                              thermal_thermal_tt2ntot,
-     .                              thermal_thermal_ddptot
+     .                              thermal_thermal_ddptot,
+     .                              thermal_thermal_he3dptot
 c
       write (nunit,2020) beam_thermal_ddntot,beam_thermal_ddptot,
      .                   beam_thermal_dtntot,
-     .                   beam_thermal_tt2ntot,beam_thermaldth_tftot
+     .                   beam_thermal_tt2ntot,beam_thermaldth_tftot,
+     .                   beam_thermalhe3th_dftot
 c
  2020 format (' beam-thermal    d(d,n)he3 rate per second: ', 1pe14.3 /
      .        ' beam-thermal    d(d,p)t   rate per second: ', 1pe14.3 /
      .        ' beam-thermal df(tth,n)he4 rate per second: ', 1pe14.3 /
      .        ' beam-thermal   t(t,2n)he4 rate per second: ', 1pe14.3 /
-     .        ' beam-thermal tf(dth,n)he4 rate per second: ', 1pe14.3)
+     .        ' beam-thermal tf(dth,n)he4 rate per second: ', 1pe14.3 /
+     .        ' beam-thermal df(he3,p)he4 rate per second: ', 1pe14.3  )
 c
       write (nunit, 2040) beam_beam_ddntot,beam_beam_ddptot,
      .                    beam_beam_dtntot,beam_beam_tt2ntot
@@ -1303,6 +1292,9 @@ c
       if (pfustt .ne. 0.0)  write (nunit, 2062)  pfustt, qtt
  2062 format (2x,'total prompt power,t(t,2n)he4 =',
      .        1pe12.4,' watts',' Qtt = ',1pe12.4)
+      IF(pfushe3d .ne. 0.0)WRITE(nunit,2063)pfushe3d,qhe3d
+ 2063 FORMAT(2x,'total prompt power He3(d,p)He4 ',
+     .        1pe12.4,' watts',' QHe3d = ',1pe12.4)
       return
 c
  1110 format (20x,'thermal fusion energy balance(keV/cm**3-s)' //
@@ -1474,7 +1466,7 @@ c
       USE gpsi
       USE pelcom
       USE events,                   ONLY : check_prtlst,isave_event
-      USE echdat_module,            ONLY : get_ech_params
+      USE echdat_module,            ONLY : get_ech_params, model_globl
       USE P_Nfreya_12_interface,    ONLY : use_P_Nfreya,P_Nfreya_read, 
      .                                     process_beamlets
       USE P_Nfreya_rpc_interface,   ONLY : setup_run_P_Nfreya,
@@ -1720,6 +1712,7 @@ c----------------------------magnetic drag------------------------------------
 
 
  30   continue
+ 
 c
 c----------------------------NTV Torque---------------C.K.Pan--03/01/2010------
       if(include_ntv .eq.1)then
@@ -1730,7 +1723,7 @@ c----------------------------NTV Torque---------------C.K.Pan--03/01/2010------
 c ------ A single mp_polnum,mp_tornum perturbation    
 c ------ delta_b : Tesla
             bmn_theta_a_sqr = delta_b_sqr*real(mp_polnum)/2.0 
-            delta_b_o_b_sqr = 2.0*bmn_theta_a_sqr/(DABS(btor)*1.0e-4)**2.0
+            delta_b_o_b_sqr = 2.0*bmn_theta_a_sqr/(DABS(btor)*1.0e-4)**2
      .                    *(r(j)/r(nj))**(2.0*real(mp_polnum)-2.0)
            
 c ------ Effective inverse aspect ratio
@@ -1827,6 +1820,7 @@ c  appear explicitly in 'source', but rather appears through the matrix
 c  'eqdimp' in 'abcg'.
 c ----------------------------------------------------------------------
 c
+ 
       do j=1,nj
         xlame   = 24.0 - LOG (SQRT (ene(j))/(1.0e3*te(j)))
         teerg   = te(j)*1.6e-9
@@ -1909,7 +1903,7 @@ c
         end do
       end do
 
-
+ 
 c
 c ----------------------------------------------------------------------
 c  calculate the radiative energy loss due to bremsstrahlung,
@@ -1958,6 +1952,7 @@ c
 
 
  2120      continue
+
 c ---------------------------------------------------------------------------
 c          NEUTRAL BEAM INJECTION
 c ---------------------------------------------------------------------------
@@ -2588,16 +2583,12 @@ c
                      last_mon_index = p_nf_index
                      p_nf_mon_set = .TRUE.
                      descrip_mon(p_nf_index) = "P_Nfreya elapsed time"
-c        write(888,FMT='("start p_nf  2595,p_nf-index = ",i5)')
-c     .                   p_nf_index  ! 88888889999999
+
                   ENDIF
                   start_timer(p_nf_index) =.TRUE.
                   stop_timer(p_nf_index)  =.FALSE.
                   CALL collect_stats(p_nf_index)
                   start_timer(p_nf_index) =.FALSE.
-c        write(888,FMT='("start p_nf  2595",1pe14.6,x,i5)')
-c     .                   elapsed_time(p_nf_index),p_nf_index ! 88888889999999
-
                 ! use enx (andd ennub)  for density change monitor due to beam fuelling and
                 ! inital digout of thermal density profile:
                 CALL load_enx (ibion,nj,iother,nneu,id,it,enx)
@@ -2623,9 +2614,7 @@ c     .                   elapsed_time(p_nf_index),p_nf_index ! 88888889999999
      .                                              freyavb,ncrt) 
                      IF(recall_P_Nfreya)
      .                         pn_dt = time - P_Nfreya_call_time
-c                   IF(recall_P_Nfreya)
-c     .                write(977,13)time ! 8888899999
-c 13                    Format('chk prof,time =',1pe12.6)
+
                 ENDIF  
 
  
@@ -2639,9 +2628,7 @@ c     .                   3(1pe12.6,x))
                 IF(beam_iteration)THEN 
                    pn_dt = P_Nfreya_dt
                    recall_P_Nfreya = .TRUE.
-c                   write(977,15)pn_dt ! 8888899999
-c 15                Format('beam iteration forces pnf call,pn_dt=',
-c     .             1pe12.6) ! 88888899999
+
                 ENDIF
 c                IF(pn_dt .LE. 0.0_DP .AND. recall_P_Nfreya)THEN
 c                    write(977,16)pn_dt ! 8888899999
@@ -2674,10 +2661,7 @@ c                ENDIF
                 beam_sim_time_start = P_Nfreya_call_time
                 beam_sim_time_end   = beam_sim_time_start + pn_dt
 
-c        write(977,11) P_Nfreya_call_no,time ! 888889999
-c        write(977,12)beam_sim_time_start,beam_sim_time_end
-c 11     FORMAT('pnf call no,time =',i5,2x,1pe12.6)
-c 12     FORMAT('sim time s,e =',2(2x,1pe12.6))
+
  
                 CALL setup_run_P_Nfreya(time,1)      ! P_Nfreya_rpc_interface.f90
 c        print *,' ************ done setup_run_P_nfreya'
@@ -2727,8 +2711,7 @@ c        print *,' ************ done setup_run_P_nfreya'
                 stop_timer(p_nf_index)  =.TRUE.
                 CALL collect_stats(p_nf_index)
                 stop_timer(p_nf_index)  =.FALSE.
-c        write(888,FMT='("stop p_nf  2728 ",1pe14.6,x,i5)')
-c     .                   elapsed_time(p_nf_index),p_nf_index ! 88888889999999
+
              ENDIF  rp_NF
      
           !--------------------------------------------------------------
@@ -2951,6 +2934,7 @@ c     .                                  sbeam(1:3),enbeam(1:3)
           ENDIF
    
       elseif( .not. use_nubeam)then  beamif 
+ 
 c -------------------------------------------------------------------------------
 c            the old single pulse beam calcs
 c            calculate the particle and energy sources due to neutral beams
@@ -3075,12 +3059,10 @@ c
 c
 c     if iborb =3 freya will only be used to generate an
 c     initial fast ion birth deposition distribution that mcgo will sample.
-      write(6,FMT='("calling freya")') ! 8888889999
       call freya (nbeams,atw, codeid, kappa,nw,nh,nion,p,rmhdgrid,
      .     rin,rmax,zmhdgrid,zax,zmin,zmax,pbeam,ebeam,iexcit,enbeams,
      .     time,time0)
  
-
       imslmd = 'postnub'
 c      write(6,FMT='("calling postnub")') ! 8888889999
       call postnub
@@ -3479,20 +3461,20 @@ c     .             elapsed_time(nubeam_index),nubeam_index  ! 88888889999999
  
            endif
 
-          if ( (nubeam_evolve .eq. -1) .and. 
-     .         (nubeam_version .lt. 201107) )  then
+!          if ( (nubeam_evolve .eq. -1) .and. 
+!      .         (nubeam_version .lt. 201107) )  then
 
-             pload_12 = 0
-             call get_12_fiprof(time,pload_12)
-             wb(:,1,1) = wbeam(:)/0.62415064e16  !only define for (Kj:1,1)
-             enb(:,1,1) = enbeam(:)
-             do j=1,SIZE( enb,dim=1)
-               enb(j,1,1) = MAX(enb(j,1,1),enbmin) !zero doesnt work
+!             pload_12 = 0
+!             call get_12_fiprof(time,pload_12)
+!             wb(:,1,1) = wbeam(:)/0.62415064e16  !only define for (Kj:1,1)
+!           enb(:,1,1) = enbeam(:)
+!             do j=1,SIZE( enb,dim=1)
+!               enb(j,1,1) = MAX(enb(j,1,1),enbmin) !zero doesnt work
                                                    !in curray
-             enddo
-             enbeams(:)= enbeam(:) 
+!             enddo
+!             enbeams(:)= enbeam(:) 
 
-           endif
+!           endif
 
            !time +dt is time after corrector is done
 
@@ -3516,6 +3498,7 @@ c          if (istep .ne. 'init')  go to 2279
 
               if (nubeam_version .lt. 201107) then 
                  if ((nubeam_restart .eq.  0) .or. 
+     .               (nubeam_restart .eq.  -1) .or.  ! 888899999 hsj 10/9/13
      .               (nubeam_restart .eq. -2) .or.
      .               (nubeam_restart .eq. -99))
      .           call set_nubeam_init_profs !JMP END
@@ -3963,6 +3946,7 @@ c
 c
 
  2661 model = model + 1
+ 
       if (    model  .gt. krf)  go to 2850   ! exit from RF section here
       if(fusionvb .gt. 0)print *,'starting rf loop,model',
      .                            model,irf(model),irfmodel(model)
@@ -4072,6 +4056,7 @@ c
  2710 call copya  (ene, enrf(1,model), nj)
       call copya  (te , terf(1,model), nj)
       call psirho (0)
+
       rfmodel_power_e(model) =0.0  !we will recalcualte the power HSJ
       rfmodel_cd(model) =0.0       !ditto for currrent drive
       rfmodel_power_i(model) =0.0  !never any ion heating
@@ -4093,9 +4078,14 @@ c        write(888,FMT='("start ech_index = ",i5)')ech_index  ! 88888889999999
 c        write(888,FMT='("start ech 4080",1pe14.6,x,i5)')
 c     .                   elapsed_time(ech_index),ech_index  ! 88888889999999
       
-      IF(ech_input .ne. 'none')CALL get_ech_params(time,model)
+ 
+      IF(ech_input .ne. 'none') THEN
+        CALL get_ech_params(time,model)
+      ELSE
+        model_globl = model
+      ENDIF
 
-
+ 
 
 
 c      write(940,Fmt ='("cray309 calling ech")') ! 8888889999
@@ -4110,7 +4100,8 @@ c      write(940,FMT='("time =",1pe14.8)')time
      .          qrfes(1,model), currfs(1,model), jtor_eccd(1,model),
      .          totecpe, totecc,
      .          ifixshap, time, irfplt, rmajor, btor, zeff, rf_output)
-      write (6, '(a /)') ' ---- returned from subroutine ECH'
+
+       write (6, '(a /)') ' ---- returned from subroutine ECH'
 c      write(940,Fmt ='("return from ech")') ! 8888889999
 c
 
@@ -4156,8 +4147,6 @@ c     .        time,factor,model ! 8888888999999
        stop_timer(ech_index)  =.TRUE.
        CALL collect_stats(ech_index)
        stop_timer(ech_index)  =.FALSE.
-c        write(888,FMT='("stop ech 4146",1pe14.6,x,i5)')
-c     .             elapsed_time(ech_index),ech_index  ! 88888889999999
        go to 2661
 
 
@@ -4905,7 +4894,6 @@ c
 
 
 
-
 c ----------------------------------------------------------------------
 c calculate effective source (G/cm-s) in Faraday's law due to
 c   beam-driven and rf-driven current;
@@ -5231,7 +5219,7 @@ c
            end do
 c
            qe2d(j) = -five_halfs_te * ene(j)*te(j)*dlnhdt + dlnrdt*
-     .          (five_halfs_ti * ene(j)*te(j)*dlnhdr + 1.5*te(j)*sume1
+     .          (five_halfs_te * ene(j)*te(j)*dlnhdr + 1.5*te(j)*sume1
      .        +  1.5 * (ene(j) + te(j)*sume2)*dtedr)
 c           qe2d(j) = qe2d(j) * qe2dmult 
 c
@@ -5319,6 +5307,7 @@ c
       return
 c
       end
+
 
       subroutine source_mod_stab(flag,njin,xke,xki,xkw)
 c ----------------------------------------------------------------

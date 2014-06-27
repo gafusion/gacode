@@ -244,9 +244,6 @@
 
             ierr = izero 
 
-
-
-
  
            CALL stage_cntour_call (dischg%rma,dischg%zma,ptrace,rcmin,rcmax,zcmin,         &
                                zcmax,zrcmin,zrcmax,rzcmin,rzcmax,dang,arcl,        &

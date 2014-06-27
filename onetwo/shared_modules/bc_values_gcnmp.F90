@@ -1,6 +1,7 @@
   MODULE BC_values_gcnmp
 
     USE nrtype,             ONLY : DP,I4B
+    USE solcon_gcnmp,       ONLY : itran_max
     IMPLICIT NONE
     REAL(DP),SAVE,ALLOCATABLE, DIMENSION(:) :: ub,ub_lcl,zeff_bc,ene_bc,    &
                   te_bc,ti_bc,angrot_bc,bctime,fix_edge_te,fix_edge_ti,     &
@@ -8,13 +9,16 @@
     REAL(DP),SAVE,ALLOCATABLE, DIMENSION(:,:) :: fix_edge_ni,flux_bc
     REAL(DP),SAVE,ALLOCATABLE, DIMENSION(:,:) :: en_bc,bc,bctime_zone
     REAL(DP),SAVE      :: totcur_bc,fix_edge_te_bc,fix_edge_ti_bc,    &
-                          fix_edge_rot_bc,time_bc, vloop_bc          
+                          fix_edge_rot_bc,time_bc, vloop_bc         
  
-    INTEGER(I4B),SAVE  :: nbctim,te_var_edge,ti_var_edge,rot_var_edge, u_vloop_bc
+    INTEGER(I4B),SAVE  :: nbctim,te_var_edge,ti_var_edge,rot_var_edge, u_vloop_bc, &
+                          nb_robin,nb_robin_nj
     INTEGER(I4B),SAVE  :: te_index,ti_index,rot_index,iter_vloop,axis_bc_type
     INTEGER(I4B),SAVE,ALLOCATABLE,DIMENSION(:)   :: ni_index, ni_var_edge,bc_type 
-    REAL(DP),SAVE,ALLOCATABLE,DIMENSION(:)       ::  fix_edge_ni_bc
-    LOGICAL, SAVE      :: set_bc
+    REAL(DP),SAVE,ALLOCATABLE,DIMENSION(:)       :: fix_edge_ni_bc
+    REAL(DP),SAVE,ALLOCATABLE,DIMENSION(:)       :: flux_ub_conserve
+    REAL(DP),SAVE,DIMENSION(itran_max)           :: flux_mult_bc 
+    LOGICAL, SAVE      :: set_bc, robin_bc,conserve_bc_flux
 
 
   CONTAINS
@@ -516,6 +520,122 @@
   RETURN
   END   SUBROUTINE bc_conditions
 
+      SUBROUTINE boundary_flux(flux_ub,ntot,nb,ndep_var)
+!-------------------------------------------------------------------------------
+!   Get the steady state flux at the  boundary point nb for variable
+!   ndep_var. Note that ndep_var = 1.. ntot
+!   flux = [Integral from o to rho(nb) of S*H*rho*drho]/(h(nb)*rho(nb))
+!   NOTE that this routine asumes that  the source term,s, is  loaded
+!   Hence call this only affter call to source is made.
+!------------------------------------------------------------HSJ-------------
+      USE nrtype,                                    ONLY : DP,I4B
+
+      USE common_constants,                          ONLY : zeroc,kevpjou,Proton_Mass
+
+      USE dep_var,                                   ONLY : ene,te,ti,en,angrot
+
+      USE MPI_data,                                  ONLY : myid,master
+
+      USE grid_class,                                ONLY : r,fcap,gcap,hcap,nj,r2capi
+
+      USE source_terms_gcnmp,                        ONLY : s,imp_called,qdelt
+
+      USE error_handler,                             ONLY : lerrno,terminate
+                                                   
+      USE ions_gcnmp,                                ONLY : nimp,nion,z,atw,dzdte
+
+      USE io_gcnmp,                                  ONLY : nlog,ncrt
+
+      USE solcon_gcnmp,                              ONLY : dudt,time_deriv_in_flux,   &
+                                                            angrcple,iangrot
+
+      IMPLICIT NONE
+      INTEGER(I4B) nb,ndep_var,ntot,j,k,l
+      REAL(DP) flux_ub(ntot),stot(nj),td(nj)
+      REAL(DP) fmult,sume,sumi,r2omega,smassden,xmassi
+
+
+          td(:) = zeroc
+          IF(1 .LE. ndep_var .AND. ndep_var .LE. ntot)THEN 
+
+              IF(time_deriv_in_flux)THEN
+                 DO j=1,nj
+                    td(j) = zeroc
+                    IF(ndep_var .LE. nion)THEN     ! density equations
+                       td(:) = dudt(ndep_var,:)    ! em*dudt row ndep_var, diagonal for densities
+                    ELSEIF(ndep_var == nion+1)THEN ! Te equation
+                       DO k=1,ntot                 ! em*dudt row nion+1,col k
+                          IF(k .LE. nion)THEN
+                             td(j) = td(j) + 1.5_DP*te(j)*z(j,k)*dudt(k,j)
+                          ELSEIF( k == nion+1)THEN
+                             sume = ene(j)
+                             DO l=1,nion
+                                sume = sume + en(j,l)*te(j)*dzdte(j,l)
+                             ENDDO
+                             td(j) = td(j) + 1.5_DP*sume*dudt(k,j)
+                          ENDIF ! no contribution if k > nion +1
+                       ENDDO
+                    ELSEIF(ndep_var == nion+2)THEN   ! TI equation
+                       fmult   = angrcple*angrot(j)*kevpjou*0.5_DP*iangrot
+                       r2omega = angrot(j)*r2capi(j)
+                       DO k=1,ntot                   ! em*dudt row nion+1,col k
+                          IF(k .LE. nion)THEN
+                             td(j) = td(j) + (1.5_DP*ti(j)+fmult*r2omega*atw(k)*Proton_Mass)*dudt(k,j)
+                          ELSEIF(k == nion+1)THEN
+                             td(j) = zeroc
+                          ELSEIF( k == nion+2)THEN
+                             sumi = zeroc
+                             DO l=1,nion
+                                sumi = sumi + en(j,l)
+                             ENDDO
+                             td(j) = td(j) + 1.5_DP*sumi*dudt(k,j)
+                          ELSEIF( k == nion +3)THEN
+                             td(j) = zeroc
+                          ELSEIF( k == nion +4)THEN
+                             smassden = 0.0_DP
+                             DO l=1,ntot-4
+                                xmassi   = atw(l)*Proton_mass     
+                                smassden = smassden+xmassi*en(j,l)
+                                td(j)    = td(j) + r2omega*xmassi*dudt(l,j)
+                             ENDDO
+                             td(j)    = td(j) + smassden*r2omega*kevpjou*r2capi(j) *dudt(k,j)
+                          ENDIF
+                       ENDDO
+
+                    ELSEIF(ndep_var == nion+3 .AND. j .GT. 1 )THEN  ! rbp equation
+                          td(j) = (1.0_DP / (fcap(j) * gcap(j) * (hcap(j) * r(j))**2 ))*dudt(ndep_var,j)
+                    ELSEIF(ndep_var == nion+4)THEN
+                          smassden = 0.0_DP
+                          td(j) = zeroc
+                          DO k=1,ntot-4
+                             xmassi   = atw(k)*Proton_mass     
+                             smassden = smassden+xmassi*en(j,k)
+                             td(j)    = td(j) + r2omega*xmassi*dudt(k,j)
+                          ENDDO
+                             td(j)    = td(j) + smassden*r2capi(j) *dudt(ndep_var,j)
+                   ENDIF
+                 ENDDO  ! loop over grid points 
+              ENDIF     ! time_deriv_in_flux
+#ifndef NFREYA
+              CALL impsrc   ! load qdelt if not loaded 
+#endif
+              stot(:) = s(ndep_var,:) - td(:)  ! td == 0 if time_deriv_in_flux = false
+              IF(ndep_var == nion+1)stot(:) = stot(:) -qdelt(:) 
+              IF(ndep_var == nion+2)stot(:) = stot(:) +qdelt(:)              
+              CALL trapv (r,stot,hcap, nb, flux_ub(ndep_var))   ! utils .F90
+              flux_ub(ndep_var) = flux_ub(ndep_var)/(hcap(nb)*r(nb))
+write(173,FMT='("flux_ub =",x,1pe12.2)')flux_ub(ndep_var)
+           ELSE
+              IF(myid == master)WRITE(ncrt,FMT='("ERROR in sub ss_boundary_flux")')
+              lerrno = 69
+              CALL terminate(lerrno,nlog)
+           ENDIF
+
+        RETURN
+
+      END SUBROUTINE boundary_flux
+
+
 
 
 
@@ -671,7 +791,7 @@
 ! ----------------------------------------------------------------------
 ! --- check to make sure boundary conditions are set properly
 ! --- IF there is a file associated with nlog write the error
-! --- to he file, otherwise write it to ncrt
+! --- to the file, otherwise write it to ncrt
 ! ------------------------------------------------------------------ HSJ
 !
       USE nrtype,                                 ONLY : DP,I4B

@@ -226,14 +226,7 @@ c
       USE etc
       USE cer
       implicit  integer (i-n), real*8 (a-h, o-z)
-c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray205.f,v 1.33 2010/07/30 16:40:07 stjohn Exp $"/
 
-c      include 'netcdf.inc'   ! from the netCDF package..
-c                            ..this must be symlinked to local directory
 c
 c     F90 automatic (temporary) arrays:
       dimension  aspline(kpsi), bspline(kpsi), cspline(kpsi),
@@ -242,9 +235,6 @@ c     F90 automatic (temporary) arrays:
      .           tmpdata(kpsi)
       logical    monotonic
       character  starflag*2, title*39, headerline*132
-c
-      integer    LENGTH
-      external   LENGTH
 c
       integer    rcode                                ! error code
       integer    dim_njtime(2), dim_plasbdrytime(2)   ! variable shape
@@ -292,8 +282,8 @@ c                                                         .. define mode
       else                        ! READ from existing file
         niterdb = NCOPN (iterdbfilename, NCNOWRIT, rcode)
         if (rcode .ne. 0) go to 3 ! no error, continue
-    2   write  (ncrt, 4)  iterdbfilename(1:LENGTH(iterdbfilename))
-        write  (nout, 4)  iterdbfilename(1:LENGTH(iterdbfilename))
+    2   write  (ncrt, 4)  TRIM(iterdbfilename)
+        write  (nout, 4)  TRIM(iterdbfilename)
     4   format (                                                      /
      .      ' ERROR: subroutine ITER_DBASE1 has encountered an error' /
      .      '        the ITER database file "', a, '" cannot be opened')

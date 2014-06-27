@@ -1,0 +1,284 @@
+# Make directives lohan6, venus :
+# compile with pgf95,ifort:
+# FORT can be overwritten by command line argument:
+# eg gmake FORT=ifort
+## FORT = pgf90 #Not a valid option
+FORT = ifort
+FORT = pgf95  
+#The following is supposed to supress unresolved references: 
+LINK_orig = -Wl,-noinhibit-exec -Wl,-Map,mapfilename   
+MACHINEOK = 1
+MACHINE = venus
+LIBS      = $(ONETWO)/onetwo_libs
+NUBEAM12  = nubeam_12.f
+NUBEAM_12_BUILD = TRUE
+UFILE12   = ufiles_12.f90
+UBUILD    = TRUE
+MAKE1     = make.includes
+MAKE2     = make.objects
+DATA_LOC  = /p/linux/onetwo
+MDSPLUS_LIB = /f/mdsplus/linux/rpm_mdsplus
+# MPIBASE = /export/mvapich2-1.2p1_open-fabric
+MPIBASE  = /export/mvapich2-1.4rc1_open-fabric
+# ACMLBASE = /usr/local/math_libs/acml
+ACMLBASE  = /c/source/PGI/pgi/linux86-64/9.0-1/lib
+#NOTE: acml lib has lapack,blas,plus other routines:  
+ifeq ($(strip $(FORT)),pgf96)
+  # FC_NOMPI   = /c/source/PGI/pgi/linux86-64/8.0-2/bin/pgf95
+  # CC_NOMPI   = /c/source/PGI/pgi/linux86-64/8.0-2/bin/pgCC
+  # CXX_NOMPI  = /c/source/PGI/pgi/linux86-64/8.0-2/bin/pgcc
+  FC_NOMPI    = /c/source/PGI/pgi/linux86-64//9.0-1/bin/pgf95
+  CC_NOMPI    = /c/source/PGI/pgi/linux86-64//9.0-1/bin/pgCC
+  CXX_NOMPI   = /c/source/PGI/pgi/linux86-64//9.0-1/bin/pgcc
+  MPICHDIR    = $(MPIBASE)/pgi-8.0-2/
+  MPI_CC      = $(MPICHDIR)/bin/mpicc_pgcc
+  DEBUG       =  -g -check -fpe0 
+  LAPACKDIR = $(ACMLBASE)
+  CFLG = pgf95
+  #staticlink because runtime libs 
+  #not distributable:
+  #LINK = -lmpi -L/opt/mpich/ch-p4/lib/ -lmpe
+  OPTIMIZE  = -O2
+  AMD64 = -tp=k8-64  -Mcache_align -DIS_64BIT -O3 -fast -Mvect=sse -Mscalarsse 
+  #MPI_INC = /opt/pgi/linux86-64/6.2/mpi/mpich/include/f90base
+  SUPERLU_INC = -I/usr/local/math_libs/superlu/SuperLU_DIST_2.1/pgi/include/
+  SUPERLU_INC_C = -I/usr/local/math_libs/superlu/SuperLU_DIST_2.1/pgi/include/
+  SUPERLU_LIB = /usr/local/math_libs/superlu/SuperLU_DIST_2.1/pgi/lib/libsuperlu_dist_2.1.a
+  SPLINELIB = /p/linux/tools/lib/splinelib_pgf_64.a
+
+  #this builds 6 4bit  onetwo,links to 64 bit libs:
+  #MODULES  = /p/linux/nubeam/jan2006/pgf90_6.0/ntcc/mod
+  #MODULES   = /p/linux/nubeam/jan2006/pgf90_6.1_64/ntcc/mod
+  MODULES   = ./
+  COMP      = /c/source/PGI/pgi/linux86-64/8.0-2/bin/pgf95
+  PGCC      = /c/source/PGI/pgi/linux86-64/8.0-2/bin/pgcc
+  DEBUG     = -g 
+  SPECIAL   = -Msave -byteswapio #-r8 
+  LAPACK    = $(LAPACKDIR)/libacml.a
+  FTN90LIB =  /usr/pgi/linux86-64/7.0-6/lib/libpgc.a \
+  /usr/pgi/linux86-64/7.0-6/lib/libpgftnrtl.a \
+  /usr/pgi/linux86-64/7.0-6/lib/libpgthread.a \
+  /usr/pgi/linux86-64/7.0-6/lib/libpgmp.a
+  FTN90LIB =  /c/source/PGI/pgi/linux86-64/9.0-1/lib/libpgc.a \
+  /c/source/PGI/pgi/linux86-64//9.0-1/lib/libpgftnrtl.a \
+  /c/source/PGI/pgi/linux86-64//9.0-1/lib/libpgthread.a \
+  /c/source/PGI/pgi/linux86-64//9.0-1/lib/libpgmp.a
+
+  #using the FTN990 lib above causes undefined __syscall_error for example
+  FTN90LIB      = 
+  CFLG = 
+  #OPTIMIZE      = -fast
+  OPTIMIZE      = -O3
+  #NETCDF_LIB   = /p/linux/tools/netcdf-3.6.2/64/pgf7.0-6/lib/libnetcdf.a
+  #NETCDF_INC   = /p/linux/tools/netcdf-3.6.2/64/pgf7.0-6/include/
+  #link to current version of netcdf:
+  NETCDF_DIR    = /usr/local/netcdf_pgf95
+  NETCDF_LIB    = $(NETCDF_DIR)/lib/libnetcdf.a $(NETCDF_DIR)/lib/libnetcdff.a
+  NETCDF_INC    = $(NETCDF_DIR)/include/
+  #UFILE_LIBS   = /p/linux/nubeam/jan2006/pgf90_6.1_64/ntcc/lib
+  UFILE_LIBS    = /usc-data/p2/linux/onetwo/nubeam_12_build/LINUX/lib
+  TSPLINE_LIB   = /p/linux/tools/lib
+  SPLINE_LIB    = splinelib_pgf_64.a
+  #NUBEAM_LIBS   = \
+  #/p/linux/nubeam/jan2006/pgf90_7.0-6_64/ntcc/lib
+  CPPLF95LIB    =/usr/lib/gcc/x86_64-redhat-linux/4.0.2/libstdc++.a\
+  /usr/lib/gcc/x86_64-redhat-linux/4.0.2/libgcc.a \
+  /usr/lib/gcc/x86_64-redhat-linux/4.0.2/libgcc_s.so 
+  GCCLIB        =  /usr/lib64/libstdc++.so.6.0.3
+  GCCLIB        = 
+  ifdef   USEMPI # need to fix this:
+    # compiler specs, for Portland Group Compiler:
+    FC= /usr/pgi/linux86/7.0-6/bin/mpif90  #/usr/local/mpi/bin/mpif90 
+    CXX= /usr/pgi/linux86/7.0-6/bin/mpif90 # /usr/local/mpi/bin/mpicc 
+    INC= . #/usr/local/mpi/include
+  endif
+endif
+ifeq ($(strip $(FORT)),pgf95)
+  # FC_NOMPI    = /c/source/PGI/pgi/linux86-64/8.0-2/bin/pgf95
+  # CC_NOMPI    = /c/source/PGI/pgi/linux86-64/8.0-2/bin/pgCC
+  # CXX_NOMPI   = /c/source/PGI/pgi/linux86-64/8.0-2/bin/pgcc
+  # FC_NOMPI    = /c/source/PGI/pgi/linux86-64/11.6/bin/pgf95
+  # CC_NOMPI    = /c/source/PGI/pgi/linux86-64/11.6/bin/pgCC
+  # CXX_NOMPI   = /c/source/PGI/pgi/linux86-64/11.6/bin/pgcc
+  # FC_NOMPI     = /opt/pgi/linux86-64/11.6/bin/pgf95
+  # CC_NOMPI     = /opt/pgi/linux86-64/11.6/bin/pgCC
+  # CXX_NOMPI     = /opt/pgi/linux86-64/11.6/bin/pgcc
+
+  FC_NOMPI     = /opt/pgi/linux86-64/11.10/bin/pgf95
+  CC_NOMPI     = /opt/pgi/linux86-64/11.10/bin/pgCC
+  CXX_NOMPI    = /opt/pgi/linux86-64/11.10/bin/pgcc
+  MPICHDIR     = $(MPIBASE)/pgi-8.0-2/
+  MPI_CC       = $(MPICHDIR)/bin/mpicc_pgcc
+  DEBUG        =  -g -check -fpe0 
+  LAPACKDIR = $(ACMLBASE)
+  CFLG = pgf95
+  #staticlink because runtime libs 
+  #not distributable:
+  #LINK = -lmpi -L/opt/mpich/ch-p4/lib/ -lmpe
+  OPTIMIZE  = -O2
+  AMD64 = -tp=k8-64  -Mcache_align -DIS_64BIT -O3 -fast -Mvect=sse -Mscalarsse 
+  #MPI_INC = /opt/pgi/linux86-64/6.2/mpi/mpich/include/f90base
+  SUPERLU_INC = -I/usr/local/math_libs/superlu/SuperLU_DIST_2.1/pgi/include/
+  SUPERLU_INC_C = -I/usr/local/math_libs/superlu/SuperLU_DIST_2.1/pgi/include/
+  SUPERLU_LIB = /usr/local/math_libs/superlu/SuperLU_DIST_2.1/pgi/lib/libsuperlu_dist_2.1.a
+  SPLINELIB = /p/linux/tools/lib/splinelib_pgf_64.a
+
+  #this builds 6 4bit  onetwo,links to 64 bit libs:
+  MODULES   = ./
+  PGCC      = /opt/pgi/linux86-64/11.10/bin/pgcc 
+  DEBUG     = -g 
+  SPECIAL   = -Msave -byteswapio #-r8 
+  LAPACK    = $(LAPACKDIR)/libacml.a
+  FTN90LIB =  /usr/pgi/linux86-64/7.0-6/lib/libpgc.a \
+  /usr/pgi/linux86-64/7.0-6/lib/libpgftnrtl.a \
+  /usr/pgi/linux86-64/7.0-6/lib/libpgthread.a \
+  /usr/pgi/linux86-64/7.0-6/lib/libpgmp.a
+  FTN90LIB =  /c/source/PGI/pgi/linux86-64/11.6/lib/libpgc.a \
+  /c/source/PGI/pgi/linux86-64//11.6/lib/libpgftnrtl.a \
+  /c/source/PGI/pgi/linux86-64//11.6/lib/libpgthread.a \
+  /c/source/PGI/pgi/linux86-64//11.6/lib/libpgmp.a
+
+  #using the FTN990 lib above causes undefined __syscall_error for example
+  FTN90LIB      = 
+  CFLG = 
+  #OPTIMIZE      = -fast
+  OPTIMIZE      = -O3
+  #link to current version of netcdf:
+  NETCDF_DIR    = /c/source/netcdf/netcdf-4.1.3-64-pgf90.11.10
+  NETCDF_LIB    = $(NETCDF_DIR)/lib/libnetcdf.a  $(NETCDF_DIR)/lib/libnetcdff.a
+  NETCDF_LIB    = -L$(NETCDF_DIR)/lib -lnetcdff -lnetcdf
+  NETCDF_INC    = $(NETCDF_DIR)/include/
+  #UFILE_LIBS   = /p/linux/nubeam/jan2006/pgf90_6.1_64/ntcc/lib
+  UFILE_LIBS    = /usc-data/p2/linux/onetwo/nubeam_12_build/LINUX/lib
+  TSPLINE_LIB   = /p/linux/tools/lib
+  SPLINE_LIB    = splinelib_pgf_64.a
+  #NUBEAM_LIBS   = \
+  #/p/linux/nubeam/jan2006/pgf90_7.0-6_64/ntcc/lib
+  CPPLF95LIB    =/usr/lib/gcc/x86_64-redhat-linux/4.0.2/libstdc++.a\
+  /usr/lib/gcc/x86_64-redhat-linux/4.0.2/libgcc.a \
+  /usr/lib/gcc/x86_64-redhat-linux/4.0.2/libgcc_s.so 
+  GCCLIB        = 
+  ifdef   USEMPI # need to fix this:
+    # compiler specs, for Portland Group Compiler:
+    FC= /usr/pgi/linux86/7.0-6/bin/mpif90  #/usr/local/mpi/bin/mpif90 
+    CXX= /usr/pgi/linux86/7.0-6/bin/mpif90 # /usr/local/mpi/bin/mpicc 
+    INC= . #/usr/local/mpi/include
+  endif
+
+  UFILE_LIBRARIES  = $(UFILE_LIBS)/libuflib.a \
+  $(UFILE_LIBS)/libufhdf.a \
+  $(UFILE_LIBS)/libmdstransp.a \
+  $(UFILE_LIBS)/libsgdummy.a \
+  $(UFILE_LIBS)/libvaxonly.a \
+#  $(UFILE_LIBS)/portlib.a \
+  $(UFILE_LIBS)/libmds_sub.a \
+  $(UFILE_LIBS)/libgeneric_dummy.a 
+  #NOTE libgeneric_dummy.a is built by nubeam in .../generic_dummy directory
+  #the link can be avoided  by setting environment before nubeam is built:
+  #setenv LOADER_TRAILER '-L/usr/local/netcdf_intel/lib/ -lnetcdf'
+   UFILE_LIBRARIES  = $(UFILE_LIBS)/libuflib.a         \
+  $(UFILE_LIBS)/libufhdf.a        \
+  $(UFILE_LIBS)/libmdstransp.a    \
+  $(UFILE_LIBS)/libvaxonly.a      \
+  $(UFILE_LIBS)/libportlib.a      \
+  $(UFILE_LIBS)/libmds_sub.a      \
+  /f/mdsplus/linux64/mdsplus/lib/libMdsLib_client.a \
+  /f/mdsplus/linux64/mdsplus/lib/libMdsIpShr.a \
+  /f/mdsplus/linux64/mdsplus/lib/libTdiShr.a \
+  $(UFILE_LIBS)/libgeneric_dummy.a 
+#  $(UFILE_LIBS)/libhdf_dummy.a 
+
+  UFILE_LIBS =  /p/linux/nubeam/201405/ntcc/lib
+  UFILE_LIBRARIES  = $(UFILE_LIBS)/libuflib.a         \
+  $(UFILE_LIBS)/libufhdf.a        \
+  $(UFILE_LIBS)/libmdstransp.a    \
+  $(UFILE_LIBS)/libvaxonly.a      \
+  $(UFILE_LIBS)/libportlib.a      \
+  $(UFILE_LIBS)/libmds_sub.a      \
+  $(UFILE_LIBS)/libmdstransp.a /f/mdsplus/linux64/lib64/libMdsLib.so
+ 
+endif
+
+ifeq ($(strip $(FORT)),ifort) 
+  MKLPATH    = /opt/intel/Compiler/11.1/038/mkl/lib/em64t
+  MPIBASE    = /export/mvapich2-1.2p1_open-fabric
+  FC_NOMPI   = /opt/intel/Compiler/11.1/038/bin/intel64/ifort
+  COMP       = $(FC_NOMPI)
+  CC_NOMPI   = /usr/bin/g++
+  CXX_NOMPI  = /usr/bin/gcc
+  MPICHDIR   = $(MPIBASE)/intel-11.0/
+  MPI_CC     = $(MPICHDIR)/bin/mpicc
+  AMD64      = 
+  DEBUG      =  -g -check all  -fpe:0  -O0  -traceback
+  MODULES    = ./
+  #here lapack needs libg2c
+  PGCC  = gcc
+  CFLG = ifort
+  #staticlink because runtime libs 
+  #not distributable:
+  LINK  =  -L$(MKLPATH)/ -lmkl_solver_lp64_sequential  -Wl,--start-group\
+  -lmkl_intel_lp64 -lmkl_sequential\
+  -lmkl_core  -Wl,--end-group -lpthread
+
+  OPTIMIZE    = -O2 
+  NETCDF_DIR  = /usr/local/netcdf_intel
+  NETCDF_LIB  = $(NETCDF_DIR)/lib/libnetcdf.a
+  NETCDF_INC  = $(NETCDF_DIR)/include/
+  SUPERLU_INC = -I/usr/local/math_libs/superlu/SuperLU_DIST_2.1/intel/include/
+  SUPERLU_INC_C = -I/usr/local/math_libs/superlu/SuperLU_DIST_2.1/intel/include/
+  SUPERLU_LIB = /usr/local/math_libs/superlu/SuperLU_DIST_2.1/intel/lib/libsuperlu_dist_2.1.a
+  SPLINE_LIB = splinelib_ifort_64.a
+  TSPLINE_LIB   = /p/linux/tools/lib
+  CPPLF95LIB    =/usr/lib/gcc/x86_64-redhat-linux/4.0.2/libstdc++.a\
+  /usr/lib/gcc/x86_64-redhat-linux/4.0.2/libgcc.a \
+  /usr/lib/gcc/x86_64-redhat-linux/4.0.2/libgcc_s.so 
+  GCCLIB        =  /usr/lib64/libstdc++.so.6.0.3
+  GCCLIB        = 
+  UFILE_LIBS      =/usr/local/ufiles/ifort/lib/
+  #-------------------------------------------------------------------------------
+  # the following magic was very hard to come by and took me 2 full days to resolve HSJ:
+  UFILE_LIBRARIES  = $(UFILE_LIBS)/libuflib.a         \
+  $(UFILE_LIBS)/libufhdf.a        \
+  $(UFILE_LIBS)/libmdstransp.a    \
+  $(UFILE_LIBS)/libvaxonly.a      \
+  $(UFILE_LIBS)/libportlib.a      \
+  $(UFILE_LIBS)/libmds_sub.a      \
+  /f/mdsplus/linux64/mdsplus/lib/libMdsLib_client.a \
+  /f/mdsplus/linux64/mdsplus/lib/libMdsIpShr.a \
+  /f/mdsplus/linux64/mdsplus/lib/libTdiShr.a \
+  $(UFILE_LIBS)/libhdf_dummy.a  
+  #-------------------------------------------------------------------------------
+  ifdef   USEMPI
+    FC  = $(MPICHDIR)/bin/mpif90
+    CXX = $(MPICHDIR)/bin/mpicc
+    INC = ./
+  endif
+endif 
+
+SPECIAL_nubeam = $(SPECIAL)
+MSG = 
+ifndef  USEMPI
+  FC = $(FC_NOMPI)
+  CXX = gcc 
+  INC = ./
+endif 
+
+ifdef  PARALLEL_12
+  INC= /usr/pgi/linux86-64/7.0-6/include/f90base
+endif
+ifeq ($(OPT),debug)
+  OPTION = $(DEBUG)
+  DBG = _debug
+else
+  OPTION = $(OPTIMIZE)
+  DBG= 
+endif
+COMPILE   = $(FC) -I$(INC) $(OMP) $(PROF)\
+  $(AUTP) -c $(OPTION) $(LISTING) $(SPECIAL)
+COMPILE_nubeam   = $(FC) -I$(INC)   $(PROF)\
+  $(AUTP)  -c  $(OPTION) $(LISTING) $(SPECIAL_nubeam)
+COMPILE_ntcc = $(FC) -I$(INC)  $(OMP) $(PROF) \
+  $(AUTP)   -c  $(OPTION) $(LISTING) $(SPECIAL_ntcc)
+
+LINK = $(LINK_orig) -Wl,-rpath,$(NETCDF_DIR)/lib:$(LD_LIBRARY_PATH)
+COMP_MOD =./mifort

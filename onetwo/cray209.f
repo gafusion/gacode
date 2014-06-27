@@ -23,11 +23,6 @@ c
       USE etc
       implicit  integer (i-n), real*8 (a-h, o-z)
 c
-      character rcs_id*63
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray209.f,v 1.83 2013/05/08 00:45:33 stjohn Exp $"/
-c
       dimension dpdpsi(nj),psir(nj),press(nj)
       real *8 , dimension(:),allocatable :: dpressdrho 
 c
@@ -556,7 +551,6 @@ c      USE  io,                        ONLY : ioftn, iopntr, nunits
 c      include 'small.i'
 
 c
-      external  LENGTH
       logical   opened
       integer   pointer
       character record*132
@@ -681,7 +675,8 @@ c
         drcapdt(j) = drcapdt(j)* cap_mult
 c
         prep       = rcap0i(j)+drcapidt(j)*dtime
-        drcapidt(j) = ((1.0+derwght)*rcapi(j)-derwght*prep-rcap0i(j))/dtime
+        drcapidt(j) = ((1.0+derwght)*rcapi(j)-derwght*prep-rcap0i(j))/
+     .                                              dtime !Fixed for too many columns 2/27/2014 SPS
         drcapidt(j) = drcapidt(j)* cap_mult
 c
         prep       = r2capi0(j)+dr2idt(j)*dtime
@@ -760,7 +755,7 @@ c      print *, 'prepar, rewinding units'
           nchars = 0
           do while (nchars .lt. iopntr(i))
             read (iunit, '(a)')  record
-            nchars = nchars + LENGTH (record)
+            nchars = nchars + LEN_TRIM (record)
           end do
         end if
 ****    call POSTEXT (iunit, iopntr(i), icount)
@@ -1462,13 +1457,12 @@ c
       equivalence                                  (bpcontr(1), zdum(1))
 c
       logical    eqtype
-      integer    LENGTH, asize
+      integer    length, asize
       character  eqdsrce*13, tempname*64
-      external   LENGTH
 c
       imslmd = 'reqdsk'
 c
-      asize = LENGTH (eqdskin)          ! number of characters in eqdskin
+      asize = LEN_TRIM(eqdskin)          ! number of characters in eqdskin
       write (tempname, '(a)') eqdskin(1:asize)
       call myopen (nrguess, tempname, 2, length, iread)
       if (iread .ne. 1) then

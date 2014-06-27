@@ -6,7 +6,8 @@
 
     USE nrtype,          ONLY : DP,I4B,I2B
 
-    USE bc_values_gcnmp, ONLY : u_vloop_bc,axis_bc_type
+    USE bc_values_gcnmp, ONLY : u_vloop_bc,axis_bc_type,robin_bc, &
+                                conserve_bc_flux,flux_mult_bc
 
     USE common_constants,ONLY : izero,zeroc
 
@@ -50,7 +51,8 @@
                                 use_input_confinement,              &
                                 frz_tglf,frz_glf,frz_mmm,           &
                                 use_frz_chi,                        &
-                                fixed_profile_multiplier
+                                fixed_profile_multiplier,           &
+                                time_deriv_in_flux
 
     USE  neo_tport,            ONLY : jneo,neocl_mult,use_forcebal_chie, &
                                       use_forcebal_chii
@@ -78,6 +80,10 @@
     USE turb_tport,            ONLY : wturbd,wturbv,gmax_crit
 
     USE Plasma_properties,     ONLY : mhd_dat
+
+    USE ions_gcnmp,            ONLY : nion
+
+    USE dep_var,               ONLY : dp4
 
     IMPLICIT NONE
  
@@ -249,6 +255,14 @@
         dbg_print                          =  .FALSE.
 
         fixt_filename = 'NONE'
+       
+        robin_bc                           = .FALSE.
+
+        conserve_bc_flux                   = .FALSE.
+
+        time_deriv_in_flux                 = .FALSE.
+
+        flux_mult_bc(:)                    = 1._DP
 
     CALL set_forcebal_default_switches   ! turns off call to forcebal
 

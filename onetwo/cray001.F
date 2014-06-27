@@ -31,10 +31,6 @@ c
       implicit none
 c
       integer*4 mpiIerror,myid,ierr,omp_get_thread_num
-      character rcs_id*63 
-      save      rcs_id
-      data      rcs_id /
-     ."$Id: cray001.F,v 1.18 2013/07/19 16:55:04 stjohn Exp $"/
 
 
       include 'quit.i'
@@ -85,6 +81,31 @@ D      call MPI_Barrier( MPI_COMM_WORLD,ierr)
        versid = 'Onetwo V5.46'  ! update for venus,star,P_Nfreya
        versid = 'Onetwo V5.47'  ! add timing routines for perfomance study 5/7/13  
        versid ='Onetwo  V5.48'  ! removed dbg calls
+       versid ='Onetwo  V5.49'  ! added he3 fusion calcs 8/29/13 HSJ
+       versid ='Onetwo  V5.50'  ! added VIDAR as running host 11/4/13 
+                                ! robin bc not working yet in this verson 12/12/13
+                                !   HSJ
+                                ! modified divergence of ion/electron conduction 
+                                ! output to iterdb/statefile to match outone/trplt
+                                !  11 Feb 2014 SPS
+       versid ='Onetwo  V5.51'
+       versid ='Onetwo  V5.52'  ! Added extra calls to fluxx after sources are
+                                ! updated so that convective fluxes are correct
+                                !  6 Mar 2014 SPS
+                                !  
+       versid ='Onetwo  V5.53'  ! Fixed bug where angular momentum convective 
+                                ! flux was not being reported correctly to the 
+                                ! statefile
+                                ! Also fixed angular momentum flux long_names
+                                ! in the statefile
+                                !  13 Mar 2014 SPS
+                                !  
+       versid ='Onetwo  V5.54'  ! Made changes to ext_prog_info to allow
+                                ! arbitrary hostname with venus paths
+                                ! as defaults.  This is to permit the 
+                                ! new 'sun' cluster for between shot 
+                                ! autoONETWO.
+
 !$OMP parallel
 !$      print *,"OMP  thread number =",omp_get_thread_num()
 !$OMP end parallel
