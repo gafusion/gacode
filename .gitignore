@@ -18,6 +18,7 @@ le3/.VERSION
 
 # Executables
 gato/gato
+glf23/src/glf23
 gks/src/gks_analysis
 gyro/src/gyro
 neo/src/neo
