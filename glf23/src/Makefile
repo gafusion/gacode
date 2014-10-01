@@ -40,7 +40,7 @@ $(LLIB).a: $(OBJECTS)
 	$(F77) $(FFLAGS)  -c $<
 
 .f.o :
-	$(F77) $(FFLAGS) -c $<
+	$(FC) $(FFLAGS) -c $<
 
 clean:
 	rm -f *.o *.lst $(LLIB).a glf23
