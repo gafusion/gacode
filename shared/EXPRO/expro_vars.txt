@@ -1,0 +1,469 @@
+----
+Variable: EXPRO_error
+Description: 
+Units: ?
+Dimensions: 0
+----
+Variable: EXPRO_n_ion_max
+Description: 
+Units: ?
+Dimensions: 0
+----
+Variable: EXPRO_n_ion
+Description: 
+Units: ?
+Dimensions: 0
+----
+Variable: EXPRO_n_exp
+Description: 
+Units: ?
+Dimensions: 0
+----
+Variable: EXPRO_b_ref
+Description: 
+Units: ?
+Dimensions: 0
+----
+Variable: EXPRO_arho
+Description: 
+Units: ?
+Dimensions: 0
+----
+Variable: EXPRO_null_tag
+Description: 
+Units: ?
+Dimensions: 0
+----
+Variable: EXPRO_rho
+Description: 
+Units: -
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_rmin
+Description: 
+Units: m
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_rmaj
+Description: 
+Units: m
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_q
+Description: 
+Units: -
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_kappa
+Description: 
+Units: -
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_delta
+Description: 
+Units: -
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_z_eff
+Description: 
+Units: -
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_w0
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_flow_mom
+Description: 
+Units: n-m
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_sbcx
+Description: 
+Units: /m^3/s
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_sbeame
+Description: 
+Units: /m^3/s
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_sscxl
+Description: 
+Units: /m^3/s
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_pow_e
+Description: 
+Units: MW
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_pow_i
+Description: 
+Units: MW
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_pow_ei
+Description: 
+Units: MW
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_zeta
+Description: 
+Units: -
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_flow_beam
+Description: 
+Units: kw/ev
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_flow_wall
+Description: 
+Units: kw/ev
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_zmag
+Description: 
+Units: m
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_ptot
+Description: 
+Units: pa
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_polflux
+Description: 
+Units: wb/rad
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_pow_e_fus
+Description: 
+Units: MW
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_pow_i_fus
+Description: 
+Units: MW
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_pow_e_sync
+Description: 
+Units: MW
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_pow_e_brem
+Description: 
+Units: MW
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_pow_e_line
+Description: 
+Units: MW
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_pow_e_aux
+Description: 
+Units: MW
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_pow_i_aux
+Description: 
+Units: MW
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_ne
+Description: 
+Units: 10^19/m^3
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_ni
+Description: 
+Units: 10^19/m^3
+Dimensions: 2
+Dimension 1: rho
+Dimension 2: ions
+----
+Variable: EXPRO_te
+Description: 
+Units: keV
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_ti
+Description: 
+Units: keV
+Dimensions: 2
+Dimension 1: rho
+Dimension 2: ions
+----
+Variable: EXPRO_vtor
+Description: 
+Units: m/s
+Dimensions: 2
+Dimension 1: rho
+Dimension 2: ions
+----
+Variable: EXPRO_vpol
+Description: 
+Units: m/s
+Dimensions: 2
+Dimension 1: rho
+Dimension 2: ions
+----
+Variable: EXPRO_bunit
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_s
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_drmaj
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_dzmag
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_sdelta
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_skappa
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_szeta
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_dlnnedr
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_dlntedr
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_dlnnidr
+Description: 
+Units: ?
+Dimensions: 2
+Dimension 1: rho
+Dimension 2: ions
+----
+Variable: EXPRO_dlntidr
+Description: 
+Units: ?
+Dimensions: 2
+Dimension 1: rho
+Dimension 2: ions
+----
+Variable: EXPRO_dlnptotdr
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_w0p
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_vol
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_volp
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_cs
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_rhos
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_ni_new
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_dlnnidr_new
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_grad_r0
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_ave_grad_r
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_drdrho
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_bp0
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_bt0
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_nfourier
+Description: 
+Units: ?
+Dimensions: 0
+----
+Variable: EXPRO_geo
+Description: 
+Units: ?
+Dimensions: 3
+Dimension 1: rho
+Dimension 2: ions
+Dimension 3:?
+----
+Variable: EXPRO_dgeo
+Description: 
+Units: ?
+Dimensions: 3
+Dimension 1: rho
+Dimension 2: ions
+Dimension 3:?
+----
+Variable: EXPRO_gamma_e
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_gamma_p
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_mach
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_thetascale
+Description: 
+Units: ?
+Dimensions: 1
+Dimension 1: rho
+----
+Variable: EXPRO_signb
+Description: 
+Units: ?
+Dimensions: 0
+----
+Variable: EXPRO_signq
+Description: 
+Units: ?
+Dimensions: 0
+----
+Variable: EXPRO_ctrl_quasineutral_flag
+Description: 
+Units: ?
+Dimensions: 0
+----
+Variable: EXPRO_ctrl_n_ion
+Description: 
+Units: ?
+Dimensions: 0
+----
+Variable: EXPRO_ctrl_z
+Description: 
+Units: ?
+Dimensions: 0
+----
+Variable: EXPRO_ctrl_numeq_flag
+Description: 
+Units: ?
+Dimensions: 0
+----
+Variable: EXPRO_ctrl_silent_flag
+Description: 
+Units: ?
+Dimensions: 0
