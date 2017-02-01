@@ -4450,8 +4450,8 @@ c
   200   continue
 c
 c 6.2.1.3 Find the mean discrepancy
-        suminr        = suminr / float(ntht)
-        suminz        = suminz / float(ntht)
+        suminr        = suminr / real(ntht)
+        suminz        = suminz / real(ntht)
 c
 c 6.2.2 Print error message if any discrepancy
 c
@@ -4515,8 +4515,8 @@ c 6.3.1.2 Check the last  ray is on the midplane
   220   continue
 c
 c 6.3.1.3 Find the mean discrepancy
-        sumray1       = sumray1 / float(npsi)
-        sumrayn       = sumrayn / float(npsi)
+        sumray1       = sumray1 / real(npsi)
+        sumrayn       = sumrayn / real(npsi)
 c
 c 6.3.2 Print error message if any discrepancy
 c
@@ -5295,8 +5295,8 @@ c 4.5.4.1 Compute the average of seqrps and seqzps on axis
       seqzaxs     = seqzaxs + seqzps(1,ii)
   200 continue
 c
-      seqraxs     = seqraxs/float(ntht)
-      seqzaxs     = seqzaxs/float(ntht)
+      seqraxs     = seqraxs/real(ntht)
+      seqzaxs     = seqzaxs/real(ntht)
 c
 c 4.5.4.2 Check for discrepancies
       ircnt       = 0
@@ -5501,8 +5501,8 @@ c
   400   continue
 c
 c 7.2.1.3 Find the mean discrepancy
-        suminr          = suminr / float(ntht)
-        suminz          = suminz / float(ntht)
+        suminr          = suminr / real(ntht)
+        suminz          = suminz / real(ntht)
 c
 c 7.2.2 Print error message if any discrepancy
 c
@@ -5567,8 +5567,8 @@ c 7.3.1.2 Check the last  ray is on the midplane
   420   continue
 c
 c 7.3.1.3 Find the mean discrepancy
-        sumray1         = sumray1 / float(npsi)
-        sumrayn         = sumrayn / float(npsi)
+        sumray1         = sumray1 / real(npsi)
+        sumrayn         = sumrayn / real(npsi)
 c
 c 7.3.2 Print error message if any discrepancy
 c
@@ -6335,8 +6335,8 @@ c
       seqzaxs     = seqzaxs + seqzps(1,ii)
   200 continue
 c
-      seqraxs     = seqraxs/float(ntht)
-      seqzaxs     = seqzaxs/float(ntht)
+      seqraxs     = seqraxs/real(ntht)
+      seqzaxs     = seqzaxs/real(ntht)
 c
 c 5.7.2 Check for discrepancies
 c
@@ -6544,8 +6544,8 @@ c
   400   continue
 c
 c 8.2.1.3 Find the mean discrepancy
-        suminr          = suminr / float(ntht)
-        suminz          = suminz / float(ntht)
+        suminr          = suminr / real(ntht)
+        suminz          = suminz / real(ntht)
 c
 c 8.2.2 Print error message if any discrepancy
 c
@@ -6610,8 +6610,8 @@ c 8.3.1.2 Check the last  ray is on the midplane
   420   continue
 c
 c 8.3.1.3 Find the mean discrepancy
-        sumray1         = sumray1 / float(npsi)
-        sumrayn         = sumrayn / float(npsi)
+        sumray1         = sumray1 / real(npsi)
+        sumrayn         = sumrayn / real(npsi)
 c
 c 8.3.2 Print error message if any discrepancy
 c
@@ -7127,7 +7127,7 @@ c
 c 4.2.1.2.1.3 Use natural boundary conditions at the plasma surface but force
 c             a near floating condition at the axis
       elseif(nbcond .gt. +2) then
-        bigval     = abs(float(nbcond))
+        bigval     = abs(real(nbcond))
         bcb(1)     = bigval
         bcb(2)     = bigval*sf2pp
         bcb(3)     = bigval
@@ -7135,7 +7135,7 @@ c             a near floating condition at the axis
 c
 c 4.2.1.2.1.4 Use a floating condition at both ends
       elseif(nbcond .lt.  0) then
-        bigval     = abs(float(nbcond))
+        bigval     = abs(real(nbcond))
         bcb(1)     = bigval
         bcb(2)     = bigval*sf2pp
         bcb(3)     = 0.0
@@ -7170,7 +7170,7 @@ c
 c 4.2.1.2.3.3 Use natural boundary conditions at the plasma surface but force
 c             a near floating condition at the axis
       elseif(nbcond .gt. +2) then
-        bigval     = abs(float(nbcond))
+        bigval     = abs(real(nbcond))
         bcb(1)     = bigval
         bcb(2)     = bigval*sp2pp
         bcb(3)     = bigval
@@ -7178,7 +7178,7 @@ c             a near floating condition at the axis
 c
 c 4.2.1.2.3.4 Use a floating condition at both ends
       elseif(nbcond .lt.  0) then
-        bigval     = abs(float(nbcond))
+        bigval     = abs(real(nbcond))
         bcb(1)     = bigval
         bcb(2)     = bigval*sp2pp
         bcb(3)     = 0.0
@@ -7307,8 +7307,8 @@ c 5.5.1 Compute the average of seqrps and seqzps on axis
       seqzaxs     = seqzaxs + seqzps(1,ii)
   300 continue
 c
-      seqraxs     = seqraxs/float(ntht)
-      seqzaxs     = seqzaxs/float(ntht)
+      seqraxs     = seqraxs/real(ntht)
+      seqzaxs     = seqzaxs/real(ntht)
 c
 c 5.5.2 Check for discrepancies
       ircnt       = 0
@@ -7513,8 +7513,8 @@ c
   500   continue
 c
 c 8.2.1.3 Find the mean discrepancy
-        suminr          = suminr / float(ntht)
-        suminz          = suminz / float(ntht)
+        suminr          = suminr / real(ntht)
+        suminz          = suminz / real(ntht)
 c
 c 8.2.2 Print error message if any discrepancy
 c
@@ -7579,8 +7579,8 @@ c 8.3.1.2 Check the last  ray is on the midplane
   520   continue
 c
 c 8.3.1.3 Find the mean discrepancy
-        sumray1         = sumray1 / float(npsi)
-        sumrayn         = sumrayn / float(npsi)
+        sumray1         = sumray1 / real(npsi)
+        sumrayn         = sumrayn / real(npsi)
 c
 c 8.3.2 Print error message if any discrepancy
 c
@@ -9729,7 +9729,7 @@ c
 c 2.2.1.3 Use natural boundary conditions at the plasma surface but force
 c         a near floating condition at the axis
       elseif(nxtrap .gt. +2) then
-        bigval     = abs(float(nxtrap))
+        bigval     = abs(real(nxtrap))
         bcb(1)     = bigval
         bcb(2)     = bigval*sf2pp
         bcb(3)     = bigval
@@ -9737,7 +9737,7 @@ c         a near floating condition at the axis
 c
 c 2.2.1.4 Use a floating condition at both ends
       elseif(nxtrap .lt.  0) then
-        bigval     = abs(float(nxtrap))
+        bigval     = abs(real(nxtrap))
         bcb(1)     = bigval
         bcb(2)     = bigval*sf2pp
         bcb(3)     = 0.0
@@ -9772,7 +9772,7 @@ c
 c 2.2.2.3 Use natural boundary conditions at the plasma surface but force
 c         a near floating condition at the axis
       elseif(nxtrap .gt. +2) then
-        bigval     = abs(float(nxtrap))
+        bigval     = abs(real(nxtrap))
         bcb(1)     = bigval
         bcb(2)     = bigval*sp2pp
         bcb(3)     = bigval
@@ -9780,7 +9780,7 @@ c         a near floating condition at the axis
 c
 c 2.2.2.4 Use a floating condition at both ends
       elseif(nxtrap .lt.  0) then
-        bigval     = abs(float(nxtrap))
+        bigval     = abs(real(nxtrap))
         bcb(1)     = bigval
         bcb(2)     = bigval*sp2pp
         bcb(3)     = 0.0
@@ -9815,7 +9815,7 @@ c
 c 2.2.3.3 Use natural boundary conditions at the plasma surface but force
 c         a near floating condition at the axis
       elseif(nxtrap .gt. +2) then
-        bigval     = abs(float(nxtrap))
+        bigval     = abs(real(nxtrap))
         bcb(1)     = bigval
         bcb(2)     = bigval*sfp2pp
         bcb(3)     = bigval
@@ -9823,7 +9823,7 @@ c         a near floating condition at the axis
 c
 c 2.2.3.4 Use a floating condition at both ends
       elseif(nxtrap .lt.  0) then
-        bigval     = abs(float(nxtrap))
+        bigval     = abs(real(nxtrap))
         bcb(1)     = bigval
         bcb(2)     = bigval*sfp2pp
         bcb(3)     = 0.0
@@ -9858,7 +9858,7 @@ c
 c 2.2.4.3 Use natural boundary conditions at the plasma surface but force
 c         a near floating condition at the axis
       elseif(nxtrap .gt. +2) then
-        bigval     = abs(float(nxtrap))
+        bigval     = abs(real(nxtrap))
         bcb(1)     = bigval
         bcb(2)     = bigval*spp2pp
         bcb(3)     = bigval
@@ -9866,7 +9866,7 @@ c         a near floating condition at the axis
 c
 c 2.2.4.4 Use a floating condition at both ends
       elseif(nxtrap .lt.  0) then
-        bigval     = abs(float(nxtrap))
+        bigval     = abs(real(nxtrap))
         bcb(1)     = bigval
         bcb(2)     = bigval*spp2pp
         bcb(3)     = 0.0
@@ -10655,7 +10655,7 @@ c
 c
 c 2.2 Set up the poloidal  grid
 c
-      dthchi        = charcmx/float(nthet-1)
+      dthchi        = charcmx/real(nthet-1)
       ntht1         = nthet - 1
       do 100 ii     = 1,ntht1
       thchi(ii)     = (ii-1.0)*dthchi
@@ -10813,7 +10813,7 @@ c
 c 5.3.1.2 Use natural boundary conditions at the plasma surface but force
 c         a near floating condition at the axis
         elseif(nspbc1 .gt. +2) then
-          bigval     = abs(float(nspbc1))
+          bigval     = abs(real(nspbc1))
           bcb(1)     = bigval
           bcb(2)     = bigval*am2pp
           bcb(3)     = bigval
@@ -10821,7 +10821,7 @@ c         a near floating condition at the axis
 c
 c 5.3.1.3 Use a floating condition at both ends
         elseif(nspbc1 .lt.  0) then
-          bigval     = abs(float(nspbc1))
+          bigval     = abs(real(nspbc1))
           bcb(1)     = bigval
           bcb(2)     = bigval*am2pp
           bcb(3)     = 0.0
@@ -10858,7 +10858,7 @@ c
 c 5.4.1.2 Use natural boundary conditions at the plasma surface but force
 c         a near floating condition at the axis
         elseif(nspbc1 .gt. +2) then
-          bigval     = abs(float(nspbc1))
+          bigval     = abs(real(nspbc1))
           bcb(1)     = bigval
           bcb(2)     = bigval*pm2pp
           bcb(3)     = bigval
@@ -10866,7 +10866,7 @@ c         a near floating condition at the axis
 c
 c 5.4.1.3 Use a floating condition at both ends
         elseif(nspbc1 .lt.  0) then
-          bigval     = abs(float(nspbc1))
+          bigval     = abs(real(nspbc1))
           bcb(1)     = bigval
           bcb(2)     = bigval*pm2pp
           bcb(3)     = 0.0
@@ -10903,7 +10903,7 @@ c
 c 5.5.1.2 Use natural boundary conditions at the plasma surface but force
 c         a near floating condition at the axis
         elseif(nspbc1 .gt. +2) then
-          bigval     = abs(float(nspbc1))
+          bigval     = abs(real(nspbc1))
           bcb(1)     = bigval
           bcb(2)     = bigval*hm2pp
           bcb(3)     = bigval
@@ -10911,7 +10911,7 @@ c         a near floating condition at the axis
 c
 c 5.5.1.3 Use a floating condition at both ends
         elseif(nspbc1 .lt.  0) then
-          bigval     = abs(float(nspbc1))
+          bigval     = abs(real(nspbc1))
           bcb(1)     = bigval
           bcb(2)     = bigval*hm2pp
           bcb(3)     = 0.0
@@ -11000,7 +11000,7 @@ c 7.2.2 Check the inboard edge is positive
 c
       if(redge .le. 0.0) then
         rsign        = sign(1.5,redge)
-        nrsign       = ifix(rsign)
+        nrsign       = int(rsign)
         call abortjob
      &        ('setgdpc ', 14,   'inboard redge is non positive       '
      &        ,'ktype   ', ktype,    'nrsign  ', nrsign,   -1)
@@ -11014,7 +11014,7 @@ c 7.3.1 Grid sizing
 c
       ndim1        = npsi
       ndim2        = nthet
-      npgrid       = sqrt(float(ndim1)*float(ndim2))
+      npgrid       = sqrt(real(ndim1)*real(ndim2))
       xdim         = rmmax - redge
       zdim         = zmmax - zmmin
 c
@@ -12503,7 +12503,7 @@ c
 c 3.2.1.1.2.2 Use natural boundary conditions at the plasma surface but force
 c             a near floating condition at the axis
       elseif(nfbcnd .gt. +2) then
-        bigval     = abs(float(nfbcnd))
+        bigval     = abs(real(nfbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*sf2pp
         bcb(3)     = bigval
@@ -12511,7 +12511,7 @@ c             a near floating condition at the axis
 c
 c 3.2.1.1.2.3 Use a floating condition at both ends
       elseif(nfbcnd .lt.  0) then
-        bigval     = abs(float(nfbcnd))
+        bigval     = abs(real(nfbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*sp2pp
         bcb(3)     = 0.0
@@ -12850,7 +12850,7 @@ c
 c 5.2.2.1.3 Use natural boundary conditions at the plasma surface but force
 c           a near floating condition at the axis
       elseif(nsbcnd .gt. +2) then
-        bigval     = abs(float(nsbcnd))
+        bigval     = abs(real(nsbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*sf2pp
         bcb(3)     = bigval
@@ -12858,7 +12858,7 @@ c           a near floating condition at the axis
 c
 c 5.2.2.1.4 Use a floating condition at both ends
       elseif(nsbcnd .lt.  0) then
-        bigval     = abs(float(nsbcnd))
+        bigval     = abs(real(nsbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*sf2pp
         bcb(3)     = 0.0
@@ -12894,7 +12894,7 @@ c
 c 5.2.2.3.3 Use natural boundary conditions at the plasma surface but force
 c           a near floating condition at the axis
       elseif(nsbcnd .gt. +2) then
-        bigval     = abs(float(nsbcnd))
+        bigval     = abs(real(nsbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*sp2pp
         bcb(3)     = bigval
@@ -12902,7 +12902,7 @@ c           a near floating condition at the axis
 c
 c 5.2.2.3.4 Use a floating condition at both ends
       elseif(nsbcnd .lt.  0) then
-        bigval     = abs(float(nsbcnd))
+        bigval     = abs(real(nsbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*sp2pp
         bcb(3)     = 0.0
@@ -12938,7 +12938,7 @@ c
 c 5.2.2.5.3 Use natural boundary conditions at the plasma surface but force
 c           a near floating condition at the axis
       elseif(nsbcnd .gt. +2) then
-        bigval     = abs(float(nsbcnd))
+        bigval     = abs(real(nsbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*sfp2pp
         bcb(3)     = bigval
@@ -12946,7 +12946,7 @@ c           a near floating condition at the axis
 c
 c 5.2.2.5.4 Use a floating condition at both ends
       elseif(nsbcnd .lt.  0) then
-        bigval     = abs(float(nsbcnd))
+        bigval     = abs(real(nsbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*sfp2pp
         bcb(3)     = 0.0
@@ -12982,7 +12982,7 @@ c
 c 5.2.2.7.3 Use natural boundary conditions at the plasma surface but force
 c           a near floating condition at the axis
       elseif(nsbcnd .gt. +2) then
-        bigval     = abs(float(nsbcnd))
+        bigval     = abs(real(nsbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*spp2pp
         bcb(3)     = bigval
@@ -12991,7 +12991,7 @@ c           a near floating condition at the axis
 c
 c 5.2.2.7.4 Use a floating condition at both ends
       elseif(nsbcnd .lt.  0) then
-        bigval     = abs(float(nsbcnd))
+        bigval     = abs(real(nsbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*spp2pp
         bcb(3)     = 0.0
@@ -13027,7 +13027,7 @@ c
 c 5.2.2.9.3 Use natural boundary conditions at the plasma surface but force
 c           a near floating condition at the axis
       elseif(nsbcnd .gt. +2) then
-        bigval     = abs(float(nsbcnd))
+        bigval     = abs(real(nsbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*sdn2pp
         bcb(3)     = bigval
@@ -13035,7 +13035,7 @@ c           a near floating condition at the axis
 c
 c 5.2.2.9.4 Use a floating condition at both ends
       elseif(nsbcnd .lt.  0) then
-        bigval     = abs(float(nsbcnd))
+        bigval     = abs(real(nsbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*sdn2pp
         bcb(3)     = 0.0
@@ -13071,7 +13071,7 @@ c
 c 5.2.2.11.3 Use natural boundary conditions at the plasma surface but force
 c            a near floating condition at the axis
       elseif(nsbcnd .gt. +2) then
-        bigval     = abs(float(nsbcnd))
+        bigval     = abs(real(nsbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*spf2pp
         bcb(3)     = bigval
@@ -13079,7 +13079,7 @@ c            a near floating condition at the axis
 c
 c 5.2.2.11.4 Use a floating condition at both ends
       elseif(nsbcnd .lt.  0) then
-        bigval     = abs(float(nsbcnd))
+        bigval     = abs(real(nsbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*spf2pp
         bcb(3)     = 0.0
@@ -13096,7 +13096,7 @@ c 5.2.3 Set up the new psi array
 c
       zpsmax        = psimax1
       zpslim        = psilim1 + delpsir1*dpslv
-      zdpsin        = (zpslim - psimax1)/float(nprofl-1)
+      zdpsin        = (zpslim - psimax1)/real(nprofl-1)
 c
       do 400 jv     = 1,nprofl-1
       zpsin(jv)     = psimsh(jv) + (psimsh(jv)-psimax1)*dpslv
@@ -14330,7 +14330,7 @@ c
 c 1.2.2.1.3 Use natural boundary conditions at the plasma surface but force
 c           a near floating condition at the axis
       elseif(nsbcnd .gt. +2) then
-        bigval     = abs(float(nsbcnd))
+        bigval     = abs(real(nsbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*sf2pp
         bcb(3)     = bigval
@@ -14338,7 +14338,7 @@ c           a near floating condition at the axis
 c
 c 1.2.2.1.4 Use a floating condition at both ends
       elseif(nsbcnd .lt.  0) then
-        bigval     = abs(float(nsbcnd))
+        bigval     = abs(real(nsbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*sf2pp
         bcb(3)     = 0.0
@@ -14374,7 +14374,7 @@ c
 c 1.2.2.2.3 Use natural boundary conditions at the plasma surface but force
 c           a near floating condition at the axis
       elseif(nsbcnd .gt. +2) then
-        bigval     = abs(float(nsbcnd))
+        bigval     = abs(real(nsbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*sp2pp
         bcb(3)     = bigval
@@ -14382,7 +14382,7 @@ c           a near floating condition at the axis
 c
 c 1.2.2.2.4 Use a floating condition at both ends
       elseif(nsbcnd .lt.  0) then
-        bigval     = abs(float(nsbcnd))
+        bigval     = abs(real(nsbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*sp2pp
         bcb(3)     = 0.0
@@ -14418,7 +14418,7 @@ c
 c 1.2.2.3.3 Use natural boundary conditions at the plasma surface but force
 c           a near floating condition at the axis
       elseif(nsbcnd .gt. +2) then
-        bigval     = abs(float(nsbcnd))
+        bigval     = abs(real(nsbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*sfp2pp
         bcb(3)     = bigval
@@ -14426,7 +14426,7 @@ c           a near floating condition at the axis
 c
 c 1.2.2.3.4 Use a floating condition at both ends
       elseif(nsbcnd .lt.  0) then
-        bigval     = abs(float(nsbcnd))
+        bigval     = abs(real(nsbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*sfp2pp
         bcb(3)     = 0.0
@@ -14462,7 +14462,7 @@ c
 c 1.2.2.4.3 Use natural boundary conditions at the plasma surface but force
 c           a near floating condition at the axis
       elseif(nsbcnd .gt. +2) then
-        bigval     = abs(float(nsbcnd))
+        bigval     = abs(real(nsbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*spp2pp
         bcb(3)     = bigval
@@ -14470,7 +14470,7 @@ c           a near floating condition at the axis
 c
 c 1.2.2.4.4 Use a floating condition at both ends
       elseif(nsbcnd .lt.  0) then
-        bigval     = abs(float(nsbcnd))
+        bigval     = abs(real(nsbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*spp2pp
         bcb(3)     = 0.0
@@ -14506,7 +14506,7 @@ c
 c 1.2.2.5.3 Use natural boundary conditions at the plasma surface but force
 c           a near floating condition at the axis
       elseif(nsbcnd .gt. +2) then
-        bigval     = abs(float(nsbcnd))
+        bigval     = abs(real(nsbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*sdn2pp
         bcb(3)     = bigval
@@ -14514,7 +14514,7 @@ c           a near floating condition at the axis
 c
 c 1.2.2.5.4 Use a floating condition at both ends
       elseif(nsbcnd .lt.  0) then
-        bigval     = abs(float(nsbcnd))
+        bigval     = abs(real(nsbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*sdn2pp
         bcb(3)     = 0.0
@@ -14550,7 +14550,7 @@ c
 c 1.2.2.6.3 Use natural boundary conditions at the plasma surface but force
 c           a near floating condition at the axis
       elseif(nsbcnd .gt. +2) then
-        bigval     = abs(float(nsbcnd))
+        bigval     = abs(real(nsbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*spf2pp
         bcb(3)     = bigval
@@ -14558,7 +14558,7 @@ c           a near floating condition at the axis
 c
 c 1.2.2.6.4 Use a floating condition at both ends
       elseif(nsbcnd .lt.  0) then
-        bigval     = abs(float(nsbcnd))
+        bigval     = abs(real(nsbcnd))
         bcb(1)     = bigval
         bcb(2)     = bigval*spf2pp
         bcb(3)     = 0.0
@@ -15284,10 +15284,10 @@ c
 c 6.5.1.2 Set options according to override choice if both options exist
         elseif(kqcal1 .ne. 0  .and.  kqcal0 .ne. 0) then
           if    (nqchois .gt. 0) then
-            fact0     =       1.0/float(iabs(nqchois))
+            fact0     =       1.0/real(iabs(nqchois))
             kqchuse   =  +3
           elseif(nqchois .lt. 0) then
-            fact0     = 1.0 - 1.0/float(iabs(nqchois))
+            fact0     = 1.0 - 1.0/real(iabs(nqchois))
             kqchuse   =  +4
 c
 c 6.5.1.3 Set options according to default choice if no override and both options exist
@@ -17765,7 +17765,7 @@ c
 c
 c 2.2.2.2 For direct equilibria use a uniform mesh
       if    (ktype .eq. 0) then
-        zdelpsi     =  delpsir / float(ksftotl)
+        zdelpsi     =  delpsir / real(ksftotl)
         do 30 lj    = 1,ksftotl
         surfpsi(lj) = psilim - (lj-1)*zdelpsi
    30   continue
@@ -18542,17 +18542,17 @@ c 5.0 Renormalize the errors
 c
 c 5.1 Normalize the global error
 c
-      toteror     =  totlerr / (float(kwtotl+1)*rhsmax)
+      toteror     =  totlerr / (real(kwtotl+1)*rhsmax)
 c
       if(ktype .eq. 0) then
-        toterov     =  totlerv / (float(kwtotv+1)*rhsmax)
+        toterov     =  totlerv / (real(kwtotv+1)*rhsmax)
       endif
 c
 c
 c 5.2 Find the maximum normalized surface error
 c
       do 500 lj   = 1,ksftotl
-      srferor     = surferr(lj) / (surfcur(lj)*float(nsrferr(lj)+1))
+      srferor     = surferr(lj) / (surfcur(lj)*real(nsrferr(lj)+1))
       if(abs(srferor) .ge. srfermx) then
         ksrfermx    = lj
         srfermx     = abs(srferor)
@@ -18697,7 +18697,7 @@ c
       write(kuout,2200)
       write(kuout,2210) ksftotl,delstsf
       do 510 lj   = 1,ksftotl
-      srferor     = surferr(lj) / (surfcur(lj)*float(nsrferr(lj)+1))
+      srferor     = surferr(lj) / (surfcur(lj)*real(nsrferr(lj)+1))
       write(kuout,2220) lj,surfpsi(lj),srferor,nsrferr(lj),surfcur(lj)
      &                    ,ksrferr(lj)
   510 continue
@@ -18942,10 +18942,10 @@ c
       elseif(kf .gt.  1  .and.  kf .lt. 11) then
         kf1          = kf-1
         write(symchar,1000) kf1
-        dlfac(kf)    = float(kf1)
+        dlfac(kf)    = real(kf1)
         symbl(kf)    = symchar
       elseif(kf .eq. 11) then
-        dlfac(kf)    = float(kf-1)
+        dlfac(kf)    = real(kf-1)
         symbl(kf)    = '+'
       elseif(kf .eq. 12) then
         dlfac(kf)    = 100.0
@@ -20246,7 +20246,7 @@ c
 c 2.1 Loop over the poloidal grid points
 c
       dsmax     = thchi(nthet)
-      dsgrid    = dsmax/float(ntmsh1)
+      dsgrid    = dsmax/real(ntmsh1)
 c
       do 100 i  = 1,ntmsh
       dlgd      = (i-1)*dsgrid
@@ -21493,7 +21493,7 @@ c
 c 1.2.2.3 Use natural boundary conditions at the plasma surface but force
 c         a near floating condition at the axis
       elseif(nfqbnd .gt. +2) then
-        bigval     = abs(float(nfqbnd))
+        bigval     = abs(real(nfqbnd))
         bdd(1)     = bigval
         bdd(2)     = bigval*sp2pp
         bdd(3)     = bigval
@@ -21501,7 +21501,7 @@ c         a near floating condition at the axis
 c
 c 1.2.2.4 Use a floating condition at both ends
       elseif(nfqbnd .lt.  0) then
-        bigval     = abs(float(nfqbnd))
+        bigval     = abs(real(nfqbnd))
         bdd(1)     = bigval
         bdd(2)     = bigval*sp2pp
         bdd(3)     = 0.0
@@ -21903,7 +21903,7 @@ c
       ntm1       = ntm - 1
       thmn       = theqvl(1)
       thmx       = theqvl(ntvl)
-      dsgd       = (thmx - thmn)/float(ntm1)
+      dsgd       = (thmx - thmn)/real(ntm1)
       smallno    = rndff
 c
 c
@@ -22365,7 +22365,7 @@ c
       ntm1           = ntm - 1
       thmn           = theqvl(1)
       thmx           = theqvl(ntvl)
-      dsgd           = (thmx - thmn)/float(ntm1)
+      dsgd           = (thmx - thmn)/real(ntm1)
       smallno        = rndff
 c
 c
@@ -23800,11 +23800,11 @@ c
 c
 c 3.2.2 Set the integer range of rational values
 c
-      lqmin   = ifix(qnmin)
-      lqmax   = ifix(qnmax)
+      lqmin   = int(qnmin)
+      lqmax   = int(qnmax)
 c
       qrndof  = qnmin*rndoff
-      qxmin   = float(lqmin)
+      qxmin   = real(lqmin)
       if(abs(qxmin-qnmin) .le. qrndof) lqmin  = lqmin - 1
 c
       lqtot   = lqmax - lqmin + 1
@@ -23936,7 +23936,7 @@ c 3.3.2 Search for rational q between the jp and jp+1 surfaces
 c
          do 420 lq = 1,lqtot
          lqrat     = lq + lqmin
-         qrat      = float(lqrat)
+         qrat      = real(lqrat)
          qda       = qqa - qrat
          qdb       = qqb - qrat
 c
@@ -24128,8 +24128,8 @@ c
 c
 c 3.7.2 Set up the rational value
 c
-         if(ntor .eq. 0) qrat  = float(lpsiq(lq))
-         if(ntor .ne. 0) qrat  = float(lpsiq(lq))/float(ntor)
+         if(ntor .eq. 0) qrat  = real(lpsiq(lq))
+         if(ntor .ne. 0) qrat  = real(lpsiq(lq))/real(ntor)
 c
 c 5.7.3 Set up the label
 c
@@ -30070,8 +30070,8 @@ c
 c 3.1.2.3 Print a warning if the points were reordered by a quarter cycle
 c         or more
          korderp  = iabs(korder)
-         npclw    = ifix(1.0*float(npc)/4.0)
-         npcup    = ifix(3.0*float(npc)/4.0)
+         npclw    = int(1.0*real(npc)/4.0)
+         npcup    = int(3.0*real(npc)/4.0)
          if(korderp .gt. npclw  .and.  korderp .lt. npcup) then
             call abortjob
      &        ('eqdmap  ',  8,   'Points from furplm reinitialized    '
@@ -30169,8 +30169,8 @@ c 3.2.2  Initialization
 c
          npcf     = npc
          mapcn    = +1
-         dangax   = 1.0/float(nangax)
-         danglm   = 1.0/float(nanglm)
+         dangax   = 1.0/real(nangax)
+         danglm   = 1.0/real(nanglm)
          psit     = (psiv-psimax)/delpsir
          dang     = dangax - (dangax-danglm)*psit
 c
@@ -30179,7 +30179,7 @@ c
          if    (jval .le. 1) then
             arcl    = arcl0
          elseif(jval .gt. 1) then
-            arcl    = arprev/float(narcl1)
+            arcl    = arprev/real(narcl1)
             if(arcl .eq. 0.0) arcl = arcl0
          endif
 c
@@ -30250,8 +30250,8 @@ c
 c 3.2.5.3 Print a warning if the points were reordered by a quarter cycle
 c         or more
          iorderp  = iabs(iorder)
-         npclw    = ifix(1.0*float(npc)/4.0)
-         npcup    = ifix(3.0*float(npc)/4.0)
+         npclw    = int(1.0*real(npc)/4.0)
+         npcup    = int(3.0*real(npc)/4.0)
          if(iorderp .gt. npclw  .and.  iorderp .lt. npcup) then
             call abortjob
      &        ('eqdmap  ', 20,   'Points from cntour reinitialized    '
@@ -37967,7 +37967,7 @@ c 2.2.4.1 Check in the radial direction
         if(xs .le. xminn  .or.  xs .ge. xmaxx) then
           if(xs .le. xminn) ksign  = -1
           if(xs .ge. xmaxx) ksign  = +1
-          shft    =  float(niter-1) / float(newtn)
+          shft    =  real(niter-1) / real(newtn)
           xreset  =  xmidpt + nksign*ksign*shft*xminr
           nksign  = -nksign
 c
@@ -37983,7 +37983,7 @@ c 2.2.4.2 Check in the axial direction
         if(ys .le. yminn  .or.  ys .ge. ymaxx) then
           if(ys .le. yminn) ksign  = -1
           if(ys .ge. ymaxx) ksign  = +1
-          shft    =  float(niter-1) / float(newtn)
+          shft    =  real(niter-1) / real(newtn)
           yreset  =  ymidpt + mksign*ksign*shft*yminr
           mksign  = -mksign
 c
@@ -38272,7 +38272,7 @@ c
 c
 c 1.1.2 Set input.
 c
-      if(ntor .ne. 0) zwn = abs(float(ntor))
+      if(ntor .ne. 0) zwn = abs(real(ntor))
       if(ntor .eq. 0) zwn = 1.0
 c
       npts      = nptt
@@ -38379,7 +38379,7 @@ c
 c 1.4 Define the packing fraction according to nrat and pkfrac.
 c     fpack and qpack are defined from pkfrac and qpfrac modified by nrat.
 c
-      ratpak    = float(iabs(nratt))/float(jpsi)
+      ratpak    = real(iabs(nratt))/real(jpsi)
       if    (nratt .eq. 0  .and.  pkfrac .eq. 0.0) then
         fpack     =  0.0
         fpnorm    =  1.0
@@ -38432,7 +38432,7 @@ c
       jpstart      = max0(jp0st,jp1st)
 c
       zdelcs0      = crange
-      zdelcs       = crange/float(jpsi)
+      zdelcs       = crange/real(jpsi)
 c
 c
 c
@@ -38482,11 +38482,11 @@ c
 c 2.1.3 Set the loop counters accordingly.
 c
       if    (ksrch .eq. 0) then
-        nqmin     = ifix(zqmin)
-        nqmax     = ifix(zqmax) + 1
+        nqmin     = int(zqmin)
+        nqmax     = int(zqmax) + 1
       elseif(ksrch .ne. 0) then
-        nqmin     = ifix(zqmin)
-        nqmax     = ifix(zqmax)
+        nqmin     = int(zqmin)
+        nqmax     = int(zqmax)
         if(nqmax .le. nqmin) nqmax = nqmin + 1
       endif
 c
@@ -38539,7 +38539,7 @@ c         surfaces prescribed in plpak, pspak, and at the edge.
 c
 c 2.3.2.1.1 Search for rational surfaces between qnval(jp) and qnval(jp+1).
           do 220 lq = nqmin,nqmax
-          ratq      = float(lq)
+          ratq      = real(lq)
           if((qnval(jp)-ratq)*(qnval(jp+1)-ratq) .lt. 0.0  .or.
      &                        (qnval(jp+1)-ratq) .eq. 0.0)  then
 c
@@ -39035,8 +39035,8 @@ c
 c 4.2.1 Initialize normalizations.
 c
         zfrac0     = jpsi*zratp/zpnorm
-        zfrac1     = zfrac0/float(nratnl)
-        zfrac2     = amax1(float(jpsi)*(1.0-zratp/zpnorm),1.0)
+        zfrac1     = zfrac0/real(nratnl)
+        zfrac2     = amax1(real(jpsi)*(1.0-zratp/zpnorm),1.0)
         zfrac3     = zfrac1*zfrac2
 c
         zdeltaq    = zqmax - zqmin
@@ -39281,14 +39281,14 @@ c 5.2.3.3 Set the range to fill in.
             if(lp .eq. lrat1) zq1  = zqlim
 c
             zdqinc   = (zq1 - zq0)/(zdelq*zdelcs0)
-            nwpt01   = kpst + kpak*iabs(ifix(zdqinc))
+            nwpt01   = kpst + kpak*iabs(int(zdqinc))
             if(nwpt01 .le. 0) then
               call abortjob
      &        ('meshpak ', 30,   'nwpt01 .le. 0: Setting nwpt01=1     '
      &        ,'nwpt01  ', nwpt01,   'lp      ', lp,       -1)
               nwpt01   = 1
             endif
-            zds      = zdiffs/float(nwpt01)
+            zds      = zdiffs/real(nwpt01)
 c
 c 5.2.3.4 Fill in the points for this section between packing points.
             do 530 nwa = 1,nwpt01
@@ -39446,7 +39446,7 @@ c 5.2.4.2.4 Check zs2 does not exceed the mesh endpoint.
           if(zs2 .gt. cfinal) zs2 = cfinal
 c
 c 5.2.4.2.5 Set the increments to fill in the points.
-          nwpt00    = kpst + kpak*ifix(zfrac1)
+          nwpt00    = kpst + kpak*int(zfrac1)
           if(nwpt00 .le. 0) then
             call abortjob
      &        ('meshpak ', 37,   'nwpt00 < 0: Resetting nwpt00 = 1    '
@@ -39775,7 +39775,7 @@ c 6.4.1 Find the normalization from the different weightings given
 c       to different rational surfaces.
 c
 c 6.4.1.1 Loop over packing surfaces.
-        sumfac       = zratp/float(nratnl)
+        sumfac       = zratp/real(nratnl)
 c
         sumplpk      = 0.0
         do 630 lp    = 1,nratnl
@@ -46103,7 +46103,7 @@ c
 c
       wallmsec  = 1000*(3600*thour + 60*tmins + tsecs)  +  tmsec
 c
-      walltime  = float(wallmsec) / 1000.0
+      walltime  = real(wallmsec) / 1000.0
       tmwal     = walltime
 c
 c
@@ -46151,7 +46151,7 @@ clock call System_Clock(counts,rate)
 clock if    (rate .le. 0) then
 clock     cputime  = 0.0
 clock elseif(rate .gt. 0) then
-clock     cputime  = float(counts) / float(rate)
+clock     cputime  = real(counts) / real(rate)
 clock endif
 c
 c SGI cputime = dble (etime (times))
