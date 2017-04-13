@@ -5,7 +5,10 @@ ifeq ($(OPT),debug)
 else
    FFLAGS=${FOPT}
 endif
-      
+
+vgen_libs = -L$(GACODE_ROOT)/shared/harvest_client/ \
+              -I$(GACODE_ROOT)/shared/harvest_client/ \
+              -lharvest     
 EXEC = vgen
 
 OBJECTS = vgen_globals.o \
@@ -18,10 +21,10 @@ OBJECTS = vgen_globals.o \
 .SUFFIXES : .o .f90
 
 all: $(OBJECTS) $(EXTRA_LIBS)
-	$(FC) $(FFLAGS) -o $(EXEC) $(OBJECTS) $(EXTRA_LIBS) $(LMATH)
+	$(FC) $(FFLAGS) $(vgen_libs) -o $(EXEC) $(OBJECTS) $(EXTRA_LIBS) $(LMATH)
 
 .f90.o :
-	$(FC) $(FMATH) $(FFLAGS) -c $<
+	$(FC) $(FMATH) $(FFLAGS) $(vgen_libs) -c $<
 
 clean:
 	rm -f *.o $(EXEC) ${GACODE_ROOT}/modules/vgen_globals.mod

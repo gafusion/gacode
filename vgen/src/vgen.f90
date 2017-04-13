@@ -15,8 +15,9 @@ program vgen
   use EXPRO_interface
 
   implicit none
-
-  integer :: i
+  
+   integer  :: ierr
+   integer :: i
   integer :: j
   integer :: ix
   integer :: rotation_model 
@@ -29,8 +30,16 @@ program vgen
   real :: omega_deriv
   integer :: simntheta
   real :: cpu_tot_in, cpu_tot_out
+   CHARACTER(LEN=65507) :: harvest_sendline
+   CHARACTER(LEN=255) :: harvest_tag
+   CHARACTER NUL
+   PARAMETER(NUL = CHAR(0))
+   CHARACTER(LEN=2) :: NUM
+    
 
   real, dimension(:), allocatable :: er_exp
+  include 'harvest_lib.inc' 
+  
 
   !---------------------------------------------------------------------
   ! Initialize MPI_COMM_WORLD communicator.
@@ -409,6 +418,14 @@ program vgen
      call EXPRO_write_derived(1,'input.profiles.extra')
 
      ! 3. input.profiles.jbs
+     ierr=init_harvest('Neo_jbs'//NUL,harvest_sendline,LEN(harvest_sendline))
+
+     ierr=set_harvest_verbose(1)
+     ierr=set_harvest_protocol('TCP'//NUL)
+     ierr=set_harvest_host('localhost'//NUL)
+
+     ierr=set_harvest_payload_str(harvest_sendline,'VERSION'//NUL,'APS15_1'//NUL) !no underscore to allow different versions of the same run
+
      open(unit=1,file='input.profiles.jbs',status='replace')
      write(1,'(a)') '#'
      write(1,'(a)') '# expro_rho'
@@ -419,10 +436,23 @@ program vgen
      write(1,'(a)') '# jbs_koh    (MA/m^2)'
      write(1,'(a)') '# where jbs = < j_parallel B > / B_unit'
      write(1,'(a)') '#'
+
+     write(*,*)'It compiled!'
+    
+     
      do i=1,EXPRO_n_exp
         write(1,'(6(1pe14.7,2x))') EXPRO_rho(i), pflux_sum(i), &
              jbs_neo(i), jbs_sauter(i), jbs_nclass(i), jbs_koh(i)
+        write(*,'(6(1pe14.7,2x))') EXPRO_rho(i), pflux_sum(i), &
+             jbs_neo(i), jbs_sauter(i), jbs_nclass(i), jbs_koh(i)
      enddo
+     ierr=set_harvest_payload_dbl(harvest_sendline,'EXPRO_RHO'//NUL,EXPRO_rho)
+     ierr=set_harvest_payload_dbl(harvest_sendline,'PFLUX_SUM'//NUL,pflux_sum)
+     ierr=set_harvest_payload_dbl(harvest_sendline,'JBS_NEO'//NUL,jbs_neo)
+     ierr=set_harvest_payload_dbl(harvest_sendline,'JBS_SAUTER'//NUL,jbs_sauter)
+     ierr=set_harvest_payload_dbl(harvest_sendline,'JBS_NCLASS'//NUL,jbs_nclass)
+     ierr=set_harvest_payload_dbl(harvest_sendline,'JBS_KOH'//NUL,jbs_koh)
+ 
      close(1)
      !----------------------------------------------------------------------
 
@@ -455,4 +485,5 @@ program vgen
        'vpol_1(km/s)=',1pe9.2,2x,&
        'nth=',i2,2x,'[',i2,']')
 
+ierr=harvest_send(harvest_sendline)
 end program vgen
