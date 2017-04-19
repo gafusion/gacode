@@ -1,0 +1,45 @@
+#! /usr/bin/env bash
+#
+# SCRIPT:
+#  gyro.COMET
+#
+# FUNCTION:
+#  Parallel execution script
+#---------------------------------------------------
+
+simdir=${1}
+nmpi=${2}
+exec=${3}
+nomp=${4}
+numa=${5}
+mpinuma=${6}
+nidle=${7}
+
+# nmpi = MPI tasks
+# nomp = OpenMP threads per MPI task
+# numa = NUMAs active per node
+# mpinuma = MPI tasks per active NUMA 
+
+. $GACODE_ROOT/shared/bin/gacode_mpi_tool
+
+cd $simdir
+
+export OMP_NUM_THREADS=$nomp
+
+hostfile=`generate_pbs_nodefile`
+
+if [[ -a $hostfile ]]; then
+  if (( $mpinode==24 )); then
+    echo "ibrun -n $nmpi $exec"
+    ibrun -v -n $nmpi $exec
+  else
+    echo "ibrun --npernode $mpinode $exec"
+    ibrun -v --npernode $mpinode $exec
+  fi
+elif [[ -a hosts ]]; then
+  echo "mpirun_rsh -export-all -host hosts -np $nmpi $exec"
+  mpirun_rsh -export-all -host hosts -np $nmpi $exec
+else
+  echo "mpirun_rsh -export-all -np 1 `hostname` $exec"
+  mpirun_rsh -export-all -np 1 `hostname` $exec
+fi

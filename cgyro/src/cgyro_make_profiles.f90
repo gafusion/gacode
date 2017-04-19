@@ -26,13 +26,13 @@ subroutine cgyro_make_profiles
   if (num_ele == 0) then
      ! Adiabatic electrons
      ae_flag = 1
-     call cgyro_info('Using adiabatic electron model.')
+     call cgyro_info('Using adiabatic electrons')
   else if (num_ele == 1) then
      ! GK electrons
      ae_flag = 0
-     call cgyro_info('Using gyrokinetic electrons.')
+     call cgyro_info('Using gyrokinetic electrons')
   else
-     call cgyro_error('Only one electron species allowed.')
+     call cgyro_error('Only one electron species allowed')
      return
   endif
 
@@ -159,21 +159,21 @@ subroutine cgyro_make_profiles
      call set_betastar
      
      ! Re-scaling
-     lambda_star  = lambda_star * lambda_star_scale
-     gamma_e      = gamma_e      * gamma_e_scale
-     gamma_p      = gamma_p      * gamma_p_scale
-     mach         = mach         * mach_scale
-     q            = q            * q_scale
-     s            = s            * s_scale
-     shift        = shift        * shift_scale
-     kappa        = kappa        * kappa_scale
-     delta        = delta        * delta_scale
-     zeta         = zeta         * zeta_scale
-     s_kappa      = s_kappa      * s_kappa_scale
-     s_delta      = s_delta      * s_delta_scale
-     s_zeta       = s_zeta       * s_zeta_scale
-     beta_star    = beta_star    * beta_star_scale
-     betae_unit   = betae_unit   * betae_unit_scale
+     lambda_star      = lambda_star * lambda_star_scale
+     gamma_e          = gamma_e      * gamma_e_scale
+     gamma_p          = gamma_p      * gamma_p_scale
+     mach             = mach         * mach_scale
+     q                = q            * q_scale
+     s                = s            * s_scale
+     shift            = shift        * shift_scale
+     kappa            = kappa        * kappa_scale
+     delta            = delta        * delta_scale
+     zeta             = zeta         * zeta_scale
+     s_kappa          = s_kappa      * s_kappa_scale
+     s_delta          = s_delta      * s_delta_scale
+     s_zeta           = s_zeta       * s_zeta_scale
+     beta_star(0)     = beta_star(0) * beta_star_scale
+     betae_unit       = betae_unit   * betae_unit_scale
      do is=1,n_species
         dlnndr(is) = dlnndr(is)  * dlnndr_scale(is) 
         dlntdr(is) = dlntdr(is)  * dlntdr_scale(is)  
@@ -216,11 +216,13 @@ subroutine cgyro_make_profiles
 
      enddo
 
-     ! Compute beta_* if negative initially
-     if (beta_star < 0.0) call set_betastar
+     ! Always compute beta_* consistently
+     call set_betastar
+     beta_star(0) = beta_star(0)*beta_star_scale
      
   endif
 
+  
   !-------------------------------------------------------------
   ! Manage simulation type (n=0,linear,nonlinear)
   !
@@ -234,11 +236,10 @@ subroutine cgyro_make_profiles
 
      k_theta = 0
 
-     call cgyro_info('Triggered zonal flow test.')
+     call cgyro_info('Triggered zonal flow test')
 
      if (n_radial /= 1) then
-        call cgyro_error('ERROR: (CGYRO) For zonal flow test, set n_radial=1.')
-        return
+        call cgyro_info('Zonal flow test with n_radial>1')
      endif
 
      n = 0
@@ -253,7 +254,7 @@ subroutine cgyro_make_profiles
 
      n = 1
 
-     call cgyro_info('Single-mode linear analysis.')
+     call cgyro_info('Single-mode linear analysis')
 
   else
 
@@ -269,28 +270,36 @@ subroutine cgyro_make_profiles
 
      k_theta = n*k_theta
 
-     call cgyro_info('Multiple toroidal harmonics.')
+     call cgyro_info('Multiple toroidal harmonics')
 
   endif
   !-------------------------------------------------------------
 
   !------------------------------------------------------------------------
-  ! ExB shear
+  ! ExB and profile shear
   !
   if (abs(gamma_e) > 1e-10 .and. nonlinear_flag > 0) then
      omega_eb = k_theta*length*gamma_e/(2*pi)
      select case (shear_method)
      case (1)
-        call cgyro_info('Hammett discrete-shift ExB shear.') 
+        call cgyro_info('ExB shear: Hammett discrete shift') 
      case (2)
-        call cgyro_info('Wavenumber advection ExB shear.') 
+        call cgyro_info('ExB shear: Explicit wavenumber advection') 
      case (3)
-        call cgyro_info('Linear-time ExB shear.') 
+        call cgyro_info('ExB shear: Linearized Hammett shift') 
+     case (4)
+        call cgyro_info('ExB shear: Implicit wavenumber advection') 
+     case (5)
+        call cgyro_info('ExB shear: Compact-difference wavenumber advection') 
      end select
   else
      omega_eb = 0.0
      shear_method = 0
-     call cgyro_info('No ExB shear.') 
+     call cgyro_info('ExB shear: OFF') 
+  endif
+
+  if (profile_shear_flag == 1) then
+     call cgyro_info('Profile shear: Continuous wavenumber advection') 
   endif
   !------------------------------------------------------------------------
 
@@ -304,10 +313,17 @@ subroutine cgyro_make_profiles
      indx_xi(ix) = ix-1
   enddo
   allocate(px(n_radial))
-  do ir=1,n_radial
-     px(ir) = -n_radial/2 + (ir-1)
-  enddo
-  if (zf_test_flag == 1) px(1) = 1
+  if (zf_test_flag == 1) then
+     do ir=1,n_radial
+        px(ir) = ir
+        ! only need positive k_r Fourier coefficients.
+     enddo
+  else
+     do ir=1,n_radial
+        px(ir) = -n_radial/2 + (ir-1)
+     enddo
+  endif
+
   !-------------------------------------------------------------
 
 end subroutine cgyro_make_profiles
@@ -320,14 +336,20 @@ subroutine set_betastar
 
   integer :: is
 
-  beta_star = 0.0
+  ! This is dp/dr at theta=0
+  ! Note that in rotation, this will be overwritten as dp_eff/dr (theta=0)
+  
+  beta_star(:) = 0.0
   do is=1,n_species
-     beta_star = beta_star+dens(is)*temp(is)/(dens_ele*temp_ele) &
+     beta_star(0) = beta_star(0) &
+          + dens(is)*temp(is)/(dens_ele*temp_ele) &
           *(dlnndr(is)+dlntdr(is))
   enddo
   if (ae_flag == 1) then
-     beta_star = beta_star + (dlnndre_ade + dlntdre_ade)
+     beta_star(0) = beta_star(0) + (dlnndre_ade + dlntdre_ade)
   endif
-  beta_star = beta_star*betae_unit
-
+  beta_star(0)  = beta_star(0)*betae_unit
+  ! 8pi/Bunit^2 * scaling factor
+  beta_star_fac = -betae_unit/(dens_ele*temp_ele)*beta_star_scale  
+  
 end subroutine set_betastar

@@ -53,6 +53,7 @@ tgyro/src/tgyro_main
 xptor/driver/xptor
 le3/src/le3
 le3/profiles_3d/profiles_3d
+quick/src/quick
 
 # Regression logs and directories
 *.log

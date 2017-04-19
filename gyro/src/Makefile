@@ -1,4 +1,4 @@
-include ${GACODE_ROOT}/shared/install/make.inc.${GACODE_PLATFORM}
+include ${GACODE_ROOT}/platform/build/make.inc.${GACODE_PLATFORM}
 
 ifeq ($(OPT),debug)
    FFLAGS=${FDEBUG}
@@ -100,6 +100,7 @@ OBJECTS += gyro_globals.o \
           gyro_moments_plot.o \
           gyro_mpi_grid.o \
           gyro_memory_usage.o \
+          gyro_miscellaneous_math.o \
           gyro_nl_setup.o \
           gyro_nl_direct.o \
           gyro_nl_fft.o \

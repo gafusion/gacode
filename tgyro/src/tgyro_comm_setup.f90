@@ -116,6 +116,7 @@ subroutine tgyro_comm_setup
            adjoint = i_proc_global-low+worker*procs(i)/n_worker
            lproc   = procs(i)/n_worker
            lpath   = paths(i)
+           lcode   = code(i)
            i_r     = i+1
            workeradj = i_proc_global-low+(i-1)*procs(i)/n_worker
         endif

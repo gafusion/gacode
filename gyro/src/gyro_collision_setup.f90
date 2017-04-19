@@ -59,7 +59,6 @@ subroutine gyro_collision_setup
   real :: anorm
   !
   real, external :: rbf,irbf
-  real, external :: DERF
   real, external :: DLANGE
   !-----------------------------------------------------------
 
@@ -74,7 +73,7 @@ subroutine gyro_collision_setup
 
      x = sqrt(energy(ie))
 
-     h_coll = exp(-x*x)/(x*sqrt(pi))+(1.0-1.0/(2.0*x*x))*DERF(x)
+     h_coll = exp(-x*x)/(x*sqrt(pi))+(1.0-1.0/(2.0*x*x))*erf(x)
 
      nu_total(:,ie,indx_e) = &
           0.5*(nu_s(indx_e,:)/x**3)*(z_eff_s(:)+h_coll)
@@ -90,7 +89,7 @@ subroutine gyro_collision_setup
 
            x = sqrt(energy(ie))*mu(is)/mu(isp)
 
-           h_coll = exp(-x*x)/(x*sqrt(pi))+(1.0-1.0/(2.0*x*x))*DERF(x)
+           h_coll = exp(-x*x)/(x*sqrt(pi))+(1.0-1.0/(2.0*x*x))*erf(x)
 
            x = sqrt(energy(ie))
 

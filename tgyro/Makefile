@@ -2,7 +2,7 @@
 # Toplevel makefile for tgyro
 #----------------------------
 
-include ../shared/install/make.inc.${GACODE_PLATFORM}
+include ../platform/build/make.inc.${GACODE_PLATFORM}
 
 export EXTRA_LIBS = \
        ${GACODE_ROOT}/neo/src/neo_lib.a \

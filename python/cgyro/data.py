@@ -25,8 +25,12 @@ class cgyrodata:
         # Read time vector.
         #
         data = np.loadtxt(self.dir+'out.cgyro.time')
-        self.t      = data[:,0]
-        self.error  = data[:,1]
+        self.t    = data[:,0]
+        self.err1 = data[:,1]
+        try:
+            self.err2 = data[:,2]
+        except:
+            self.err2 = data[:,1]
         self.n_time = len(self.t)   
         print "INFO: (data.py) Read time vector in out.cgyro.time."
         #-----------------------------------------------------------------
@@ -53,7 +57,7 @@ class cgyrodata:
 
         self.p = np.array(data[l:l+self.n_radial],dtype=int)
         self.kx = 2*np.pi*self.p/self.length
-        
+    
         mark = l+self.n_radial
         self.theta = np.array(data[mark:mark+self.n_theta])
         
@@ -212,6 +216,30 @@ class cgyrodata:
             pass 
         #-----------------------------------------------------------------
 
+    def getflux(self):
+
+        import numpy as np
+        import time
+
+        # Convenience definition
+        nt = self.n_time
+
+        #-----------------------------------------------------------------
+        # Particle and energy fluxes
+        #
+        nd = self.n_species*3*self.n_field*self.n_n*nt
+
+        try:
+            start = time.time()
+            data = np.fromfile(self.dir+'out.cgyro.ky_flux',dtype='float',sep=" ")
+            end = time.time()
+            self.ky_flux = np.reshape(data[0:nd],(self.n_species,3,self.n_field,self.n_n,nt),'F')
+            print "INFO: (data.py) Read data in out.cgyro.ky_flux. TIME = "+str(end-start)
+        except:
+            pass 
+
+        #-----------------------------------------------------------------
+
     def getbigflux(self):
 
         """Larger flux files"""
@@ -226,14 +254,6 @@ class cgyrodata:
         # Particle and energy fluxes
         #
         nd = self.n_radial*self.n_species*self.n_n*nt
-        try:
-            start = time.time()
-            data = np.fromfile(self.dir+'out.cgyro.kxky_flux_n',dtype='float',sep=" ")
-            end = time.time()
-            self.kxky_flux_n = np.reshape(data[0:nd],(self.n_radial,self.n_species,self.n_n,nt),'F')
-            print "INFO: (data.py) Read data in out.cgyro.kxky_flux_n. TIME = "+str(end-start)
-        except:
-            pass
 
         try:
             start = time.time()
@@ -242,16 +262,16 @@ class cgyrodata:
             self.kxky_flux_e = np.reshape(data[0:nd],(self.n_radial,self.n_species,self.n_n,nt),'F')
             print "INFO: (data.py) Read data in out.cgyro.kxky_flux_e. TIME = "+str(end-start)
         except:
-            pass 
-
+            pass
+        
         try:
             start = time.time()
-            data = np.fromfile(self.dir+'out.cgyro.kxky_flux_v',dtype='float',sep=" ")
+            data = np.fromfile(self.dir+'out.cgyro.kxky_flux_n',dtype='float',sep=" ")
             end = time.time()
-            self.kxky_flux_v = np.reshape(data[0:nd],(self.n_radial,self.n_species,self.n_n,nt),'F')
-            print "INFO: (data.py) Read data in out.cgyro.kxky_flux_v. TIME = "+str(end-start)
+            self.kxky_flux_n = np.reshape(data[0:nd],(self.n_radial,self.n_species,self.n_n,nt),'F')
+            print "INFO: (data.py) Read data in out.cgyro.kxky_flux_n. TIME = "+str(end-start)
         except:
-            pass
+            pass 
         #-----------------------------------------------------------------
 
     def getexflux(self):
@@ -319,6 +339,16 @@ class cgyrodata:
             self.n = np.reshape(data,(2,self.n_radial,self.n_species,self.n_n,nt),'F')
             self.nsq = self.n[0,:,:,:,:]**2+self.n[1,:,:,:,:]**2
             print "INFO: (data.py) Read data in out.cgyro.kxky_n. TIME = "+str(end-start)
+        except:
+            pass
+
+        try:
+            start = time.time()
+            data = np.fromfile(self.dir+'out.cgyro.kxky_e',dtype='float',sep=" ")
+            end = time.time()
+            self.e = np.reshape(data,(2,self.n_radial,self.n_species,self.n_n,nt),'F')
+            self.esq = self.e[0,:,:,:,:]**2+self.e[1,:,:,:,:]**2
+            print "INFO: (data.py) Read data in out.cgyro.kxky_e. TIME = "+str(end-start)
         except:
             pass
         #-----------------------------------------------------------------

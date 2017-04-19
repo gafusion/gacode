@@ -8,7 +8,7 @@ subroutine tgyro_write_input
   integer :: i_ion,is
   character(len=7) :: ttext
   character(len=1) :: itag
-  
+
   !----------------------------------------------------------------
   ! Trap miscellaneous errors
   !
@@ -106,12 +106,6 @@ subroutine tgyro_write_input
 
      end select
 
-     if (tgyro_global_newton_flag == 0) then
-        write(1,10) 'TGYRO_GLOBAL_NEWTON_FLAG','Block-diagonal flux Jacobian'
-     else
-        write(1,10) 'TGYRO_GLOBAL_NEWTON_FLAG','Exact flux Jacobian'
-     endif
-
      !--------------------------------------------------------
      select case (loc_residual_method)
 
@@ -130,10 +124,6 @@ subroutine tgyro_write_input
      case (4)
 
         write(1,10) 'LOC_RESIDUAL_METHOD','(f-g)^2/MAX(1,(f^2+g^2))'
-
-     case (5)
-
-        write(1,10) 'LOC_RESIDUAL_METHOD','WEIGHTED'
 
      case default
 
@@ -230,17 +220,21 @@ subroutine tgyro_write_input
      case (1)
 
         if (loc_chang_hinton == 1) then
-           write(1,10) 'LOC_NEO_METHOD','Hinton-Hazeltine theory (Chang-Hinton chii)'
+           write(1,10) 'LOC_NEO_METHOD','Hinton-Hazeltine theory with Chang-Hinton Qi (ignores impurities)'
         else
-           write(1,10) 'LOC_NEO_METHOD','Hinton-Hazeltine theory'
+           write(1,10) 'LOC_NEO_METHOD','Hinton-Hazeltine theory (ignores impurities)'
         endif
 
      case (2)
 
         write(1,10) 'LOC_NEO_METHOD','NEO code'
         if (loc_n_ion >= 4) then
-           write(1,10) '        * INFO','Using reduced energy resolution to cope with so many ions.'
+           write(1,10) 'INFO: (tgyro) Using reduced energy resolution to cope with so many ions.'
         endif
+
+     case (3)
+
+        write(1,10) 'LOC_NEO_METHOD','Hirshman-Sigmar theory for all species.'
 
      case default
 

@@ -1,4 +1,4 @@
-include ${GACODE_ROOT}/shared/install/make.inc.${GACODE_PLATFORM}
+include ${GACODE_ROOT}/platform/build/make.inc.${GACODE_PLATFORM}
 
 ifeq ($(OPT),debug)
    FFLAGS=${FDEBUG}
@@ -36,7 +36,6 @@ OBJECTS = cgyro_globals.o \
           cgyro_init_manager.o \
 	  cgyro_step_collision_simple.o \
           cgyro_step_collision.o \
-	  cgyro_implicit_gk.o \
           cgyro_kernel.o \
           cgyro_mpi_grid.o \
 	  cgyro_experimental_globals.o \
@@ -50,9 +49,9 @@ OBJECTS = cgyro_globals.o \
           cgyro_run.o \
           cgyro_shear.o \
           cgyro_shear_interface.o \
-          cgyro_shear_advect.o \
           cgyro_shear_hammett.o \
           cgyro_shear_linear.o \
+          cgyro_shear_crank.o \
 	  cgyro_step_gk.o \
           cgyro_write_initdata.o \
           cgyro_read_restart.o \

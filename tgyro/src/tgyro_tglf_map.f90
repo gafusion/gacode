@@ -13,7 +13,8 @@ subroutine tgyro_tglf_map
   implicit none
 
   ! Local variables
-  integer :: i_ion, harvest_err
+  integer :: i_ion,i0 
+  integer :: harvest_err
   real :: q_abs
   real :: q_prime
   real :: p_prime
@@ -21,11 +22,10 @@ subroutine tgyro_tglf_map
   real :: gamma_p0
 
   include 'harvest_lib.inc'
-  
+
   CHARACTER NUL
   PARAMETER(NUL = CHAR(0))
-  
-  
+
   q_abs = abs(q(i_r))
 
   ! Initialize TGLF
@@ -45,35 +45,48 @@ subroutine tgyro_tglf_map
 
   !----------------------------------------------------------------
   ! Number of species (max=6)
-  tglf_ns_in = loc_n_ion+1
+  if (tgyro_quickfast_flag == 1) then
+     tglf_ns_in = sum(therm_flag(1:loc_n_ion))+1
+  else
+     tglf_ns_in = loc_n_ion+1
+  endif
   if (tglf_ns_in > nsm) then
      call tgyro_catch_error('ERROR: (tgyro_tglf_map) Too many ions in TGLF.')
   endif
   !----------------------------------------------------------------
 
   !----------------------------------------------------------------
+  ! Species loop:
+  !
   ! Charges: e,i,z
   tglf_zs_in(1) = -1.0
-  do i_ion=1,loc_n_ion
-     tglf_zs_in(i_ion+1) = zi_vec(i_ion)
-  enddo
-  !----------------------------------------------------------------
-
-  !----------------------------------------------------------------
-  ! Assuming mi(1) is normalizing mass
   !
-  ! Mass ratios: me/mi(1),mi(1)/mi(1),m(2)/mi(1),...
+  ! Mass ratios: me/mi(1),mi(1)/mi(1),m(2)/mi(1), ... 
+  !              [assume mi(1) is normalizing mass]
   tglf_mass_in(1) = (me*loc_me_multiplier)/mi(1)
-  do i_ion=1,loc_n_ion 
-     tglf_mass_in(i_ion+1) = mi(i_ion)/mi(1)
-  enddo
-  !----------------------------------------------------------------
-
-  !----------------------------------------------------------------
-  ! ne/ne,ni(1)/ne,ni(2)/ne,...
+  !
+  ! Density ratios: ne/ne,ni(1)/ne,ni(2)/ne, ...
   tglf_as_in(1) = 1.0
+  !
+  ! Density gradients (e,i,z)
+  tglf_rlns_in(1) = r_min*dlnnedr(i_r)
+  !
+  ! Temperature gradients (e,i,z)
+  tglf_rlts_in(1) = r_min*dlntedr(i_r)
+  !
+  ! Temperature ratios: Te/Te,Ti(1)/Te,Ti(2)/Te
+  tglf_taus_in(1) = 1.0
+
+  i0 = 1
   do i_ion=1,loc_n_ion
-     tglf_as_in(i_ion+1) = ni(i_ion,i_r)/ne(i_r) 
+     if (therm_flag(i_ion) == 0 .and. tgyro_quickfast_flag == 1) cycle
+     i0 = i0+1 
+     tglf_zs_in(i0)   = zi_vec(i_ion)
+     tglf_mass_in(i0) = mi(i_ion)/mi(1)
+     tglf_as_in(i0)   = ni(i_ion,i_r)/ne(i_r) 
+     tglf_rlns_in(i0) = r_min*dlnnidr(i_ion,i_r)
+     tglf_rlts_in(i0) = r_min*dlntidr(i_ion,i_r)
+     tglf_taus_in(i0) = ti(i_ion,i_r)/te(i_r)
   enddo
   !----------------------------------------------------------------
 
@@ -82,7 +95,7 @@ subroutine tgyro_tglf_map
   q_prime = (q_abs/(r(i_r)/r_min))**2*s(i_r)
   p_prime = (q_abs/(r(i_r)/r_min))*(beta_unit(i_r)/(8*pi))*(-r_min*dlnpdr(i_r))
   !----------------------------------------------------------------
-  
+
   !----------------------------------------------------------------
   ! Geometry parameters:
   !
@@ -131,30 +144,6 @@ subroutine tgyro_tglf_map
   endif
   !----------------------------------------------------------------
 
-  !-----------------------------------
-  ! Density gradients (e,i,z)
-  tglf_rlns_in(1) = r_min*dlnnedr(i_r)
-  do i_ion=1,loc_n_ion
-     tglf_rlns_in(i_ion+1) = r_min*dlnnidr(i_ion,i_r)
-  enddo
-  !-----------------------------------
-
-  !-----------------------------------
-  ! Temperature gradients (e,i,z)
-  tglf_rlts_in(1) = r_min*dlntedr(i_r)
-  do i_ion=1,loc_n_ion
-     tglf_rlts_in(i_ion+1) = r_min*dlntidr(i_ion,i_r)
-  enddo
-  !-----------------------------------
-
-  !-----------------------------------
-  ! Te/Te,Ti/Te,Tz/Te
-  tglf_taus_in(1) = 1.0
-  do i_ion=1,loc_n_ion
-     tglf_taus_in(i_ion+1) = ti(i_ion,i_r)/te(i_r)
-  enddo
-  !-----------------------------------
-
   !----------------------------------------------------------------
   ! Electron beta used for electromagnetic calculations
   tglf_betae_in = betae_unit(i_r)*loc_betae_scale
@@ -183,7 +172,7 @@ subroutine tgyro_tglf_map
   endif
   !----------------------------------------------------------------
   ! set ky_in to value for n=1
-  if (tglf_kygrid_model_in.eq.3) tglf_ky_in = ABS(rho_s(i_r)*q(i_r)/r(i_r))
+  if (tglf_kygrid_model_in == 3) tglf_ky_in = abs(rho_s(i_r)*q(i_r)/r(i_r))
   !-----------------------------------
   ! Number of high-k modes
   !  nky=12 (default to include ETG)
@@ -316,43 +305,43 @@ subroutine tgyro_tglf_map
   !----------------------------------------------------------------
   ! TGLFNN ACTIVATION THRESHOLD
   !
-  tglf_nn_max_error_in=tgyro_tglf_nn_max_error
+  tglf_nn_max_error_in = tgyro_tglf_nn_max_error
 
   !----------------------------------------------------------------
   ! HARVEST: NEO AND TARGET FLUXES, GYRO-BOHM NORMALIZATIONS, SHOT
   !
   if (i_tran == 0 .and. 0==1) then
-    ! Initialization
-    tglf_harvest_extra_in = NUL
-    harvest_err=set_harvest_verbose(0)
+     ! Initialization
+     tglf_harvest_extra_in = NUL
+     harvest_err=set_harvest_verbose(0)
 
-    ! Target fluxes
-    harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_eflux_e_target'//NUL,eflux_e_target(i_r))
-    harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_eflux_i_target'//NUL,eflux_i_target(i_r))
-    harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_pflux_e_target'//NUL,pflux_e_target(i_r))
-    harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_mflux_target'//NUL,mflux_target(i_r))
+     ! Target fluxes
+     harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_eflux_e_target'//NUL,eflux_e_target(i_r))
+     harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_eflux_i_target'//NUL,eflux_i_target(i_r))
+     harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_pflux_e_target'//NUL,pflux_e_target(i_r))
+     harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_mflux_target'//NUL,mflux_target(i_r))
 
-    ! Neoclassical fluxes
-    harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_eflux_e_neo'//NUL,eflux_e_neo(i_r))
-    harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_sum_eflux_i_neo'//NUL,&
-    & sum(eflux_i_neo(therm_vec(:),i_r)))
-    harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_pflux_e_neo'//NUL,pflux_e_neo(i_r))
-    harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_sum_mflux_i_neo'//NUL,&
-    & sum(mflux_i_neo(therm_vec(:),i_r)))
+     ! Neoclassical fluxes
+     harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_eflux_e_neo'//NUL,eflux_e_neo(i_r))
+     harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_sum_eflux_i_neo'//NUL,&
+          & sum(eflux_i_neo(therm_vec(:),i_r)))
+     harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_pflux_e_neo'//NUL,pflux_e_neo(i_r))
+     harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_sum_mflux_i_neo'//NUL,&
+          & sum(mflux_i_neo(therm_vec(:),i_r)))
 
-    ! Turbulent fluxes interface
-    CALL tglf_harvest_local
+     ! Turbulent fluxes interface
+     CALL tglf_harvest_local
 
-    ! Gyrobohm normalizations
-    harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_q_gb'//NUL,q_gb(i_r))
-    harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_pi_gb'//NUL,pi_gb(i_r))
-    harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_gamma_gb'//NUL,gamma_gb(i_r))
+     ! Gyrobohm normalizations
+     harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_q_gb'//NUL,q_gb(i_r))
+     harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_pi_gb'//NUL,pi_gb(i_r))
+     harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_gamma_gb'//NUL,gamma_gb(i_r))
 
-    ! Indication of thermal ions
-    harvest_err=set_harvest_payload_int_array(tglf_harvest_extra_in,'tgyro_therm_vec'//NUL,therm_vec(:),size(therm_vec))
+     ! Indication of thermal ions
+     harvest_err=set_harvest_payload_int_array(tglf_harvest_extra_in,'tgyro_therm_vec'//NUL,therm_vec(:),size(therm_vec))
 
-    ! Experimental shot
-    harvest_err=set_harvest_payload_int(tglf_harvest_extra_in,'shot'//NUL,shot)
+     ! Experimental shot
+     harvest_err=set_harvest_payload_int(tglf_harvest_extra_in,'shot'//NUL,shot)
   endif
 
 end subroutine tgyro_tglf_map

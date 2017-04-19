@@ -120,7 +120,6 @@ subroutine EXPRO_compute_derived
   EXPRO_sdlnnidr = 0.0
   EXPRO_sdlntidr = 0.0
 
-  print *,'HERE'
   do is=1,EXPRO_n_ion
      if (minval(EXPRO_ni(is,:)) > 0.0) then
         ! 1/L_ni = -dln(ni)/dr (1/m)

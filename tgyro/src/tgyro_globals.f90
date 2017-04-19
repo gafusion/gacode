@@ -45,9 +45,11 @@ module tgyro_globals
   character(len=80), dimension(:), allocatable :: paths
   integer, dimension(:), allocatable :: procs
   real, dimension(:), allocatable :: inputrads
+  character(len=5), dimension(:), allocatable :: code
   !
   character(80) :: lpath, linput
   integer :: lproc
+  character(len=5) :: lcode
   !
   ! Control variables
   !
@@ -227,6 +229,7 @@ module tgyro_globals
   integer, dimension(:), allocatable :: therm_vec
 
   real, dimension(n_ion_max) :: mi
+  real, dimension(n_ion_max) :: n_ratio,t_ratio
 
   ! Physical constants
   real :: pi
@@ -294,7 +297,6 @@ module tgyro_globals
   integer :: loc_num_equil_flag
   integer :: tgyro_neo_gv_flag
   integer :: tglf_q_low_flag
-  integer :: tgyro_global_newton_flag
   integer :: tgyro_iteration_method
   integer :: tgyro_rotation_flag
   real :: tgyro_rmin
@@ -318,8 +320,9 @@ module tgyro_globals
   real :: tgyro_rped
   real :: tgyro_neped
   real :: tgyro_zeffped
+  real :: tgyro_ped_ratio
   real :: tgyro_tglf_nn_max_error
-  character(len=5) :: tgyro_multi_code
+  integer :: tgyro_quickfast_flag
   !
   ! Iteration variables (global)
   !
@@ -330,7 +333,6 @@ module tgyro_globals
   integer :: flux_method
   integer, dimension(:), allocatable :: flux_method_vec
   integer :: i_tran
-  integer :: i_tran_old
   integer :: i_bc
   integer :: flux_counter
   integer :: i_ash

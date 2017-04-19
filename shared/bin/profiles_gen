@@ -756,7 +756,7 @@ then
    fi
 
    # Launch parallel vgen executable
-   $GACODE_ROOT/shared/exec/gyro.$GACODE_PLATFORM \
+   $GACODE_ROOT/platform/exec/exec.$GACODE_PLATFORM \
     $SIMDIR/vgen $NPROC $VGEN_EXE/vgen $NOMP $NUMA $MPINUMA
 
 
@@ -800,7 +800,7 @@ fi
 if [ $GMERGE_FLAG -eq 1 ] 
 then
    rm -f input.profiles.gen
-   python $GACODE_ROOT/shared/bin/profile_parse.py $FILE      
+   python $GACODE_ROOT/shared/bin/profile_parse.py $FILE
    if [ "$FILE" != "input.profiles" ] ; then
       mv $FILE.gen input.profiles.gen
    fi
@@ -808,7 +808,7 @@ then
    CER_FILE=${a:25} 
    a=`grep INPUT $FILE`
    FILE=${a:25}
-fi   
+fi
 #=============================================================
 
 #=============================================================
@@ -854,10 +854,10 @@ echo $itype >> $CONFIG
 # Optional CER file
 echo $CER_FILE >> $CONFIG
 
-# EFIT method 
+# EFIT method
 echo $EFIT_METHOD >> $CONFIG
 
-# EFIT options 
+# EFIT options
 echo $NOQ_FLAG >> $CONFIG
 echo $NOP_FLAG >> $CONFIG
 
@@ -1018,7 +1018,7 @@ then
    if [ -f 'gato_error' ]
    then
       echo 'ERROR: (gato) Fatal error.'
-      exit 1 
+      exit 1
    else
       mv grid.dat out.gato.fluxsurf
       echo 'INFO: (gato) Done.  Check out.gato.info for diagnostics.'
@@ -1127,10 +1127,10 @@ rm -f input.gato.* dummy.peq
 if [ $VERBOSE_FLAG -eq 0 ]
 then
    rm -f $CONFIG fluxfit.* ingta o1gta grid.dat success
-   rm -f *.ave out.com out.dim out.ufile.log 
+   rm -f *.ave out.com out.dim out.ufile.log
    rm -f gfile out.expro.run pfile.*
 else
-   if [ -f "ingta" ] ; then 
+   if [ -f "ingta" ] ; then
       mv ingta input.gato.ingta
    fi
 fi

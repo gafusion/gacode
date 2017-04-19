@@ -18,9 +18,10 @@ elif ifield > 0:
 else:
     sim.getbigfield()
 
-phic = sim.kxky_phi[0,0,0,:]
-y    = phic[:]/phic[0]
 t    = sim.t
+phic = sim.kxky_phi[0,0,0,:]
+y    = phic[:]*1e6*(1-np.i0(sim.kx[0]**2)*np.exp(-sim.kx[0]**2))/(np.i0(sim.kx[0]**2)*np.exp(-sim.kx[0]**2))
+#initialization in code is with 1e-6*besselj0 # phic[0]
 
 #----------------------------------------------------
 # Average calculations
@@ -40,17 +41,26 @@ ax = fig.add_subplot(111)
 ax.grid(which="majorminor",ls=":")
 ax.grid(which="major",ls=":")
 ax.set_xlabel(TIME)
-ax.set_ylabel(r'$\Phi/\Phi_0$')
+ax.set_ylabel(r'$\mathrm{Re}\Phi/\Phi_0$')
 
-ax.plot(t,y,color='k')
+for i in range(sim.n_radial):
+    ax.plot(t,sim.kxky_phi[0,i,0,:]*1e6*(1-np.i0(sim.kx[i]**2)*np.exp(-sim.kx[i]**2))/(np.i0(sim.kx[i]**2)*np.exp(-sim.kx[i]**2)),label=r'$k_x=%.3g$' % sim.kx[i])
+
+
+    
 ax.plot(t[imin:],ave_vec[imin:],color='b',
         label=r'$\mathrm{Average}$',linewidth=1)
 
-theory = 1.0/(1.0+1.6*2.0**2/np.sqrt(0.5/3.0))
+theory = 1./(1.0+1.6*sim.q**2/np.sqrt(sim.rmin/sim.rmaj))
 ax.plot([0,max(t)],[theory,theory],color='grey',
         label=r'$\mathrm{RH \; theory}$',alpha=0.3,linewidth=4)
 
-ax.legend()
+theory2 = 1./(1.0+2.*sim.q**2)
+ax.plot([0,max(t)],[theory2,theory2],color='m',
+        label=r'$\mathrm{fluid \; theory}$',alpha=0.3,linewidth=4)
+
+ax.legend(loc=1,prop={'size':10})
+
 
 if ftype == 'screen':
     plt.show()

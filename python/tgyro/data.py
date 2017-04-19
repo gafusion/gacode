@@ -17,6 +17,7 @@ class tgyrodata:
         self.n_fields     = 0
         self.n_r          = 0
         self.data         = {}
+        self.pedflag      = 0
     
         self.dir = sim_directory
         self.n_ion = int(self.get_tag_value("LOC_N_ION"))
@@ -96,6 +97,7 @@ class tgyrodata:
         self.fileparser('out.tgyro.evo_ne')
         self.fileparser('out.tgyro.flux_e')
         self.fileparser('out.tgyro.profile_e')
+        self.pedflag = self.fileparser('out.tgyro.ped',ped=True)
         for i in range(self.n_ion):
             for root in ['evo_n','flux_i','profile_i']:
                 self.fileparser('out.tgyro.'+root+str(i+1))
@@ -137,7 +139,7 @@ class tgyrodata:
    
     #---------------------------------------------------------------------------#
 
-    def fileparser(self,file,onerow=False):
+    def fileparser(self,file,onerow=False,ped=False):
         """Generic parser for standard TGYRO iteration-based file format"""
 
         import os
@@ -159,11 +161,17 @@ class tgyrodata:
             ix = 2
         else:
             ix = 1
-        nr = self.n_r+ix
+
+        if ped == False:
+            nrad = self.n_r
+        else:
+            nrad = 1
+
+        nr = nrad+ix
         nc = len(string.split(data[0]))
         nb = self.n_iterations+1
 
-        numdata = np.zeros((nc,nb,self.n_r))
+        numdata = np.zeros((nc,nb,nrad))
         for ib in range(nb):
             try:
                 tags = string.split(data[ib*nr])
@@ -171,7 +179,7 @@ class tgyrodata:
                 print "WARNING: (data.py) "+file+" shorter than expected."
                 return 0
 
-            for ir in range(self.n_r):
+            for ir in range(nrad):
                 row = string.split(data[ib*nr+ir+ix])
                 numdata[:,ib,ir] = row[:]
 
@@ -180,4 +188,4 @@ class tgyrodata:
             self.data[tags[ic]] = numdata[ic,:,:]
         
         if self.verbose: print 'INFO: (data.py) Read data in '+file
-
+        return 1

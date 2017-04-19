@@ -1,0 +1,24 @@
+#!/bin/bash
+
+echo "-queue: debug, regular"
+echo "  -qos: normal, premium, low, scavenger"
+
+# Default queue
+if [ "$QUEUE" == "null_queue" ] ; then
+   QUEUE=debug
+fi
+
+bfile=$SIMDIR/batch.src
+
+echo "#!/bin/bash -l" > $bfile
+echo "#SBATCH -J $LOCDIR" >> $bfile
+echo "#SBATCH -A $REPO" >> $bfile
+echo "#SBATCH -C haswell" >> $bfile
+echo "#SBATCH -o $SIMDIR/batch.out" >> $bfile
+echo "#SBATCH -e $SIMDIR/batch.err" >> $bfile
+echo "#SBATCH -p $QUEUE" >> $bfile
+echo "#SBATCH --qos=$QOS" >> $bfile
+echo "#SBATCH -t $WALLTIME" >> $bfile
+echo "#SBATCH -N $nodes" >> $bfile
+
+echo "$CODE -e $LOCDIR -n $nmpi -nomp $nomp -numa $numa -mpinuma $mpinuma -p $SIMROOT" >> $bfile 

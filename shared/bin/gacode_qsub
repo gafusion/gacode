@@ -44,6 +44,9 @@ then
   echo "         -queue"
   echo "         Queue name"
   echo
+  echo "         -qos"
+  echo "         Quality of service (Cori Haswell only)"
+  echo
   echo "         -w"
   echo "         Wallclock limit (default 0:59:00)"
   echo
@@ -62,6 +65,7 @@ user=`whoami`
 CODE=cgyro
 SUB_FLAG=0
 QUEUE=null_queue
+QOS=normal
 WALLTIME=0:59:00
 if hash getnim 2> /dev/null; then
    # NERSC
@@ -119,6 +123,8 @@ while [ $# -gt 0 ] ; do
 
   -queue) shift ; QUEUE=$1 ;;
 
+  -qos) shift ; QOS=$1 ;;
+
   -w) shift ; WALLTIME=$1 ;;
 
   -repo) shift ; REPO=$1 ;;
@@ -142,8 +148,8 @@ SIMDIR=$SIMROOT/$LOCDIR
 #=============================================================
 
 # Extract CORES_PER_NODE and NUMAS_PER_NODE
-export `grep _NODE $GACODE_ROOT/shared/install/make.inc.$GACODE_PLATFORM`
-export "`grep IDENT $GACODE_ROOT/shared/install/make.inc.$GACODE_PLATFORM`"
+export `grep _NODE $GACODE_ROOT/platform/build/make.inc.$GACODE_PLATFORM`
+export "`grep IDENT $GACODE_ROOT/platform/build/make.inc.$GACODE_PLATFORM`"
 echo "INFO: (gacode_qsub) Job layout diagnostics"
 echo
 echo "       identity: $IDENTITY"
@@ -158,7 +164,7 @@ echo " MPI tasks/node          : $mpinode"
 echo " OpenMP threads/MPI task : $nomp"
 echo " MPI tasks per numa node : $mpinuma"
 echo
-. $GACODE_ROOT/shared/qsub/qsub.$GACODE_PLATFORM
+. $GACODE_ROOT/platform/qsub/qsub.$GACODE_PLATFORM
 
 if [ $SUB_FLAG -eq 0 ] ; then
     # Query NERSC/ORNL repositories
@@ -187,5 +193,11 @@ if [ $SUB_FLAG -eq 0 ] ; then
     
 else
     # Submit batch file
-    sbatch $bfile || (echo 'Using qsub to submit';qsub $bfile)
+    if hash sbatch 2> /dev/null ; then
+       sbatch $bfile 
+    elif hash qsub 2> /dev/null ; then
+       qsub $bfile
+    else
+       echo "ERROR: (gacode_qsub) No batch command recognized."
+    fi 
 fi

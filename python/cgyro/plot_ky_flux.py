@@ -9,9 +9,11 @@ w = float(sys.argv[2])
 moment = sys.argv[3]
 ymin   = sys.argv[4]
 ymax   = sys.argv[5]
+field  = int(sys.argv[6])
+fc     = int(sys.argv[7])
 
 sim = cgyrodata('./')
-sim.getbigflux()
+sim.getflux()
 
 ns = sim.n_species
 t  = sim.t
@@ -19,16 +21,47 @@ t  = sim.t
 ky  = sim.ky
 ave = np.zeros((sim.n_n,ns))
 
+field_tag = '\mathrm{Total}'
+
+if hasattr(sim,'ky_flux'):
+    # New flux format
+    if fc == 0:
+        ys = np.sum(sim.ky_flux,axis=(2))
+    else:
+        ys = sim.ky_flux[:,:,field,:,:]
+        if field == 0:
+            field_tag = '\phi'
+        elif field == 1:
+            field_tag = 'A_\parallel'
+        else:
+            field_tag = 'B_\parallel'
+else:
+    # Old/large flux format
+    sim.getbigflux()          
+    ys = np.zeros([ns,3,sim.n_n,sim.n_time])
+    if moment == 'n':
+        ys[:,0,:,:] = np.sum(sim.kxky_flux_n,axis=0)
+    if moment == 'e':
+        ys[:,1,:,:] = np.sum(sim.kxky_flux_e,axis=0)
+
 if moment == 'n':
     ntag = 'Density~flux'
     mtag = '\Gamma'
-    y = np.sum(sim.kxky_flux_n,axis=0)
-    ftag = 'ky_flux_n'
+    ttag = 'G'
+    ftag = 'flux_n'
+    y = ys[:,0,:,:]
 elif moment == 'e':
     ntag = 'Energy~flux'
     mtag = 'Q'
-    y = np.sum(sim.kxky_flux_e,axis=0)
-    ftag = 'ky_flux_e'
+    ttag = 'Q'
+    ftag = 'flux_e'
+    y = ys[:,1,:,:]
+elif moment == 'v':
+    ntag = 'Momentum~flux'
+    mtag = '\Pi'
+    ttag = 'Pi'
+    ftag = 'flux_v'
+    y = ys[:,2,:,:]
 else:
     print 'ERROR (plot_ky_flux.py) Invalid moment.'
     sys.exit()

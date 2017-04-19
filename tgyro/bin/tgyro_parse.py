@@ -1,8 +1,6 @@
 from gacodeinput import *
 import sys
 
-gyro_start = sys.argv[1]
-
 x = ManagerInput()
 
 x.set_extension('.gen')
@@ -85,7 +83,6 @@ x.add('LOC_RESIDUAL_METHOD','2')
 x.add('LOC_NUM_EQUIL_FLAG','0')
 x.add('TGYRO_NEO_GV_FLAG','1')
 x.add('TGLF_Q_LOW_FLAG','0')
-x.add('TGYRO_GLOBAL_NEWTON_FLAG','0')
 x.add('TGYRO_ITERATION_METHOD','1')
 x.add('TGYRO_ROTATION_FLAG','1')
 x.add('TGYRO_RMIN','-1.0')
@@ -106,11 +103,12 @@ x.add('TGYRO_WRITE_PROFILES_FLAG','0')
 x.add('TGYRO_NEO_N_THETA','11')
 x.add('TGYRO_PTOT_FLAG','0')
 x.add('TGYRO_PED_MODEL','1')
-x.add('TGYRO_RPED','0.9')
-x.add('TGYRO_NEPED','-1.0')
-x.add('TGYRO_ZEFFPED','2.07')
+x.add('TGYRO_RPED','-0.92')
+x.add('TGYRO_NEPED','-0.92')
+x.add('TGYRO_ZEFFPED','-0.92')
+x.add('TGYRO_PED_RATIO','-0.92')
 x.add('TGYRO_TGLF_NN_MAX_ERROR','-1')
-x.add('TGYRO_MULTI_CODE','gyro')
+x.add('TGYRO_QUICKFAST_FLAG','0')
 
 # Deprecated parameters
 x.dep('LOC_N_FEEDBACK','new parameter is LOC_NE_FEEDBACK_FLAG')
@@ -126,8 +124,9 @@ x.dep('LOC_CIRC_FLAG','Removed this functionality.')
 x.dep('LOC_QUASINEUTRAL_FLAG','New parameter (with slightly different effect) is TGYRO_QUASINEUTRAL_FLAG.')
 x.dep('TGYRO_QUASINEUTRAL_FLAG','Quasineutrality now implemented with ion variables TGYRO_EVO_E*.')
 x.dep('TGYRO_FIX_CONCENTRATION_FLAG','This option no longer exists -- see TGYRO_EVO_E* variables.')
+x.dep('TGYRO_GLOBAL_NEWTON_FLAG','This option no longer exists.')
 
-x.read_input('input.tgyro',gyro_start)
+x.read_input('input.tgyro')
 x.write_proc('proc')
 x.printmsg()
 

@@ -67,6 +67,8 @@ if sim.n_n > 16:
 else:
     ax.legend(loc=4, ncol=6, prop={'size':12})
 
+fname = 'out.cgyro.kx_phi'
+
 if ftype == 'screen':
    plt.show()
 else:

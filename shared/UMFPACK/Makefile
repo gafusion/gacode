@@ -1,4 +1,4 @@
-include ../install/make.inc.${GACODE_PLATFORM}
+include ${GACODE_ROOT}/platform/build/make.inc.${GACODE_PLATFORM}
 
 # We don't apply debug flags to UMFPACK because its old and trusted.
 

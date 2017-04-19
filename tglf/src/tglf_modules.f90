@@ -355,7 +355,7 @@
       REAL,DIMENSION(nsm,nxm) :: gxn, gxp1, gxp3
       REAL,DIMENSION(nsm,nxm) :: gxr11, gxr13, gxr33
       REAL,DIMENSION(nsm,nxm) :: gxw113, gxw133, gxw333
-      REAL,DIMENSION(nxm) :: wdx, wdpx, b0x, kxx
+      REAL,DIMENSION(nxm) :: wdx, wdpx, b0x, b2x, kxx
       REAL,DIMENSION(nxm) :: cx_tor_par, cx_tor_per
       REAL,DIMENSION(nxm) :: cx_par_par
       REAL,DIMENSION(nxm) :: p0x, Bx
@@ -367,7 +367,7 @@
       REAL,DIMENSION(nkym,nxm) :: cx_par_par_save
       REAL,DIMENSION(nkym,nxm) :: cx_tor_par_save
       REAL,DIMENSION(nkym,nxm) :: cx_tor_per_save
-      REAL,DIMENSION(nkym,nxm) :: kxx_save
+      REAL,DIMENSION(nkym,nxm) :: b2x_save, kxx_save
 !
       END MODULE tglf_xgrid
 !

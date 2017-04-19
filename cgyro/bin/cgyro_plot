@@ -39,6 +39,9 @@ then
   echo "          -w <float>"
   echo "           Width of time-average window (1.0 is entire time history)."
   echo
+  echo "          -fc"
+  echo "           Toggle plotting of field breakdown of fluxes."
+  echo
   echo "          -plot <type>"
   echo "           Function to plot."
   echo "           <type> = text     (text summary of fluxes)"
@@ -56,7 +59,9 @@ then
   echo "                  = kx_phi   (average kx-phi intensities)"
   echo "                  = kxky_phi (kx-ky spectra of ave(|phi|))"
   echo "                  = xflux    (radial profile of fluxes for all species)"
-  echo "                  = note     (notebook)"
+  echo "                  = fluct    (fluctuations)"
+  echo "                  = vid      (create video from png files)"
+  echo "                  = fix      (fix old simulation directory)"
   echo
   echo "          -mesh"
   echo "          Add mesh to hb plot."
@@ -79,12 +84,31 @@ then
   echo
   echo "          -t <value>"
   echo "          Specify integer time index (-1 is last time)."
-  echo "          *Affects: ball, hb, hbcut"
+  echo "          *Affects: ball, hb, hbcut, fluct"
   echo
   echo "          -n <value>"
   echo "          Specify values of n (toroidal mode index)"
   echo "          *Affects: ky_phi"
   echo
+  echo "          -cmap <value>"
+  echo "          Name of colormap (jet,hsv,brg,...)"  
+  echo
+  echo " OPTIONS FOR -plot fluct/vid"
+  echo
+  echo "          -nx <int>"
+  echo "           Number of radial interpolation points (default 128)"
+  echo
+  echo "          -ny <int>"
+  echo "           Number of alpha interpolation points (default 128)"
+  echo
+  echo "          -fmin <float>"
+  echo "           Minimum value for contour plot"
+  echo
+  echo "          -fmax <float>"
+  echo "           Maximum value for contout plot"
+  echo
+  echo "          -start <int>"
+  echo "           First frame for encoding"
   echo
   echo " LINEAR EXAMPLES:"
   echo "  $ cgyro_plot -e . -plot freq           [frequency versus time]"
@@ -93,13 +117,14 @@ then
   echo
   echo
   echo " NONLINEAR EXAMPLES:"
-  echo "  $ cgyro_plot -e . -plot flux           [energy flux versus time]"
-  echo "  $ cgyro_plot -e . -plot flux -ext png  [... above to PNG file]"
-  echo "  $ cgyro_plot -e . -plot flux -ext dump [... above to datafile]"
-  echo "  $ cgyro_plot -e . -plot flux -moment n [particle flux versus time]"
-  echo "  $ cgyro_plot -e . -plot ky_flux        [energy flux versus ky]"
-  echo "  $ cgyro_plot -e . -plot phi            [n=0 and n>0 potentials versus time]"
-  echo "  $ cgyro_plot -e . -plot ky_phi -n 0,2,4-8 [n=0 and n>0 potentials versus time]"
+  echo "  $ cgyro_plot -e . -plot flux              [energy flux versus time]"
+  echo "  $ cgyro_plot -e . -plot flux -ext png     [... above to PNG file]"
+  echo "  $ cgyro_plot -e . -plot flux -ext dump    [... above to datafile]"
+  echo "  $ cgyro_plot -e . -plot flux -moment n    [particle flux versus time]"
+  echo "  $ cgyro_plot -e . -plot flux -fc -field 1 [A_par energy flux versus time]"
+  echo "  $ cgyro_plot -e . -plot ky_flux           [energy flux versus ky]"
+  echo "  $ cgyro_plot -e . -plot phi               [phi(t) for n=0 and n>0]"
+  echo "  $ cgyro_plot -e . -plot ky_phi -n 0,2,4-8 [phi harmonics versus time]"
 
 
   exit 1
@@ -114,6 +139,7 @@ LOCDIR=.
 SIMROOT=$PWD
 SPECIES=0
 FIELD=0
+FC=0
 FTYPE=screen
 PLOT_TYPE=field
 TIME=-1
@@ -126,6 +152,12 @@ INDX=1
 THETA=0.0
 N=null
 MESH=0
+NX=128
+NY=128
+FMIN=auto
+FMAX=auto
+CMAP=jet
+START=1
 #==============================================================================
 
 #==============================================================================
@@ -144,6 +176,8 @@ while [ $# -gt 0 ] ; do
 
   -field) shift ; FIELD=$1 ;;
 
+  -fc) FC=1 ;;
+
   -moment) shift ; MOMENT=$1 ;;
 
   -ext) shift ; FTYPE=$1 ;;
@@ -159,7 +193,14 @@ while [ $# -gt 0 ] ; do
 
   -w) shift ; W=$1 ;;
 
+  -start) shift ; START=$1 ;;
+
   -n) shift ; N=$1 ;;
+  -nx) shift ; NX=$1 ;;
+  -ny) shift ; NY=$1 ;;
+  -fmin) shift ; FMIN=$1 ;;
+  -fmax) shift ; FMAX=$1 ;;
+  -cmap) shift ; CMAP=$1 ;;
 
   -mesh) MESH=1 ;;
 
@@ -202,17 +243,20 @@ case "$PLOT_TYPE" in
 	python $PYROOT/plot_error.py $FTYPE ;;
 
    ky_flux)
-	python $PYROOT/plot_ky_flux.py $FTYPE $W $MOMENT $YMIN $YMAX ;;
+	python $PYROOT/plot_ky_flux.py $FTYPE $W $MOMENT $YMIN $YMAX $FIELD $FC ;;
 
    xflux)
 	python $PYROOT/plot_ex_flux.py $FTYPE $W $MOMENT $YMIN $YMAX ;;
+
+   fluct)
+	python $PYROOT/plot_fluct.py $FTYPE $MOMENT $SPECIES $YMIN $YMAX $NX $NY $TIME $FMIN $FMAX $CMAP ;;
 
    flux)
 	if [ "$FTYPE" == "dump" ]
         then
 	   python $PYROOT/dump_flux.py 
         else
-	   python $PYROOT/plot_flux.py $FTYPE $W $MOMENT $YMIN $YMAX 
+	   python $PYROOT/plot_flux.py $FTYPE $W $MOMENT $YMIN $YMAX $FIELD $FC
         fi
         ;;
 
@@ -237,8 +281,11 @@ case "$PLOT_TYPE" in
    text)
    	python $PYROOT/text.py $W $FTYPE ;;
 
-   note)
-   	python $PYROOT/plot_notebook.py $W $FTYPE $SPECIES ;;
+   fix)
+   	python $PYROOT/fix.py ;;
+
+   vid)
+   	$PYROOT/avconv_wrapper $START ;;
 
    *)
         echo "Unrecognized argument to -plot" ; exit 1 ;;

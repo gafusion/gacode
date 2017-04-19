@@ -1,4 +1,4 @@
-include ../install/make.inc.${GACODE_PLATFORM}
+include ${GACODE_ROOT}/platform/build/make.inc.${GACODE_PLATFORM}
 
 ifeq ($(OPT),debug)
    FFLAGS=${FDEBUG}
@@ -15,27 +15,20 @@ OBJECTS = math_constants.o \
           cub_spline_deriv.o \
           cub_spline_deriv2.o \
           energy_integral.o \
-          erf.o \
           gacode_system.o \
           gamma.o \
           gauss_legendre.o \
           gauss_integ.o \
-          ifs_pppl.o \
-          invert_p32.o \
           i0.o \
           j0y0.o \
           parallel_dim.o \
-          pascal.o \
           polydiff.o \
           poly2diff.o \
           proc_time.o \
-          p32.o \
           pseudospec_lib.o \
           rjbesl.o \
           math_scaleint.o \
           math_scaleintv.o \
-          sigv.o \
-          sivukhin.o \
           timer_lib.o
 
 .SUFFIXES : .o .f90 .f
@@ -50,10 +43,10 @@ lib: $(OBJECTS)
 
 .f90.o :
 	$(FC) $(FMATH) $(FFLAGS) -c $<
- 
+
 clean:
 	rm -f *.o $(LLIB).a *.mod
 	rm -f ${GACODE_ROOT}/modules/math_constants.mod
 	rm -f ${GACODE_ROOT}/modules/timer_lib.mod
 
--include install/make.ext.${GACODE_PLATFORM}
+-include ${GACODE_ROOT}/platform/build/make.inc.${GACODE_PLATFORM}

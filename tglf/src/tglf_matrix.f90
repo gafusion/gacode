@@ -2157,7 +2157,7 @@
       do i=1,nx
       do is =ns0,ns
         bb=taus(is)*mass(is)*(ky/zs(is))**2 
-        b=bb*b0x(i)
+        b=bb*b0x(i)/b2x(i)
         hxn(is,i)    = FLR_Hn(fth,b)
         hxp1(is,i)   = hxn(is,i)
         hxp3(is,i)   = FLR_dHp3(fth,b)+hxn(is,i)

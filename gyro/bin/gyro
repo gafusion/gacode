@@ -387,7 +387,7 @@ esac
 #
 if [ $INIT_FLAG -ne 1 ] 
 then
-  $GACODE_ROOT/shared/exec/gyro.$GACODE_PLATFORM \
+  $GACODE_ROOT/platform/exec/exec.$GACODE_PLATFORM \
     $SIMDIR $NPROC $GYRO_DIR/src/gyro $NOMP $NUMA $MPINUMA $NIDLE
 fi
 

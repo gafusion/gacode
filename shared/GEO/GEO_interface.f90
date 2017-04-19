@@ -48,8 +48,16 @@
 !  GEO_s_delta_in
 !  GEO_zeta_in
 !  GEO_s_zeta_in
-!  GEO_beta_star_in -> beta_unit*dlnpdr 
+!  GEO_beta_star_in    
+!  GEO_beta_star_1_in 
+!  GEO_beta_star_2_in 
 !  GEO_fourier_in(8,GEO_nfourier_in)
+!
+! NOTE:
+!  beta_star(t) = beta_star + beta_star_1 [ 1-cos(t) ] + beta_star_2 [ 1-2cos(t) ]  
+!               = (8 pi)/(B_unit^2) dp(t)/dr
+!
+!  beta_star_1 > 0 and beta_star_2 > 0 only for strong rotation. 
 !
 ! OUTPUT:
 !
@@ -66,6 +74,7 @@
 !  GEO_gq       : G_q
 !  GEO_captheta : Theta
 !  GEO_nu       : eikonal function nu(r,theta)
+!  GEO_l_r      : dl/dr = cos u dZ/dr - sin u dR/dr
 !  GEO_l_t      : dl/dt
 !  GEO_nsin     : neoclassical sine (Rr Rt - Zr Zt)/(dl/dt)
 !  GEO_usin     : Coriolis drift sine
@@ -94,6 +103,8 @@ module GEO_interface
   real :: GEO_zeta_in
   real :: GEO_s_zeta_in
   real :: GEO_beta_star_in
+  real :: GEO_beta_star_1_in
+  real :: GEO_beta_star_2_in
 
   integer :: GEO_ntheta_in=1001
   integer :: GEO_nfourier_in=0
@@ -121,6 +132,7 @@ module GEO_interface
   real, dimension(:), allocatable :: GEOV_gq
   real, dimension(:), allocatable :: GEOV_captheta
   real, dimension(:), allocatable :: GEOV_nu
+  real, dimension(:), allocatable :: GEOV_l_r
   real, dimension(:), allocatable :: GEOV_l_t
   real, dimension(:), allocatable :: GEOV_nsin
   real, dimension(:), allocatable :: GEOV_usin
@@ -149,6 +161,7 @@ module GEO_interface
   real :: GEO_gq
   real :: GEO_captheta
   real :: GEO_nu
+  real :: GEO_l_r
   real :: GEO_l_t
   real :: GEO_nsin
   real :: GEO_usin
@@ -164,7 +177,6 @@ module GEO_interface
 
   real :: GEO_f
   real :: GEO_ffprime
-  real :: GEO_beta_star
   real :: GEO_volume_prime
   real :: GEO_volume
   real :: GEO_fluxsurfave_grad_r2

@@ -213,8 +213,8 @@
                 +1.5*(ave_hr13p0(is,1,1)-ave_hp3p0(is,1,1))*rlts(is)))
            max_freq = MAX(max_freq,test)
          enddo 
-!         max_freq = filter_in*ABS(ky)*max_freq
-         max_freq = 2.0*ABS(ky)*max_freq/ABS(as(1)*zs(1))
+         max_freq = filter_in*ABS(ky)*max_freq
+!         max_freq = 2.0*ABS(ky)*max_freq/ABS(as(1)*zs(1))
 !         write(*,*)"max_freq = ",max_freq,filter_in
 !       endif
        betae_sig = 0.0

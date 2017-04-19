@@ -236,22 +236,6 @@ class ManagerInput:
     def set_extension(self,text):
         self.extension = text
 
-    def getcpu(self,path):
-
-        for line in open(path+'/input.gyro.gen','r').readlines():
-            line = string.strip(line)
-            data = string.splitfields(line,'  ')
-            if (data[1] == 'ENERGY_GRID'):
-                ne = int(data[0])
-            if (data[1] == 'PASS_GRID'):
-                n_pass = int(data[0])
-            if (data[1] == 'TRAP_GRID'):
-                n_trap = int(data[0])
-            if (data[1] == 'TOROIDAL_GRID'):
-                n_n = int(data[0])
-
-        return ne*(n_pass+n_trap)*n_n
-
     def strip_tag(self,datafile):
 
         file_input = open(datafile+'.input','w')
@@ -266,7 +250,7 @@ class ManagerInput:
                 data = string.splitfields(line_s,' ')
 
                 # data[0] -> DIR
-                # data[1] -> GYRO1, TGLF1, etc.
+                # data[1] -> directory1, etc
                 # data[2] -> <n_cores>
                 # data[3,...] -> OVERLAY_VARIABLE [special option X=<xmin>]
 
@@ -311,9 +295,11 @@ class ManagerInput:
         file_input.close()
 
 
-    def read_input(self,datafile,gyro_start):
+    def read_input(self,datafile):
 
         # Eventual output file
+        # For example: datafile = input.cgyro
+        #             extension = .gen
         outfile = datafile+self.extension
 
         # Split datafile into datafile.input (pure input) 
@@ -325,6 +311,9 @@ class ManagerInput:
         z.data_dict = self.data_dict
         z.data_orderlist = self.data_orderlist
         z.dep_dict = self.dep_dict
+
+        # NOTE: 'datafile'.input (input.tgyro.input) contains the TGYRO inputs 
+        # (with DIR lines stripped)
         z.read_input(datafile+'.input')
         self.error = z.error
         self.error_msg = z.error_msg
@@ -347,102 +336,61 @@ class ManagerInput:
         # Logging
         print 'INFO: (gacodeinput) Number of code instances: '+str(n_path)
 
-        # Add special entries (DIR) to output file, and overlay
-        # extra parameters onto GYRO, TGLF or GLF23 input files.
-        #
-        # NOTE:
-        #  - IFS   directories must be of the form IFS*
-        #  - TGLF  directories must be of the form TGLF*
-        #  - GLF23 directories must be of the form GLF*
-        #  - otherwise, CGYRO and GYRO directories are autodetected.
-
         for p in range(len(self.slavepath)):
             self.sum_proc = self.sum_proc + int(self.slaveproc[p])
             basedir = self.slavepath[p]
-            file_outfile.write(basedir+' '+self.slaveproc[p]+' '+self.slaveradius[p]+'\n') 
 
-            if basedir[0:3] == 'IFS':
-                print 'INFO: (gacodeinput) Detected '+basedir+'; CPU_max=1'
-               
-            elif basedir[0:4] == 'TGLF':
-                basefile = basedir+'/input.tglf' 
-                tempfile = basedir+'/input.tglf.temp' 
-                file_base = open(basefile,'r')
-                file_temp = open(tempfile,'w')
-
-                for line in file_base.readlines():
-                    if line[0:18] <> "# -- Begin overlay":
-                        file_temp.write(line)
-                    else:
-                        break
-
-                file_base.close()
-                file_temp.close()
-
-                os.system('echo "# -- Begin overlay [Add parameters above this line]" >> '+tempfile)
-                os.system('cat '+self.overlayfile[p]+' >> '+tempfile)
-                os.system('mv '+tempfile+' '+basefile)
-
-                os.system('tglf -i '+basedir+' -p $PWD')
-                print 'INFO: (gacodeinput) Processed input.* in '+basedir+'; CPU_max=1'
-                
-            elif basedir[0:3] == 'GLF':
-                basefile = basedir+'/input.glf23' 
-                tempfile = basedir+'/input.glf23.temp' 
-                file_base = open(basefile,'r')
-                file_temp = open(tempfile,'w')
-
-                for line in file_base.readlines():
-                    if line[0:18] <> "# -- Begin overlay":
-                        file_temp.write(line)
-                    else:
-                        break
-
-                file_base.close()
-                file_temp.close()
-
-                os.system('echo "# -- Begin overlay [Add parameters above this line]" >> '+tempfile)
-                os.system('cat '+self.overlayfile[p]+' >> '+tempfile)
-                os.system('mv '+tempfile+' '+basefile)
-
-                os.system('glf23 -i '+basedir+' -p $PWD')
-                print 'INFO: (gacodeinput) Processed input.* in '+basedir+'; CPU_max=1'
-                
+            # Detect the code to be run in each directory            
+            if os.path.isfile(basedir+'/input.gyro'):
+                code='gyro'
+            elif os.path.isfile(basedir+'/input.cgyro'):
+                code='cgyro'
+            elif os.path.isfile(basedir+'/input.tglf'):
+                code='tglf'
+            elif os.path.isfile(basedir+'/input.ifs'):
+                code='ifs'
+            elif os.path.isfile(basedir+'/input.glf23'):
+                code='glf23'
             else:
+                code='unknown'
+                self.error=1
+                self.error_message='Could not identify code'
 
-                if os.path.isfile(basedir+'/input.gyro'):
-                    code='gyro'
+            file_outfile.write(basedir+' '+self.slaveproc[p]+' '+self.slaveradius[p]+' '+code+'\n') 
+
+            if code == 'unknown':
+                print 'ERROR: (gacodeinput.py) No code found in '+basedir
+                continue
+            if code == 'ifs':
+                print 'INFO: (gacodeinput.py) Found ifs input in '+basedir
+                continue
+            else:
+                print 'INFO: (gacodeinput.py) Found '+code+' input in '+basedir
+                
+            basefile = basedir+'/input.'+code 
+            tempfile = basefile+'.temp' 
+
+            file_base = open(basefile,'r')
+            file_temp = open(tempfile,'w')
+
+            for line in file_base.readlines():
+                if line[0:18] <> "# -- Begin overlay":
+                    file_temp.write(line)
                 else:
-                    code='cgyro'
+                    break
 
-                basefile = basedir+'/input.'+code 
-                tempfile = basefile+'.temp' 
+            file_base.close()
+            file_temp.close()
 
-                file_base = open(basefile,'r')
-                file_temp = open(tempfile,'w')
+            # Overlay parameters
+            os.system('echo "# -- Begin overlay" >> '+tempfile)
+            os.system('cat '+self.overlayfile[p]+' >> '+tempfile)
+            os.system('mv '+tempfile+' '+basefile)
 
-                for line in file_base.readlines():
-                    if line[0:18] <> "# -- Begin overlay":
-                        file_temp.write(line)
-                    else:
-                        break
-
-                file_base.close()
-                file_temp.close()
-
-                os.system('echo "# -- Begin overlay" >> '+tempfile)
-                os.system('cat '+self.overlayfile[p]+' >> '+tempfile)
-                os.system('mv '+tempfile+' '+basefile)
-
-                if code == 'gyro':
-                    os.system(code+' -i '+basedir+' -n 1 -nomp 1 -p $PWD '+gyro_start)
-                    cpu = self.getcpu(basedir)
-                    print 'INFO: (gacodeinput) Processed input.* in '+basedir+'; CPU_max='+str(cpu)
-                else:
-                    os.system(code+' -t '+basedir+' -n 1 -nomp 1 -p $PWD > out.tgyro.testlog')
-                    print 'INFO: (gacodeinput) Processed input.* in '+basedir+'; see out.cgyro.mpi/info'
+            # Run code in test mode
+            os.system(code+' -i '+basedir+' -n 1 -p $PWD > out.log')
                   
             os.system('rm '+self.overlayfile[p])
 
         print 'INFO: (gacodeinput) Required MPI tasks in TGYRO: '+str(self.sum_proc)
-        
+

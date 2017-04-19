@@ -30,16 +30,11 @@ subroutine cgyro_field_v
 
   ! Poisson and Ampere RHS integrals of H
 
-!$omp parallel do private(ic_loc,iv,is,ix,ie,fac,it)
+!$omp parallel do private(ic_loc,iv)
   do ic=nc1,nc2
      ic_loc = ic-nc1+1
-     it = it_c(ic)
      do iv=1,nv
-        is = is_v(iv)
-        ix = ix_v(iv)
-        ie = ie_v(iv)
-        fac = w_e(ie)*w_xi(ix)*z(is)*dens(is)*dens_rot(it,is)*cap_h_v(ic_loc,iv)
-        field_loc(:,ic) = field_loc(:,ic)+fac*jvec_v(:,ic_loc,iv) 
+        field_loc(:,ic) = field_loc(:,ic)+dvjvec_v(:,ic_loc,iv)*cap_h_v(ic_loc,iv)
      enddo
   enddo
 
@@ -83,15 +78,12 @@ subroutine cgyro_field_c
 
   ! Poisson and Ampere RHS integrals of h
 
-!$omp parallel private(ic)
+!$omp parallel private(iv_loc,ic)
 !$omp do reduction(+:field_loc)
   do iv=nv1,nv2
      iv_loc = iv-nv1+1
-     is = is_v(iv)
      do ic=1,nc
-        it = it_c(ic)
-        field_loc(:,ic) = field_loc(:,ic)+(dvfac(iv_loc)*jvec_c(:,ic,iv_loc))&
-             *dens_rot(it,is)*h_x(ic,iv_loc)
+        field_loc(:,ic) = field_loc(:,ic)+dvjvec_c(:,ic,iv_loc)*h_x(ic,iv_loc)
      enddo
   enddo
 !$omp end do
@@ -127,12 +119,12 @@ subroutine cgyro_field_c
      endif
   endif
 
-!$omp parallel do private(iv,iv_loc,ic,is)
+!$omp parallel do private(iv_loc,is,ic)
   do iv=nv1,nv2
      iv_loc = iv-nv1+1
      is = is_v(iv)
      do ic=1,nc
-        psi(ic,iv_loc) = sum(jvec_c(:,ic,iv_loc)*field(:,ic))
+        psi(ic,iv_loc) = sum( jvec_c(:,ic,iv_loc)*field(:,ic))
         chi(ic,iv_loc) = sum(jxvec_c(:,ic,iv_loc)*field(:,ic))
         cap_h_c(ic,iv_loc) = h_x(ic,iv_loc)+psi(ic,iv_loc)*z(is)/temp(is)
      enddo

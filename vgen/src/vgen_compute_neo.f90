@@ -16,7 +16,7 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   real, intent(out)   :: vtor_diff      ! vtor_exp - vtor_neo (m/s) 
   integer, intent(out) :: simntheta
 
-  integer :: j, n
+  integer :: j, n, is
   real :: cc, loglam
 
   integer :: nmin, nmax, nth
@@ -29,7 +29,7 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   
   dens_norm = EXPRO_ne(i)
   temp_norm = EXPRO_te(i)
-  mass_norm = neo_mass_1_in
+  mass_norm = neo_mass_in(1)
   vth_norm  = sqrt(temp_norm * temp_norm_fac &
        / (mass_norm * mass_deuterium)) &
        * 1.0e4 / EXPRO_rmin(EXPRO_n_exp)
@@ -87,173 +87,28 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   loglam = 24.0 - log(sqrt(EXPRO_ne(i)*1e13)/(EXPRO_te(i)*1000))
   
   ! Species 1 -- must be an ion species
-  neo_dens_1_in = EXPRO_ni_new(i) / dens_norm
-  neo_dlnndr_1_in = EXPRO_dlnnidr_new(i) * EXPRO_rmin(EXPRO_n_exp)
-  neo_temp_1_in = EXPRO_ti(1,i) / temp_norm
-  neo_dlntdr_1_in = EXPRO_dlntidr(1,i) * EXPRO_rmin(EXPRO_n_exp)
-  neo_nu_1_in = cc * loglam * neo_dens_1_in * dens_norm * neo_z_1_in**4 &
-       / (sqrt(neo_mass_1_in) * (neo_temp_1_in * temp_norm)**1.5) &
-       / vth_norm
+  neo_dens_in(1)   = EXPRO_ni_new(i) / dens_norm
+  neo_dlnndr_in(1) = EXPRO_dlnnidr_new(i) * EXPRO_rmin(EXPRO_n_exp)
+  neo_temp_in(1)   = EXPRO_ti(1,i) / temp_norm
+  neo_dlntdr_in(1) = EXPRO_dlntidr(1,i) * EXPRO_rmin(EXPRO_n_exp)
+  neo_nu_1_in      = cc * loglam * neo_dens_in(1) * dens_norm &
+       * neo_z_in(1)**4 / (sqrt(neo_mass_in(1)) &
+       * (neo_temp_in(1) * temp_norm)**1.5) / vth_norm
   
   ! Species 2
-  
-  if(neo_n_species_in >= 2) then
-     if(neo_z_2_in /= -1) then
-        neo_dens_2_in = EXPRO_ni(2,i) / dens_norm
-        neo_dlnndr_2_in = EXPRO_dlnnidr(2,i) * EXPRO_rmin(EXPRO_n_exp)
-        neo_temp_2_in = EXPRO_ti(2,i) / temp_norm 
-        neo_dlntdr_2_in = EXPRO_dlntidr(2,i) * EXPRO_rmin(EXPRO_n_exp)
+  do is=2,neo_n_species_in
+     if(neo_z_in(is) /= -1) then
+        neo_dens_in(is)   = EXPRO_ni(is,i) / dens_norm
+        neo_dlnndr_in(is) = EXPRO_dlnnidr(is,i) * EXPRO_rmin(EXPRO_n_exp)
+        neo_temp_in(is)   = EXPRO_ti(is,i) / temp_norm 
+        neo_dlntdr_in(is) = EXPRO_dlntidr(is,i) * EXPRO_rmin(EXPRO_n_exp)
      else
-        neo_dens_2_in = EXPRO_ne(i) / dens_norm
-        neo_temp_2_in = EXPRO_te(i) / temp_norm
-        neo_dlnndr_2_in = EXPRO_dlnnedr(i) * EXPRO_rmin(EXPRO_n_exp)
-        neo_dlntdr_2_in = EXPRO_dlntedr(i) * EXPRO_rmin(EXPRO_n_exp)
+        neo_dens_in(is)   = EXPRO_ne(i) / dens_norm
+        neo_temp_in(is)   = EXPRO_te(i) / temp_norm
+        neo_dlnndr_in(is) = EXPRO_dlnnedr(i) * EXPRO_rmin(EXPRO_n_exp)
+        neo_dlntdr_in(is) = EXPRO_dlntedr(i) * EXPRO_rmin(EXPRO_n_exp)
      endif
-  endif
-  
-  ! Species 3
-  
-  if(neo_n_species_in >= 3) then
-     if(neo_z_3_in /= -1) then
-        neo_dens_3_in = EXPRO_ni(3,i) / dens_norm
-        neo_dlnndr_3_in = EXPRO_dlnnidr(3,i) * EXPRO_rmin(EXPRO_n_exp)
-        neo_temp_3_in = EXPRO_ti(3,i) / temp_norm 
-        neo_dlntdr_3_in = EXPRO_dlntidr(3,i) * EXPRO_rmin(EXPRO_n_exp)
-     else
-        neo_dens_3_in = EXPRO_ne(i) / dens_norm
-        neo_temp_3_in = EXPRO_te(i) / temp_norm
-        neo_dlnndr_3_in = EXPRO_dlnnedr(i) * EXPRO_rmin(EXPRO_n_exp)
-        neo_dlntdr_3_in = EXPRO_dlntedr(i) * EXPRO_rmin(EXPRO_n_exp)
-     endif
-  endif
-  
-  ! Species 4
-  
-  if(neo_n_species_in >= 4) then
-     if(neo_z_4_in /= -1) then
-        neo_dens_4_in = EXPRO_ni(4,i) / dens_norm
-        neo_dlnndr_4_in = EXPRO_dlnnidr(4,i) * EXPRO_rmin(EXPRO_n_exp)
-        neo_temp_4_in = EXPRO_ti(4,i) / temp_norm  
-        neo_dlntdr_4_in = EXPRO_dlntidr(4,i) * EXPRO_rmin(EXPRO_n_exp)
-     else
-        neo_dens_4_in = EXPRO_ne(i) / dens_norm
-        neo_temp_4_in = EXPRO_te(i) / temp_norm
-        neo_dlnndr_4_in = EXPRO_dlnnedr(i) * EXPRO_rmin(EXPRO_n_exp)
-        neo_dlntdr_4_in = EXPRO_dlntedr(i) * EXPRO_rmin(EXPRO_n_exp)
-     endif
-  endif
-
-  ! Species 5
-  
-  if(neo_n_species_in >= 5) then
-     if(neo_z_5_in /= -1) then
-        neo_dens_5_in = EXPRO_ni(5,i) / dens_norm
-        neo_dlnndr_5_in = EXPRO_dlnnidr(5,i) * EXPRO_rmin(EXPRO_n_exp)
-        neo_temp_5_in = EXPRO_ti(5,i) / temp_norm  
-        neo_dlntdr_5_in = EXPRO_dlntidr(5,i) * EXPRO_rmin(EXPRO_n_exp)
-     else
-        neo_dens_5_in = EXPRO_ne(i) / dens_norm
-        neo_temp_5_in = EXPRO_te(i) / temp_norm
-        neo_dlnndr_5_in = EXPRO_dlnnedr(i) * EXPRO_rmin(EXPRO_n_exp)
-        neo_dlntdr_5_in = EXPRO_dlntedr(i) * EXPRO_rmin(EXPRO_n_exp)
-     endif
-  endif
-
-  ! Species 6
-  
-  if(neo_n_species_in >= 6) then
-     if(neo_z_6_in /= -1) then
-        neo_dens_6_in = EXPRO_ni(6,i) / dens_norm
-        neo_dlnndr_6_in = EXPRO_dlnnidr(6,i) * EXPRO_rmin(EXPRO_n_exp)
-        neo_temp_6_in = EXPRO_ti(6,i) / temp_norm  
-        neo_dlntdr_6_in = EXPRO_dlntidr(6,i) * EXPRO_rmin(EXPRO_n_exp)
-     else
-        neo_dens_6_in = EXPRO_ne(i) / dens_norm
-        neo_temp_6_in = EXPRO_te(i) / temp_norm
-        neo_dlnndr_6_in = EXPRO_dlnnedr(i) * EXPRO_rmin(EXPRO_n_exp)
-        neo_dlntdr_6_in = EXPRO_dlntedr(i) * EXPRO_rmin(EXPRO_n_exp)
-     endif
-  endif
-
-  ! Species 7
-  
-  if(neo_n_species_in >= 7) then
-     if(neo_z_7_in /= -1) then
-        neo_dens_7_in = EXPRO_ni(7,i) / dens_norm
-        neo_dlnndr_7_in = EXPRO_dlnnidr(7,i) * EXPRO_rmin(EXPRO_n_exp)
-        neo_temp_7_in = EXPRO_ti(7,i) / temp_norm  
-        neo_dlntdr_7_in = EXPRO_dlntidr(7,i) * EXPRO_rmin(EXPRO_n_exp)
-     else
-        neo_dens_7_in = EXPRO_ne(i) / dens_norm
-        neo_temp_7_in = EXPRO_te(i) / temp_norm
-        neo_dlnndr_7_in = EXPRO_dlnnedr(i) * EXPRO_rmin(EXPRO_n_exp)
-        neo_dlntdr_7_in = EXPRO_dlntedr(i) * EXPRO_rmin(EXPRO_n_exp)
-     endif
-  endif
-
-  ! Species 8
-  
-  if(neo_n_species_in >= 8) then
-     if(neo_z_8_in /= -1) then
-        neo_dens_8_in = EXPRO_ni(8,i) / dens_norm
-        neo_dlnndr_8_in = EXPRO_dlnnidr(8,i) * EXPRO_rmin(EXPRO_n_exp)
-        neo_temp_8_in = EXPRO_ti(8,i) / temp_norm  
-        neo_dlntdr_8_in = EXPRO_dlntidr(8,i) * EXPRO_rmin(EXPRO_n_exp)
-     else
-        neo_dens_8_in = EXPRO_ne(i) / dens_norm
-        neo_temp_8_in = EXPRO_te(i) / temp_norm
-        neo_dlnndr_8_in = EXPRO_dlnnedr(i) * EXPRO_rmin(EXPRO_n_exp)
-        neo_dlntdr_8_in = EXPRO_dlntedr(i) * EXPRO_rmin(EXPRO_n_exp)
-     endif
-  endif
-
-  ! Species 9
-  
-  if(neo_n_species_in >= 9) then
-     if(neo_z_9_in /= -1) then
-        neo_dens_9_in = EXPRO_ni(9,i) / dens_norm
-        neo_dlnndr_9_in = EXPRO_dlnnidr(9,i) * EXPRO_rmin(EXPRO_n_exp)
-        neo_temp_9_in = EXPRO_ti(9,i) / temp_norm  
-        neo_dlntdr_9_in = EXPRO_dlntidr(9,i) * EXPRO_rmin(EXPRO_n_exp)
-     else
-        neo_dens_9_in = EXPRO_ne(i) / dens_norm
-        neo_temp_9_in = EXPRO_te(i) / temp_norm
-        neo_dlnndr_9_in = EXPRO_dlnnedr(i) * EXPRO_rmin(EXPRO_n_exp)
-        neo_dlntdr_9_in = EXPRO_dlntedr(i) * EXPRO_rmin(EXPRO_n_exp)
-     endif
-  endif
-
-  ! Species 10
-  
-  if(neo_n_species_in >= 10) then
-     if(neo_z_10_in /= -1) then
-        neo_dens_10_in = EXPRO_ni(10,i) / dens_norm
-        neo_dlnndr_10_in = EXPRO_dlnnidr(10,i) * EXPRO_rmin(EXPRO_n_exp)
-        neo_temp_10_in = EXPRO_ti(10,i) / temp_norm  
-        neo_dlntdr_10_in = EXPRO_dlntidr(10,i) * EXPRO_rmin(EXPRO_n_exp)
-     else
-        neo_dens_10_in = EXPRO_ne(i) / dens_norm
-        neo_temp_10_in = EXPRO_te(i) / temp_norm
-        neo_dlnndr_10_in = EXPRO_dlnnedr(i) * EXPRO_rmin(EXPRO_n_exp)
-        neo_dlntdr_10_in = EXPRO_dlntedr(i) * EXPRO_rmin(EXPRO_n_exp)
-     endif
-  endif
-
-  ! Species 11
-  
-  if(neo_n_species_in >= 11) then
-     if(neo_z_11_in /= -1) then
-        neo_dens_11_in = EXPRO_ni(11,i) / dens_norm
-        neo_dlnndr_11_in = EXPRO_dlnnidr(11,i) * EXPRO_rmin(EXPRO_n_exp)
-        neo_temp_11_in = EXPRO_ti(11,i) / temp_norm  
-        neo_dlntdr_11_in = EXPRO_dlntidr(11,i) * EXPRO_rmin(EXPRO_n_exp)
-     else
-        neo_dens_11_in = EXPRO_ne(i) / dens_norm
-        neo_temp_11_in = EXPRO_te(i) / temp_norm
-        neo_dlnndr_11_in = EXPRO_dlnnedr(i) * EXPRO_rmin(EXPRO_n_exp)
-        neo_dlntdr_11_in = EXPRO_dlntedr(i) * EXPRO_rmin(EXPRO_n_exp)
-     endif
-  endif
+  enddo
 
   nmin = (nth_min - 1)/2
   nmax = (nth_max - 1)/2
@@ -305,70 +160,12 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   write(1,'(e16.8)',advance='no') neo_rho_star_in
   write(1,'(e16.8)',advance='no') neo_rmaj_over_a_in
   write(1,'(e16.8)',advance='no') neo_nu_1_in
-  write(1,'(e16.8)',advance='no') neo_dens_1_in
-  write(1,'(e16.8)',advance='no') neo_temp_1_in
-  write(1,'(e16.8)',advance='no') neo_dlnndr_1_in
-  write(1,'(e16.8)',advance='no') neo_dlntdr_1_in
-  if(neo_n_species_in >= 2) then
-     write(1,'(e16.8)',advance='no') neo_dens_2_in
-     write(1,'(e16.8)',advance='no') neo_temp_2_in
-     write(1,'(e16.8)',advance='no') neo_dlnndr_2_in
-     write(1,'(e16.8)',advance='no') neo_dlntdr_2_in
-  endif
-  if(neo_n_species_in >= 3) then
-     write(1,'(e16.8)',advance='no') neo_dens_3_in
-     write(1,'(e16.8)',advance='no') neo_temp_3_in
-     write(1,'(e16.8)',advance='no') neo_dlnndr_3_in
-     write(1,'(e16.8)',advance='no') neo_dlntdr_3_in
-  endif
-  if(neo_n_species_in >= 4) then
-     write(1,'(e16.8)',advance='no') neo_dens_4_in
-     write(1,'(e16.8)',advance='no') neo_temp_4_in
-     write(1,'(e16.8)',advance='no') neo_dlnndr_4_in
-     write(1,'(e16.8)',advance='no') neo_dlntdr_4_in
-  endif
-  if(neo_n_species_in >= 5) then
-     write(1,'(e16.8)',advance='no') neo_dens_5_in
-     write(1,'(e16.8)',advance='no') neo_temp_5_in
-     write(1,'(e16.8)',advance='no') neo_dlnndr_5_in
-     write(1,'(e16.8)',advance='no') neo_dlntdr_5_in
-  endif
-  if(neo_n_species_in >= 6) then
-     write(1,'(e16.8)',advance='no') neo_dens_6_in
-     write(1,'(e16.8)',advance='no') neo_temp_6_in
-     write(1,'(e16.8)',advance='no') neo_dlnndr_6_in
-     write(1,'(e16.8)',advance='no') neo_dlntdr_6_in
-  endif
-  if(neo_n_species_in >= 7) then
-     write(1,'(e16.8)',advance='no') neo_dens_7_in
-     write(1,'(e16.8)',advance='no') neo_temp_7_in
-     write(1,'(e16.8)',advance='no') neo_dlnndr_7_in
-     write(1,'(e16.8)',advance='no') neo_dlntdr_7_in
-  endif
-  if(neo_n_species_in >= 8) then
-     write(1,'(e16.8)',advance='no') neo_dens_8_in
-     write(1,'(e16.8)',advance='no') neo_temp_8_in
-     write(1,'(e16.8)',advance='no') neo_dlnndr_8_in
-     write(1,'(e16.8)',advance='no') neo_dlntdr_8_in
-  endif
-  if(neo_n_species_in >= 9) then
-     write(1,'(e16.8)',advance='no') neo_dens_9_in
-     write(1,'(e16.8)',advance='no') neo_temp_9_in
-     write(1,'(e16.8)',advance='no') neo_dlnndr_9_in
-     write(1,'(e16.8)',advance='no') neo_dlntdr_9_in
-  endif
-  if(neo_n_species_in >= 10) then
-     write(1,'(e16.8)',advance='no') neo_dens_10_in
-     write(1,'(e16.8)',advance='no') neo_temp_10_in
-     write(1,'(e16.8)',advance='no') neo_dlnndr_10_in
-     write(1,'(e16.8)',advance='no') neo_dlntdr_10_in
-  endif
-  if(neo_n_species_in >= 11) then
-     write(1,'(e16.8)',advance='no') neo_dens_11_in
-     write(1,'(e16.8)',advance='no') neo_temp_11_in
-     write(1,'(e16.8)',advance='no') neo_dlnndr_11_in
-     write(1,'(e16.8)',advance='no') neo_dlntdr_11_in
-  endif
+  do is=1,neo_n_species_in
+     write(1,'(e16.8)',advance='no') neo_dens_in(is)
+     write(1,'(e16.8)',advance='no') neo_temp_in(is)
+     write(1,'(e16.8)',advance='no') neo_dlnndr_in(is)
+     write(1,'(e16.8)',advance='no') neo_dlntdr_in(is)
+  enddo
   close(1)
 
   ! Run NEO

@@ -1,8 +1,4 @@
-#---------------------------
-# Toplevel makefile for 3d
-#---------------------------
-
-include ${GACODE_ROOT}/shared/install/make.inc.${GACODE_PLATFORM}
+include ${GACODE_ROOT}/platform/build/make.inc.${GACODE_PLATFORM}
 
 export EXTRA_LIBS = \
        ${GACODE_ROOT}/le3/minpack/minpack_lib.a \

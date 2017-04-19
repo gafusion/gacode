@@ -2,38 +2,41 @@ subroutine tgyro_profile_reintegrate
 
   use tgyro_globals
   use tgyro_ped
-
-  use mpi
   use tgyro_iteration_variables
-  use EXPRO_interface
 
   implicit none
 
   integer :: i_ion
   integer :: i_star  
-
-  CHARACTER(LEN=6) :: NUM
+  real :: w
 
   if (tgyro_ped_model > 1) then
 
      ! Map data over r(n_r) < r < a
 
-     call tgyro_pedestal_map(dlnnedr(n_r),zn_top,n_top(1),nn_vec(:,2),i_star,exp_ne)
-     call tgyro_pedestal_map(dlntedr(n_r),zt_top,t_top(1),t_vec(:),i_star,exp_te)
-     call tgyro_pedestal_map(dlntidr(1,n_r),zt_top,t_top(1),t_vec(:),i_star,exp_ti(1,:))
+     call tgyro_pedestal_map(dlnnedr(n_r),zn_top,n_top(1)*n_frac,nn_vec(:,2)*n_frac,&
+          i_star,exp_ne)
+     call tgyro_pedestal_map(dlntedr(n_r),zt_top,t_top(1)*t_frac,t_vec(:)*t_frac,&
+          i_star,exp_te)
 
-     ! Set ion densities
-     exp_ni(1,i_star:n_exp) = exp_ne(i_star:n_exp)
-     if (loc_n_ion > 1) then
-        exp_ni(1,i_star:n_exp) = exp_ni(1,i_star:n_exp)-zi_vec(2)*exp_ni(2,i_star:n_exp)
-     endif
-     if (loc_n_ion > 2) then
-        exp_ni(1,i_star:n_exp) = exp_ni(1,i_star:n_exp)-zi_vec(3)*exp_ni(3,i_star:n_exp)
-     endif
-     ! Set thermal ion temperatures
-     do i_ion=2,loc_n_ion
-        if (therm_flag(i_ion) == 1) exp_ti(i_ion,i_star:n_exp) = exp_ti(1,i_star:n_exp)
+     ! Map ion densities
+     ! NOTE: Assumption is that ion profiles are 
+     !
+     !    ni(j,r) = ne(r)*ratio(j) for r > r(n_r)
+     !
+     ! where ratio(j) is the pivot density ratio at t=0 (see tgyro_pedestal).
+     !
+     do i_ion=1,loc_n_ion
+        if (therm_flag(i_ion) == 1) then
+           w = n_ratio(i_ion)*n_frac
+           call tgyro_pedestal_map(dlnnidr(i_ion,n_r),zn_top,w*n_top(1),w*nn_vec(:,2),&
+                i_star,exp_ni(i_ion,:))
+           w = t_ratio(i_ion)*t_frac
+           call tgyro_pedestal_map(dlntidr(i_ion,n_r),zt_top,w*t_top(1),w*t_vec(:),&
+                i_star,exp_ti(i_ion,:))
+        endif
      enddo
+
   endif
 
   ! Map data inside r < r(n_r)
@@ -48,37 +51,7 @@ subroutine tgyro_profile_reintegrate
   enddo
   call tgyro_expro_map(r,w0p,n_r,w0(n_r),rmin_exp,exp_w0,n_exp,'lin')
 
-  ptot_exp = exp_ne*exp_te
-  do i_ion=1,loc_n_ion
-     ptot_exp = ptot_exp + exp_ni(i_ion,:)*exp_ti(i_ion,:)
-  enddo
-
-  ! Convert to Pa: n[1/cm^3]*(kT[ev])/10  
-  ptot_exp = ptot_exp*k/10.0
-
-  if ((tgyro_write_profiles_flag==-1) .and. (i_tran.ge.2) .and. (i_tran_old .ne. i_tran)) then
-     call EXPRO_palloc(MPI_COMM_WORLD,'./',1)
-     call EXPRO_pread
-
-     EXPRO_ptot = ptot_exp
-     EXPRO_ne   = exp_ne*1e-13
-     EXPRO_te   = exp_te*1e-3
-     EXPRO_ni(1:loc_n_ion,:) = exp_ni(1:loc_n_ion,:)*1e-13
-     EXPRO_ti(1:loc_n_ion,:) = exp_ti(1:loc_n_ion,:)*1e-3
-     EXPRO_ptot = ptot_exp ! already in Pa
-
-     if (i_proc_global == 0) then
-        ! Write data to file
-        write(NUM,'(i0)')i_tran-1
-        write(*,*)'write input.profiles.'//trim(NUM)
-        call EXPRO_write_original(&
-             1,'input.profiles',&
-             2,'input.profiles.'//trim(NUM),&
-             'Profiles modified by TGYRO')
-     endif
-
-     call EXPRO_palloc(MPI_COMM_WORLD,'./',0)
-     i_tran_old=i_tran
-  endif
+  ! Compute pressure: ptot_exp
+  call tgyro_pressure
 
 end subroutine tgyro_profile_reintegrate

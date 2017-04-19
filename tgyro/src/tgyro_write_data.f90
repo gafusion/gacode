@@ -10,9 +10,11 @@
 
 subroutine tgyro_write_data(i_print)
 
-  use mpi
   use tgyro_globals
   use tgyro_ped
+  use EXPRO_interface
+  use mpi
+  use tgyro_iteration_variables, only : i_tran_loop
 
   implicit none
 
@@ -24,6 +26,53 @@ subroutine tgyro_write_data(i_print)
   real, dimension(2:n_r,loc_n_ion+4) :: res2,relax2
   character(len=2) :: itag
   character(len=6) :: ntag,ttag
+
+  !====================================================
+  ! input.profiles
+  !====================================================
+
+  if (tgyro_write_profiles_flag /= 0 .and. i_print > 0) then 
+
+     call EXPRO_palloc(MPI_COMM_WORLD,'./',1)
+     call EXPRO_pread
+
+     call tgyro_profile_reintegrate
+
+     EXPRO_ptot = ptot_exp
+     EXPRO_ne   = exp_ne*1e-13
+     EXPRO_te   = exp_te*1e-3
+     EXPRO_ni(1:loc_n_ion,:) = exp_ni(1:loc_n_ion,:)*1e-13
+     EXPRO_ti(1:loc_n_ion,:) = exp_ti(1:loc_n_ion,:)*1e-3
+     EXPRO_w0   = exp_w0
+     EXPRO_ptot = ptot_exp ! already in Pa
+
+     if (i_proc_global == 0) then
+
+        if (tgyro_write_profiles_flag == -1) then
+           ! Output for each iteration
+           write(ntag,'(i0)') i_tran
+           call EXPRO_write_original(&
+                1,'input.profiles',&
+                2,'input.profiles.'//trim(ntag),&
+                'Profiles modified by TGYRO')
+        endif
+
+        if (i_tran_loop == tgyro_relax_iterations) then
+           ! Output for last iteration
+           call EXPRO_write_original(&
+                1,'input.profiles',&
+                2,'input.profiles.new',&
+                'Profiles modified by TGYRO')
+
+           call EXPRO_compute_derived
+           call EXPRO_write_derived(1,'input.profiles.extra')
+        endif
+
+     endif
+
+     call EXPRO_palloc(MPI_COMM_WORLD,'./',0)
+
+  endif
 
   if (i_proc_global > 0) return
 

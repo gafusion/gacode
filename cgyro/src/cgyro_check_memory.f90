@@ -74,36 +74,29 @@ subroutine cgyro_check_memory(datafile)
      total_memory = 0
      write(io,*) ' == Distributed =='
 
-     if (implicit_flag == 1) then
-        write(io,*)
-        write(io,*) 'Implicit time advance'
-        write(io,*)
-        call cgyro_alloc_add(io,nc*nv_loc*16.0,'gkvec')
-        call cgyro_alloc_add(io,(2*nup_theta+1)*nc*10*nv_loc*16.0,'gksp_mat')
-        call cgyro_alloc_add(io,(2*nup_theta+1)*nc*10*nv_loc*2*4.0,'gksp_indx')
-        call cgyro_alloc_add(io,10*nv_loc*8.0,'gksp_cntl')
-        call cgyro_alloc_add(io,20*nv_loc*4.0,'gksp_icntl')
-        call cgyro_alloc_add(io,20*nv_loc*4.0,'gksp_keep')
-     endif
-
      write(io,*)
      write(io,*) 'Distribution-like arrays'
      write(io,*)
      call cgyro_alloc_add(io,4*nc*nv_loc*16.0,'rhs')
      call cgyro_alloc_add(io,n_field*nc*nv_loc*16.0,'omega_s')
+     call cgyro_alloc_add(io,n_field*nc*nv_loc*16.0,'omega_ss')
      call cgyro_alloc_add(io,nc*nv_loc*16.0,'omega_cap_h')
      call cgyro_alloc_add(io,nc*nv_loc*16.0,'omega_h')
      call cgyro_alloc_add(io,nc*nv_loc*16.0,'h_x')
+     call cgyro_alloc_add(io,nc*nv_loc*16.0,'h0_x')
      call cgyro_alloc_add(io,nc*nv_loc*16.0,'g_x')
      call cgyro_alloc_add(io,nc*nv_loc*16.0,'psi')
+     call cgyro_alloc_add(io,nc*nv_loc*16.0,'chi')
      call cgyro_alloc_add(io,nc*nv_loc*16.0,'h0_x')
      call cgyro_alloc_add(io,nc*nv_loc*16.0,'cap_h_c')
      call cgyro_alloc_add(io,nc*nv_loc*16.0,'cap_h_ct')
+     call cgyro_alloc_add(io,nc_loc*nv*16.0,'cap_h_v')
+     call cgyro_alloc_add(io,nc_loc*nv*16.0,'cap_h_v_prime')
      call cgyro_alloc_add(io,n_field*nc*nv_loc*8.0,'jvec_c')
      call cgyro_alloc_add(io,n_field*nc_loc*nv*8.0,'jvec_v')
      call cgyro_alloc_add(io,n_field*nc*nv_loc*8.0,'jxvec_c')
-     call cgyro_alloc_add(io,nc_loc*nv*16.0,'cap_h_v')
-     call cgyro_alloc_add(io,nc_loc*nv*16.0,'cap_h_v_prime')
+     call cgyro_alloc_add(io,nc*nv_loc*8.0,'upfac1')
+     call cgyro_alloc_add(io,nc*nv_loc*8.0,'upfac2')
 
      if (nonlinear_flag == 1) then
         write(io,*)
@@ -127,19 +120,6 @@ subroutine cgyro_check_memory(datafile)
         call cgyro_alloc_add(io,(8.0*n_xi)*n_xi*n_species*n_energy*n_theta,'cmat')
      else
         call cgyro_alloc_add(io,(8.0*nv)*nv*nc_loc,'cmat')
-     endif
-
-     if (implicit_flag == 1) then
-        write(io,*)
-        write(io,*) 'implicit gk'
-        write(io,*)
-        call cgyro_alloc_add(io,(nc*n_field)**2*16.0,'fieldmat')
-        call cgyro_alloc_add(io,nc*n_field*4.0,'idfield')
-        call cgyro_alloc_add(io,nc*n_field*4.0,'i_piv_field')
-        call cgyro_alloc_add(io,nc*n_field*16.0,'fieldvec')
-        call cgyro_alloc_add(io,nc*n_field*16.0,'fieldvec_loc')
-        call cgyro_alloc_add(io,nc*16.0,'gksvec')
-        call cgyro_alloc_add(io,2*nc*16.0,'gkwvec')
      endif
 
      write(io,*)

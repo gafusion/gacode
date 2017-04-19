@@ -22,7 +22,6 @@ subroutine tgyro_read_input
   character(len=80) :: ipath
   !-----------------------------------------------
 
-
   if (i_proc_global == 0) then
 
      inquire(file=filename,exist=fileex)
@@ -115,7 +114,6 @@ subroutine tgyro_read_input
   call tgyro_readbc_int(loc_num_equil_flag)
   call tgyro_readbc_int(tgyro_neo_gv_flag)
   call tgyro_readbc_int(tglf_q_low_flag)
-  call tgyro_readbc_int(tgyro_global_newton_flag)
   call tgyro_readbc_int(tgyro_iteration_method)
   call tgyro_readbc_int(tgyro_rotation_flag)
   call tgyro_readbc_real(tgyro_rmin)
@@ -139,8 +137,9 @@ subroutine tgyro_read_input
   call tgyro_readbc_real(tgyro_rped)
   call tgyro_readbc_real(tgyro_neped)
   call tgyro_readbc_real(tgyro_zeffped)
+  call tgyro_readbc_real(tgyro_ped_ratio)
   call tgyro_readbc_real(tgyro_tglf_nn_max_error)
-  call tgyro_readbc_char(tgyro_multi_code)
+  call tgyro_readbc_real(tgyro_quickfast_flag)
   ! ** END input read; ADD NEW PARAMETERS ABOVE HERE!!
   call tgyro_readbc_int(n_inst)
   !-------------------------------------------------------
@@ -148,6 +147,7 @@ subroutine tgyro_read_input
   allocate(paths(n_inst))
   allocate(procs(n_inst))
   allocate(inputrads(n_inst))
+  allocate(code(n_inst))
 
   if (i_proc_global == 0) then
 
@@ -155,7 +155,7 @@ subroutine tgyro_read_input
 
      do i=1,n_inst
 
-        read(1,*) ipath,procs(i),inputrads(i)
+        read(1,*) ipath,procs(i),inputrads(i),code(i)
         ind = index(ipath,' ')
 
         ! Append '/' to path name for use later
@@ -200,7 +200,7 @@ subroutine tgyro_read_input
   endif
   call MPI_BCAST(gyrotest_flag,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
   if (gyrotest_flag == 1) then
-     ! No iterations; only one call to GYRO 
+     ! No iterations; only one call to code
      tgyro_relax_iterations = 0
      ! One CPU per instance
      procs(:) = 1
@@ -224,6 +224,13 @@ subroutine tgyro_read_input
   call MPI_BCAST(inputrads,&
        n_inst,&
        MPI_DOUBLE_PRECISION,&
+       0,&
+       MPI_COMM_WORLD,&
+       ierr)
+
+  call MPI_BCAST(code,&
+       n_inst*5,&
+       MPI_CHARACTER,&
        0,&
        MPI_COMM_WORLD,&
        ierr)

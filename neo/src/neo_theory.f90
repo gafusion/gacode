@@ -97,7 +97,7 @@ contains
     do is=1, n_species
        if(Z(is) > 0 .and. dens(is,ir) > d_max) then
           is_ion = is
-          d_max  = dens(is,ir)
+          d_max  = dens(is,ir) 
        endif
     enddo
     if(is_ion == -1) then
@@ -753,7 +753,6 @@ contains
   subroutine get_coll_freqs(flag, ir_loc,is_loc,js_loc,ene,nu_d)
     use neo_globals
     implicit none
-    real, external :: derf
     integer, intent(in)  :: flag
     ! 0->use HS0 model; else->use collision_model
     integer, intent(in) :: ir_loc, is_loc, js_loc
@@ -788,7 +787,7 @@ contains
              Xd_coll = 1.0
           else
              Hd_coll = exp(-xb*xb) / (xb*sqrt(pi)) &
-                  + (1.0-1.0/(2.0*xb*xb)) * DERF(xb)
+                  + (1.0-1.0/(2.0*xb*xb)) * erf(xb)
              Xd_coll = 1.0 / (xa)
              endif
        else if(mass(is_loc) < mass(js_loc)) then
@@ -818,10 +817,10 @@ contains
     else
        ! Hirshman-Sigmar model: nu_d != nu_s
        Hd_coll = exp(-xb*xb) / (xb*sqrt(pi)) & 
-            + (1.0-1.0/(2.0*xb*xb)) * DERF(xb)
+            + (1.0-1.0/(2.0*xb*xb)) * erf(xb)
        Xd_coll = 1.0 / (xa)
        Hs_coll = -exp(-xb*xb) / (xb*sqrt(pi)) & 
-            + (1.0/(2.0*xb*xb)) * DERF(xb)
+            + (1.0/(2.0*xb*xb)) * erf(xb)
        Xs_coll = (xa) * (2.0 * temp(is_loc,ir_loc)/temp(js_loc,ir_loc)) &
             * (1.0 + mass(js_loc) / mass(is_loc))
        nu_d = fac * Hd_coll * Xd_coll

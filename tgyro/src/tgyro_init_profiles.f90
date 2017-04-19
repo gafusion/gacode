@@ -18,9 +18,9 @@ subroutine tgyro_init_profiles
   integer :: i
   integer :: n
   real :: arho
+  real :: tmp_ped
   real :: p_ave
   real :: x0(1),y0(1)
-  real, external :: bval
 
   !------------------------------------------------------
   ! PHYSICAL CONSTANTS
@@ -188,6 +188,9 @@ subroutine tgyro_init_profiles
      call cub_spline(EXPRO_rmin(:)/r_min,1e13*EXPRO_ni(i_ion,:),n_exp,r,ni(i_ion,:),n_r)
      call cub_spline(EXPRO_rmin(:)/r_min,EXPRO_dlntidr(i_ion,:)/100.0,n_exp,r,dlntidr(i_ion,:),n_r)
      call cub_spline(EXPRO_rmin(:)/r_min,EXPRO_dlnnidr(i_ion,:)/100.0,n_exp,r,dlnnidr(i_ion,:),n_r)
+     ! Define default ratios (these will change if tgyro_ped_ratio < 0.0)
+     n_ratio(i_ion) = ni(i_ion,n_r)/ne(n_r)
+     t_ratio(i_ion) = ti(i_ion,n_r)/te(n_r)
   enddo
 
   if (tgyro_ptot_flag == 1) then
@@ -224,7 +227,7 @@ subroutine tgyro_init_profiles
 
      ! Update some species (evo_e=1) based on quasineutrality
      call tgyro_quasigrad
- 
+
      ! Reintegrate density profiles
      do i_ion=1,loc_n_ion
         ! ni in 1/cm^3
@@ -333,6 +336,7 @@ subroutine tgyro_init_profiles
   call cub_spline(EXPRO_rmin(:)/r_min,EXPRO_flow_mom(:)*1e7,n_exp,r,mf_in,n_r)
   !------------------------------------------------------------------------------------------
 
+  !------------------------------------------------------------------------------------------
   ! Fourier coefficients for plasma shape
   if (EXPRO_nfourier > 0) then
 
@@ -373,6 +377,7 @@ subroutine tgyro_init_profiles
      loc_num_equil_flag = 0
 
   endif
+  !------------------------------------------------------------------------------------------
 
   !-----------------------------------------------------------------
   ! Parameters for EPED pedestal model 
@@ -391,17 +396,14 @@ subroutine tgyro_init_profiles
   exp_ti(1:loc_n_ion,:) = EXPRO_ti(1:loc_n_ion,:)*1e3
   ! exp_w0 [1/s]
   exp_w0 = EXPRO_w0
-  
+
   allocate(volp_exp(n_exp))
   volp_exp = EXPRO_volp
   allocate(ptot_exp(n_exp))
-  ! Pressure [Pa] 
-  ptot_exp = exp_ne*exp_te
-  do i_ion=1,loc_n_ion
-     ptot_exp = ptot_exp + exp_ni(i_ion,:)*exp_ti(i_ion,:)
-  enddo
-  ! Convert to Pa: n[1/cm^3]*(kT[ev])/10  
-  ptot_exp = ptot_exp*k/10.0
+
+  ! Compute pressure: ptot_exp
+  call tgyro_pressure
+
   ! Volume average (p_ave)
   call tgyro_volume_ave(ptot_exp,EXPRO_rmin,volp_exp,p_ave,n_exp)
   !
@@ -418,8 +420,14 @@ subroutine tgyro_init_profiles
      ! a [m]
      a_in = r_min
      ! Bt on axis [T]
+     if (EXPRO_rvbv == 0.0) then
+        call tgyro_catch_error('EXPRO_rvbv = 0.  Check input.profiles')
+     endif
      bt_in = EXPRO_rvbv/EXPRO_rmaj(n_exp)
      ! Plasma current Ip [Ma]
+     if (EXPRO_ip_exp == 0.0) then
+        call tgyro_catch_error('EXPRO_ip_exp = 0. Check input.profiles')
+     endif
      ip_in = 1e-6*EXPRO_ip_exp
      ! betan [%] = betat/In*100 where In = Ip/(a Bt) 
      betan_in = ( p_ave/(0.5*bt_in**2/mu_0) ) / ( ip_in/(a_in*bt_in) ) * 100.0
@@ -434,7 +442,7 @@ subroutine tgyro_init_profiles
      !
      ! Pedestal density
      if (tgyro_neped < 0.0) then
-        ! Here, x0 will be x0=psi_norm_ped
+        ! Set neped to ne(psi_0), where psi_0=-tgyro_neped
         x0(1) = -tgyro_neped
         call cub_spline(psi_exp,EXPRO_ne(:),n_exp,x0,y0,1)
         tgyro_neped = y0(1)
@@ -442,11 +450,33 @@ subroutine tgyro_init_profiles
      !
      ! Pedestal zeff
      if (tgyro_zeffped < 0.0) then
-        ! Here, x0 will be x0=psi_norm_ped
+        ! Set zeffped to zeff(psi_0), where psi_0=-tgyro_zeffped
         x0(1) = -tgyro_zeffped
         call cub_spline(psi_exp,EXPRO_z_eff(:),n_exp,x0,y0,1)
         tgyro_zeffped = y0(1)
      endif
+
+     ! Pedestal density/temperature ratios 
+     if (tgyro_ped_ratio < 0.0) then
+        do i_ion=1,loc_n_ion
+           x0(1) = -tgyro_ped_ratio
+
+           call cub_spline(psi_exp,EXPRO_ne(:),n_exp,x0,y0,1)
+           tmp_ped = y0(1)
+           call cub_spline(psi_exp,EXPRO_ni(i_ion,:),n_exp,x0,y0,1)
+           n_ratio(i_ion) = y0(1)/tmp_ped
+
+           call cub_spline(psi_exp,EXPRO_te(:),n_exp,x0,y0,1)
+           tmp_ped = y0(1)
+           call cub_spline(psi_exp,EXPRO_ti(i_ion,:),n_exp,x0,y0,1)
+           t_ratio(i_ion) = y0(1)/tmp_ped
+        enddo
+     endif
+
+     ! Quantities used to compute (ne,ni,Te,Ti) from <n>, <T>.
+     n_frac = 2.0/(1.0+sum(n_ratio(1:loc_n_ion)))
+     t_frac = (1.0+sum(n_ratio(1:loc_n_ion)))/(1.0+sum(n_ratio(1:loc_n_ion)*t_ratio(1:loc_n_ion)))
+
   endif
   !-----------------------------------------------------------------
 
@@ -486,20 +516,3 @@ subroutine tgyro_init_profiles
 
 
 end subroutine tgyro_init_profiles
-
-real function bval(x,f,n)
-
-   integer, intent(in) :: n
-   real, intent(in), dimension(n) :: x,f
-   real :: x1,x2,f1,f2,xs
-
-   xs = x(n)
-   x2 = x(n-7)
-   f2 = f(n-7)
-   x1 = x(n-9)
-   f1 = f(n-9) 
-    
-   bval = (xs-x1)/(x2-x1)*f2+(xs-x2)/(x1-x2)*f1
- 
-end function bval
-

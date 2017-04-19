@@ -1,4 +1,4 @@
-include install/make.inc.${GACODE_PLATFORM}
+include ../platform/build/make.inc.${GACODE_PLATFORM}
 
 all:
 	cd math ; make "OPT=${OPT}"

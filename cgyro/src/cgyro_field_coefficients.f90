@@ -67,8 +67,11 @@ subroutine cgyro_field_coefficients
 !$omp do reduction(+:sum_loc)
      do iv=nv1,nv2
         iv_loc = iv-nv1+1
+        is = is_v(iv)
         do ic=1,nc
-           sum_loc(ic) = sum_loc(ic)+vfac(iv_loc)*jvec_c(2,ic,iv_loc)**2
+           it = it_c(ic)
+           sum_loc(ic) = sum_loc(ic)+vfac(iv_loc)*dens_rot(it,is) &
+                *jvec_c(2,ic,iv_loc)**2 
         enddo
      enddo
 !$omp end do
@@ -124,7 +127,7 @@ subroutine cgyro_field_coefficients
            it = it_c(ic)
            sum_loc(ic) = sum_loc(ic)-w_xi(ix)*w_e(ie)*dens(is) &
                 *z(is)*jvec_c(1,ic,iv_loc)*jvec_c(3,ic,iv_loc) &
-                *z(is)/temp(is)
+                *z(is)/temp(is)*dens_rot(it,is)
         enddo
      enddo
 
@@ -150,7 +153,7 @@ subroutine cgyro_field_coefficients
            it = it_c(ic)
            sum_loc(ic) = sum_loc(ic)+w_xi(ix)*w_e(ie)*dens(is) &
                 *temp(is)*jvec_c(3,ic,iv_loc)**2 &
-                *(z(is)/temp(is))**2
+                *(z(is)/temp(is))**2 * dens_rot(it,is)
         enddo
      enddo
      call MPI_ALLREDUCE(sum_loc,&
@@ -194,6 +197,30 @@ subroutine cgyro_field_coefficients
      if (n == 0 .and. (px(ir) == 0 .or. ir == 1) .and. zf_test_flag == 0) then
         gcoef(:,ic) = 0.0
      endif
+  enddo
+
+  ! Arrays to speed up velocity integrals in Maxwell equations
+  do iv=nv1,nv2
+     iv_loc = iv-nv1+1
+     is = is_v(iv)
+     ie = ie_v(iv)
+     ix = ix_v(iv)
+     do ic=1,nc
+        it = it_c(ic)
+        dvjvec_c(:,ic,iv_loc) = dens_rot(it,is)*w_e(ie)*w_xi(ix)*z(is)*dens(is)* &
+             jvec_c(:,ic,iv_loc)
+     enddo
+  enddo
+  do ic=nc1,nc2
+     ic_loc = ic-nc1+1
+     it = it_c(ic)
+     do iv=1,nv
+        is = is_v(iv)
+        ix = ix_v(iv)
+        ie = ie_v(iv)
+        dvjvec_v(:,ic_loc,iv) = dens_rot(it,is)*w_e(ie)*w_xi(ix)*z(is)*dens(is)* &
+             jvec_v(:,ic_loc,iv)
+     enddo
   enddo
   !-------------------------------------------------------------------------
 

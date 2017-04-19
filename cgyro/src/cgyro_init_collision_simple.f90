@@ -115,7 +115,6 @@ subroutine cgyro_init_collision_simple
         enddo
      enddo
   enddo
-!$acc enter data copyin(cmat_simple)
 
   deallocate(amat)
   deallocate(i_piv)

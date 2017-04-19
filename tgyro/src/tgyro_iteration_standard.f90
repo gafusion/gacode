@@ -81,46 +81,25 @@ subroutine tgyro_iteration_standard
      call tgyro_profile_functions 
      !----------------------------------------------
 
-     if (tgyro_global_newton_flag == 1) then
+     !----------------------------------------------
+     ! Build dQ/dz (block diagonal matrix)
+     !
+     ! (p  ,p) (p  ,p+1) (p  ,p+2)
+     ! (p+1,p) (p+1,p+1) (p+1,p+2)
+     ! (p+2,p) (p+2,p+1) (p+2,p+2)
 
-        !----------------------------------------------
-        ! Build dQ/dz (dense matrix)
-        !
-        do p=1,p_max
+     jf(:,:) = 0.0
 
-           x_vec(:) = x_vec0(:)
-           x_vec(p) = x_vec0(p)+dx
-
-           call tgyro_flux_vector_dense(x_vec,f_vec)
-           jf(:,p) = (f_vec(:)-f_vec0(:))/dx
-
-        enddo
-        x_vec = x_vec0
-        !----------------------------------------------
-
-     else
-
-        !----------------------------------------------
-        ! Build dQ/dz (block diagonal matrix)
-        !
-        ! (p  ,p) (p  ,p+1) (p  ,p+2)
-        ! (p+1,p) (p+1,p+1) (p+1,p+2)
-        ! (p+2,p) (p+2,p+1) (p+2,p+2)
-
-        jf(:,:) = 0.0
-
-        do ip=0,n_evolve-1
-           call tgyro_flux_vector(x_vec,f_vec,dx,evolve_indx(ip+1))
-           do p=1,p_max,n_evolve
-              do pp=0,n_evolve-1
-                 jf(p+pp,p+ip) = (f_vec(p+pp)-f_vec0(p+pp))/dx
-              enddo
+     do ip=0,n_evolve-1
+        call tgyro_flux_vector(x_vec,f_vec,dx,evolve_indx(ip+1))
+        do p=1,p_max,n_evolve
+           do pp=0,n_evolve-1
+              jf(p+pp,p+ip) = (f_vec(p+pp)-f_vec0(p+pp))/dx
            enddo
         enddo
-        !
-        !----------------------------------------------
-
-     endif
+     enddo
+     !
+     !----------------------------------------------
 
      !----------------------------------------------
      ! Total Jacobian: (dQ/dz-dQ^T/dz)

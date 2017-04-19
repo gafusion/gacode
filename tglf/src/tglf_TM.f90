@@ -247,6 +247,7 @@
           do j=1,nx
             wdx_save(i,j) = wdx(j)
             b0x_save(i,j) = b0x(j)
+            b2x_save(i,j) = b2x(j)
             cx_par_par_save(i,j) = cx_par_par(j)
             cx_tor_par_save(i,j) = cx_tor_par(j)
             cx_tor_per_save(i,j) = cx_tor_per(j)
@@ -261,6 +262,7 @@
           do j=1,nx
              wdx(j) = wdx_save(i,j)
              b0x(j) = b0x_save(i,j)
+             b2x(j) = b2x_save(i,j)
              cx_par_par(j) = cx_par_par_save(i,j)
              cx_tor_par(j) = cx_tor_par_save(i,j)
              cx_tor_per(j) = cx_tor_per_save(i,j)

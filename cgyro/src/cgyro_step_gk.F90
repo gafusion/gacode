@@ -60,7 +60,7 @@ subroutine cgyro_rhs(ij)
 
   integer, intent(in) :: ij
   integer :: is,ir
-  integer :: id,jc,j
+  integer :: id,jc
   real :: rval,rval2
   complex :: rhs_stream
   complex :: rhs_ij(nc,nv_loc)
@@ -86,25 +86,7 @@ subroutine cgyro_rhs(ij)
 
   call timer_lib_in('str')
 
-  if (implicit_flag == 1) then
-
-     ! IMPLICIT advance 
-
-!$omp parallel do private(ic)
-     do iv_loc=1,nv2-nv1+1
-        do ic=1,nc
-           ! Diagonal terms
-           rhs_ij(ic,iv_loc) = &
-                omega_cap_h(ic,iv_loc)*cap_h_c(ic,iv_loc)+&
-                omega_h(ic,iv_loc)*h_x(ic,iv_loc)+&
-                sum(omega_s(:,ic,iv_loc)*field(:,ic))
-        enddo
-     enddo
-
-  else
-
-     ! EXPLICIT advance 
-
+#ifdef _OPENACC
 !$acc data  &
 !$acc& pcopyout(rhs_ij) &
 !$acc& pcopyin(g_x,h_x,field,cap_h_c) &
@@ -112,8 +94,7 @@ subroutine cgyro_rhs(ij)
 !$acc& present(omega_cap_h,omega_h,omega_s) &
 !$acc& present(omega_stream,xi,vel) &
 !$acc& present(dtheta,dtheta_up,icd_c)
-
-#ifdef _OPENACC
+  
 !$acc  parallel loop gang vector collapse(2) & 
 !$acc& private(iv,ic,iv_loc,is,rval,rval2,rhs_stream,id,jc)
 #else
@@ -146,18 +127,16 @@ subroutine cgyro_rhs(ij)
 
         enddo
      enddo
-!$acc end data
-  endif
+!$acc end data	  
 
   rhs(:,:,ij) = rhs_ij(:,:)
 
-  ! Wavenumber advection shear terms
-  call cgyro_advect_wavenumber
-
   call timer_lib_out('str')
 
-  ! Nonlinear evaluation [f,g]
+  ! Wavenumber advection shear terms
+  call cgyro_advect_wavenumber(ij)
 
+  ! Nonlinear evaluation [f,g]
   if (nonlinear_flag == 1) then     
      if (nonlinear_method == 1) then
         call cgyro_nl_direct(ij)

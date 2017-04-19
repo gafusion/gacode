@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# Comment Information
+TITLE="CGYRO Turbulence"
+TIMESTAMP=`date -Iseconds`
+
+# Main movie definitions
+BASENAME=%d.png
+BITRATE=1000k
+FRAMERATE=20
+QUALITY=19
+OUT=movie.mp4
+
+if hash avconv 2>/dev/null ; then
+    avconv -framerate $FRAMERATE \
+	   -start_number $1 \
+	   -i $BASENAME \
+	   -c:v libx264 \
+	   -profile:v high \
+	   -crf $QUALITY \
+	   -pix_fmt yuv420p \
+	   -metadata title="$TITLE" \
+	   -metadata creation_time="$TIMESTAMP" \
+	   $OUT
+elif hash ffmpeg 2>/dev/null ; then
+    ffmpeg -framerate $FRAMERATE \
+	   -start_number $1 \
+	   -i $BASENAME \
+	   -c:v libx264 \
+	   -profile:v high \
+	   -crf $QUALITY \
+	   -pix_fmt yuv420p \
+	   -metadata title="$TITLE" \
+	   -metadata creation_time="$TIMESTAMP" \
+	   $OUT
+else
+    echo Need avconv or ffmpeg in gacode/python/cgyro/avconv_wrapper
+fi

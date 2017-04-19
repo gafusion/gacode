@@ -24,9 +24,11 @@ module tgyro_ped
   real :: ip_in
   real :: kappa_in
   real :: m_in
-  real :: neped_in
+  real :: nped_in
   real :: r_in
   real :: zeffped_in
+  
+  real :: t_axis
 
   ! EPED_NN outputs
   integer, parameter :: nx_nn=1001
@@ -54,12 +56,11 @@ module tgyro_ped
 
   ! Pedestal top scale lengths
   real :: zn_top,zt_top
-  real :: n_top(1),t_top(1)
-  real :: r_top(1)
   real :: dr_nml
-  real, dimension(1) :: psi_top
-  real, dimension(1) :: p_top
-
+  real, dimension(1) :: r_top,psi_top
+  real, dimension(1) :: n_top,t_top,p_top
+  real :: n_frac,t_frac
+  
 contains
 
   subroutine tgyro_pedestal
@@ -72,13 +73,16 @@ contains
     ! Parameters interpolated at top of pedestal
     real, dimension(1) :: n_p_top,t_p_top
     real, dimension(1) :: dpsidr_top
+    real :: ntsum
+    integer :: i_ion
 
     if (tgyro_ped_model == 1) return
 
     !-------------------------------------------------------------------------
-    ! 1. Initializations (not used)
+    ! 1. Initializations 
     !
-    neped_in   = tgyro_neped
+    ! nped_in = <n>
+    nped_in    = tgyro_neped*(1.0+sum(n_ratio(1:loc_n_ion)))/2.0
     zeffped_in = tgyro_zeffped
     !-------------------------------------------------------------------------
 
@@ -87,32 +91,46 @@ contains
     !
     if (i_proc_global == 0) then
 
-       ! Inputs stored in interface
+       ! Inputs stored in interface  
        call tgyro_eped_nn
+       ! Outputs (nx_nn is large, fixed number of radial points)
+       !  nn_vec(1:nx_nn,1) -> psi_norm
+       !  nn_vec(1:nx_nn,2) -> ne [1/cm^3]
+       !  nn_vec(1:nx_nn,3) -> P [Pa]
 
        if (tgyro_rped < 0.0) then
-            psi_top(1) = 1.0 - 1.5*nn_w_ped*abs(tgyro_rped)
+          psi_top(1) = 1.0 - 1.5*nn_w_ped*abs(tgyro_rped)
        else
-            psi_top(1) = tgyro_rped
+          psi_top(1) = tgyro_rped
        endif
 
-    endif
+  endif
 
-    ! Communicated needed data from output.avg
+    ! Broadcast needed data from single-task call above 
     call MPI_BCAST(nn_vec,size(nn_vec),MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
     call MPI_BCAST(psi_top,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+
+    ! NOTE: Below, n_top means ne_top
+    !              t_top means Te_top 
 
     ! n_top: in 1/cm^3
     call cub_spline(nn_vec(:,1),nn_vec(:,2),nx_nn,psi_top,n_top,1)
     ! p_top: in Pa
     call cub_spline(nn_vec(:,1),nn_vec(:,3),nx_nn,psi_top,p_top,1) 
 
-    ! FORMULA: P = 2nkT 
+    ! Pressure formula based on pivot assumption (includes tiny fast ion bits):
+    ! 
+    ! P/k = ne Te + Sum_i ni Ti
+    !     = n_top t_top [ 1 + Sum_i n_ratio(i) t_ratio(i) ]
+    !     = n_top t_top ntsum
+    !     = p_top/k
+ 
+    !ntsum = 1.0+sum(n_ratio(1:loc_n_ion)*t_ratio(1:loc_n_ion))
 
-    ! t_top [eV]
+    ! t_top [eV] 
     t_top = (10.0*p_top)/(2*n_top*k) 
 
-    ! n', T':
+    ! Calculate n' (n_p) and T' (t_p):
     call bound_deriv(n_p,nn_vec(:,2),nn_vec(:,1),nx_nn)
     t_vec = (10.0*nn_vec(:,3))/(2*nn_vec(:,2)*k)
     call bound_deriv(t_p,t_vec,nn_vec(:,1),nx_nn)
@@ -128,7 +146,7 @@ contains
     ! zn_top = -(1/n) dn/dr 
     ! zt_top = -(1/T) dT/dr 
     !
-    call cub_spline(psi_exp,rmin_exp    ,n_exp,psi_top,r_top,1)
+    call cub_spline(psi_exp,rmin_exp  ,n_exp,psi_top,     r_top,1)
     call cub_spline(psi_exp,dpsidr_exp,n_exp,psi_top,dpsidr_top,1)
 
     zn_top = -n_p_top(1)/n_top(1)*dpsidr_top(1)
@@ -136,16 +154,42 @@ contains
     !-------------------------------------------------------------------------
 
     !-------------------------------------------------------------------------
-    ! 4. Integrate to obtain TGYRO pivot
-
+    ! 4. Integrate to obtain TGYRO pivot values
+    
     ! Integration backward from r_top to r_star
     dr_nml = r_top(1)-r(n_r)
-    ti(:,n_r) = t_top(1)*exp(0.5*(dlntidr(:,n_r)+zt_top)*dr_nml)
-    te(n_r)   = t_top(1)*exp(0.5*(dlntedr(n_r)  +zt_top)*dr_nml)
-    ne(n_r)   = n_top(1)*exp(0.5*(dlnnedr(n_r)  +zn_top)*dr_nml)
+    ne(n_r)   = n_top(1)*exp(0.5*(dlnnedr(n_r)  +zn_top)*dr_nml)*n_frac
+    te(n_r)   = t_top(1)*exp(0.5*(dlntedr(n_r)  +zt_top)*dr_nml)*t_frac
+
+    ! Self-similar ion values (fixed pivot assumption; see tgyro_profile_reintegrate)
+    do i_ion=1,loc_n_ion
+       if (therm_flag(i_ion) == 1) then
+          ni(i_ion,n_r) = n_top(1)*exp(0.5*(dlnnidr(i_ion,n_r)+zn_top)*dr_nml)*n_ratio(i_ion)*n_frac
+          ti(i_ion,n_r) = t_top(1)*exp(0.5*(dlntidr(i_ion,n_r)+zt_top)*dr_nml)*t_ratio(i_ion)*t_frac
+       endif
+    enddo
     !-------------------------------------------------------------------------
 
   end subroutine tgyro_pedestal
+
+  !---------------------------------------------------------------------------
+  ! tgyro_pededtal_map.f90
+  !
+  ! PURPOSE:
+  !  Perform critical profile interpolation from core to edge.
+  !
+  ! Inputs
+  !
+  !  z_star : scale length at r_star (pivot)
+  !  z_top  : scale length at r_top  (pedestal top)
+  !  f_top  : function at r_top
+  !  p_vec  : profile vector from pedestal top to edge (r_star < r < a)
+  !
+  ! Outputs
+  !
+  ! i_star : first i_exp such that r > r_star
+  ! f_exp  : Global profile on experimental (input.profiles) grid 
+  !---------------------------------------------------------------------------
 
   subroutine tgyro_pedestal_map(z_star,z_top,f_top,p_vec,i_star,f_exp)
 

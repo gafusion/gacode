@@ -1,0 +1,30 @@
+#! /usr/bin/env bash
+#
+# SCRIPT:
+#  gyro.CORI_KNL
+#
+# FUNCTION:
+#  Parallel execution script
+#---------------------------------------------------
+
+simdir=${1}
+nmpi=${2}
+exec=${3}
+nomp=${4}
+numa=${5}
+mpinuma=${6}
+nidle=${7}
+
+# nmpi = MPI tasks
+# nomp = OpenMP threads per MPI task
+# numa = NUMAs active per node
+# mpinuma = MPI tasks per active NUMA 
+
+. $GACODE_ROOT/shared/bin/gacode_mpi_tool
+
+cd $simdir
+
+export OMP_NUM_THREADS=$nomp
+export OMP_PLACES=threads
+echo "> srun --cpu_bind=cores -n $nmpi -c $(($CORES_PER_NODE/$mpinode)) $exec"
+srun --cpu_bind=cores -n $nmpi -c $(($CORES_PER_NODE/$mpinode)) $exec

@@ -4,47 +4,65 @@ from gacodeplotdefs import *
 from gacodefuncs import *
 from cgyro.data import cgyrodata
 
-ftype = sys.argv[1]
-w = float(sys.argv[2])
+ftype  = sys.argv[1]
+w      = float(sys.argv[2])
 moment = sys.argv[3]
-ymin = sys.argv[4]
-ymax = sys.argv[5]
+ymin   = sys.argv[4]
+ymax   = sys.argv[5]
+field  = int(sys.argv[6])
+fc     = int(sys.argv[7])
 
 sim = cgyrodata('./')
-sim.getbigflux()
+sim.getflux()
 
 ns = sim.n_species
 t  = sim.t
+
+field_tag = '\mathrm{Total}'
+
+if hasattr(sim,'ky_flux'):
+    # New flux format
+    if fc == 0:
+        ys = np.sum(sim.ky_flux,axis=(2,3))
+    else:
+        ys = np.sum(sim.ky_flux[:,:,field,:,:],axis=2)
+        if field == 0:
+            field_tag = '\phi'
+        elif field == 1:
+            field_tag = 'A_\parallel'
+        else:
+            field_tag = 'B_\parallel'
+else:
+    # Old/large flux format
+    sim.getbigflux()          
+    ys = np.zeros([ns,3,sim.n_time])
+    if moment == 'n':
+        ys[:,0,:] = np.sum(sim.kxky_flux_n,axis=(0,2))
+    if moment == 'e':
+        ys[:,1,:] = np.sum(sim.kxky_flux_e,axis=(0,2))
+
+# Now, ys -> {n_species,3,nt}
 
 if moment == 'n':
     ntag = 'Density~flux'
     mtag = '\Gamma'
     ttag = 'G'
     ftag = 'flux_n'
-    if hasattr(sim,'kxky_flux_n'):
-        y = np.sum(sim.kxky_flux_n,axis=(0,2))
-    else:
-        y = sim.flux_n
+    y = ys[:,0,:]
 elif moment == 'e':
     ntag = 'Energy~flux'
     mtag = 'Q'
     ttag = 'Q'
     ftag = 'flux_e'
-    if hasattr(sim,'kxky_flux_e'):
-        y = np.sum(sim.kxky_flux_e,axis=(0,2))
-    else:
-        y = sim.flux_e
+    y = ys[:,1,:]
 elif moment == 'v':
     ntag = 'Momentum~flux'
     mtag = '\Pi'
     ttag = 'Pi'
     ftag = 'flux_v'
-    if hasattr(sim,'kxky_flux_v'):
-        y = np.sum(sim.kxky_flux_v,axis=(0,2))
-    else:
-        y = sim.flux_v
+    y = ys[:,2,:]
 else:
-    print 'ERROR (plot_flux_time.py) Invalid moment.'
+    print 'ERROR (plot_flux.py) Invalid moment.'
     sys.exit()
 
 # Get index for average window
@@ -76,9 +94,9 @@ ax.set_xlabel(TIME)
 
 color = ['k','m','b','c','g','r']
 
-windowtxt = r'$['+str(t[imin])+' < (c_s/a) t < '+str(t[-1])+']$'
+windowtxt = '['+str(t[imin])+' < (c_s/a) t < '+str(t[-1])+']'
 
-ax.set_title(r'$\mathrm{'+ntag+'} \quad $'+windowtxt)
+ax.set_title(r'$\mathrm{'+ntag+'} \quad '+windowtxt+'\quad ['+field_tag+']$')
 
 for ispec in range(ns):
     ave = average(y[ispec,:],t,w)

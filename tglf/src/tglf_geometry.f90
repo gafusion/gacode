@@ -99,16 +99,17 @@ SUBROUTINE xgrid_functions_sa
      wdx(i) = -xwell_sa*MIN(1.0,alpha_sa)+ cn - sn*kxx(i)
      ! b0x(i) = 1.0+(shat_sa*(thx-theta0_sa) - alpha_sa*sn)**2
      b0x(i) = 1.0+(kxx(i))**2
+     b2x(i) = 1.0
      wdpx(i) = 0.0   ! not used for s-alpha
      if(b_model_sa.eq.1)then
         ! put B dependence into k_per**2
-        b0x(i) = b0x(i)/Bx(i)**2
+        b2x(i) = Bx(i)**2
      endif
      if(b_model_sa.eq.2)then
         ! put 1/R(theta) factor into wd
         wdx(i) = wdx(i)/Rx
         ! put B dependence into k_per**2
-        b0x(i) = b0x(i)/Bx(i)**2
+        b2x(i) = Bx(i)**2
      endif
      ! debug
      ! write(*,*)i,thx,Bx(i),wdx(i),b0x(i)
@@ -343,13 +344,17 @@ SUBROUTINE xgrid_functions_geo
      wdp2 = (qrat_geo(m2)/b_geo(m2))*costheta_p_geo(m2)
      wdpx(i) = wdp1 + (wdp1-wdp2)*(y_x-y1)/(y2-y1)
      wdpx(i) = (R_unit/Rmaj_s)*wdpx(i)
+     ! interpolate b2x = b_geo**2
+     b1 = b_geo(m1)**2
+     b2 = b_geo(m2)**2
+     b2x(i) =  b1 +(b2-b1)*(y_x-y1)/(y2-y1)
      ! interpolate b0x
      b1 = (1.0+(kx_factor(m1)*(S_prime(m1)+dkxky1)-kx0*b_geo(m1)/qrat_geo(m1)**2)**2) &
-          *(qrat_geo(m1)/b_geo(m1))**2
+          *qrat_geo(m1)**2
      b2 = (1.0+(kx_factor(m2)*(S_prime(m2)+dkxky2)-kx0*b_geo(m2)/qrat_geo(m2)**2)**2) &
-          *(qrat_geo(m2)/b_geo(m2))**2
+          *qrat_geo(m2)**2
      ! write(*,*)"b1,b2,b3,b4=",b1,b2,b3,b4
-     b0x(i) = b1 +(b2-b1)*(y_x-y1)/(y2-y1)
+     b0x(i) =  b1 +(b2-b1)*(y_x-y1)/(y2-y1)
      if(b0x(i).lt.0.0)then
         write(*,*)"interpolation error b0x < 0",i,b0x(i),b1,b2
         b0x(i)=(b1+b2)/2.0
@@ -952,7 +957,7 @@ SUBROUTINE mercier_luc
   ! p_prime_zero forces grad-B-curvature to zero to compensates
   ! for b_par =0
   !
-  p_prime_zero_s = 1.0
+  p_prime_zero_s = -1.0
   if(use_mhd_rule_in)p_prime_zero_s = 0.0
   !
   ! write(*,*)"debug p_prime_zero",p_prime_zero_s

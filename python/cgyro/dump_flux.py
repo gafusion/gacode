@@ -4,28 +4,31 @@ from gacodeplotdefs import *
 from cgyro.data import cgyrodata
 
 sim = cgyrodata('./')
-sim.getbigflux()
+sim.getflux()
 
 ns = sim.n_species
 t = sim.t
 
-for moment in ['n','e']:
+ys = np.sum(sim.ky_flux,axis=(2,3))
+for moment in ['n','e','v']:
     if moment == 'n':
+        ntag = 'Density~flux'
         mtag = '\Gamma'
         ttag = 'G'
         ftag = 'flux_n'
-        if hasattr(sim,'kxky_flux_n'):
-            y = np.sum(sim.kxky_flux_n,axis=(0,2))
-        else:
-            y = sim.flux_n
+        y = ys[:,0,:]
     elif moment == 'e':
+        ntag = 'Energy~flux'
         mtag = 'Q'
         ttag = 'Q'
         ftag = 'flux_e'
-        if hasattr(sim,'kxky_flux_e'):
-            y = np.sum(sim.kxky_flux_e,axis=(0,2))
-        else:
-            y = sim.flux_e
+        y = ys[:,1,:]
+    elif moment == 'v':
+        ntag = 'Momentum~flux'
+        mtag = '\Pi'
+        ttag = 'Pi'
+        ftag = 'flux_v'
+        y = ys[:,2,:]
 
     data  = np.column_stack((sim.t,y[0,:]))
     head  = '(cs/a) t     '+ttag+'_1/'+ttag+'_GB'

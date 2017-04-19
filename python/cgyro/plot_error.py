@@ -19,8 +19,11 @@ ax.set_ylabel(r'$\mathrm{Integration~Error}$')
 ax.set_yscale('log')
 #======================================
 
-ax.plot(sim.t[2:],sim.error[2:])
+ax.plot(sim.t[2:],sim.err1[2:],label=r'$\mathrm{Total~error}$')
+ax.plot(sim.t[2:],sim.err2[2:],label=r'$\mathrm{RK4~error}$')
 ax.set_xlim([0,max(sim.t)])
+
+ax.legend()
 
 if ftype == 'screen':
     plt.show()

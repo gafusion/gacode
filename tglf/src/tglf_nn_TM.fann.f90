@@ -6,8 +6,11 @@
 !
      use tglf_pkg
      use tglf_interface
-     USE tglf_dimensions
-     USE tglf_global
+     use tglf_dimensions
+     use tglf_global
+#ifdef MPI_TGLF
+     use tglf_mpi
+#endif
 !
      IMPLICIT NONE
 !
@@ -84,26 +87,9 @@
 
 !    WRITE(*,*)INPUT_PARAMETERS
 
-    call get_environment_variable('TGLFNN_MODEL_DIR',tglfnn_model)
-    ierr=load_anns(0, TRIM(tglfnn_model)//NUL,'brainfuse'//NUL)
-    ierr=load_anns_inputs(INPUT_PARAMETERS)
-    ierr=run_anns()
-    ierr=get_anns_avg_array(OUTPUT_PARAMETERS)
-
-    energy_flux_out(1,1)   = OUTPUT_PARAMETERS(1)
-    energy_flux_out(3,1)   = OUTPUT_PARAMETERS(2)
-    particle_flux_out(1,1) = OUTPUT_PARAMETERS(3)
-    stress_tor_out(3,1)    = OUTPUT_PARAMETERS(4)
-
-!    write(*,*)    energy_flux_out(1,1),   &
-!                  energy_flux_out(3,1),   &
-!                  particle_flux_out(1,1), &
-!                  stress_tor_out(3,1)
-
 !
-! '#---------------------------------------------------'
-! '# Sort ions by A, Z, Te/Ti'
-! '#---------------------------------------------------'
+!sort ions by A, Z, Te/Ti
+!
      tmp=0.0
      tmp(1)=1E10
      tmp(2)=1E9
@@ -126,14 +112,57 @@
         stop
     endif
 
-    OUT_ENERGY_FLUX_i_RNG=0
-    OUT_ENERGY_FLUX_1_RNG=0
-    OUT_PARTICLE_FLUX_1_RNG=0
-    OUT_STRESS_TOR_i_RNG=0
+!
+!run NN
+!
+    call get_environment_variable('TGLFNN_MODEL_DIR',tglfnn_model)
+    ierr=load_anns(0, TRIM(tglfnn_model)//NUL,'brainfuse'//NUL)
+    ierr=load_anns_inputs(INPUT_PARAMETERS)
+    ierr=run_anns()
+
+    if (iProcTglf==-1) then !only write if not MPI
+        ierr=get_anns_std_array(OUTPUT_PARAMETERS)
+
+        open(unit=1,file='std.tglf.gbflux',status='replace')
+        write(1,'(1(1pe11.4,1x))',advance="no") OUTPUT_PARAMETERS(3)
+        DO i = 1,tglf_ns_in-1
+            write(1,'(1(1pe11.4,1x))',advance="no") 0.0
+        ENDDO
+        write(1,'(1(1pe11.4,1x))',advance="no") OUTPUT_PARAMETERS(1)
+        write(1,'(1(1pe11.4,1x))',advance="no") 0.0
+        write(1,'(1(1pe11.4,1x))',advance="no") OUTPUT_PARAMETERS(2)
+        DO i = 1,tglf_ns_in-2
+            write(1,'(1(1pe11.4,1x))',advance="no") 0.0
+        ENDDO
+        write(1,'(1(1pe11.4,1x))',advance="no") 0.0
+        write(1,'(1(1pe11.4,1x))',advance="no") OUTPUT_PARAMETERS(4)
+        DO i = 1,tglf_ns_in-2
+            write(1,'(1(1pe11.4,1x))',advance="no") 0.0
+        ENDDO
+        DO i = 1,tglf_ns_in-1
+            write(1,'(1(1pe11.4,1x))',advance="no") 0.0
+        ENDDO
+        close(1)
+    endif
+
+    ierr=get_anns_avg_array(OUTPUT_PARAMETERS)
+    energy_flux_out(1,1)   = OUTPUT_PARAMETERS(1)
+    energy_flux_out(3,1)   = OUTPUT_PARAMETERS(2)
+    particle_flux_out(1,1) = OUTPUT_PARAMETERS(3)
+    stress_tor_out(3,1)    = OUTPUT_PARAMETERS(4)
+
+!    write(*,*)    energy_flux_out(1,1),   &
+!                  energy_flux_out(3,1),   &
+!                  particle_flux_out(1,1), &
+!                  stress_tor_out(3,1)
 
 !
-! Switch between TGLF and the NN depending on 'nn_max_error' values
-!
+!switch between TGLF and the NN depending on 'nn_max_error' values (disabled)
+     OUT_ENERGY_FLUX_i_RNG=0
+     OUT_ENERGY_FLUX_1_RNG=0
+     OUT_PARTICLE_FLUX_1_RNG=0
+     OUT_STRESS_TOR_i_RNG=0
+
      if ((OUT_ENERGY_FLUX_1_RNG   < tglf_nn_max_error_in) .and. &
          (OUT_ENERGY_FLUX_i_RNG   < tglf_nn_max_error_in) .and. &
          (OUT_PARTICLE_FLUX_1_RNG < tglf_nn_max_error_in) .and. &

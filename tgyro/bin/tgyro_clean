@@ -16,7 +16,7 @@ fi
 
 if [ "$1" == "-a" ]
 then
-   rm -f *.log *.gen halt out.* *.out *.dat batch.* *.eps
+   rm -f *.log *.gen halt out.* *.out *.dat batch.out batch.err *.eps
    rm -f */*.out */RES* */halt */*.gen */out* */*~
    rm -f */*ps */*.err */*.src */*.log */gyrotest_flag gyrotest_flag
    rm -f *.dump* input.profiles.gen */input.profiles.gen

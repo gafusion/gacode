@@ -35,7 +35,6 @@ subroutine GEO_interp(theta_0)
      GEO_grad_r0 = 1.0
 
      GEO_ffprime   = 0.0
-     GEO_beta_star = GEO_beta_star_in
      GEO_f         = GEO_rmaj_in
 
      GEO_volume       = 2*pi**2*GEO_rmin_in**2*GEO_rmaj_in
@@ -65,9 +64,10 @@ subroutine GEO_interp(theta_0)
      GEO_captheta  = GEO_s_in*theta_0-&
           GEO_q_in**2*GEO_rmaj_in*GEO_beta_star_in*sin(theta_0) 
      GEO_nu     = -GEO_q_in*theta_0
-     GEO_l_t    = 0.0 ! check with NEO usage
-     GEO_nsin   = 0.0 ! check with NEO usage
-     GEO_bigr   = GEO_rmaj_in/GEO_b
+     GEO_l_r = 0.0
+     GEO_l_t = 0.0
+     GEO_nsin = 0.0 ! check with NEO usage
+     GEO_bigr = GEO_rmaj_in/GEO_b
      GEO_bigr_r = cos(theta_0)
      GEO_bigr_t = -GEO_rmin_in*sin(theta_0)
      GEO_theta_nc = theta_0
@@ -137,6 +137,7 @@ subroutine GEO_interp(theta_0)
   GEO_captheta = GEOV_captheta(i1)+(GEOV_captheta(i2)-GEOV_captheta(i1))*z
   GEO_nu       = GEOV_nu(i1)+(GEOV_nu(i2)-GEOV_nu(i1))*z
   GEO_bigr     = GEOV_bigr(i1)+(GEOV_bigr(i2)-GEOV_bigr(i1))*z
+  GEO_l_r      = GEOV_l_r(i1)+(GEOV_l_r(i2)-GEOV_l_r(i1))*z
   GEO_l_t      = GEOV_l_t(i1)+(GEOV_l_t(i2)-GEOV_l_t(i1))*z
   GEO_nsin     = GEOV_nsin(i1)+(GEOV_nsin(i2)-GEOV_nsin(i1))*z
   GEO_usin     = GEOV_usin(i1)+(GEOV_usin(i2)-GEOV_usin(i1))*z

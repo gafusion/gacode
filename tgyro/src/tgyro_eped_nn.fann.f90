@@ -73,9 +73,9 @@
    real(4) :: INPUT_PARAMETERS(10)
    real(4) :: OUTPUT_PARAMETERS(5)
 
-   real    :: nn_p_ped, nn_t_ped
-   real    :: nn_t_edg, nn_n_edg
-   real    :: nn_t_cor, nn_n_cor
+   real :: nn_p_ped, nn_t_ped
+   real :: nn_t_edg, nn_n_edg
+   real :: nn_t_cor, nn_n_cor
 
    integer :: i
 
@@ -93,40 +93,40 @@
    INPUT_PARAMETERS( 5) = ip_in
    INPUT_PARAMETERS( 6) = kappa_in
    INPUT_PARAMETERS( 7) = m_in
-   INPUT_PARAMETERS( 8) = neped_in
+   INPUT_PARAMETERS( 8) = nped_in
    INPUT_PARAMETERS( 9) = r_in
    INPUT_PARAMETERS(10) = zeffped_in
 
    call get_environment_variable('EPEDNN_MODEL_DIR',epednn_model)
-   !write(*,*) TRIM(epednn_model)
-   ierr=load_anns(1, TRIM(epednn_model)//NUL,'brainfuse'//NUL)
-   ierr=load_anns_inputs(INPUT_PARAMETERS)
-   ierr=run_anns()
-   ierr=get_anns_avg_array(OUTPUT_PARAMETERS)
 
-   nn_w_ped = OUTPUT_PARAMETERS(3)*2
+   ierr = load_anns(1, TRIM(epednn_model)//NUL,'brainfuse'//NUL)
+   ierr = load_anns_inputs(INPUT_PARAMETERS)
+   ierr = run_anns()
+   ierr = get_anns_avg_array(OUTPUT_PARAMETERS)
+
+   nn_w_ped = OUTPUT_PARAMETERS(3)
+
+   ! nn_p* -> Pa
+   ! nn_t* -> eV
+   ! nn_n* -> 10^13/cm^3 
+
    nn_p_ped = OUTPUT_PARAMETERS(1)*1e6
+   nn_t_ped = (10*nn_p_ped)/(2*(1e13*nped_in)*k)
 
-   nn_t_ped = nn_p_ped/neped_in/1.6022/2.0
-   nn_n_cor = neped_in * 1.5
-   nn_t_cor = te(1)
-   nn_n_edg = neped_in * 0.25
-   nn_t_edg = 75.
+   nn_n_cor = nped_in*1.5
+   nn_t_cor = t_axis
+
+   nn_n_edg = nped_in*0.25
+   nn_t_edg = 75.0
 
    nn_vec=0.0
    do i=0,nx_nn-1
       nn_vec(i+1,1) = i/(nx_nn-1.0)
    enddo
 
-   !write(*,*)nn_w_ped, &
-   !     neped_in, nn_t_ped,           &
-   !     nn_n_cor, nn_t_cor,           &
-   !     nn_n_edg, nn_t_edg,           &
-   !     nexpin, nexpout, texpin, texpout
-
    call toq_profiles( &
         nn_vec(:,1), nx_nn, nn_w_ped/2.0, &
-        neped_in, nn_t_ped,               &
+        nped_in, nn_t_ped,                &
         nn_n_cor, nn_t_cor,               &
         nn_n_edg, nn_t_edg,               &
         nexpin, nexpout, texpin, texpout, &
@@ -137,18 +137,7 @@
 
    ! At this point: 
    !   nn_vec(:,1) -> psi_norm
-   !   nn_vec(:,2) -> ne [1/cm^3]
-   !   nn_vec(:,3) -> P [Pa]
-
-
-   !if (i_proc_global == 0) then
-   !   do i=1,nx_nn
-   !      write(*,*) nn_vec(i,1),nn_vec(i,2),nn_vec(i,3),nn_vec(i,3)/nn_vec(i,2)/1.6022/2.*1E13
-   !   enddo
-   !   call MPI_finalize(i)
-   !   stop
-   !endif
- 
-   ! WRITE(*,*) OUTPUT_PARAMETERS
+   !   nn_vec(:,2) -> <n> [1/cm^3]
+   !   nn_vec(:,3) -> P   [Pa]
 
  end subroutine tgyro_eped_nn

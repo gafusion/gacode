@@ -8,7 +8,7 @@
 # nidle = Idle threads
 
 # Extract CORES_PER_NODE and NUMAS_PER_NODE
-export `grep PER_NODE $GACODE_ROOT/shared/install/make.inc.$GACODE_PLATFORM`
+export `grep PER_NODE $GACODE_ROOT/platform/build/make.inc.$GACODE_PLATFORM`
 
 # Total omp threads (used plus idle)
 nomptot=$(($nomp+$nidle))

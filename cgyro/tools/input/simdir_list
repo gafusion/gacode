@@ -1,21 +1,17 @@
 Local CGYRO templates:
 
-reg01: exp+lor+es +lin+ie +loc+mil+nrot
-reg02: exp+sug+es +lin+ie +loc+mil+nrot
-reg03: imp+sug+es +lin+ie +loc+mil+nrot
-reg04: exp+sug+em +lin+ie +loc+mil+nrot
-reg05: imp+sug+em +lin+ie +loc+mil+nrot
-reg06: imp+sug+es + zf+ie +loc+mil+nrot
-reg07: exp+sug+em +lin+iec+pro+gen+ rot
-reg08: imp+sug+em +lin+ie +pro+mil+ rot
-reg09: exp+sug+es + nl+i  +loc+mil+nrot
-reg10: exp+sug+em + nl+ie +loc+mil+nrot
-reg11: exp+sug+es + nl+i  +loc+mil+ rot 
-reg12: exp+sug+cem+lin+ie +loc+mil+nrot
-reg13: imp+sug+cem+lin+ie +loc+mil+nrot
-reg14: exp+sug+cem+ nl+ie +loc+mil+nrot
-reg15: exp+sug+cem+lin+ie +loc+mil+nrot [high-k]
-reg16: exp+lor+es +lin+ie +loc+mil+nrot [simple lor]
+reg01: lor+es +lin+ie +loc+mil+nrot
+reg02: sug+es +lin+ie +loc+mil+nrot
+reg03: sug+em +lin+ie +loc+mil+nrot
+reg04: sug+em +lin+iec+pro+gen+ rot
+reg05: sug+es + nl+i  +loc+mil+nrot
+reg06: sug+em + nl+ie +loc+mil+nrot
+reg07: sug+es + nl+i  +loc+mil+ rot 
+reg08: sug+cem+lin+ie +loc+mil+nrot
+reg09: sug+cem+ nl+ie +loc+mil+nrot
+reg10: sug+cem+lin+ie +loc+mil+nrot [high-k]
+reg11: lor+es +lin+ie +loc+mil+nrot [simple lor]
+reg12: sug+es +zf +ie +loc+mil+nrot
 
 nl01: 16  mode nl performance optimization case
 nl02: 64  mode nl performance optimization case

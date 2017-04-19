@@ -1,0 +1,29 @@
+#----------------------------------------------------------
+# Dell (stamnpede.tacc.utexas.edu) 
+#
+# Stampede 2 SYSTEM INFO:
+# - Intel KNL
+# - 68 cores * 4 hyperthreads
+#----------------------------------------------------------
+
+IDENTITY="TACC Stampede Phase 2 - KNL"
+CORES_PER_NODE=256
+NUMAS_PER_NODE=1
+
+# Compilers and flags
+FC     = mpiifort -lz -mod ${GACODE_ROOT}/modules -I${GACODE_ROOT}/module -I${TACC_FFTW3_INC}
+F77    = ${FC}
+
+FOMP	= -qopenmp
+FMATH	= -r8
+FOPT	= -O3 -no-prec-div -fp-model fast=2 -xMIC-AVX512 -g -diag-disable 5140,8291
+FDEBUG	= -warn all -shared-intel -check all -g
+
+# System math libraries
+LMATH = -L${TACC_FFTW3_LIB} -lfftw3_threads -lfftw3f_threads -lfftw3 -lfftw3f -mkl=sequential
+
+# NetCDF
+NETCDF 	= -L${TACC_NETCDF_LIB} -lnetcdf
+
+# Archive 
+ARCH = ar cr

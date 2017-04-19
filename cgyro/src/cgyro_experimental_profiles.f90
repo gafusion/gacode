@@ -42,8 +42,8 @@ subroutine cgyro_experimental_profiles
 
   if (ae_flag == 0) then
      n_species_exp = n_species
-     if (z(n_species) > 0) then
-        call cgyro_error('ERROR: (CGYRO) For exp. profiles, electron species must be n_species')
+     if (z(n_species) > 0.0) then
+        call cgyro_error('For exp. profiles, electron species must be n_species')
         return
      endif
   else
@@ -90,7 +90,7 @@ subroutine cgyro_experimental_profiles
   s_delta_exp(:) = EXPRO_sdelta(:) 
   zeta_exp(:)    = EXPRO_zeta(:)
   s_zeta_exp(:)  = EXPRO_szeta(:)
-  if (udsymmetry_flag == 1) then
+  if (udsymmetry_flag == 1 .and. equilibrium_model /= 3) then
      zmag_exp(:)    = 0.0   
      dzmag_exp(:)   = 0.0
   else
@@ -107,7 +107,7 @@ subroutine cgyro_experimental_profiles
 
   if (equilibrium_model == 3) then
      if (EXPRO_nfourier <= 0) then
-        call cgyro_error('ERROR: (CGYRO) Geometry coefficients missing')
+        call cgyro_error('Geometry coefficients missing')
         return
      endif
      geo_numeq_flag = 1
@@ -153,7 +153,7 @@ subroutine cgyro_experimental_profiles
   ! Sanity check for densities
   do i=1,n_species_exp
      if (minval(dens_exp(i,:)) <= 0.0) then
-        call cgyro_error('ERROR: (CGYRO) Nonpositive in exp. density profile')
+        call cgyro_error('Nonpositive in exp. density profile')
         return
      endif
   enddo

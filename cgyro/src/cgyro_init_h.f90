@@ -64,8 +64,15 @@ subroutine cgyro_init_h
               ! Zonal-flow initial condition
 
               if (zf_test_flag == 1) then
-                 if (is == 1 .and. abs(px(ir)) == 1) then
-                    h_x(ic,iv_loc) = 1e-6
+                 if (is == 1 .and. px(ir) /= 0) then
+                    arg = k_perp(ic)*rho*vth(is)*mass(is)/(z(is)*bmag(it)) &
+                         *sqrt(2.0*energy(ie))*sqrt(1.0-xi(ix)**2)
+                    h_x(ic,iv_loc) = 1e-6*bessel_j0(abs(arg))
+                    ! J0 here for the ions is equivalent to having
+                    ! the electrons deviate in density.
+                    ! Alternatively this is the result of instantaneous
+                    ! gyroaveraging after the deposition of particles in
+                    ! a certain k_radial mode.
                  endif
               else
                  arg = abs(px(ir))/real(n_radial)

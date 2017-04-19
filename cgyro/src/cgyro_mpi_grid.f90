@@ -209,21 +209,6 @@ subroutine cgyro_mpi_grid
   ! OMP code
   n_omp = omp_get_max_threads()
 
-  allocate(ic_locv(nc1:nc2))
-  allocate(iv_locv(nv1:nv2))
-
-  ic_loc = 0
-  do ic=nc1,nc2
-     ic_loc = ic_loc+1
-     ic_locv(ic) = ic_loc
-  enddo
-  iv_loc = 0
-  do iv=nv1,nv2
-     iv_loc = iv_loc+1
-     iv_locv(iv) = iv_loc
-  enddo
-!$acc enter data copyin(ic_locv,iv_locv)
-
 end subroutine cgyro_mpi_grid
 
 subroutine gcd(m,n,d)

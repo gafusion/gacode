@@ -78,15 +78,9 @@ subroutine cgyro_init_manager
           e_deriv2_mat,&
           trim(path)//'out.cgyro.egrid')
   endif
+  ! Correct weights for infinite domain
   vel(:) = sqrt(energy(:))
-
-  !----------------------------------------------------------------------
-  ! Correction factor for missing energy interval to ensure sum(w)=1.0
-  ! NOTE: without this we have poor grid-convergence for small e_max
-  !
-  !b = sqrt(e_max)
-  !w_e(n_energy) = w_e(n_energy)+2.0*exp(-e_max)*b/sqrt(pi)+erfc(b)
-  !----------------------------------------------------------------------
+  call domain_renorm(vel,w_e,n_energy)
 
   allocate(xi(n_xi))
   allocate(w_xi(n_xi))
@@ -100,12 +94,14 @@ subroutine cgyro_init_manager
   allocate(thetab(n_radial/box_size,n_theta))
   allocate(w_theta(n_theta))
   allocate(g_theta(n_theta))
+  allocate(g_theta_geo(n_theta))
   allocate(bmag(n_theta))
   allocate(btor(n_theta))
   allocate(bpol(n_theta))
   allocate(k_perp(nc))
   allocate(k_x(nc))
   allocate(bigR(n_theta))
+  allocate(bigR_r(n_theta))
   allocate(omega_stream(n_theta,n_species))
   allocate(omega_trap(n_theta,n_species))
   allocate(omega_rdrift(n_theta,n_species))
@@ -123,11 +119,8 @@ subroutine cgyro_init_manager
   allocate(omega_rot_u(n_theta,n_species))
   allocate(omega_rot_drift(n_theta,n_species))
   allocate(omega_rot_drift_r(n_theta,n_species))
-  allocate(omega_rot_prdrift(n_theta,n_species))
-  allocate(omega_rot_prdrift_r(n_theta,n_species))
-  allocate(omega_rot_edrift(n_theta,n_species))
-  allocate(omega_rot_edrift_r(n_theta,n_species))
-  allocate(omega_rot_edrift_0(n_theta))
+  allocate(omega_rot_edrift(n_theta))
+  allocate(omega_rot_edrift_r(n_theta))
   allocate(omega_rot_star(n_theta,n_species))
   
   if (test_flag == 0) then
@@ -152,8 +145,10 @@ subroutine cgyro_init_manager
      allocate(field_old3(n_field,nc))
      allocate(    moment(n_radial,n_species,2))
      allocate(moment_loc(n_radial,n_species,2))
-     allocate(     flux(n_radial,n_species,3))
-     allocate( flux_loc(n_radial,n_species,3))
+     allocate(     flux(n_radial,n_species))
+     allocate( flux_loc(n_radial,n_species))
+     allocate(    fflux(n_species,3,n_field))
+     allocate(fflux_loc(n_species,3,n_field))
      allocate(    gflux(0:n_global,n_species,3))
      allocate(gflux_loc(0:n_global,n_species,3))
      allocate(f_balloon(n_radial/box_size,n_theta))
@@ -178,6 +173,8 @@ subroutine cgyro_init_manager
      allocate(omega_ss(n_field,nc,nv_loc))
      allocate(jvec_c(n_field,nc,nv_loc))
      allocate(jvec_v(n_field,nc_loc,nv))
+     allocate(dvjvec_c(n_field,nc,nv_loc))
+     allocate(dvjvec_v(n_field,nc_loc,nv))
      allocate(jxvec_c(n_field,nc,nv_loc))
      allocate(upfac1(nc,nv_loc))
      allocate(upfac2(nc,nv_loc))
@@ -214,7 +211,6 @@ subroutine cgyro_init_manager
   if (test_flag == 0) then
 
      call cgyro_init_arrays
-     call cgyro_init_implicit_gk
      call timer_lib_out('str_init')
 
      call timer_lib_in('coll_init')
@@ -231,10 +227,7 @@ subroutine cgyro_init_manager
   call cgyro_write_initdata
   call timer_lib_out('io_init')
 
-  if (test_flag == 1) then
-     call MPI_FINALIZE(i_err)
-     stop
-  endif
+  if (test_flag == 1) return
 
   ! Initialize h (via restart or analytic IC)
   call timer_lib_in('str_init')
@@ -342,3 +335,47 @@ subroutine cgyro_init_manager
   endif
 
 end subroutine cgyro_init_manager
+
+!---------------------------------------------------
+! Calculate weight correction to integrate function
+! over interval [0,inf] instead of [0,b]
+!
+! Do this by calculating offsets to match
+!
+! Int[1/u^2], Int[1/u], Int[1], Int[u], ...
+!
+! We start from 1/u^2 not 1 since these are the
+! total polynomials of the original scheme without
+! u^2 weighting.
+!----------------------------------------------------
+
+subroutine domain_renorm(u,w,n)
+
+  implicit none
+
+  integer, intent(in) :: n
+  real, intent(in), dimension(n) :: u
+  real, intent(inout), dimension(n) :: w
+  integer, dimension(:), allocatable :: i_piv
+  real, dimension(:,:), allocatable :: a
+  real, dimension(:), allocatable :: b
+  real :: pi
+  integer :: info,m,i
+
+  pi = 4*atan(1.0)
+
+  allocate(i_piv(n))
+  allocate(b(n))
+  allocate(a(n,n))
+  do m=0,n-1
+     b(m+1) = 2*gamma((1+m)/2.0)/sqrt(pi)-sum(w*u**(m-2))    
+     do i=1,n
+        a(m+1,i) = u(i)**(m-2)
+     enddo
+  enddo
+
+  call DGESV(n,1,a,n,i_piv,b,n,info)
+
+  w = w+b
+
+end subroutine domain_renorm

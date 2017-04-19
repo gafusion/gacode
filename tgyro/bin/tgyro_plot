@@ -23,32 +23,35 @@ then
   echo "          -e <simdir>"
   echo "          Use data in <simdir>."
   echo 
-  echo "         -ext <plot extension=screen,pdf,png,dump (default screen)>"
+  echo "          -ext <plot extension=screen,pdf,png,dump (default screen)>"
   echo 
   echo "          -u <units>"
   echo "          Plot units (0=GB,1=Physical)."
   echo 
   echo "          -plot <type>"
   echo "          Generate plot of given type."
-  echo "           <type> = flux,"
-  echo "                    flux_tot,"
-  echo "                    profile,"
-  echo "                    profile_smooth,"
-  echo "                    one."
-  echo
-  echo "          -func <func>"
-  echo "          <func> = quantity to plot with -plot one."
+  echo "           <type> = note (notebook plot of quantities for r <= r_*),"
+  echo "                    glob (global data from input.profiles)"
+  echo 
+  echo " OPTIONS FOR -note"
   echo
   echo "          -dots"
   echo "          Toggle dot overlay."
   echo
-  echo "          -i"
-  echo "          Use python in interactive mode.  Useful if matplotlibrc has interactive:True  "
+  echo " OPTIONS FOR -glob"
+  echo
+  echo "          -f <func>"
+  echo "          <f> = quantity to plot (Te, Ti_1, etc)"
+  echo
+  echo "          -r <flux-surface coordinate for plotting>"
+  echo "          Choices are r,r/a,rho"
+  echo
+  echo "          -loc <Legend location: 1,2,3,4>"
   echo
   echo "Example:"
   echo
-  echo "   tgyro_plot -e . -plot flux_tot"
-  echo "   tgyro_plot -e . -plot one -func a/Lp"
+  echo "   tgyro_plot -e . -plot note"
+  echo "   tgyro_plot -e . -plot glob -f Te"
 
   exit 1
 fi
@@ -64,7 +67,9 @@ SIMROOT=$PWD
 PLOT_TYPE=null
 UNITS=0
 DOTS=0
-FUNC=null
+F=ne
+RVAR=r/a
+LOC=1
 #==============================================================================
 
 #==============================================================================
@@ -81,7 +86,11 @@ while [ $# -gt 0 ] ; do
 
   -ext) shift ; EXT=$1 ;;
 
-  -func) shift ; FUNC=$1 ;;
+  -f) shift ; F=$1 ;;
+
+  -r) shift ; RVAR=$1 ;;
+
+  -loc) shift ; LOC=$1 ;;
 
   -u) shift ; UNITS=$1 ;;
 
@@ -109,26 +118,11 @@ PYROOT=$GACODE_ROOT/python/tgyro
 #
 case "$PLOT_TYPE" in
 
-   flux)  
-	python $INTERACTIVE $PYROOT/flux.py $SIMDIR $UNITS $EXT  ;;
+   note)  
+	python $PYROOT/plot_notebook.py $SIMDIR $UNITS $EXT ;;
 
-   flux_tot)  
-	python $INTERACTIVE $PYROOT/flux_tot.py $SIMDIR $UNITS $EXT  ;;
-
-   profile)  
-	python $INTERACTIVE $PYROOT/profile.py $SIMDIR $EXT  ;;
-
-   profile_smooth)  
-	python $INTERACTIVE $PYROOT/profile_smooth.py $SIMDIR $EXT $DOTS ;;
-
-   one)  
-	python $INTERACTIVE $PYROOT/oneplot.py $SIMDIR $FUNC $EXT  ;;
-
-   check)  
-	python $PYROOT/datacheck.py $SIMDIR  ;;
-
-   notebook)  
-	python $PYROOT/notebook.py $SIMDIR $UNITS $EXT ;;
+   glob)  
+	python $PYROOT/plot_global.py $SIMDIR $F $EXT $RVAR $LOC $DOTS ;;
 
    null)
         echo "Please specify a plot type via -plot." ;;

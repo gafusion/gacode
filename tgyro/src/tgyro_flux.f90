@@ -18,10 +18,11 @@ subroutine tgyro_flux
   use glf23_interface
 
   implicit none
-  
-  integer :: i_ion
+
+  integer :: i_ion,i0, is, is_ion
   integer :: i1,i2
   integer :: n_12
+  real :: d_max
   real, dimension(8) :: x_out
 
   !-------------------------------------------
@@ -43,7 +44,6 @@ subroutine tgyro_flux
   call MPI_BARRIER(MPI_COMM_WORLD,ierr)
   if (i_proc_global == 0) then
      open(unit=1,file=trim(runfile),position='append')
-     write(1,'(t2,a)') 'INFO: (TGYRO) Entered tgyro_flux'
      close(1)
   endif
 
@@ -79,53 +79,84 @@ subroutine tgyro_flux
   ! where
   ! c_s    = sqrt(T_0e/m_i)
   ! rho_se = c_s/Omega_ci
-  Gamma_neo_GB = neo_dens_2_in * neo_temp_2_in**1.5 * neo_rho_star_in**2
-  Q_neo_GB     = neo_dens_2_in * neo_temp_2_in**2.5 * neo_rho_star_in**2
-  Pi_neo_GB    = neo_dens_2_in * neo_temp_2_in**2   * neo_rho_star_in**2
+  Gamma_neo_GB = neo_dens_in(1) * neo_temp_in(1)**1.5 * neo_rho_star_in**2
+  Q_neo_GB     = neo_dens_in(1) * neo_temp_in(1)**2.5 * neo_rho_star_in**2
+  Pi_neo_GB    = neo_dens_in(1) * neo_temp_in(1)**2   * neo_rho_star_in**2
 
   select case (loc_neo_method) 
 
   case (1)
 
-     ! Call NEO analytic theory
+     ! NEO analytic theory: Hinton-Hazeltine
+     !  
+     ! NOTE: impurities have zero flux in this case
+
      call neo_run
 
-     pflux_i_neo(1,i_r) = neo_pflux_thHH_out/Gamma_neo_GB
+     pflux_e_neo(i_r)   = neo_pflux_thHH_out /Gamma_neo_GB 
+     eflux_e_neo(i_r)   = neo_eflux_thHHe_out /Q_neo_GB
+
+     is_ion = -1
+     d_max = -1.0
+     do is=2, neo_n_species_in
+        if(neo_z_in(is) > 0 .and. neo_dens_in(is) > d_max) then
+           is_ion = is
+           d_max  = neo_dens_in(is)
+        endif
+     enddo
+     i0 = 1
+     do i_ion=1,loc_n_ion
+        if (therm_flag(i_ion) == 0 .and. tgyro_quickfast_flag == 1) cycle
+        i0 = i0+1
+        if(i0 == is_ion) exit
+     enddo
+     
+     pflux_i_neo(i_ion,i_r) = neo_pflux_thHH_out/Gamma_neo_GB
      if (loc_chang_hinton == 1) then
-        eflux_i_neo(1,i_r) = neo_eflux_thCHi_out/Q_neo_GB
+        eflux_i_neo(i_ion,i_r) = neo_eflux_thCHi_out/Q_neo_GB
      else
-        eflux_i_neo(1,i_r) = neo_eflux_thHHi_out/Q_neo_GB
+        eflux_i_neo(i_ion,i_r) = neo_eflux_thHHi_out/Q_neo_GB
      endif
-
-     pflux_e_neo(i_r) = neo_pflux_thHH_out /Gamma_neo_GB 
-     eflux_e_neo(i_r) = neo_eflux_thHHe_out /Q_neo_GB
-
+     
   case (2)
 
      ! Call NEO kinetic calculation
      if (gyrotest_flag == 0) call neo_run
 
-     pflux_e_neo(i_r) = (neo_pflux_dke_out(2)+tgyro_neo_gv_flag*neo_pflux_gv_out(2)) &
+     pflux_e_neo(i_r) = (neo_pflux_dke_out(1)+tgyro_neo_gv_flag*neo_pflux_gv_out(1)) &
           /Gamma_neo_GB 
-     eflux_e_neo(i_r) = (neo_efluxncv_dke_out(2)+tgyro_neo_gv_flag*neo_efluxncv_gv_out(2)) &
+     eflux_e_neo(i_r) = (neo_efluxncv_dke_out(1)+tgyro_neo_gv_flag*neo_efluxncv_gv_out(1)) &
           /Q_neo_GB
-     mflux_e_neo(i_r) = (neo_mflux_dke_out(2)+tgyro_neo_gv_flag*neo_mflux_gv_out(2)) &
+     mflux_e_neo(i_r) = (neo_mflux_dke_out(1)+tgyro_neo_gv_flag*neo_mflux_gv_out(1)) &
           /Pi_neo_GB
 
-     pflux_i_neo(1,i_r) = (neo_pflux_dke_out(1)+tgyro_neo_gv_flag*neo_pflux_gv_out(1)) &
-          /Gamma_neo_GB 
-     eflux_i_neo(1,i_r) = (neo_efluxncv_dke_out(1)+tgyro_neo_gv_flag*neo_efluxncv_gv_out(1)) &
-          /Q_neo_GB
-     mflux_i_neo(1,i_r) = (neo_mflux_dke_out(1)+tgyro_neo_gv_flag*neo_mflux_gv_out(1)) &
-          /Pi_neo_GB
+     i0 = 1
+     do i_ion=1,loc_n_ion
+        if (therm_flag(i_ion) == 0 .and. tgyro_quickfast_flag == 1) cycle
+        i0 = i0+1 
+        pflux_i_neo(i_ion,i_r) = (neo_pflux_dke_out(i0) + &
+             tgyro_neo_gv_flag*neo_pflux_gv_out(i0))/Gamma_neo_GB 
+        eflux_i_neo(i_ion,i_r) = (neo_efluxncv_dke_out(i0) + &
+             tgyro_neo_gv_flag*neo_efluxncv_gv_out(i0))/Q_neo_GB
+        mflux_i_neo(i_ion,i_r) = (neo_mflux_dke_out(i0) + &
+             tgyro_neo_gv_flag*neo_mflux_gv_out(i0))/Pi_neo_GB
+     enddo
 
-     do i_ion=2,loc_n_ion
-        pflux_i_neo(i_ion,i_r) = (neo_pflux_dke_out(i_ion+1) + &
-             tgyro_neo_gv_flag*neo_pflux_gv_out(i_ion+1))/Gamma_neo_GB 
-        eflux_i_neo(i_ion,i_r) = (neo_efluxncv_dke_out(i_ion+1) + &
-             tgyro_neo_gv_flag*neo_efluxncv_gv_out(i_ion+1))/Q_neo_GB
-        mflux_i_neo(i_ion,i_r) = (neo_mflux_dke_out(i_ion+1) + &
-             tgyro_neo_gv_flag*neo_mflux_gv_out(i_ion+1))/Pi_neo_GB
+  case (3)
+
+     ! NEO analytic theory: Hirshman-Sigmar
+
+     call neo_run
+
+     pflux_e_neo(i_r)   = neo_pflux_thHS_out(1)/Gamma_neo_GB 
+     eflux_e_neo(i_r)   = neo_eflux_thHS_out(1)/Q_neo_GB
+
+     i0 = 1
+     do i_ion=1,loc_n_ion
+        if (therm_flag(i_ion) == 0 .and. tgyro_quickfast_flag == 1) cycle
+        i0 = i0+1 
+        pflux_i_neo(i_ion,i_r) = neo_pflux_thHS_out(i0)/Gamma_neo_GB
+        eflux_i_neo(i_ion,i_r) = neo_eflux_thHS_out(i0)/Q_neo_GB
      enddo
 
   end select
@@ -196,21 +227,29 @@ subroutine tgyro_flux
      call tgyro_trap_component_error(tglf_error_status,tglf_error_message)
 
      pflux_e_tur(i_r) = tglf_elec_pflux_out
-     eflux_e_tur(i_r) = tglf_elec_eflux_out
+     if (tglf_q_low_flag == 1) then
+        eflux_e_tur(i_r) = tglf_elec_eflux_low_out
+     else
+        eflux_e_tur(i_r) = tglf_elec_eflux_out
+     endif
      mflux_e_tur(i_r) = -tglf_sign_It_in*tglf_elec_mflux_out
      expwd_e_tur(i_r) = tglf_elec_expwd_out
 
-     pflux_i_tur(1:loc_n_ion,i_r) = tglf_ion_pflux_out(1:loc_n_ion)
-     eflux_i_tur(1:loc_n_ion,i_r) = tglf_ion_eflux_out(1:loc_n_ion)
-     mflux_i_tur(1:loc_n_ion,i_r) = -tglf_sign_It_in*tglf_ion_mflux_out(1:loc_n_ion)
-     expwd_i_tur(1:loc_n_ion,i_r) = tglf_ion_expwd_out(1:loc_n_ion)
+     i0 = 0
+     do i_ion=1,loc_n_ion
+        if (therm_flag(i_ion) == 0 .and. tgyro_quickfast_flag == 1) cycle
+        i0 = i0+1 
+        pflux_i_tur(i_ion,i_r) = tglf_ion_pflux_out(i0)
+        if (tglf_q_low_flag == 1) then
+           eflux_i_tur(i_ion,i_r) = tglf_ion_eflux_low_out(i0)
+        else
+           eflux_i_tur(i_ion,i_r) = tglf_ion_eflux_out(i0)
+        endif
+        mflux_i_tur(i_ion,i_r) = -tglf_sign_It_in*tglf_ion_mflux_out(i0)
+        expwd_i_tur(i_ion,i_r) = tglf_ion_expwd_out(i0)
+     enddo
 
-     if (tglf_q_low_flag == 1) then
-        eflux_e_tur(i_r) = tglf_elec_eflux_low_out
-        eflux_i_tur(1:loc_n_ion,i_r) = tglf_ion_eflux_low_out(1:loc_n_ion)
-     endif
-
-  case(3)  ! Map TGYRO parameters to GLF23
+  case (3)  ! Map TGYRO parameters to GLF23
 
      call tgyro_glf23_map
 
@@ -259,7 +298,7 @@ subroutine tgyro_flux
         enddo
 
      endif
-      
+
   case default
 
      call tgyro_catch_error('ERROR: (TGYRO) No matching flux method in tgyro_flux.')

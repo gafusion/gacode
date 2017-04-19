@@ -1,0 +1,123 @@
+#!/bin/bash
+#=============================================================
+# quick
+#
+# PURPOSE:
+#  Top-level script controlling execution of QUICK
+#=============================================================
+
+#=============================================================
+# Syntax validity check and help message
+#
+n=$#
+
+if [ $n -eq 0 ]
+then
+  echo
+  echo "Usage:   quick [options]"
+  echo
+  echo "         -p <path>"
+  echo "         Set optional path to simulation directory."
+  echo "         The default path is \$PWD."
+  echo
+  echo "EXECUTE MODE (single core)"
+  echo
+  echo "         -e <simdir>" 
+  echo "         Run QUICK using input.quick in <simdir>."
+  echo
+  echo "TEMPLATE GENERATION"
+  echo
+  echo "         -g"
+  echo "         List available simulation templates."
+  echo
+  echo "         -g <template>"
+  echo "         Copy <template> into simulation path."
+
+  exit 1
+fi
+#=============================================================
+ 
+#=============================================================
+# Define variables for flag capture
+#
+SIMROOT=$PWD
+QUICK_DIR=$GACODE_ROOT/quick
+# Default number of cores
+NPROC=1
+# Execute/test mode flags
+EXEC_FLAG=0
+GENERATE_FLAG=0
+#=============================================================
+
+#=============================================================
+# Parse command line options
+#
+while [ $# -gt 0 ] ; do
+  case "$1" in
+
+  -p) shift ; SIMROOT=$1 ;;
+
+  -e) shift ; LOCDIR=$1 ; EXEC_FLAG=1 ;;
+
+  -g) shift ; LOCDIR=$1 ; GENERATE_FLAG=1 ;;
+
+  *) echo "ERROR: (quick) Incorrect syntax." ; exit 1 ;;
+ 
+  esac
+  shift
+done
+#=============================================================
+
+if [ "$LOCDIR" == "." ]
+then
+   SIMDIR=$PWD
+   cd .. ; LOCDIR=$PWD
+else
+   SIMDIR=$SIMROOT/$LOCDIR
+fi
+
+RUN_FILE=$SIMDIR/out.le3.run
+
+#============================================================
+# Generate simdir if -g set, then exit.
+#
+if [ $GENERATE_FLAG -eq 1 ]
+then
+   if [ ! -f "${QUICK_DIR}/tools/input/$LOCDIR/input.quick" ]
+   then
+      cat ${QUICK_DIR}/tools/input/simdir_list
+   else
+      cp -ai ${QUICK_DIR}/tools/input/$LOCDIR $SIMDIR
+   fi
+   exit 0
+fi
+#============================================================
+
+#============================================================
+# Now cd to simulation directory and parse input and input.profiles
+#
+cd $SIMDIR
+python $QUICK_DIR/bin/quick_parse.py 
+
+if [ -f input.profiles ]
+then
+   python $GACODE_ROOT/shared/bin/profile_parse.py input.profiles
+else
+    echo "ERROR: (tgyro script) input.profiles missing."
+    exit 1
+fi
+#============================================================
+
+
+gacode_printversion QUICK
+
+#===========================================================
+# Version stamp:
+echo $GACODE_PLATFORM > out.quick.version
+date >> out.quick.version
+#==========================================================
+
+# Execute
+$QUICK_DIR/src/quick
+
+rm -f out.expro.run

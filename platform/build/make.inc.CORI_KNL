@@ -1,0 +1,31 @@
+#----------------------------------------------------------
+# Cray XC40 (cori.nersc.gov) 
+#
+# Cori SYSTEM INFO:
+# - Intel KNL
+# - 64 cores * 4 hyperthreads (assign hypethreads to numas)
+#----------------------------------------------------------
+
+IDENTITY="NERSC Cori KNL"
+CORES_PER_NODE=256
+NUMAS_PER_NODE=4
+
+# Compilers and flags
+FC     = ftn -e m -J ${GACODE_ROOT}/modules
+F77    = ${FC}
+
+FOMP   = 
+FMATH  = -s real64
+FOPT   = -O3 -hfp3
+FDEBUG = -eD -Ktrap=fp -m 1
+
+# System math libraries
+LMATH = -lfftw3_threads -lfftw3f_threads -lfftw3 -lfftw3f 
+
+# NetCDF
+NETCDF = ${NETCDF_DIR}/lib/libnetcdff.a ${NETCDF_DIR}/lib/libnetcdf.a
+NETCDF_INC = ${NETCDF_DIR}/include
+
+# Archive 
+ARCH = ar cr
+

@@ -11,6 +11,7 @@ export PATH=$GACODE_ROOT/vgen/bin:${PATH}
 export PATH=$GACODE_ROOT/tglf/bin:${PATH}
 export PATH=$GACODE_ROOT/le3/bin:${PATH}
 export PATH=$GACODE_ROOT/glf23/bin:${PATH}
+export PATH=$GACODE_ROOT/quick/bin:${PATH}
 export PATH=$GACODE_ROOT/shared/bin:${PATH}
 
 if [ -d $GACODE_ADD_ROOT ] 

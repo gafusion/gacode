@@ -95,6 +95,7 @@ CLEAN_FLAG=0
 COMPRESS_FLAG=0
 RESET=0
 NEW_FLAG=0
+INIT_FLAG=0
 #=============================================================
 
 #=============================================================
@@ -110,6 +111,8 @@ while [ $# -gt 0 ] ; do
   -e) shift ; LOCDIR=$1 ;;
 
   -t) shift ; LOCDIR=$1 ; TEST_FLAG=1 ;;
+
+  -i) shift ; LOCDIR=$1 ; INIT_FLAG=1 ;;
 
   -n) shift ; NPROC=$1 ;;
 
@@ -153,10 +156,10 @@ fi
 #============================================================
 # Check for inconsistent flags:
 FLAG_SUM=$[ $EXEC_FLAG + $TEST_FLAG + $GENERATE_FLAG 
-                       + $REGRESS_FLAG]
+                       + $REGRESS_FLAG + $INIT_FLAG ]
 if [ $FLAG_SUM -gt 1 ]
 then
-   echo "ERROR: Can only specify one of -e, -t, -g, -r"
+   echo "ERROR: Can only specify one of -e, -t, -i, -g, -r"
    exit 1
 fi
 #============================================================
@@ -165,31 +168,7 @@ fi
 # Compress option
 if [ $COMPRESS_FLAG -eq 1 ]
 then
-    if [ -d $SIMDIR-s ] 
-    then
-       echo "WARNING: Removed old directory $SIMDIR-s."
-       rm -r $SIMDIR-s
-    fi
-    SDIR=$SIMDIR-s
-    echo "INFO: (cgyro) Compressing $LOCDIR -> $LOCDIR-s"
-    # Basic content
-    mkdir $SDIR
-    cp $SIMDIR/input.cgyro $SDIR
-    cp $SIMDIR/input.cgyro.gen $SDIR/input.cgyro.gen.original
-    cp $SIMDIR/out.cgyro.version $SDIR
-    cp $SIMDIR/out.cgyro.grids $SDIR
-    cp $SIMDIR/out.cgyro.equilibrium $SDIR
-    cp $SIMDIR/out.cgyro.time $SDIR
-    cp $SIMDIR/out.cgyro.info $SDIR
-    if grep -q NONLINEAR_FLAG=1 $SDIR/input.cgyro
-    then
-       cgyro_plot -plot flux -e $LOCDIR -ext dump
-       mv $SIMDIR/out.cgyro.flux* $SDIR
-       cgyro_plot -plot phi -e $LOCDIR -ext dump
-       mv $SIMDIR/out.cgyro.phi $SDIR
-    else
-       cp $SIMDIR/out.cgyro.freq $SDIR
-    fi
+    cgyro_compress $SIMDIR $LOCDIR
     exit 1
 fi
 #============================================================
@@ -245,6 +224,15 @@ then
     rm -f out.* batch.out batch.err *~ *gen
     echo "INFO: (cgyro) Cleaned directory." 
     exit 1
+fi
+#============================================================
+
+#============================================================
+# Init mode
+if [ $INIT_FLAG -eq 1 ]
+then
+   python $CGYRO_DIR/bin/cgyro_parse.py
+   exit 0
 fi
 #============================================================
 
@@ -330,8 +318,8 @@ then
 fi
 
 gacode_printversion CGYRO
-  
-$GACODE_ROOT/shared/exec/gyro.$GACODE_PLATFORM \
+
+$GACODE_ROOT/platform/exec/exec.$GACODE_PLATFORM \
   $SIMDIR $NPROC $CGYRO_DIR/src/cgyro $NOMP $NUMA $MPINUMA $NIDLE
 #===========================================================
 

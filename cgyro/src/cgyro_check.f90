@@ -7,6 +7,7 @@ subroutine cgyro_check
 
   integer :: is
   logical :: lfe
+  character(len=1), dimension(7) :: ctag
 
   !-----------------------------------------------------------------------
   ! Grid parameter checks
@@ -32,16 +33,11 @@ subroutine cgyro_check
   if (n_species > 6) then
      call cgyro_error('n_species <= 6.')
      return
-  endif 
- !------------------------------------------------------------------------
+  endif
 
-  !------------------------------------------------------------------------
-  ! Time integration
-  !
-  if (implicit_flag == 0) then
-     call cgyro_info('Integration: RK4 + Implicit C')
-  else
-     call cgyro_info('Integration: Implicit streaming + RK4 + Implicit C')
+  if (box_size > 1 .and. h_print_flag == 1) then
+     call cgyro_error('Distribution output not available for box_size > 1')
+     return
   endif
   !------------------------------------------------------------------------
 
@@ -51,10 +47,10 @@ subroutine cgyro_check
   select case(profile_model)
 
   case (1)
-     call cgyro_info('Profile model 1: local input (input.cgyro)')
+     call cgyro_info('Profile model: local input (input.cgyro)')
 
   case (2)
-     call cgyro_info('Profile model 2: experimental (input.profiles)')
+     call cgyro_info('Profile model: experimental (input.profiles)')
 
   case default
      call cgyro_error('Invalid value for profile_model')
@@ -62,6 +58,41 @@ subroutine cgyro_check
 
   end select
   !-----------------------------------------------------------------------
+
+  !------------------------------------------------------------------------
+  ! Equilibrium model
+  !
+  select case (equilibrium_model)  
+
+  case (1) 
+     call cgyro_info('Equilibrium: s-alpha')
+     if (profile_model == 2) then
+        call cgyro_error('s-alpha equilibrium model not valid with experimental profiles')
+        return
+     endif
+
+  case (2) 
+     call cgyro_info('Equilibrium: Miller')
+
+  case (3) 
+     call cgyro_info('Equilibrium: General (Fourier)')
+
+     if (geo_ny <= 0) then
+        call cgyro_error('Fourier geometry coefficients missing.')
+        return
+     endif
+     if (udsymmetry_flag == 1) then
+        call cgyro_error('Cannot have UDSYMMETRY_FLAG=1 with general geometry.')
+        return
+     endif
+
+  case default
+
+     call cgyro_error('Invalid value for equilibrium_model')
+     return
+
+  end select
+  !------------------------------------------------------------------------
 
   !------------------------------------------------------------------------
   ! Field consistency checks
@@ -91,32 +122,51 @@ subroutine cgyro_check
      call cgyro_info('Transverse and compressional EM fluctuations (Phi,A_par,B_par)')
 
   case default
-     call cgyro_error('Invalid value for n_field.')
+     call cgyro_error('Invalid value for n_field')
      return
   end select
+  !------------------------------------------------------------------------
 
+  !------------------------------------------------------------------------
+  ! Rotation model
+  !
+  select case (rotation_model)
+
+  case(1)
+     call cgyro_info('Rotation terms: O(mach) only (traditional GYRO)')
+  case(2)
+     call cgyro_info('Rotation terms: O(mach + mach^2) (full Sugama rotation)')
+  case(3)
+     call cgyro_info('Rotation terms: O(mach^2) only (isolated centrifugal for testing)')
+  case(4)
+     call cgyro_info('Rotation terms: O(mach^2) GKW CF TRAP term only (for testing)') 
+  case(5)
+     call cgyro_info('Rotation terms: O(mach^2) GKW CF DRIFT term only (for testing)')   
+
+  case default
+     call cgyro_error('Invalid value for rotation_model')
+     return
+
+  end select
   !------------------------------------------------------------------------
 
   !------------------------------------------------------------------------
   ! Collision model and settings
   !
+  ctag(:) = ' '
+  ctag(1) = 'x' 
+
   select case (collision_model)  
 
   case (1) 
-     call cgyro_info('Collision model 1: Lorentz ee+ei')
-
+     call cgyro_info('Collision model: Lorentz ee+ei')
   case (2) 
-     call cgyro_info('Collision model 2: Connor')
-
-  case (3) 
-     call cgyro_info('Collision model 3: Reduced Hirshman-Sigmar')
-
+     call cgyro_info('Collision model: Connor')
   case (4) 
-     call cgyro_info('Collision model 4: Sugama')
-
+     call cgyro_info('Collision model: Sugama')
+     ctag(2) = 'x'
   case(5)
-     call cgyro_info('Collision model 5: Simple Lorentz ee+ei')
-
+     call cgyro_info('Collision model: Simple Lorentz ee+ei')
   case default
      call cgyro_error('Invalid value for collision_model')
      return
@@ -124,21 +174,26 @@ subroutine cgyro_check
   end select
 
   if (collision_model /= 5) then
-     select case (collision_mom_restore)
-     case(0)
-        call cgyro_info('Collision momentum restoring: off')
-     case(1)
-        call cgyro_info('Collision momentum restoring: on')
-     case default
-        call cgyro_error('Invalid value for collision_mom_restore')
-        return
-     end select
+
+     if(collision_model /= 1) then
+        select case (collision_mom_restore)
+        case(0)
+           ! Collision momentum restoring: off       
+        case(1)
+           ! Collision momentum restoring: on
+           ctag(3)= 'x'
+        case default
+           call cgyro_error('Invalid value for collision_mom_restore')
+           return
+        end select
+     endif
 
      select case (collision_field_model)
      case(0)
-        call cgyro_info('Collision field corrections : off')
+        ! Collision field corrections : off
      case (1)
-        call cgyro_info('Collision field corrections : on')
+        ! Collision field corrections : on
+        ctag(7) = 'x'
      case default
         call cgyro_error('Invalid value for collision_field_model')
         return
@@ -146,126 +201,72 @@ subroutine cgyro_check
   endif
 
   if (collision_model == 4) then
+
      select case (collision_ene_diffusion)
      case(0)
-        call cgyro_info('Collision energy diffusion  : off')
+        ! Collision energy diffusion  : off
      case(1)
-        call cgyro_info('Collision energy diffusion  : on')
+        ! Collision energy diffusion  : on
+        ctag(2) = 'x'
      case default
         call cgyro_error('Invalid value for collision_ene_diffusion')
         return
      end select
+
      select case (collision_ene_restore)
      case(0)
-        call cgyro_info('Collision energy restoring  : off')
+        ! Collision energy restoring  : off
      case(1)
-        call cgyro_info('Collision energy restoring  : on')
+        ! Collision energy restoring  : on
+        ctag(4) = 'x'
      case default
         call cgyro_error('Invalid value for collision_ene_restore')
         return
      end select
+
      select case (collision_kperp)
      case(0)
-        call cgyro_info('Collision kperp corrections : off')
+        ! Collision kperp corrections : off
      case(1)
-        call cgyro_info('Collision kperp corrections : on')
+        ! Collision kperp corrections : on
+        ctag(5) = 'x'
      case default
         call cgyro_error('Invalid value for collision_kperp')
         return
      end select
+
   endif
 
-  if (collision_model /= 5 .or. collision_model /= 1) then
+  if (collision_model /= 5 .and. collision_model /= 1) then
      select case (collision_ion_model)
      case(0)
-        call cgyro_info('Collisional ions: on')
+        ! Collisional ions: on
+        ctag(6) = 'x'
      case(1)
-        call cgyro_info('Collisional ions: off')
+        ! Collisional ions: off
      case default
         call cgyro_error('Invalid value for collision_ion_model')
         return
      end select
   endif
-  
-  !
+
+  call cgyro_info('Collision terms: L D Rm Re kp ions field')
+  call cgyro_info('               '// &
+       '  '//ctag(1)// &
+       ' '//ctag(2)// &
+       ' '//ctag(3)// &
+       '  '//ctag(4)// &
+       '  '//ctag(5)// &
+       '   '//ctag(6)// &
+       '     '//ctag(7))
   !------------------------------------------------------------------------
 
-  !------------------------------------------------------------------------
-  ! Equilibrium model
-  !
-  select case (equilibrium_model)  
 
-  case (1) 
-     call cgyro_info('Equilibrium model 1: s-alpha')
-     if (profile_model == 2) then
-        call cgyro_error('s-alpha equilibrium model not valid with experimental profiles')
-        return
-     endif
-
-  case (2) 
-     call cgyro_info('Equilibrium model 2: Miller')
-
-  case (3) 
-     call cgyro_info('Equilibrium model 3: General (Fourier)')
-
-     if (geo_ny <= 0) then
-        call cgyro_error('Fourier geometry coefficients missing.')
-        return
-     endif
-
-  case default
-
-     call cgyro_error('Invalid value for equilibrium_model')
+  if (rotation_model > 1 .and. collision_model == 5) then
+     call cgyro_error('Simple collisions not available with rotation_model > 1')
      return
-
-  end select
-  !------------------------------------------------------------------------
-
-  !------------------------------------------------------------------------
-  ! Rotation model
-  !
-  
-  select case (cf_model)
-
-  case(0)
-     call cgyro_info('Centrifugal model: none')
-     
-  case(1)
-     call cgyro_info('Centrifugal model: included (all)')
-  case(2)
-     call cgyro_info('Centrifugal model: only cf trap (no coriolis or cf drift)')
-  case(3)
-     call cgyro_info('Centrifugal model: only cf drift (no coriolis or cf trap)') 
-  case(4)
-      call cgyro_info('Centrifugal model: only cf trap+drift (no coriolis or gammap)')   
-
-  case default
-     call cgyro_error('Invalid value for cf_model')
-     return
-
-  end select
-
-  if(cf_model > 0) then
-     if(implicit_flag == 1) then
-        call cgyro_error('Implicit method not available with cf_flag > 0')
-        return
-     endif
-     if(collision_model == 5) then
-        call cgyro_error('Simple collisions not available with cf_flag > 0')
-        return
-     endif
   endif
 
-  select case (cf_em_flag)
-  case(0)
-     call cgyro_info('Rotation EM model: no rot effects in EM fields')
-  case(1)
-     call cgyro_info('Rotation EM model: rot effects included for Apar')
-  case default
-     call cgyro_error('Invalid value for cf_em_flag')
-     return
-  end select
-  
   !------------------------------------------------------------------------
   ! Check profile parameters
   !
@@ -289,48 +290,20 @@ subroutine cgyro_check
   !------------------------------------------------------------------------
 
   !------------------------------------------------------------------------
-  ! Theta dissipation
+  ! Dissipation checks
   !
-  select case (nup_theta)  
-
-  case (1) 
-     call cgyro_info('Theta dissipation : 2nd order')
-
-  case (2) 
-     call cgyro_info('Theta dissipation : 4th order')
-
-  case (3) 
-     call cgyro_info('Theta dissipation : 6th order')
-
-  case default
+  if (nup_theta < 1 .or. nup_theta > 3) then
      call cgyro_error('Invalid value for nup_theta')
      return
-
-  end select
-  !------------------------------------------------------------------------
-
-  !------------------------------------------------------------------------
-  ! Radial dissipation
-  !
-  select case (nup_radial)  
-
-  case (1) 
-     call cgyro_info('Radial dissipation: 2nd order')
-
-  case (2) 
-     call cgyro_info('Radial dissipation: 4th order')
-
-  case (3) 
-     call cgyro_info('Radial dissipation: 6th order')
-
-  case (4) 
-     call cgyro_info('Radial dissipation: 8th order')
-
-  case default
+  endif
+  if (nup_radial < 1 .or. nup_theta > 4) then
      call cgyro_error('Invalid value for nup_radial')
      return
-
-  end select
+  endif
+  if (nup_alpha < 1 .or. nup_alpha > 4) then
+     call cgyro_error('Invalid value for nup_alpha')
+     return
+  endif
   !------------------------------------------------------------------------
 
   !------------------------------------------------------------------------

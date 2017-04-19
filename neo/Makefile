@@ -2,7 +2,7 @@
 # Toplevel makefile for neo
 #---------------------------
 
-include ${GACODE_ROOT}/shared/install/make.inc.${GACODE_PLATFORM}
+include ${GACODE_ROOT}/platform/build/make.inc.${GACODE_PLATFORM}
 
 export EXTRA_LIBS = \
        ${GACODE_ROOT}/shared/EXPRO/EXPRO_lib.a \
