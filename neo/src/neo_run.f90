@@ -9,6 +9,7 @@ subroutine neo_run()
 
   use neo_globals
   use neo_interface
+  use neo_harvest
 
   implicit none
 
@@ -16,7 +17,7 @@ subroutine neo_run()
 
   ! Map INTERFACE parameters -> GLOBAL variables
   call map_interface2global
-
+  call neo_harvest_input
   ! Can exit if we are in test mode
   if (neo_test_flag_in == 1) return
   
@@ -40,6 +41,7 @@ subroutine neo_run()
 
   ! Run NEO
   call neo_do
+  
 
   ! ----------------------------------------------------------------------
   ! OUTPUT NORMALIZATION
@@ -107,5 +109,5 @@ subroutine neo_run()
 
   neo_error_status_out  = error_status
   neo_error_message_out = error_message
-
+  call neo_harvest_output
 end subroutine neo_run

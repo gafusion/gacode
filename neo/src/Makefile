@@ -1,5 +1,11 @@
 include ${GACODE_ROOT}/platform/build/make.inc.${GACODE_PLATFORM}
 
+neo_libs= -L$(GACODE_ROOT)/shared/harvest_client/ \
+              -I$(GACODE_ROOT)/shared/harvest_client/ \
+              -lharvest  
+
+
+
 ifeq ($(OPT),debug)
    FFLAGS=${FDEBUG}
 else
@@ -31,19 +37,20 @@ OBJECTS = neo_globals.o \
           neo_make_profiles.o \
           neo_map_experimental_profiles.o \
           neo_read_input.o \
+          neo_harvest.o \
           neo_run.o \
           neo_spitzer.o 
 
 .SUFFIXES : .o .f90
 
 all: neo_lib.a $(EXEC).o $(EXTRA_LIBS)
-	$(FC) $(FFLAGS) -o $(EXEC) $(EXEC).o neo_lib.a $(EXTRA_LIBS) $(LMATH)
+	$(FC) $(FFLAGS)  $(neo_libs) -o $(EXEC) $(EXEC).o neo_lib.a $(EXTRA_LIBS) $(LMATH)
 
 neo_lib.a: $(OBJECTS)
 	$(ARCH) neo_lib.a $(OBJECTS)
 
 .f90.o :
-	$(FC) $(FMATH) $(FFLAGS) -c $<
+	$(FC) $(FMATH) $(FFLAGS) $(neo_libs) -c $<
 
 clean:  
 	rm -rf *.o neo_lib.a $(EXEC) *~
