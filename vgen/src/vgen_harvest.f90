@@ -33,7 +33,7 @@ module vgen_harvest
 
   implicit none 
 
-      ierr=init_harvest('Vgen_jbs'//NUL,harvest_sendline,LEN(harvest_sendline))
+      ierr=init_harvest('Vgen_jbs'//NUL,harvest_sendline,len(harvest_sendline))
       ierr=set_harvest_protocol('TCP'//NUL)
       ierr=set_harvest_host('localhost'//NUL)
       ierr=set_harvest_payload_int(harvest_sendline,'vel_method'//NUL,vel_method)
@@ -75,7 +75,7 @@ module vgen_harvest
       ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_pow_e_aux'//NUL,EXPRO_pow_e_aux,EXPRO_n_exp)
       ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_pow_i_aux'//NUL,EXPRO_pow_i_aux,EXPRO_n_exp)
      
-  
+       ierr=harvest_send(harvest_sendline)
   end subroutine vgen_harvest_inputandoutput
-      ierr=harvest_send(harvest_sendline)
-end program vgen
+
+end module vgen_harvest

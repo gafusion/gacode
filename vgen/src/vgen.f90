@@ -17,7 +17,6 @@ program vgen
 
   implicit none
   
-   integer  :: ierr
    integer :: i
    integer :: j
    integer :: ix
@@ -461,6 +460,7 @@ program vgen
        'Er_0(kV/m)=',1pe9.2,2x,&
        'vpol_1(km/s)=',1pe9.2,2x,&
        'nth=',i2,2x,'[',i2,']')
+
   !call vgen_harvest_inputandoutput
 
 end program vgen
