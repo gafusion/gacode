@@ -18,8 +18,8 @@ module neo_harvest
   parameter(NUL = char(0))
   character(len=2) :: NUM  
 
- include 'harvest_lib.inc'
- contains
+  include 'harvest_lib.inc'
+  contains
  
   subroutine neo_harvest_input
     

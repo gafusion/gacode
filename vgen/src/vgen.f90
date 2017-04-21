@@ -17,20 +17,20 @@ program vgen
 
   implicit none
   
-   integer :: i
-   integer :: j
-   integer :: ix
-   integer :: rotation_model 
-   real :: grad_p
-   real :: ya
-   real :: yb
-   real :: vtor_diff
-   real :: er0
-   real :: omega
-   real :: omega_deriv
-   integer :: simntheta
-   real :: cpu_tot_in, cpu_tot_out
-   real, dimension(:), allocatable :: er_exp
+  integer :: i
+  integer :: j
+  integer :: ix
+  integer :: rotation_model 
+  real :: grad_p
+  real :: ya
+  real :: yb
+  real :: vtor_diff
+  real :: er0
+  real :: omega
+  real :: omega_deriv
+  integer :: simntheta
+  real :: cpu_tot_in, cpu_tot_out
+  real, dimension(:), allocatable :: er_exp
   
   !---------------------------------------------------------------------
   ! Initialize MPI_COMM_WORLD communicator.
