@@ -11,33 +11,28 @@ module neo_harvest
 
   implicit none
   
- 
-
   integer :: ierr
-  CHARACTER(LEN=65507) :: harvest_sendline
-  CHARACTER(LEN=255) :: harvest_tag
-  CHARACTER NUL
-  PARAMETER(NUL = CHAR(0))
-  CHARACTER(LEN=2) :: NUM  
+  character(len=65507) :: harvest_sendline
+  character(len=255) :: harvest_tag
+  character NUL
+  parameter(NUL = char(0))
+  character(len=2) :: NUM  
 
  include 'harvest_lib.inc'
- contains 
+ contains
+ 
   subroutine neo_harvest_input
     
     use neo_globals
     use neo_interface
     use EXPRO_interface
-
-    
     
     implicit none
-    ierr=init_harvest('Neo_jbs'//NUL,harvest_sendline,LEN(harvest_sendline))
-    ierr=set_harvest_verbose(1)
-    ierr=set_harvest_protocol('TCP'//NUL)
-    ierr=set_harvest_host('localhost'//NUL)
-    ierr=set_harvest_payload_str(harvest_sendline,'VERSION'//NUL,'APS15_1'//NUL)
-
-       
+    
+        ierr=init_harvest('Neo_jbs'//NUL,harvest_sendline,len(harvest_sendline))
+        ierr=set_harvest_protocol('TCP'//NUL)
+        ierr=set_harvest_host('localhost'//NUL)
+    
         ierr=set_harvest_payload_int(harvest_sendline,"neo_n_energy_in"//NUL,neo_n_energy_in)
         ierr=set_harvest_payload_int(harvest_sendline,"neo_n_xi_in"//NUL,neo_n_xi_in)
         ierr=set_harvest_payload_int(harvest_sendline,"neo_n_theta_in"//NUL,neo_n_theta_in)
@@ -110,15 +105,9 @@ module neo_harvest
       ! ierr=set_harvest_payload_dbl_array(harvest_sendline,"neo_geo_yin_in"//NUL,neo_geo_yin_in,)
         ierr=set_harvest_payload_int(harvest_sendline,"neo_subroutine_flag"//NUL,neo_subroutine_flag)
         ierr=set_harvest_payload_int(harvest_sendline,"neo_test_flag_in"//NUL,neo_test_flag_in)              
-
-            
-          
-           
-
    
   end subroutine neo_harvest_input
   
-
    subroutine neo_harvest_output
 
     use neo_globals
@@ -126,9 +115,7 @@ module neo_harvest
     use EXPRO_interface
     
     implicit none
- 
-
-
+    
         ierr=set_harvest_payload_dbl(harvest_sendline,"neo_pflux_thHH_out"//NUL,neo_pflux_thHH_out)
         ierr=set_harvest_payload_dbl(harvest_sendline,"neo_eflux_thHHi_out"//NUL,neo_eflux_thHHi_out)
         ierr=set_harvest_payload_dbl(harvest_sendline,"neo_eflux_thHHe_out"//NUL,neo_eflux_thHHe_out)
@@ -157,13 +144,8 @@ module neo_harvest
         ierr=set_harvest_payload_dbl(harvest_sendline,"neo_jpar_nclass_out"//NUL,neo_jpar_nclass_out)
         ierr=set_harvest_payload_int(harvest_sendline,"neo_error_status_out"//NUL,neo_error_status_out)
 
-
-    
          ierr=harvest_send(harvest_sendline)
  
   end subroutine neo_harvest_output
-
-     
-
 
 end module neo_harvest

@@ -1,5 +1,5 @@
 !------------------------------------------------------------------------
-! vgen.f90
+! vgen.f90 
 !
 ! PURPOSE: 
 !  Driver for the vgen (velocity-generation) capability of NEO.  This 
@@ -13,6 +13,7 @@ program vgen
   use vgen_globals
   use neo_interface
   use EXPRO_interface
+  use vgen_harvest
 
   implicit none
   
@@ -30,18 +31,8 @@ program vgen
    real :: omega_deriv
    integer :: simntheta
    real :: cpu_tot_in, cpu_tot_out
-   CHARACTER(LEN=65507) :: harvest_sendline
-   CHARACTER(LEN=255) :: harvest_tag
-   CHARACTER NUL
-   PARAMETER(NUL = CHAR(0))
-   CHARACTER(LEN=2) :: NUM
- 
-    
-
-  real, dimension(:), allocatable :: er_exp
-  include 'harvest_lib.inc' 
+   real, dimension(:), allocatable :: er_exp
   
-
   !---------------------------------------------------------------------
   ! Initialize MPI_COMM_WORLD communicator.
   !
@@ -419,16 +410,7 @@ program vgen
      call EXPRO_write_derived(1,'input.profiles.extra')
 
      ! 3. input.profiles.jbs
-     ierr=init_harvest('Neo_jbs'//NUL,harvest_sendline,LEN(harvest_sendline))
-
-     ierr=set_harvest_verbose(1)
-     ierr=set_harvest_protocol('TCP'//NUL)
-     ierr=set_harvest_host('localhost'//NUL)
-    !ierr=set_harvest_payload_dbl_array(harvest_sendline,'darr'//NUL,D,SIZE(D))
-    !ierr=set_harvest_payload_flt_array(harvest_sendline,'farr'//NUL,F,SIZE(F))
  
-     ierr=set_harvest_payload_str(harvest_sendline,'VERSION'//NUL,'APS15_1'//NUL) !no underscore to allow different versions of the same run
-
      open(unit=1,file='input.profiles.jbs',status='replace')
      write(1,'(a)') '#'
      write(1,'(a)') '# expro_rho'
@@ -440,56 +422,14 @@ program vgen
      write(1,'(a)') '# where jbs = < j_parallel B > / B_unit'
      write(1,'(a)') '#'
 
-     write(*,*)'It compiled!'
-    
-     
+
      do i=1,EXPRO_n_exp
         write(1,'(6(1pe14.7,2x))') EXPRO_rho(i), pflux_sum(i), &
-             jbs_neo(i), jbs_sauter(i), jbs_nclass(i), jbs_koh(i)
-        write(*,'(6(1pe14.7,2x))') EXPRO_rho(i), pflux_sum(i), &
              jbs_neo(i), jbs_sauter(i), jbs_nclass(i), jbs_koh(i)
              
      enddo
 
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_RHO'//NUL,EXPRO_rho,EXPRO_n_exp)
-     ierr=set_harvest_payload_int(harvest_sendline,'vel_method'//NUL,vel_method)
-     ierr=set_harvest_payload_int(harvest_sendline,'erspecies_indx'//NUL,erspecies_indx)
-     ierr=set_harvest_payload_int(harvest_sendline,'nth_min'//NUL,nth_min)
-     ierr=set_harvest_payload_int(harvest_sendline,'nth_max'//NUL,nth_max)
-!    ierr=set_harvest_payload_dbl_array(harvest_sendline,'PFLUX_SUM'//NUL,pflux_sum,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'JBS_NEO'//NUL,jbs_neo,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'JBS_SAUTER'//NUL,jbs_sauter,EXPRO_n_exp)
-!    ierr=set_harvest_payload_dbl_array(harvest_sendline,'JBS_NCLASS'//NUL,jbs_nclass,EXPRO_n_exp)
-!    ierr=set_harvest_payload_dbl_array(harvest_sendline,'JBS_KOH'//NUL,jbs_koh,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'KY_SPECTRUM'//NUL,jbs_neo,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_rmin'//NUL,EXPRO_rmin,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_rmaj'//NUL,EXPRO_rmaj,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_q'//NUL,EXPRO_q,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_kappa'//NUL,EXPRO_kappa,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_delta'//NUL,EXPRO_delta,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_z_eff'//NUL,EXPRO_z_eff,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_w0'//NUL,EXPRO_w0,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_flow_mom'//NUL,EXPRO_rmin,EXPRO_flow_mom)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_sbcx'//NUL,EXPRO_sbcx,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_sbeame'//NUL,EXPRO_sbeame,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_sscxl'//NUL,EXPRO_sscxl,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_pow_e'//NUL,EXPRO_pow_e,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_pow_i'//NUL,EXPRO_pow_i,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_pow_ei'//NUL,EXPRO_pow_ei,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_zeta'//NUL,EXPRO_zeta,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_flow_beam'//NUL,EXPRO_flow_beam,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_flow_wall'//NUL,EXPRO_flow_wall,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_zmag'//NUL,EXPRO_zmag,EXPRO_n_exp)                                    
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_ptot'//NUL,EXPRO_ptot,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_polflux'//NUL,EXPRO_polflux,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_pow_e_fus'//NUL,EXPRO_pow_e_fus,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_pow_i_fus'//NUL,EXPRO_pow_i_fus,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_pow_e_sync'//NUL,EXPRO_pow_e_sync,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_pow_e_brem'//NUL,EXPRO_pow_e_brem,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_pow_e_line'//NUL,EXPRO_pow_e_line,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_pow_e_aux'//NUL,EXPRO_pow_e_aux,EXPRO_n_exp)
-     ierr=set_harvest_payload_dbl_array(harvest_sendline,'EXPRO_pow_i_aux'//NUL,EXPRO_pow_i_aux,EXPRO_n_exp)
-     
+ 
      close(1)
      !----------------------------------------------------------------------
 
@@ -521,6 +461,6 @@ program vgen
        'Er_0(kV/m)=',1pe9.2,2x,&
        'vpol_1(km/s)=',1pe9.2,2x,&
        'nth=',i2,2x,'[',i2,']')
+  !call vgen_harvest_inputandoutput
 
-ierr=harvest_send(harvest_sendline)
 end program vgen

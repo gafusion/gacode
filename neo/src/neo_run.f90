@@ -40,8 +40,7 @@ subroutine neo_run()
   neo_thHS_out=0.0
 
   ! Run NEO
-  call neo_do
-  
+  call neo_do  
 
   ! ----------------------------------------------------------------------
   ! OUTPUT NORMALIZATION

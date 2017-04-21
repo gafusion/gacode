@@ -2,9 +2,7 @@ include ${GACODE_ROOT}/platform/build/make.inc.${GACODE_PLATFORM}
 
 neo_libs= -L$(GACODE_ROOT)/shared/harvest_client/ \
               -I$(GACODE_ROOT)/shared/harvest_client/ \
-              -lharvest  
-
-
+              -lharvest
 
 ifeq ($(OPT),debug)
    FFLAGS=${FDEBUG}
