@@ -20,9 +20,6 @@ subroutine cgyro_field_v
 
   implicit none
 
-  integer :: is,ie,ix,it
-  complex :: fac
-
   
   call timer_lib_in('field_H')
 
@@ -69,7 +66,8 @@ subroutine cgyro_field_c
 
   implicit none
 
-  integer :: is,it
+  integer :: is
+  
   complex, dimension(nc) :: tmp
   
   call timer_lib_in('field_h')

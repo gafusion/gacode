@@ -28,11 +28,10 @@ subroutine cgyro_read_input
   call cgyro_readbc_real(up_radial)
   call cgyro_readbc_real(up_theta)
   call cgyro_readbc_real(up_alpha)
-  call cgyro_readbc_real(up_wave)
   call cgyro_readbc_int(nup_radial)
   call cgyro_readbc_int(nup_theta)
   call cgyro_readbc_int(nup_alpha)
-  call cgyro_readbc_int(nup_wave)
+  call cgyro_readbc_int(n_wave)
   call cgyro_readbc_int(constant_stream_flag)
   call cgyro_readbc_real(ky)
   call cgyro_readbc_int(box_size)
@@ -78,6 +77,7 @@ subroutine cgyro_read_input
   call cgyro_readbc_int(n_global)
   call cgyro_readbc_int(psym_flag)
   call cgyro_readbc_int(profile_shear_flag)
+  call cgyro_readbc_int(theta_plot)
 
   call cgyro_readbc_real(rmin)
   call cgyro_readbc_real(rmaj)
@@ -109,6 +109,7 @@ subroutine cgyro_read_input
      call cgyro_readbc_real(x)   ; sdlntdr(is) = x
   enddo
 
+  call cgyro_readbc_int(quasineutral_flag)
   call cgyro_readbc_real(lambda_star_scale)
   call cgyro_readbc_real(gamma_e_scale)
   call cgyro_readbc_real(gamma_p_scale)

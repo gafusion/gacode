@@ -36,7 +36,7 @@ ax.set_title(r'$\mathrm{Average~fluctuation~intensity} \quad $'+windowtxt)
 ax.set_xlabel(xlabel)
 
 if nstr == 'null':
-    y = np.sum(sim.phisq,axis=1)
+    y = np.sum(sim.phisq[:,0,:,:],axis=1)
     for j in range(sim.n_radial):
         ave[j] = average(y[j,:],sim.t,w)
     ax.set_ylabel(r'$\overline{\delta \phi_\mathrm{total}}$',color='k')
@@ -48,9 +48,9 @@ else:
     ax.set_ylabel(r'$\overline{\Phi_n}$',color='k')
     for n in nvec:
         num = r'$n='+str(n)+'$'
-        y[:] = sim.phisq[:,n,:]
+        y[:] = sim.phisq[:,0,n,:]
         for j in range(sim.n_radial):
-            ave[j] = average(sim.phisq[j,n,:],sim.t,w)
+            ave[j] = average(sim.phisq[j,0,n,:],sim.t,w)
         ax.plot(kx+dk/2,np.sqrt(ave[:]),ls='steps',label=num)
             
 ax.set_xlim([-x0,x0])

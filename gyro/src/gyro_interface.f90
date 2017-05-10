@@ -71,7 +71,6 @@ module gyro_interface
   integer :: gyro_verbose_flag_in = 0
   integer :: gyro_nonuniform_grid_flag_in = 0
   real    :: gyro_s_grid_in = 0.0
-  integer :: gyro_rotation_theory_method_in = 1
   real    :: gyro_gamma_e_in = 0.0
   real    :: gyro_nu_ei_in = 0.0
   real    :: gyro_nu_ei_scale_in = 1.0
@@ -290,7 +289,6 @@ contains
     gyro_verbose_flag_in = verbose_flag
     gyro_nonuniform_grid_flag_in = nonuniform_grid_flag
     gyro_s_grid_in = s_grid
-    gyro_rotation_theory_method_in = rotation_theory_method
     gyro_gamma_e_in = gamma_e
     gyro_nu_ei_in = nu_ei
     gyro_nu_ei_scale_in = nu_ei_scale
@@ -504,7 +502,6 @@ contains
     verbose_flag = gyro_verbose_flag_in
     nonuniform_grid_flag = gyro_nonuniform_grid_flag_in
     s_grid = gyro_s_grid_in
-    rotation_theory_method = gyro_rotation_theory_method_in
     gamma_e = gyro_gamma_e_in
     nu_ei = gyro_nu_ei_in
     nu_ei_scale = gyro_nu_ei_scale_in
@@ -709,7 +706,6 @@ contains
     write(1,20) 'VERBOSE_FLAG',gyro_verbose_flag_in
     write(1,20) 'NONUNIFORM_GRID_FLAG',gyro_nonuniform_grid_flag_in
     write(1,30) 'S_GRID',gyro_s_grid_in
-    write(1,20) 'ROTATION_THEORY_METHOD',gyro_rotation_theory_method_in
     write(1,30) 'GAMMA_E',gyro_gamma_e_in
     write(1,30) 'NU_EI',gyro_nu_ei_in
     write(1,30) 'NU_EI_SCALE',gyro_nu_ei_scale_in

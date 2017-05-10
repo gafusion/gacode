@@ -18,6 +18,7 @@ subroutine cgyro_write_timedata
   logical :: lfe
   real :: vfreq(2)
   complex :: ftemp(n_radial,n_theta)
+  complex :: field_plot(n_radial,theta_plot)
 
   ! Print this data on print steps only; otherwise exit now
   if (mod(i_time,print_step) /= 0) return
@@ -48,8 +49,8 @@ subroutine cgyro_write_timedata
   endif
 
   if (nonlinear_flag == 1 .and. globalflux_print_flag == 1) then
-     ! Global (n,e) fluxes for all species
-     do i_moment=1,2
+     ! Global (n,e,v) fluxes for all species
+     do i_moment=1,3
         call cgyro_write_distributed_complex(&
              trim(path)//runfile_lky_flux(i_moment),&
              size(gflux(:,:,i_moment)),&
@@ -58,20 +59,29 @@ subroutine cgyro_write_timedata
   endif
   
   if (nonlinear_flag == 1 .and. moment_print_flag == 1) then
-     ! (n,e) moment for all species at theta=0
+     ! (n,e) moment for all species at selected thetas.
      do i_moment=1,2
         call cgyro_write_distributed_complex(&
              trim(path)//runfile_kxky(i_moment),&
-             size(moment(:,:,i_moment)),&
-             moment(:,:,i_moment))
+             size(moment(:,:,:,i_moment)),&
+             moment(:,:,:,i_moment))
      enddo
   endif
 
-  ! Complex potential at theta=0 
+  ! Sort out subset of theta values for plotting
+  do ic=1,nc
+     ir = ir_c(ic)
+     it = it_c(ic)
+     if (itp(it) > 0) then
+        field_plot(ir,itp(it)) = field(1,ic)
+     endif
+  enddo
+        
+  ! Complex potential at selected thetas
   call cgyro_write_distributed_complex(&
        trim(path)//runfile_kxky_phi,&
-       size(field(1,ic_c(:,it0))),&
-       field(1,ic_c(:,it0)))
+       size(field_plot),&
+       field_plot)
 
   ! Checksum for regression testing
   ! Note that checksum is a distributed real scalar

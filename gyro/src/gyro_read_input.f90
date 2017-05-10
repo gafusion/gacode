@@ -89,7 +89,6 @@ subroutine gyro_read_input
   call readbc_int(verbose_flag)
   call readbc_int(nonuniform_grid_flag)
   call readbc_real(s_grid)
-  call readbc_int(rotation_theory_method)
   call readbc_real(gamma_e)
   call readbc_real(nu_ei)
   call readbc_real(nu_ei_scale)

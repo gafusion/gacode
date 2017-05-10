@@ -680,20 +680,6 @@ subroutine gyro_select_methods
   !-------------------------------------------------------
 
   !-------------------------------------------------------
-  ! ROTATION METHOD:
-  !
-  select case (rotation_theory_method)
-
-  case (1)
-     call send_line('rotation parameters  : CANDY METHOD')
-  case (2)
-     call catch_error('ERROR: (GYRO) rotation_theory_method=2 no longer supported.')
-  case default
-     call catch_error('ERROR: (GYRO) rotation_theory_method')
-  end select
-  !-------------------------------------------------------
-
-  !-------------------------------------------------------
   ! NONLINEAR FLAG:
   !
   select case (nonlinear_flag)

@@ -107,6 +107,7 @@ x.add('TGYRO_RPED','-0.92')
 x.add('TGYRO_NEPED','-0.92')
 x.add('TGYRO_ZEFFPED','-0.92')
 x.add('TGYRO_PED_RATIO','-0.92')
+x.add('TGYRO_PED_SCALE','1.0')
 x.add('TGYRO_TGLF_NN_MAX_ERROR','-1')
 x.add('TGYRO_QUICKFAST_FLAG','0')
 

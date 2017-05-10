@@ -1,0 +1,35 @@
+#---------------------------------------------------
+# PSFC Cluster (eofe7.mit.edu) [Intel ENV]
+#
+# PSFC CLUSTER SYSTEM INFO:
+# - 3,200 processor cores
+# - 100 compute nodes
+# - 2 16-core Intel Processors (2.2 GHz) per node 
+#   
+#---------------------------------------------------
+
+#  FIXED Hardware parameters
+CORES_PER_NODE=32
+NUMAS_PER_NODE=2
+
+# Compilers and flags
+FC     = mpiifort -mod ${GACODE_ROOT}/modules -I ${GACODE_ROOT}/modules 
+F77    = ${FC}
+
+FOMP   = -openmp
+FMATH  = -r8
+FOPT   = -O2 -no-ipo -mt_mpi
+FDEBUG = -g -check all
+
+# System math libraries
+LMATH=-mkl=cluster
+MKL_PATH=/home/software/intel/2017-01/compilers_and_libraries_2017.1.132/linux/mkl
+FFTW_INC=${MKL_PATH}/include/fftw
+
+# NetCDF
+NETCDF=-L /cm/shared/engaging/intel/intel-2013.1.046/pkg/netcdff/4.4.2-parallel/lib -lnetcdff -lnetcdf
+NETCDF_INC=/cm/shared/engaging/intel/intel-2013.1.046/pkg/netcdff/4.4.2-parallel/include
+
+# Archive 
+ARCH = ar cr
+

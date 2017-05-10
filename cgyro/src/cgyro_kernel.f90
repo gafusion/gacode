@@ -139,8 +139,8 @@ subroutine cgyro_kernel
   if(allocated(bpol))           deallocate(bpol)
   if(allocated(k_perp))         deallocate(k_perp)
   if(allocated(k_x))            deallocate(k_x)
-  if(allocated(bigR))           deallocate(bigR)
-  if(allocated(bigR_r))         deallocate(bigR_r)
+  if(allocated(bigr))           deallocate(bigr)
+  if(allocated(bigr_r))         deallocate(bigr_r)
   if(allocated(omega_stream))   then
 !$acc exit data delete(omega_stream)
      deallocate(omega_stream)

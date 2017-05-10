@@ -161,7 +161,6 @@ module gyro_globals
   integer :: density_method
   integer :: integrator_method
   integer :: nl_method
-  integer :: rotation_theory_method
   integer :: lindiff_method
   integer :: gyro_method
   integer :: sparse_method

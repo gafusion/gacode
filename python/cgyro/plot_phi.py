@@ -23,15 +23,16 @@ ax.set_title(r'$\mathrm{Fluctuation~intensity} \quad k_\theta = nq/r$')
 #======================================
 
 p2 = np.sum(sim.phisq,axis=0)/sim.rho**2
+itheta=0
 
 # n=0 intensity
-y0 = p2[0,:]
+y0 = p2[itheta,0,:]
 ax.plot(sim.t,np.sqrt(y0),label=r'$n=0$',linewidth=2)
 
 # finite-n intensity
-yn = p2[1,:]
+yn = p2[itheta,1,:]
 for n in range(2,sim.n_n):
-    yn = yn+p2[n,:]
+    yn = yn+p2[itheta,n,:]
 ax.plot(sim.t,np.sqrt(yn),label=r'$n>0$')
         
 ax.set_xlim([0,max(sim.t)])

@@ -7,7 +7,7 @@ TIMESTAMP=`date -Iseconds`
 # Main movie definitions
 BASENAME=%d.png
 BITRATE=1000k
-FRAMERATE=20
+FRAMERATE=$2
 QUALITY=19
 OUT=movie.mp4
 

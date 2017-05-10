@@ -88,6 +88,7 @@ if not os.path.isfile(fdata):
     print fdata+' does not exist.  Try -moment phi'
     sys.exit()
 
+# WARNING: Assumes theta_plot=1 
 #(2,n_radial,n_species,n_n,nt)
 if (moment == 'phi'):
     n_chunk = 2*nr*nn

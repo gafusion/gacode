@@ -25,7 +25,7 @@ ax.set_ylabel(r'$\left| \delta\phi_n \right|$')
 ax.set_yscale('log')
 ax.set_title(r'$\mathrm{Fluctuation~intensity} \quad k_\theta = nq/r$')
 
-p2 = np.sum(sim.phisq,axis=0)/sim.rho**2
+p2 = np.sum(sim.phisq[:,0,:,:],axis=0)/sim.rho**2
 
 if nstr == 'null':
     nvec = range(sim.n_n)

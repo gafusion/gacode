@@ -9,7 +9,7 @@ w = float(sys.argv[1])
 ext = sys.argv[2]
 
 sim = cgyrodata('./')
-sim.getbigflux()
+sim.getflux()
 
 nt = sim.n_time
 
@@ -33,8 +33,9 @@ if ext == 'dump':
         fn.write(str(ispec)+' ')
         fe.write(str(ispec)+' ')
         for i_n in range(sim.n_n):
-            yn = np.sum(sim.flux_n,axis=0)
-            ye = np.sum(sim.flux_e,axis=0)
+            y = np.sum(sim.ky_flux,axis=2)
+            yn = y[:,0,:,:]
+            ye = y[:,1,:,:]
             b[0,i_n] = average(yn[ispec,i_n,:],sim.t,w)
             b[1,i_n] = average(ye[ispec,i_n,:],sim.t,w)
             fn.write("{:.3e}".format(b[0,i_n])+' ')
@@ -52,8 +53,8 @@ else:
 
     try:
         for ispec in range(sim.n_species):
-	    y = np.sum(sim.kxky_flux_n,axis=(0,2))
-            b[ispec] = average(y[ispec,:],sim.t,w)
+	    y = np.sum(sim.ky_flux,axis=(2,3))
+            b[ispec] = average(y[ispec,0,:],sim.t,w)
         print 'GAMMA [GB]  ',b
     except:
         pass
@@ -61,8 +62,8 @@ else:
 
     try:
         for ispec in range(sim.n_species):
-            y = np.sum(sim.kxky_flux_e,axis=(0,2))
-            b[ispec] = average(y[ispec,:],sim.t,w)
+            y = np.sum(sim.ky_flux,axis=(2,3))
+            b[ispec] = average(y[ispec,1,:],sim.t,w)
         print 'Q     [GB]  ',b
     except:
         pass

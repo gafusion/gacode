@@ -19,7 +19,7 @@ else:
     sim.getbigfield()
 
 t    = sim.t
-phic = sim.kxky_phi[0,0,0,:]
+phic = sim.kxky_phi[0,0,0,0,:]
 y    = phic[:]*1e6*(1-np.i0(sim.kx[0]**2)*np.exp(-sim.kx[0]**2))/(np.i0(sim.kx[0]**2)*np.exp(-sim.kx[0]**2))
 #initialization in code is with 1e-6*besselj0 # phic[0]
 
@@ -44,7 +44,7 @@ ax.set_xlabel(TIME)
 ax.set_ylabel(r'$\mathrm{Re}\Phi/\Phi_0$')
 
 for i in range(sim.n_radial):
-    ax.plot(t,sim.kxky_phi[0,i,0,:]*1e6*(1-np.i0(sim.kx[i]**2)*np.exp(-sim.kx[i]**2))/(np.i0(sim.kx[i]**2)*np.exp(-sim.kx[i]**2)),label=r'$k_x=%.3g$' % sim.kx[i])
+    ax.plot(t,sim.kxky_phi[0,i,0,0,:]*1e6*(1-np.i0(sim.kx[i]**2)*np.exp(-sim.kx[i]**2))/(np.i0(sim.kx[i]**2)*np.exp(-sim.kx[i]**2)),label=r'$k_x=%.3g$' % sim.kx[i])
 
 
     

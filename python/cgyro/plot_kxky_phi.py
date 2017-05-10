@@ -22,9 +22,11 @@ ny=sim.n_n
 f = np.zeros([nx-1,ny])
 n = sim.n_time
 
+itheta=0
+
 imin = int((1.0-w)*n)
 for i in np.arange(imin,n):
-    f = f+sim.phisq[1:,:,i]
+    f = f+sim.phisq[1:,itheta,:,i]
 
 # Fix (0,0)
 i0 = nx/2-1

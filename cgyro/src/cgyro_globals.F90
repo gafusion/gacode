@@ -34,11 +34,10 @@ module cgyro_globals
   real    :: up_radial
   real    :: up_theta
   real    :: up_alpha
-  real    :: up_wave
   integer :: nup_radial
   integer :: nup_theta
   integer :: nup_alpha
-  integer :: nup_wave
+  integer :: n_wave
   integer :: constant_stream_flag
   real    :: ky
   integer :: box_size
@@ -76,6 +75,7 @@ module cgyro_globals
   real :: mach
   integer :: rotation_model
   real :: error_tol
+  real :: adapt_tol
   integer :: mpi_rank_order
   integer :: hiprec_flag
   integer :: udsymmetry_flag
@@ -83,7 +83,7 @@ module cgyro_globals
   integer :: n_global
   integer :: psym_flag
   integer :: profile_shear_flag
-  real :: adapt_tol
+  integer :: theta_plot
   !
   ! Geometry input
   !
@@ -118,6 +118,7 @@ module cgyro_globals
   integer :: subroutine_flag  ! only used for cgyro_read_input
 
   ! Re-scaling parameters for experimental profiles
+  integer :: quasineutral_flag
   real :: lambda_star_scale
   real :: gamma_e_scale
   real :: gamma_p_scale
@@ -208,8 +209,8 @@ module cgyro_globals
        (/'out.cgyro.phib ','out.cgyro.aparb','out.cgyro.bparb'/)
   character(len=16), dimension(2)  :: runfile_kxky = &
        (/'out.cgyro.kxky_n','out.cgyro.kxky_e'/)
-  character(len=20), dimension(2)  :: runfile_lky_flux = &
-       (/'out.cgyro.lky_flux_n','out.cgyro.lky_flux_e'/)
+  character(len=20), dimension(3)  :: runfile_lky_flux = &
+       (/'out.cgyro.lky_flux_n','out.cgyro.lky_flux_e','out.cgyro.lky_flux_v'/)
   integer, parameter :: io=1
   !
   ! error checking
@@ -277,8 +278,7 @@ module cgyro_globals
   complex, dimension(:,:), allocatable :: dtheta_up
   !
   ! Wavenumber advection
-  real, dimension(:), allocatable :: der_wave
-  real, dimension(:), allocatable :: dis_wave
+  real, dimension(:), allocatable :: c_wave
   !
   ! Distributions
   complex, dimension(:,:,:), allocatable :: rhs
@@ -312,8 +312,8 @@ module cgyro_globals
   complex, dimension(:,:), allocatable :: field_old
   complex, dimension(:,:), allocatable :: field_old2
   complex, dimension(:,:), allocatable :: field_old3
-  complex, dimension(:,:,:), allocatable :: moment_loc
-  complex, dimension(:,:,:), allocatable :: moment
+  complex, dimension(:,:,:,:), allocatable :: moment_loc
+  complex, dimension(:,:,:,:), allocatable :: moment
   !
   ! Nonlinear fluxes 
   real, dimension(:,:), allocatable :: flux_loc
@@ -375,8 +375,9 @@ module cgyro_globals
   ! 
   ! Equilibrium/geometry arrays
   integer :: it0
-  real :: bigR_th0
-  real :: bigR_r_th0
+  integer, dimension(:), allocatable :: itp
+  real :: bigr_th0
+  real :: bigr_r_th0
   real, dimension(:,:), allocatable :: thetab
   real, dimension(:), allocatable   :: w_theta
   real, dimension(:), allocatable   :: g_theta
@@ -386,8 +387,8 @@ module cgyro_globals
   real, dimension(:), allocatable   :: bmag
   real, dimension(:), allocatable   :: btor
   real, dimension(:), allocatable   :: bpol
-  real, dimension(:), allocatable   :: bigR
-  real, dimension(:), allocatable   :: bigR_r
+  real, dimension(:), allocatable   :: bigr
+  real, dimension(:), allocatable   :: bigr_r
   real, dimension(:,:), allocatable :: omega_stream
   real, dimension(:,:), allocatable :: omega_trap
   real, dimension(:,:), allocatable :: omega_rdrift

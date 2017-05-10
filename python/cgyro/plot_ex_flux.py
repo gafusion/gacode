@@ -32,6 +32,11 @@ elif moment == 'e':
     mtag = 'Q'
     z = np.sum(sim.lky_flux_e,axis=3)
     ftag = 'ex_flux_e'
+elif moment == 'v':
+    ntag = 'Momentum~flux'
+    mtag = '\Pi'
+    z = np.sum(sim.lky_flux_v,axis=3)
+    ftag = 'ex_flux_v'
 else:
     print 'ERROR (plot_ex_flux.py) Invalid moment.'
     sys.exit()
@@ -60,7 +65,7 @@ if ftype == 'dump':
             ave = average(y[ispec,j,:],sim.t,w)
             arr[j,ispec+1] = ave
         stag = stag+' , s'+str(ispec)
-            
+
     fid = open(fname,'w')
     fid.write('# Moment  : '+mtag+'\n')
     fid.write('# Time    : '+str(sim.t[imin])+' < (c_s/a) t < '+str(sim.t[-1])+'\n')

@@ -58,6 +58,7 @@ then
   echo "                  = ky_phi   (time-dependent ky-phi intensities)"
   echo "                  = kx_phi   (average kx-phi intensities)"
   echo "                  = kxky_phi (kx-ky spectra of ave(|phi|))"
+  echo "                  = rcorr_phi (time-average radial correlation function)"
   echo "                  = xflux    (radial profile of fluxes for all species)"
   echo "                  = fluct    (fluctuations)"
   echo "                  = vid      (create video from png files)"
@@ -272,6 +273,9 @@ case "$PLOT_TYPE" in
    kxky_phi)
 	python $PYROOT/plot_kxky_phi.py $FTYPE $W $FIELD ;;
 
+   rcorr_phi)
+           python $PYROOT/plot_rcorr_phi.py $FTYPE $W $YMIN $YMAX ;;
+
    zf)
 	python $PYROOT/plot_zf.py $FTYPE $W $FIELD ;;
 
@@ -285,7 +289,8 @@ case "$PLOT_TYPE" in
    	python $PYROOT/fix.py ;;
 
    vid)
-   	$PYROOT/avconv_wrapper $START ;;
+	FRAMERATE=20
+   	$PYROOT/avconv_wrapper $START $FRAMERATE ;;
 
    *)
         echo "Unrecognized argument to -plot" ; exit 1 ;;

@@ -306,6 +306,10 @@ subroutine EXPRO_compute_derived
      call bound_deriv(EXPRO_dlnnidr_new(:),-log(EXPRO_ni_new(:)),&
           EXPRO_rmin,EXPRO_n_exp)
 
+     ! sni = -ni''/ni (1/m^2)
+     call bound_deriv(EXPRO_sdlnnidr_new(:),EXPRO_ni_new(:)*EXPRO_dlnnidr_new(:),EXPRO_rmin,EXPRO_n_exp)
+     EXPRO_sdlnnidr_new(:) = EXPRO_sdlnnidr_new(:)/EXPRO_ni_new(:)
+     
      if (minval(EXPRO_ni_new(:)) <= 0.0) then
         EXPRO_error = 1
      endif
@@ -314,6 +318,7 @@ subroutine EXPRO_compute_derived
 
      EXPRO_ni_new(:) = EXPRO_ni(1,:)
      EXPRO_dlnnidr_new(:) = EXPRO_dlnnidr(1,:)
+     EXPRO_sdlnnidr_new(:) = EXPRO_sdlnnidr(1,:)
 
   endif
 

@@ -8,9 +8,7 @@
      use tglf_interface
      use tglf_dimensions
      use tglf_global
-#ifdef MPI_TGLF
      use tglf_mpi
-#endif
 !
      IMPLICIT NONE
 !
