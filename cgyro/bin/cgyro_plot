@@ -46,6 +46,7 @@ then
   echo "           Function to plot."
   echo "           <type> = text     (text summary of fluxes)"
   echo "                  = freq     (frequency versus time),"
+  echo "                  = ky_freq  (frequency versus ky),"
   echo "                  = ball     (ballooning modes OR ZF test)"
   echo "                  = hb       (2D ballooning distribution)"
   echo "                  = hbcut    (1D ballooning distribution line plots),"
@@ -145,7 +146,7 @@ FTYPE=screen
 PLOT_TYPE=field
 TIME=-1
 TMAX=-1.0
-YMIN=auto
+YMIN=0.0
 YMAX=auto
 W=0.5
 MOMENT=e
@@ -240,6 +241,9 @@ case "$PLOT_TYPE" in
    freq)
 	python $PYROOT/plot_freq.py $FTYPE ;;
 
+   ky_freq)
+	python $PYROOT/plot_ky_freq.py $FTYPE ;;
+
    error)
 	python $PYROOT/plot_error.py $FTYPE ;;
 
@@ -247,7 +251,7 @@ case "$PLOT_TYPE" in
 	python $PYROOT/plot_ky_flux.py $FTYPE $W $MOMENT $YMIN $YMAX $FIELD $FC ;;
 
    xflux)
-	python $PYROOT/plot_ex_flux.py $FTYPE $W $MOMENT $YMIN $YMAX ;;
+	python $PYROOT/plot_xflux.py $FTYPE $W $MOMENT $YMIN $YMAX ;;
 
    fluct)
 	python $PYROOT/plot_fluct.py $FTYPE $MOMENT $SPECIES $YMIN $YMAX $NX $NY $TIME $FMIN $FMAX $CMAP ;;

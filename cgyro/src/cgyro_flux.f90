@@ -46,7 +46,7 @@ subroutine cgyro_flux
 
      ! Parallel velocity
      vpar = vth(is)*sqrt(2.0)*vel(ie)*xi(ix)
-     
+
      do ic=1,nc
 
         ir = ir_c(ic)
@@ -73,14 +73,18 @@ subroutine cgyro_flux
 
         ! Global fluxes (complex)
         do l=0,n_global
-           if (ir-l > 0) then
-              cprod  = i_c*cap_h_c(ic,iv_loc)*conjg(psi(ic_c(ir-l,it),iv_loc))
-              cprod2 = i_c*cap_h_c(ic,iv_loc)*conjg(i_c*chi(ic_c(ir-l,it),iv_loc))
-              
+           if (ir-l > 0 .and. ir+l <= n_radial) then
+              cprod = i_c*cap_h_c(ic,iv_loc)*conjg(psi(ic_c(ir-l,it),iv_loc)) &
+                   -i_c*conjg(cap_h_c(ic,iv_loc))*psi(ic_c(ir+l,it),iv_loc)
+
+              cprod2 = i_c*cap_h_c(ic,iv_loc)*conjg(i_c*chi(ic_c(ir-l,it),iv_loc)) &
+                   -i_c*conjg(cap_h_c(ic,iv_loc))*(i_c*chi(ic_c(ir+l,it),iv_loc))
+
               gflux_loc(l,is,1) = gflux_loc(l,is,1)+cprod*dvr
               gflux_loc(l,is,2) = gflux_loc(l,is,2)+cprod*dvr*erot
-              
+
               cprod = cprod*(mach*bigr(it)/rmaj+btor(it)/bmag(it)*vpar)+cprod2
+              
               gflux_loc(l,is,3) = gflux_loc(l,is,3)+cprod*dvr*bigr(it)*mass(is)
            endif
         enddo
@@ -113,7 +117,7 @@ subroutine cgyro_flux
 
         it = it_c(ic)
 
-        fprod(:)  = aimag(cap_h_c(ic,iv_loc)*conjg( jvec_c(:,ic,iv_loc)*field(:,ic)))
+        fprod(:)  = aimag(cap_h_c(ic,iv_loc)*conjg(jvec_c(:,ic,iv_loc)*field(:,ic)))
         fprod2(:) = aimag(cap_h_c(ic,iv_loc)*conjg(i_c*jxvec_c(:,ic,iv_loc)*field(:,ic)))
 
         dvr  = w_theta(it)*dens_rot(it,is)*dens(is)*dv
@@ -155,9 +159,9 @@ subroutine cgyro_flux
 
   else
 
-     ! Complete definition of fluxes
+     ! Complete definition of fluxes (NOTE: no factor of 2 in gflux; see above)
      flux_loc  =  flux_loc*(2*k_theta*rho)
-     gflux_loc = gflux_loc*(2*k_theta*rho)
+     gflux_loc = gflux_loc*(k_theta*rho)
      fflux_loc = fflux_loc*(2*k_theta*rho)
 
      ! GyroBohm normalizations

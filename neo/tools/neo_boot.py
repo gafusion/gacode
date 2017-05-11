@@ -78,6 +78,9 @@ neoin.write('DENS_3='+ni2+'\n')
 
 neoin.close()
 
+z_all = [-1,float(zi1),float(zi2),-1,float(zi1),float(zi2)]
+n_all = [1.0,float(ni1),float(ni2),1.0,float(ni1),float(ni2)]
+
 cneo = []
 csauter = []
 
@@ -112,8 +115,8 @@ for i in range(6):
    print 'jsauter     '+str(jsauter)
    print 'I*Psi*rho_* '+str(ipsi*rhostar)
 
-   cneo.append(jneo/(ipsi*rhostar))
-   csauter.append(jsauter/(ipsi*rhostar))
+   cneo.append(jneo/(ipsi*rhostar*abs(z_all[i])*n_all[i]))
+   csauter.append(jsauter/(ipsi*rhostar*abs(z_all[i])*n_all[i]))
 
 print list
 print cneo

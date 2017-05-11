@@ -244,14 +244,13 @@ subroutine cgyro_init_arrays
   !-------------------------------------------------------------------------
 
   !-------------------------------------------------------------------------
-  ! Wavenumber advection stencil
+  ! Wavenumber advection stencil (coefficients of triangle wave)
   !
   allocate(c_wave(n_wave))
   do l=1,n_wave
      ll = 2*l-1
      c_wave(l) = 2.0/pi/ll**2*(-1)**(l-1)
   enddo
-  print *,c_wave
   !-------------------------------------------------------------------------
 
   !-------------------------------------------------------------------------
