@@ -145,7 +145,7 @@ FTYPE=screen
 PLOT_TYPE=field
 TIME=-1
 TMAX=-1.0
-YMIN=auto
+YMIN=0.0
 YMAX=auto
 W=0.5
 MOMENT=e
@@ -247,7 +247,7 @@ case "$PLOT_TYPE" in
 	python $PYROOT/plot_ky_flux.py $FTYPE $W $MOMENT $YMIN $YMAX $FIELD $FC ;;
 
    xflux)
-	python $PYROOT/plot_ex_flux.py $FTYPE $W $MOMENT $YMIN $YMAX ;;
+	python $PYROOT/plot_xflux.py $FTYPE $W $MOMENT $YMIN $YMAX ;;
 
    fluct)
 	python $PYROOT/plot_fluct.py $FTYPE $MOMENT $SPECIES $YMIN $YMAX $NX $NY $TIME $FMIN $FMAX $CMAP ;;
