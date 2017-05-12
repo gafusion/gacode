@@ -146,11 +146,15 @@ subroutine cgyro_equilibrium
 
   mach_one_fac = 1.0
   
-  ! Compute rotation (M^2) terms
-  ! Note that this changes beta_star and thus GEO
-  ! (which affects gcos2 and captheta)
+  ! 1. Compute rotation (M^2) terms IF required
+  !
+  ! NOTE: this changes beta_star and thus GEO (which affects gcos2 
+  ! and captheta)
   call cgyro_init_rotation
 
+
+  ! 2. Compute terms required for O(M) rotation, and no rotation.
+  ! 
   do it=1,n_theta
 
      call GEO_interp(theta(it))

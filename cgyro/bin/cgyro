@@ -71,6 +71,10 @@ then
   echo
   echo "         -compress"
   echo "         Compress simulation directory."
+  echo
+  echo "         -globalmap"
+  echo "         Create global data mapping file."
+  echo "         NOTE: requries setting -rhos <rho/a>"
 
   exit 1
 fi
@@ -96,6 +100,8 @@ COMPRESS_FLAG=0
 RESET=0
 NEW_FLAG=0
 INIT_FLAG=0
+GLOBALMAP_FLAG=0
+RHOS=0.002
 #=============================================================
 
 #=============================================================
@@ -137,6 +143,9 @@ while [ $# -gt 0 ] ; do
   -new) NEW_FLAG=1 ;;
 
   -compress) COMPRESS_FLAG=1 ;;
+
+  -globalmap) GLOBALMAP_FLAG=1 ;;
+  -rhos) shift ; RHOS=$1 ;;
 
   *) echo "ERROR (cgyro script): unknown option $1." ; exit 1 ;;
 
@@ -215,6 +224,17 @@ then
 fi 
 
 cd $SIMDIR
+#============================================================
+
+#============================================================
+# Global map option
+if [ $GLOBALMAP_FLAG -eq 1 ]
+then
+    echo "$RHOS" > input.globalmap 
+    $GACODE_ROOT/cgyro/tools/globalmap/src/globalmap
+    echo "INFO: (cgyro) Global mapping done."
+    exit 1
+fi
 #============================================================
 
 #============================================================

@@ -15,6 +15,7 @@ all:
 	cd ${GACODE_ROOT}/shared/GEO ; make
 	cd ${GACODE_ROOT}/shared/EXPRO ; make
 	cd src ; make
+	cd ${GACODE_ROOT}/cgyro/tools/globalmap ; make
 
 stub:
 	cd src ; make stub
@@ -22,5 +23,6 @@ stub:
 clean:
 	cd ${GACODE_ROOT}/modules ; rm -f cgyro*.mod
 	cd src ; make clean
+	cd ${GACODE_ROOT}/cgyro/tools/globalmap ; make clean
 
 .IGNORE:

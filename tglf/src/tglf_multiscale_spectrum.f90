@@ -140,7 +140,6 @@
       enddo
 !      write(*,*)"j1 = ",j1," j2 = ",j2
       ! handle exceptions
-      if(jmax1.eq.j1)jmax1=1   ! there was no low-k peak below kycut 
       if(j1.eq.nky)then  ! the maximum ky in the ky-spectrum is less than kycut
          j1=nky-1        ! note that j2=nky in this case     
       endif

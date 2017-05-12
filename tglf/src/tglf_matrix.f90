@@ -1066,8 +1066,8 @@
 !
         do k=1,nx
          ww=wx(k)*h(i,k)*h(j,k)     
-         ave_wdh(i,j)    = ave_wdh(i,j)  + ww*(wdx(k)+wdpx(k))
-         ave_wdg(i,j)   = ave_wdg(i,j) + ww*(wdx(k)+ft2*wdpx(k)*2.0/(1.0 +ft2))
+         ave_wdh(i,j)    = ave_wdh(i,j)  + ww*wdx(k)
+         ave_wdg(i,j)   = ave_wdg(i,j) + ww*(wdx(k)+wdpx(k)*(1.0-ft2)/(1.0+ft2))
          ave_b0(i,j)    = ave_b0(i,j)  + ww*b0x(k)
 !         ave_lnB(i,j)   = ave_lnB(i,j) + ww*DLOG(Bx(k))
          ave_p0inv(i,j) = ave_p0inv(i,j) + ww/p0x(k)

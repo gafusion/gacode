@@ -11,7 +11,7 @@
 char harvest_table[50];
 char harvest_protocol[4];
 char harvest_host[100];
-int  harvest_port=3200;
+int  harvest_port=32000;
 int  harvest_verbose=0;
 int  harvest_sendline_n=65507;
 int  harvest_MTU=1450;

@@ -12,7 +12,7 @@ int set_harvest_payload_dbl(char *harvest_sendline, char *what, double data);
 int set_harvest_payload_dbl_array(char *harvest_sendline, char *what, double *data, int len);
 int set_harvest_payload_bol(char *harvest_sendline, char *what, int data);
 int set_harvest_host(char *host);
-int set_harvest_protocol(char *tag);
+int set_harvest_protocol(char *protocol);
 int set_harvest_tag(char *tag);
 int set_harvest_port(int port);
 int set_harvest_table(char *table);

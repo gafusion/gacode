@@ -957,7 +957,7 @@ SUBROUTINE mercier_luc
   ! p_prime_zero forces grad-B-curvature to zero to compensates
   ! for b_par =0
   !
-  p_prime_zero_s = -1.0
+  p_prime_zero_s = 1.0
   if(use_mhd_rule_in)p_prime_zero_s = 0.0
   !
   ! write(*,*)"debug p_prime_zero",p_prime_zero_s
@@ -970,7 +970,7 @@ SUBROUTINE mercier_luc
 
      costheta_p_geo(m) = p_prime_zero_s*rmaj_s*(Bp(m)/B(m)**2)*(4.0*pi*R(m)*p_prime_s)
 
-     ! Waltz/Miller [[cos]] 
+     ! Waltz/Miller [[cos]] without the p_prime term 
 
      costheta_geo(m) = &
           -rmaj_s*(Bp(m)/B(m)**2)*(Bp(m)/r_curv(m) &

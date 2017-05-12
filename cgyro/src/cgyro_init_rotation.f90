@@ -14,11 +14,11 @@ subroutine cgyro_init_rotation
   integer, dimension(:), allocatable :: thcyc
   real, dimension(:), allocatable :: thcderiv
   real :: x, x0, fac, sum_zn, dsum_zn
-  integer :: is, it, j, id, jt, ir
+  integer :: is, it, j, id, jt
   integer, parameter :: jmax = 200
   
-  if(rotation_model == 1) then
-     ! O(mach) terms only
+  if (rotation_model == 1) then
+     ! O(M) terms only
      dens_rot(:,:)          = 1.0
      dens_ele_rot(:)        = 1.0
      lambda_rot(:,:)        = 0.0

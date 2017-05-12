@@ -142,7 +142,7 @@ subroutine cgyro_flux
   ! 3. Renormalize fluxes to GB or quasilinear forms
   !~----------------------------------------------------
 
-  if (nonlinear_flag == 0) then
+  if (nonlinear_flag == 0 .and. n > 0) then
 
      ! Quasilinear normalization (divide by |phi|^2)
      flux_norm = 0.0
