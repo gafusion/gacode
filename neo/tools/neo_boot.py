@@ -6,6 +6,11 @@ import string
 workdir = 'bdir'
 tools   = os.environ['GACODE_ROOT']+'/neo/tools/'
 
+harvestdata={}
+jneo_harvest=[]
+jsauter_harvest=[]
+Ipsirho_harvest=[]
+
 if len(sys.argv) < 11:
    print "python neo_boot.py <rmin> <q> <nuee> <ni1/ne> <zi1> <mi1/mD> <ti1/te> <zi2> <mi2/mD> <ti2/te>"
    sys.exit()
@@ -35,6 +40,18 @@ ti1  = sys.argv[7]   # main ion temperature: t_i/t_e
 zi2  = sys.argv[8]   # impurity ion charge (integer)
 mi2  = sys.argv[9]   # impurity ion mass: m_i2/m_deuterium
 ti2  = sys.argv[10]  # impurity ion temperature: t_i2/t_e
+
+harvestdata['rmin']=rmin
+harvestdata['q']=q
+harvestdata['nuee']=nuee
+harvestdata['ni1/ne']=ni1
+harvestdata['zi1']=zi1
+harvestdata['mi1/mD']=mi1
+harvestdata['ti1/te']=ti1
+harvestdata['zi2']=zi2
+harvestdata['mi2/mD']=mi2
+harvestdata['ti2/te']=ti2
+
 
 # Prepare simulation directory
 os.system('rm -rf '+workdir)
@@ -115,9 +132,24 @@ for i in range(6):
    print 'jsauter     '+str(jsauter)
    print 'I*Psi*rho_* '+str(ipsi*rhostar)
 
+   jneo_harvest.append(jneo)
+   jsauter_harvest.append(jsauter)
+   Ipsirho_harvest.append(ipsi*rhostar)
+   
    cneo.append(jneo/(ipsi*rhostar*abs(z_all[i])*n_all[i]))
    csauter.append(jsauter/(ipsi*rhostar*abs(z_all[i])*n_all[i]))
+
+
+harvestdata['jneo']=jneo_harvest
+harvestdata['jsauter']=jsauter_harvest
+harvestdata['IPsirho']=Ipsirho_harvest
+harvestdata['NEO_Coef']=cneo
+harvestdata['SAUTER_Coef']=csauter
 
 print list
 print cneo
 print csauter
+
+sys.path.append(os.environ['GACODE_ROOT']+'/shared/harvest_client/')
+from harvest_lib import harvest_send
+harvest_send(harvestdata,'Neo_boot',verbose=True,protocol='UDP',port=41000)
