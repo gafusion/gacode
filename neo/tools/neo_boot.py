@@ -152,4 +152,7 @@ print csauter
 
 sys.path.append(os.environ['GACODE_ROOT']+'/shared/harvest_client/')
 from harvest_lib import harvest_send
-harvest_send(harvestdata,'Neo_boot',verbose=True,protocol='UDP',port=41000)
+import cPickle
+with open('neo_boot.pkl','w') as f:
+   cPickle.dump(harvestdata,f)
+harvest_send(harvestdata,'Neo_boot',verbose=True,protocol='TCP',port=41000)
