@@ -41,16 +41,16 @@ zi2  = sys.argv[8]   # impurity ion charge (integer)
 mi2  = sys.argv[9]   # impurity ion mass: m_i2/m_deuterium
 ti2  = sys.argv[10]  # impurity ion temperature: t_i2/t_e
 
-harvestdata['rmin']=rmin
-harvestdata['q']=q
-harvestdata['nuee']=nuee
-harvestdata['ni1/ne']=ni1
-harvestdata['zi1']=zi1
-harvestdata['mi1/mD']=mi1
-harvestdata['ti1/te']=ti1
-harvestdata['zi2']=zi2
-harvestdata['mi2/mD']=mi2
-harvestdata['ti2/te']=ti2
+harvestdata['rmin']=float(rmin)
+harvestdata['q']=float(q)
+harvestdata['nuee']=float(nuee)
+harvestdata['ni1/ne']=float(ni1)
+harvestdata['zi1']=int(zi1)
+harvestdata['mi1/mD']=float(mi1)
+harvestdata['ti1/te']=float(ti1)
+harvestdata['zi2']=int(zi2)
+harvestdata['mi2/mD']=float(mi2)
+harvestdata['ti2/te']=float(ti2)
 
 
 # Prepare simulation directory
@@ -152,4 +152,4 @@ print csauter
 
 sys.path.append(os.environ['GACODE_ROOT']+'/shared/harvest_client/')
 from harvest_lib import harvest_send
-harvest_send(harvestdata,'Neo_boot',verbose=True,protocol='UDP',port=41000)
+harvest_send(harvestdata,'Neo_boot',verbose=True,protocol='TCP',port=41000)
