@@ -117,7 +117,6 @@ REGRESS_RESET=0
 SCOPY_FLAG=0
 KILL_STATUS=2
 START=new
-HARVEST_FLAG=1
 #=============================================================
 
 #=============================================================
@@ -157,8 +156,6 @@ while [ $# -gt 0 ] ; do
   -K) shift ; KILL_STATUS=1 ; LOCDIR=$1 ;;
 
   -start) shift ; START=$1 ;;
-  
-  -noharvest) shift ; HARVEST_FLAG=0 ;;
 
   *) echo "ERROR: incorrect gyro syntax." ; exit 1 ;;
  
@@ -330,11 +327,6 @@ fi
 # Execute:
 
 gacode_printversion TGYRO 
-
-if [ $HARVEST_FLAG -eq 0 ]
-then
-   export HARVEST_HOST=127.0.0.1
-fi
 
 cat $LOG_FILE
 echo "INFO: (tgyro script) See $RUNBASE for TGYRO run summary."
