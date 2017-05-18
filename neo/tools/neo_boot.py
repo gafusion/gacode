@@ -11,12 +11,12 @@ jneo_harvest=[]
 jsauter_harvest=[]
 Ipsirho_harvest=[]
 
-if len(sys.argv) < 11:
-   print "python neo_boot.py <rmin> <q> <nuee> <ni1/ne> <zi1> <mi1/mD> <ti1/te> <zi2> <mi2/mD> <ti2/te>"
+if len(sys.argv) < 12:
+   print "python neo_boot.py <rmin> <q> <nuee> <ni1/ne> <zi1> <mi1/mD> <ti1/te> <zi2> <mi2/mD> <ti2/te> <index>"
    sys.exit()
 
 # EXAMPLE:
-# python $GACODE_ROOT/neo/tools/neo_boot.py 0.17 2.0 0.1 0.9 1 1.0 1.0 6 6.0 1.0
+# python $GACODE_ROOT/neo/tools/neo_boot.py 0.17 2.0 0.1 0.9 1 1.0 1.0 6 6.0 1.0 1992
 
 # In the input.neo, there are 3 species:
 # electrons are species 1, main ions are species 2,
@@ -41,6 +41,7 @@ zi2  = sys.argv[8]   # impurity ion charge (integer)
 mi2  = sys.argv[9]   # impurity ion mass: m_i2/m_deuterium
 ti2  = sys.argv[10]  # impurity ion temperature: t_i2/t_e
 
+harvestdata['IndexRS']=sys.argv[11]
 harvestdata['rmin']=float(rmin)
 harvestdata['q']=float(q)
 harvestdata['nuee']=float(nuee)
