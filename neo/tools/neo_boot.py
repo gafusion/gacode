@@ -11,7 +11,7 @@ jneo_harvest=[]
 jsauter_harvest=[]
 Ipsirho_harvest=[]
 
-if len(sys.argv) < 12:
+if len(sys.argv) < 11:
    print "python neo_boot.py <rmin> <q> <nuee> <ni1/ne> <zi1> <mi1/mD> <ti1/te> <zi2> <mi2/mD> <ti2/te> <index>"
    sys.exit()
 
@@ -41,7 +41,7 @@ zi2  = sys.argv[8]   # impurity ion charge (integer)
 mi2  = sys.argv[9]   # impurity ion mass: m_i2/m_deuterium
 ti2  = sys.argv[10]  # impurity ion temperature: t_i2/t_e
 
-harvestdata['IndexRS']=sys.argv[11]
+harvestdata['IndexRS']=int(sys.argv[11])
 harvestdata['rmin']=float(rmin)
 harvestdata['q']=float(q)
 harvestdata['nuee']=float(nuee)
