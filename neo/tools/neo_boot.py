@@ -46,10 +46,10 @@ harvestdata['rmin']=float(rmin)
 harvestdata['q']=float(q)
 harvestdata['nuee']=float(nuee)
 harvestdata['ni1/ne']=float(ni1)
-harvestdata['zi1']=int(zi1)
+harvestdata['zi1']=float(zi1)
 harvestdata['mi1/mD']=float(mi1)
 harvestdata['ti1/te']=float(ti1)
-harvestdata['zi2']=int(zi2)
+harvestdata['zi2']=float(zi2)
 harvestdata['mi2/mD']=float(mi2)
 harvestdata['ti2/te']=float(ti2)
 
@@ -153,4 +153,10 @@ print csauter
 
 sys.path.append(os.environ['GACODE_ROOT']+'/shared/harvest_client/')
 from harvest_lib import harvest_send
+
+import cPickle
+with open('neo_boot.pkl','w') as f:
+   cPickle.dump(harvestdata,f)
+
+
 harvest_send(harvestdata,'Neo_boot',verbose=True,protocol='TCP',port=41000)
