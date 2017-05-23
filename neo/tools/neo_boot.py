@@ -40,7 +40,7 @@ ti1  = sys.argv[7]   # main ion temperature: t_i/t_e
 zi2  = sys.argv[8]   # impurity ion charge (integer)
 mi2  = sys.argv[9]   # impurity ion mass: m_i2/m_deuterium
 ti2  = sys.argv[10]  # impurity ion temperature: t_i2/t_e
-if len(sys.argv)==12:
+if len(sys.argv)==12and sys.argv[11]!='None':
    harvestdata['IndexRS']=int(sys.argv[11])
 harvestdata['rmin']=float(rmin)
 harvestdata['q']=float(q)
