@@ -41,7 +41,8 @@ zi2  = sys.argv[8]   # impurity ion charge (integer)
 mi2  = sys.argv[9]   # impurity ion mass: m_i2/m_deuterium
 ti2  = sys.argv[10]  # impurity ion temperature: t_i2/t_e
 if len(sys.argv)==12:
-   harvestdata['IndexRS']=int(sys.argv[11])
+      index=(sys.argv[11]) 
+      harvestdata['IndexRS']=index
 harvestdata['rmin']=float(rmin)
 harvestdata['q']=float(q)
 harvestdata['nuee']=float(nuee)
@@ -159,4 +160,4 @@ with open('neo_boot.pkl','w') as f:
    cPickle.dump(harvestdata,f)
 
 
-harvest_send(harvestdata,'Neo_boot',verbose=True,protocol='TCP',port=41000)
+harvest_send(harvestdata,'Neo_boot',verbose=True,protocol='TCP')   
