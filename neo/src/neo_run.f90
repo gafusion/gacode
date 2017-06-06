@@ -39,12 +39,12 @@ subroutine neo_run()
   neo_nclass_out=0.0
   neo_thHS_out=0.0
 
-  if (.false.) then
+  if (neo_nn_flag_in .ne. 1) then
     ! Run NEO
     call neo_do  
-  endif else
+  else
     call neo_jbs_nn
-  endelse
+  endif
 
   ! ----------------------------------------------------------------------
   ! OUTPUT NORMALIZATION

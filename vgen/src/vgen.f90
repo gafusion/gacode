@@ -58,6 +58,7 @@ program vgen
   read(1,*) erspecies_indx
   read(1,*) nth_min
   read(1,*) nth_max
+  read(1,*) vgen_nn_flag
   close(1)
 
   select case(er_method)

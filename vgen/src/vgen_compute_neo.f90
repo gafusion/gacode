@@ -167,6 +167,9 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
      write(1,'(e16.8)',advance='no') neo_dlntdr_in(is)
   enddo
   close(1)
+  
+  !Set the NN flag
+  neo_nn_flag_in = vgen_nn_flag
 
   ! Run NEO
   cpu_in = MPI_Wtime()
