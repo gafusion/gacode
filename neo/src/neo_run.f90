@@ -39,8 +39,12 @@ subroutine neo_run()
   neo_nclass_out=0.0
   neo_thHS_out=0.0
 
-  ! Run NEO
-  call neo_do  
+  if (.false.) then
+    ! Run NEO
+    call neo_do  
+  endif else
+    call neo_jbs_nn
+  endelse
 
   ! ----------------------------------------------------------------------
   ! OUTPUT NORMALIZATION
