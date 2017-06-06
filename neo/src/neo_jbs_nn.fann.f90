@@ -108,7 +108,12 @@
         OUT_CSAU_CTi= OUTPUT_PARAMETERS(12)
 
         WRITE(*,*)OUTPUT_PARAMETERS
-
+        
+        !!!!!OUTPUT!!!!
+        neo_th_out(5) = sauter ! Need to fill in sum over terms
+        neo_dke_1d_out = jbs_neo ! Need to fill in sum over terms
+        !!!!!!!!!!!!!!!
+        
        !open(unit=1,file='input.profiles.jbs',status='replace')
        ! input.profiles.jbs is to be filled by computed NN computed jbs. 
        !write(1,'(a)') '#'
