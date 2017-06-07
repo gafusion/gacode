@@ -1,0 +1,40 @@
+# --------------------------------
+# PPPL AToM installation 
+# (using conda for dependencies)
+# --------------------------------
+#
+# Sterling Smith
+
+IDENTITY="PPPL conda"
+CORES_PER_NODE=1
+NUMAS_PER_NODE=1
+
+CONDA_HOME = /p/atom/conda/
+CONDA_LIB = $(CONDA_HOME)/lib
+
+# Compilers (intel) and flags 
+
+FC	= mpif90 -std=f2008 -J $(GACODE_ROOT)/modules -I $(GACODE_ROOT)/modules -L $(CONDA_LIB) 
+F77	= mpif90
+CC	= mpicc
+
+FMATH	= -fdefault-real-8
+FOPT	= -O3
+FDEBUG	= -Wall -fcheck=all -fbacktrace -fbounds-check -O0 -Wextra -finit-real=nan -Wunderflow -ffpe-trap=invalid,zero,overflow
+FBOUND	= -Wall -fbounds-check
+FOMP	= -fopenmp
+
+
+# System math libraries
+
+LAPACK = -L $(CONDA_LIB) -l lapack -l blas
+LMATH = $(LAPACK) -L$(CONDA_LIB) -lfftw3_mpi -lfftw3_threads  -lfftw3 -lfftw3f -lfftw3l -L /usr/lib64 -lm
+
+
+NETCDF = -L /usr/lib64 ${CONDA_HOME}/lib/libnetcdff.a ${CONDA_HOME}/lib/libnetcdf.a  -Wl,-rpath,$(CONDA_LIB):/usr/lib64 -L ${CONDA_HOME}/lib -lhdf5_hl -lhdf5 -lcurl -ldf -lmfhdf -lz -lm
+NETCDF_INC = ${CONDA_HOME}/include
+
+# Archive
+
+ARCH = ar cr
+
