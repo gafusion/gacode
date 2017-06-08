@@ -61,7 +61,31 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   neo_zeta_in        = EXPRO_zeta(i) 
   neo_s_zeta_in      = EXPRO_szeta(i) 
   neo_zmag_over_a_in = EXPRO_zmag(i)/EXPRO_rmin(EXPRO_n_exp)
-  neo_s_zmag_in      = EXPRO_dzmag(i) 
+  neo_s_zmag_in      = EXPRO_dzmag(i)
+
+  ! Neural Network specific local parameters 
+
+  nn_vnorm=EXPRO_cs(i)
+  nn_anorm=EXPRO_rmaj(i)
+  nn_I_over_phi_prime=EXPRO_grad_r0(i)*EXPRO_bt0(i)/EXPRO_bp0(i)
+  nn_rho_star=EXPRO_rhos(i)/EXPRO_rmaj(i)
+  nn_1_over_Lte=EXPRO_dlntedr(i)
+  nn_1_over_Lne=EXPRO_dlnnedr(i)
+  nn_ni1_dens=EXPRO_ni_new(i)
+  nn_ni2_dens=EXPRO_ni(2,)
+  nn_1_over_LtD=EXPRO_dlntidr(i)
+  nn_1_over_LnD=EXPRO_dlnnidr_new(i)
+  nn_1_over_LtC=EXPRO_dlntidr(2,i)
+  nn_1_over_LnC=EXPRO_dlnnidr(2,i)
+
+  
+  nn_rmin_in=EXPRO_rmin(i)/nn_anorm   ! rmin 
+  nn_q_in=   !q
+  nn_nuee_in=!nuee
+  nn_ni1_ne_in=!ni1/ne
+  nn_ti1_te_in=!ti1/te
+  
+  
   
   neo_rho_star_in = sqrt(temp_norm * temp_norm_fac &
        * mass_norm * mass_deuterium) &
