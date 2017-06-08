@@ -48,11 +48,11 @@
      call cpu_time(start)
      print '(a)','INFO: (JBSNN) Computing Bootstrap Current with NEO-NN'
     
-     INPUT_PARAMETERS( 1)=neo_rmin_over_a_in/ neo_rmaj_over_a_in     ! rmin
-     INPUT_PARAMETERS( 2)=neo_q_in                                   ! q
-     INPUT_PARAMETERS( 3)=neo_nu_1_in                                ! nuee nor
-     INPUT_PARAMETERS( 4)=neo_dens_in(1)                             ! ni1/ne
-     INPUT_PARAMETERS( 5)=neo_temp_in(1)                             ! ti1/te
+     INPUT_PARAMETERS( 1)=nn_rmin_in                                ! rmin
+     INPUT_PARAMETERS( 2)=nn_q_in                                   ! q
+     INPUT_PARAMETERS( 3)=nn_nuee_in                                ! nuee nor
+     INPUT_PARAMETERS( 4)=nn_ni1_ne_in                              ! ni1/ne
+     INPUT_PARAMETERS( 5)=nn_ti1_te_in                              ! ti1/te
     
      ! INPUT_PARAMETERS( 6)=neo_mass_in(2)                           ! mi2/mD
      ! INPUT_PARAMETERS( 7)=neo_z_in(2)                              ! zi2
