@@ -13,9 +13,10 @@ datafile  = sys.argv[6]
 lx        = float(sys.argv[7])
 ly        = float(sys.argv[8])
 title     = sys.argv[9]
-ymax      = float(sys.argv[10])
-xspan1    = float(sys.argv[11])
-xspan2    = float(sys.argv[12])
+ymin      = sys.argv[10]
+ymax      = sys.argv[11]
+xspan1    = float(sys.argv[12])
+xspan2    = float(sys.argv[13])
 
 n_field   = int(sim.profile['n_field'])
 n_kinetic = int(sim.profile['n_kinetic'])
@@ -87,8 +88,8 @@ if xspan1 > 0.0:
 
 ax.set_xlim([0,t[-1]])
 
-if ymax > 0:
-    ax.set_ylim([0,ymax])
+if ymax != 'auto':
+    ax.set_ylim([float(ymin),float(ymax)])
         
 ax.legend(loc=1)
 

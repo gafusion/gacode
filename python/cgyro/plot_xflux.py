@@ -58,23 +58,14 @@ fname = 'out.cgyro.'+ftag
 #============================================================
 # Dump and exit if desired:
 if ftype == 'dump':
-    arr = np.zeros([len(ky),ns+1])
-    arr[:,0] = ky
-    stag = '# (k_y rho_s'
-    for ispec in range(ns):
-        for j in range(sim.n_n):
-            ave = average(y[ispec,j,:],sim.t,w)
-            arr[j,ispec+1] = ave
-        stag = stag+' , s'+str(ispec)
-
     fid = open(fname,'w')
     fid.write('# Moment  : '+mtag+'\n')
     fid.write('# Time    : '+str(sim.t[imin])+' < (c_s/a) t < '+str(sim.t[-1])+'\n')
-    fid.write(stag+')\n')
-    np.savetxt(fid,arr,fmt='%.5e')
+    #fid.write(stag+')\n')
+    np.savetxt(fid,xr[0,:],fmt='%.5e')
+    np.savetxt(fid,xi[0,:],fmt='%.5e')
     fid.close()
-
-    print 'INFO: (plot_xflux) Created '+fname
+    print 'WARNING: (plot_xflux) Data dump not fully implemented in '+fname
     sys.exit()
 
 #============================================================
@@ -97,18 +88,18 @@ t = 2*np.pi*np.arange(0.0,1.0,0.001)
 ax.set_title(r'$\mathrm{'+ntag+'} \quad $'+windowtxt)
 
 for ispec in range(ns):
-    stag = str(ispec)
-    u = specmap(sim.mass[ispec],sim.z[ispec])
     # Flux curve
     g = np.zeros(len(t))
     g = xr[ispec,0] 
     for l in range(1,nl):
         g = g+2*(np.cos(l*t)*xr[ispec,l]-np.sin(l*t)*xi[ispec,l])
+    # Flux average
+    g0 = xr[ispec,0]
+    u     = specmap(sim.mass[ispec],sim.z[ispec])
+    label = r'$'+mtag+'_'+u+'/'+mtag+'_\mathrm{GB}: '+str(round(g0,3))+'$'
+    # Plot
     ax.plot(t/(2*np.pi),g)
-    # Flux integral
-    gi = xr[ispec,0]
-    label = r'$'+mtag+'_'+u+'/'+mtag+'_\mathrm{GB}: '+str(round(gi,3))+'$'
-    ax.plot([0,1],[gi,gi],label=label)
+    ax.plot([0,1],[g0,g0],label=label)
 
 if ymax != 'auto':
     ax.set_ylim([float(ymin),float(ymax)])

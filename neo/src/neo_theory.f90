@@ -9,7 +9,7 @@ module neo_theory
   public :: THEORY_alloc, THEORY_do
   real :: pflux_HH, efluxi_HH, efluxe_HH, jpar_HH, kpar_HH, uparB_HH, &
        vpol_ion_HH,  efluxi_CH, efluxi_TG, &
-       jpar_S, kpar_S, uparB_S, vpol_ion_S, phi_HR, jpar_K
+       jpar_S, kpar_S, uparB_S, vpol_ion_S, jtor_S, phi_HR, jpar_K
   real, dimension(:), allocatable :: pflux_multi_HS, eflux_multi_HS
   
   real, private :: eps ! r/rmaj
@@ -35,7 +35,7 @@ contains
        if(initialized) return
        if(adiabatic_ele_model == 0) then
           do is=1, n_species
-             if(Z(is) == -1) then
+             if(Z(is) < 0.0) then
                 is_ele = is
                 exit
              endif
@@ -144,7 +144,7 @@ contains
     call compute_vpol_ion(ir,kpar_HH, vpol_ion_HH)
     call compute_CH(ir,efluxi_CH)
     call compute_TG(ir,efluxi_TG)
-    call compute_Sauter(ir,jpar_S, kpar_S, uparB_S)
+    call compute_Sauter(ir,jpar_S, kpar_S, uparB_S,jtor_S)
     call compute_vpol_ion(ir,kpar_S, vpol_ion_S)
     call compute_HR(ir,phi_HR)
     call compute_HS(ir,pflux_multi_HS, eflux_multi_HS)
@@ -423,17 +423,17 @@ contains
   ! Sauter bootstrap current model
   ! Phys. Plasmas, vol. 6, 2834 (1999)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine compute_Sauter(ir,jpar, kpar, uparB)
+  subroutine compute_Sauter(ir,jpar, kpar, uparB, jtor)
     use neo_globals
-    use neo_equilibrium, only: I_div_psip, ftrap
+    use neo_equilibrium, only: I_div_psip, ftrap, Btor, w_theta
     implicit none
     integer, intent (in) :: ir
-    real, intent (out) :: jpar, kpar, uparB
+    real, intent (out) :: jpar, kpar, uparB, jtor
     real :: X31, L31_S, X32e, F32_ee, X32i, F32_ei, L32_S, alpha_0, alpha_S, &
          X34, L34_S, X33, sigma_S, sigma_spitzer
     real :: nue_S, nue_star_S, nui_star_S
-    integer :: is
-    real :: dens_sum, press_sum
+    integer :: is, it
+    real :: dens_sum, press_sum, fac
 
     ! EAB: 07/11/2013 changed def of Sauter nui_star_S for impurities
     ! from (Zi**2 * Zeff * ne) to (Zi**4)*(n_all_ions) 
@@ -470,7 +470,7 @@ contains
 
     if(adiabatic_ele_model == 1) then
        jpar = 0.0
-
+       jtor = 0.0
     else
 
        nue_S  = nue_HH * (dens_ele/dens(is_ion,ir)) &
@@ -548,6 +548,13 @@ contains
        jpar = jpar + L34_S * alpha_S * I_div_psip * rho(ir) &
             * dlntdr(is_ion,ir) * press_sum
 
+       ! Approximation for <jtor/R>/<1/R> ~ <jpar B/Bunit>/<BT/Bunit>
+       fac = 0.0
+       do it=1,n_theta
+          fac = fac + w_theta(it) * Btor(it)
+       enddo
+       jtor = jpar/fac
+       
     end if
 
   end subroutine compute_Sauter

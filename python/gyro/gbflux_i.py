@@ -4,11 +4,13 @@ from gacodeplotdefs import *
 from gacodefuncs import *
 from gyro.data import GYROData
 
-sim       = GYROData(sys.argv[1])
-field     = sys.argv[2]
-i_moment  = int(sys.argv[3])
-window    = float(sys.argv[4])
-ftype     = sys.argv[5]
+sim      = GYROData(sys.argv[1])
+field    = sys.argv[2]
+i_moment = int(sys.argv[3])
+window   = float(sys.argv[4])
+ftype    = sys.argv[5]
+ymin     = sys.argv[6]
+ymax     = sys.argv[7]
 
 n_field   = int(sim.profile['n_field'])
 n_kinetic = int(sim.profile['n_kinetic'])
@@ -52,16 +54,17 @@ color = ['k','m','b','c']
 n_x = sim.profile['n_x']
 ave = np.zeros(n_x)
 
-print sim.profile['r']
-print n_x
-
 # Loop over species
 for i in range(n_kinetic):
     stag = sim.tagspec[i]
     ave[:] = average_n(flux0[i,i_moment,:,:],t,window,n_x)
     ax.plot(sim.profile['r'],ave[:],label=stag,color=color[i])
 
+if ymax != 'auto':
+    ax.set_ylim([float(ymin),float(ymax)])
+
 ax.legend()
+
 if ftype == 'screen':
     plt.show()
 else:

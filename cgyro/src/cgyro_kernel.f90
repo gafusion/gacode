@@ -58,7 +58,7 @@ subroutine cgyro_kernel
 
   call timer_lib_in('io_init')
   call cgyro_write_timedata
-  call timer_lib_in('io_init')
+  call timer_lib_out('io_init')
   io_control = 2*(1-silent_flag)
 
   do i_time=1,n_time

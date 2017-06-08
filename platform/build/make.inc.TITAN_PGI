@@ -23,7 +23,7 @@ FACC   = -acc -Minfo=accel -Mcuda=kepler,nollvm,keepgpu
 FOMP   = -mp -Mstack_arrays ${FACC}
 FMATH  = -r8 -Mr8 -Mr8intrinsics
 FOPT   = -fast -fastsse -Mvect -Minfo=all
-FDEBUG = -g -Kieee -Ktrap=divz -Mbounds
+FDEBUG = -g -Kieee -Ktrap=fp,divz -Mbounds -Mchkptr -Mchkstk -traceback -Minform=inform
 
 # System math libraries
 #LMATH = -L/opt/fftw/3.3.0.1/x86_64/lib -Wl,-rpath=/opt/fftw/3.3.0.1/x86_64/lib \

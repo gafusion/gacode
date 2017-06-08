@@ -73,20 +73,28 @@ subroutine cgyro_flux
 
         ! Global fluxes (complex)
         do l=0,n_global
-           if (ir-l > 0 .and. ir+l <= n_radial) then
-              cprod = i_c*cap_h_c(ic,iv_loc)*conjg(psi(ic_c(ir-l,it),iv_loc)) &
-                   -i_c*conjg(cap_h_c(ic,iv_loc))*psi(ic_c(ir+l,it),iv_loc)
 
-              cprod2 = i_c*cap_h_c(ic,iv_loc)*conjg(i_c*chi(ic_c(ir-l,it),iv_loc)) &
-                   -i_c*conjg(cap_h_c(ic,iv_loc))*(i_c*chi(ic_c(ir+l,it),iv_loc))
+           cprod  = 0.0 
+           cprod2 = 0.0
 
-              gflux_loc(l,is,1) = gflux_loc(l,is,1)+cprod*dvr
-              gflux_loc(l,is,2) = gflux_loc(l,is,2)+cprod*dvr*erot
+           ! i H * J0 phi^* - i H^* J0 phi
 
-              cprod = cprod*(mach*bigr(it)/rmaj+btor(it)/bmag(it)*vpar)+cprod2
-              
-              gflux_loc(l,is,3) = gflux_loc(l,is,3)+cprod*dvr*bigr(it)*mass(is)
+           if (ir-l > 0) then
+              cprod  = cprod +i_c*cap_h_c(ic,iv_loc)*conjg(psi(ic_c(ir-l,it),iv_loc))
+              cprod2 = cprod2+i_c*cap_h_c(ic,iv_loc)*conjg(i_c*chi(ic_c(ir-l,it),iv_loc))
            endif
+           if (ir+l <= n_radial) then
+              cprod  = cprod -i_c*conjg(cap_h_c(ic,iv_loc))*psi(ic_c(ir+l,it),iv_loc)
+              cprod2 = cprod2-i_c*conjg(cap_h_c(ic,iv_loc))*(i_c*chi(ic_c(ir+l,it),iv_loc))
+           endif
+
+           gflux_loc(l,is,1) = gflux_loc(l,is,1)+cprod*dvr
+           gflux_loc(l,is,2) = gflux_loc(l,is,2)+cprod*dvr*erot
+
+           cprod = cprod*(mach*bigr(it)/rmaj+btor(it)/bmag(it)*vpar)+cprod2
+
+           gflux_loc(l,is,3) = gflux_loc(l,is,3)+cprod*dvr*bigr(it)*mass(is)
+
         enddo
 
      enddo
@@ -116,6 +124,8 @@ subroutine cgyro_flux
      do ic=1,nc
 
         it = it_c(ic)
+
+        ! Im [ H * J0 phi^* ]
 
         fprod(:)  = aimag(cap_h_c(ic,iv_loc)*conjg(jvec_c(:,ic,iv_loc)*field(:,ic)))
         fprod2(:) = aimag(cap_h_c(ic,iv_loc)*conjg(i_c*jxvec_c(:,ic,iv_loc)*field(:,ic)))

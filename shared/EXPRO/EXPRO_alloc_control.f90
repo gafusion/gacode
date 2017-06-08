@@ -187,6 +187,9 @@ subroutine EXPRO_alloc_control(i_proc,flag)
      allocate(EXPRO_rhos(EXPRO_n_exp))
      EXPRO_rhos(:)=0.0
 
+     allocate(EXPRO_nuee(EXPRO_n_exp))
+     EXPRO_nuee(:)=0.0
+     
      allocate(EXPRO_w0p(EXPRO_n_exp))
      EXPRO_w0p(:)=0.0
      allocate(EXPRO_gamma_e(EXPRO_n_exp))
@@ -292,6 +295,8 @@ subroutine EXPRO_alloc_control(i_proc,flag)
 
      deallocate(EXPRO_cs)
      deallocate(EXPRO_rhos)
+
+     deallocate(EXPRO_nuee)
 
      deallocate(EXPRO_w0p)
      deallocate(EXPRO_gamma_e)

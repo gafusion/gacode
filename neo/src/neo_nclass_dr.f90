@@ -18,6 +18,7 @@ module neo_nclass_dr
   real, dimension(:), allocatable :: uparB_nc, vpol_nc, vtor_nc
   real :: jbs_nc
   real :: cc, loglam
+  integer :: z_indx ! NOTE: NCLASS Z's are NEO Z's cast to integers
   
 contains
   
@@ -270,7 +271,7 @@ contains
     m_z = 1
     do is=1, n_species
        if(z(is) > m_z) then
-          m_z = z(is)
+          m_z = int(z(is))
        endif
     enddo
 
@@ -304,24 +305,28 @@ contains
        ! use an approx for loglam
        loglam = 24.0 - log(sqrt(1.0*1e13)/(1.0*1000))
        is=1
-       den_iz(is,abs(z(is))) = (nu(is,ir)*vth_norm(ir)) &
+       z_indx = int(abs(z(is)))
+       den_iz(is,z_indx) = (nu(is,ir)*vth_norm(ir)) &
             / (cc * loglam * z(is)**4) &
             * (sqrt(mass(is)) * (temp(is,ir)*temp_norm(ir))**1.5) * 1e19
-       dens_norm(ir) = den_iz(is,abs(z(is))) * 1e-19 / dens(is,ir)
+       dens_norm(ir) = den_iz(is,z_indx) * 1e-19 / dens(is,ir)
        do is=2,n_species
-          den_iz(is,abs(z(is))) = dens(is,ir)  * dens_norm(ir) * 1e19
+          z_indx = int(abs(z(is)))
+          den_iz(is,z_indx) = dens(is,ir)  * dens_norm(ir) * 1e19
        enddo
     else
        do is=1,n_species
-          den_iz(is,abs(z(is))) = dens(is,ir) * dens_norm(ir) * 1e19
+          z_indx = int(abs(z(is)))
+          den_iz(is,z_indx) = dens(is,ir) * dens_norm(ir) * 1e19
        enddo
     endif
 
     !  c_den-density cutoff below which species is ignored (/m**3)
     c_den=1.0e10
     do is=1,n_species
-       if(den_iz(is,abs(z(is))) < c_den) then
-          c_den = den_iz(is,abs(z(is))) 
+       z_indx = int(abs(z(is)))
+       if(den_iz(is,z_indx) < c_den) then
+          c_den = den_iz(is,z_indx) 
        endif
     enddo
     c_den = c_den - 1.0
@@ -329,7 +334,8 @@ contains
     !  grp_iz(i,z)-pressure gradient of i,z (keV/m**3/rho)
     grp_iz(:,:) = 0.0
     do is=1,n_species
-       grp_iz(is,abs(z(is))) = -den_iz(is,abs(z(is))) *  temp_i(is) &
+       z_indx = int(abs(z(is)))
+       grp_iz(is,z_indx) = -den_iz(is,z_indx) *  temp_i(is) &
             * (dlnndr(is,ir) + dlntdr(is,ir)) / a_meters
     enddo
 
@@ -338,7 +344,8 @@ contains
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! fex_iz(3,i,z)-moments of external parallel force on i,z (T*j/m**3) 
     !do is=1,n_species
-    !   fex_iz(1,is,abs(z(is))) = source_nclass(is) &
+    !   z_indx = int(abs(z(is)))
+    !   fex_iz(1,is,z_indx) = source_nclass(is) &
     !        * dens_norm(ir) * 1e19 * b_unit(ir) &
     !        * (vth_norm(ir) * a_meters)**2 * (mass_deuterium*1e-27)
     !enddo

@@ -23,26 +23,24 @@ if imin == nt-1:
 print 'INFO: Average Window:',str(sim.t[imin])+' < (c_s/a) t < '+str(sim.t[-1])
 
 if ext == 'dump':
-    # Datafile output
 
-    b = np.zeros([2,sim.n_n])
+   # Datafile output
 
-    fn=open('out.cgyroplot.fluxn','w')
-    fe=open('out.cgyroplot.fluxe','w')
-    for ispec in range(sim.n_species):
-        fn.write(str(ispec)+' ')
-        fe.write(str(ispec)+' ')
-        for i_n in range(sim.n_n):
-            y = np.sum(sim.ky_flux,axis=2)
-            yn = y[:,0,:,:]
-            ye = y[:,1,:,:]
-            b[0,i_n] = average(yn[ispec,i_n,:],sim.t,w)
-            b[1,i_n] = average(ye[ispec,i_n,:],sim.t,w)
-            fn.write("{:.3e}".format(b[0,i_n])+' ')
-            fe.write("{:.3e}".format(b[1,i_n])+' ')
-        fn.write('\n')
-        fe.write('\n')            
-        print 'Wrote output to out.cgyroplot.flux*'
+   b = np.zeros([sim.n_n])
+
+   tag = ['fluxn','fluxe','fluxv']
+
+   for i in range(3):
+      f=open('out.cgyroplot.'+tag[i],'w')
+      for ispec in range(sim.n_species):
+         f.write(str(ispec)+' ')
+         for i_n in range(sim.n_n):
+            y0 = np.sum(sim.ky_flux,axis=2)
+            y  = y0[:,i,:,:]
+            b[i_n] = average(y[ispec,i_n,:],sim.t,w)
+            f.write("{:.3e}".format(b[i_n])+' ')
+            f.write('\n')
+      print 'Wrote output to out.cgyroplot.'+tag[i]
 else:
     # Screen output
 
@@ -50,24 +48,19 @@ else:
     np.set_printoptions(precision=3,suppress=False,threshold=100000)
 
     b = np.zeros([sim.n_species])
+ 
+    tag = [
+       'GAMMA [GB]',
+       'Q     [GB]',
+       'PI    [GB]']
 
-    try:
-        for ispec in range(sim.n_species):
-	    y = np.sum(sim.ky_flux,axis=(2,3))
-            b[ispec] = average(y[ispec,0,:],sim.t,w)
-        print 'GAMMA [GB]  ',b
-    except:
-        pass
-            
-
-    try:
-        for ispec in range(sim.n_species):
-            y = np.sum(sim.ky_flux,axis=(2,3))
-            b[ispec] = average(y[ispec,1,:],sim.t,w)
-        print 'Q     [GB]  ',b
-    except:
-        pass
-
-
+    for i in range(3):
+       try:
+          for ispec in range(sim.n_species):
+             y = np.sum(sim.ky_flux,axis=(2,3))
+             b[ispec] = average(y[ispec,i,:],sim.t,w)
+             print tag[i],b
+       except:
+             pass
 
     

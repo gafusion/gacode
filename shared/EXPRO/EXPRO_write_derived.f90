@@ -49,6 +49,7 @@ subroutine EXPRO_write_derived(io,datafile)
   write(io,'(a)') "# 48    EXPRO_adlntedr(:)      -Te''/Te (1/m^2)"
   write(io,'(a)') "# 49-58 EXPRO_sdlnnidr(1:10,:) -ni''/ni (1/m^2)"
   write(io,'(a)') "# 59-68 EXPRO_sdlntidr(1:10,:) -Ti''/Ti (1/m^2)"
+  write(io,'(a)') '# 69    EXPRO_nuee(:)          nuee (1/s)'
   write(io,'(a)') '#'
   write(io,'(a,i3)') '# Each vector has length ',EXPRO_n_exp
   write(io,'(a)') '#'
@@ -85,6 +86,7 @@ subroutine EXPRO_write_derived(io,datafile)
   write(io,10) EXPRO_sdlntedr(:) ! 48
   write(io,10) transpose(EXPRO_sdlnnidr(:,:)) ! 49-58
   write(io,10) transpose(EXPRO_sdlntidr(:,:)) ! 59-68
+  write(io,10) EXPRO_nuee(:)     ! 69
 
   close(io)
 

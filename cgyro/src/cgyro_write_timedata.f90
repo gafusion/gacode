@@ -48,7 +48,7 @@ subroutine cgyro_write_timedata
           flux(:,:))
   endif
 
-  if (nonlinear_flag == 1 .and. globalflux_print_flag == 1) then
+  if (n_global > 0) then
      ! Global (n,e,v) fluxes for all species
      do i_moment=1,3
         call cgyro_write_distributed_complex(&
@@ -85,7 +85,11 @@ subroutine cgyro_write_timedata
 
   ! Checksum for regression testing
   ! Note that checksum is a distributed real scalar
-  call write_precision(trim(path)//runfile_prec,sum(abs(fflux)))
+  if (zf_test_flag == 0) then
+     call write_precision(trim(path)//runfile_prec,sum(abs(fflux)))
+  else
+     call write_precision(trim(path)//runfile_prec,sum(abs(field)))
+  endif
 
   !------------------------------------------------------------------
   ! Ballooning mode (or ZF) output for linear runs with a single mode
@@ -822,6 +826,9 @@ subroutine write_timers(datafile)
 
      !---------------------------------------------------------------------------
      ! Print timers
+
+     call MPI_barrier(CGYRO_COMM_WORLD,i_err)
+
      if (i_proc == 0) then
         open(unit=io,file=datafile,status='old',position='append')
         write(io,'(11(1pe10.3,1x))') &

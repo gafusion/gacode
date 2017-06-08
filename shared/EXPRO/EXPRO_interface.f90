@@ -39,6 +39,7 @@
 !  EXPRO_volp(:)        dV/dr (m^2)
 !  EXPRO_cs(:)          cs (m/s)
 !  EXPRO_rhos(:)        rhos (m)
+!  EXPRO_nuee(:)        nuee (1/s)
 !  EXPRO_ni_new(:)      ni [Corrected for quasin.]
 !  EXPRO_dlnnidr_new(:) -dln(ni)/dr (1/m) [Corrected for quasin.]
 !  EXPRO_sdlnnidr_new(:) -ni''/ni /dr (1/m^2) [Corrected for quasin.]
@@ -248,6 +249,8 @@ module EXPRO_interface
   real, dimension(:),allocatable :: EXPRO_cs
   real, dimension(:),allocatable :: EXPRO_rhos
 
+  real, dimension(:),allocatable :: EXPRO_nuee
+  
   real, dimension(:),allocatable :: EXPRO_ni_new
   real, dimension(:),allocatable :: EXPRO_dlnnidr_new
   real, dimension(:),allocatable :: EXPRO_sdlnnidr_new

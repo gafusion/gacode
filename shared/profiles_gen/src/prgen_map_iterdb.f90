@@ -256,33 +256,8 @@ subroutine prgen_map_iterdb
   !
   print '(a)','INFO: (prgen) Found these ion species:'
   do i=1,onetwo_nion_tot
-
-     select case(onetwo_ion_name(i))
-     case ('h')
-        onetwo_z(i) = 1
-        onetwo_m(i) = 1.0
-     case ('d')
-        onetwo_z(i) = 1
-        onetwo_m(i) = 2.0
-     case ('t')
-        onetwo_z(i) = 1
-        onetwo_m(i) = 3.0
-     case ('he')
-        onetwo_z(i) = 2
-        onetwo_m(i) = 4.0
-     case ('c')
-        onetwo_z(i) = 6
-        onetwo_m(i) = 12.0
-     case ('ar')
-        onetwo_z(i) = 18
-        onetwo_m(i) = 40.0
-     case default
-        onetwo_z(i) = 0
-        onetwo_m(i) = 0.0
-     end select
-
+     call onetwo_ion_zmass(onetwo_ion_name(i),onetwo_z(i),onetwo_m(i))
      print '(t6,i2,1x,a)',i,trim(onetwo_ion_name(i))
-
   enddo
 
   !
@@ -307,7 +282,7 @@ subroutine prgen_map_iterdb
         ion_z(i)    = onetwo_z(ip)             
 
         call prgen_ion_name(nint(ion_mass(i)),ion_z(i),ion_name(i))     
-
+    
      endif
   enddo
   !---------------------------------------------------------
@@ -346,3 +321,36 @@ subroutine volint(f,fdv)
 
 end subroutine volint
 
+subroutine onetwo_ion_zmass(iname,z,m)
+
+  implicit none
+  
+  character(len=2) :: iname
+  integer :: z
+  real :: m
+  
+  select case (iname)
+  case ('h')
+     z = 1
+     m = 1.0
+  case ('d')
+     z = 1
+     m = 2.0
+  case ('t')
+     z = 1
+     m = 3.0
+  case ('he')
+     z = 2
+     m = 4.0
+  case ('c')
+     z = 6
+     m = 12.0
+  case ('ar')
+     z = 18
+     m = 40.0
+  case default
+     z = 0
+     m = 0.0
+  end select
+
+end subroutine onetwo_ion_zmass

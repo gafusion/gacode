@@ -30,6 +30,7 @@ vars_input_profiles_extra = [
     'sdlnnidr_6', 'sdlnnidr_7', 'sdlnnidr_8', 'sdlnnidr_9', 'sdlnnidr_10',
     'sdlntidr_1', 'sdlntidr_2', 'sdlntidr_3', 'sdlntidr_4', 'sdlntidr_5',
     'sdlntidr_6', 'sdlntidr_7', 'sdlntidr_8', 'sdlntidr_9', 'sdlntidr_10',
+    'nuee'
 ]
 
 vars_input_profiles_jbs = ['expro_rho', 'jbs_err', 'jbs_neo', 'jbs_sauter', 'jbs_nclass', 'jbs_koh']

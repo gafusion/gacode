@@ -23,11 +23,11 @@ subroutine cgyro_advect_wavenumber(ij)
   if (shear_method == 2) then
      allocate(h0(nv_loc,1-2*n_wave:n_radial+2*n_wave))
      ! Zero wavenumber (probably causes boundary reflection)
-!$omp parallel do private(j,ir,h0,dh,l,ll,ic)
+!$omp parallel do private(j,ir,iv_loc,h0,dh,l,ll,ic)
      do j=1,n_theta
         h0 = 0.0
         do ir=1,n_radial
-           h0(:,ir) = h_x(ic_c(ir,j),:)
+           h0(:,ir) = omega_eb*h_x(ic_c(ir,j),:)
         enddo
         do ir=1,n_radial
            dh(:) = 0.0
@@ -36,7 +36,7 @@ subroutine cgyro_advect_wavenumber(ij)
               dh(:) = dh(:)+c_wave(l)*(h0(:,ir+ll)-h0(:,ir-ll))
            enddo
            ic = ic_c(ir,j)
-           rhs(ic,:,ij) = rhs(ic,:,ij)+omega_eb*dh(:)
+           rhs(ic,:,ij) = rhs(ic,:,ij)+dh(:)
         enddo
      enddo
      deallocate(h0)
