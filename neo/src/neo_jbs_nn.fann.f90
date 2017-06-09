@@ -46,11 +46,11 @@
      call cpu_time(start)
      print '(a)','INFO: (JBSNN) Computing Bootstrap Current with NEO-NN'
     
-     INPUT_PARAMETERS( 1)=nn_rmin_in                                ! rmin
-     INPUT_PARAMETERS( 2)=nn_q_in                                   ! q
-     INPUT_PARAMETERS( 3)=nn_nuee_in                                ! nuee nor
-     INPUT_PARAMETERS( 4)=nn_ni1_ne_in                              ! ni1/ne
-     INPUT_PARAMETERS( 5)=nn_ti1_te_in                              ! ti1/te
+     INPUT_PARAMETERS(4)=nn_rmin_in                                ! rmin
+     INPUT_PARAMETERS(3)=nn_q_in                                   ! q
+     INPUT_PARAMETERS(2)=log10(nn_nuee_in)                         ! nuee nor
+     INPUT_PARAMETERS(1)=nn_ni1_ne_in                              ! ni1/ne
+     INPUT_PARAMETERS(5)=nn_ti1_te_in                              ! ti1/te
     
      ! INPUT_PARAMETERS( 6)=neo_mass_in(2)                          ! mi2/mD
      ! INPUT_PARAMETERS( 7)=neo_z_in(2)                             ! zi2
@@ -72,18 +72,18 @@
     
      ierr=get_anns_avg_array(OUTPUT_PARAMETERS)
     
-     OUT_CNEO_Cne= OUTPUT_PARAMETERS(1)
+     OUT_CNEO_CnC= OUTPUT_PARAMETERS(1)
      OUT_CNEO_CnD= OUTPUT_PARAMETERS(2)
-     OUT_CNEO_CnC= OUTPUT_PARAMETERS(3)
-     OUT_CNEO_CTe= OUTPUT_PARAMETERS(4)
+     OUT_CNEO_Cne= OUTPUT_PARAMETERS(3)
+     OUT_CNEO_CTC= OUTPUT_PARAMETERS(4)
      OUT_CNEO_CTD= OUTPUT_PARAMETERS(5)
-     OUT_CNEO_CTC= OUTPUT_PARAMETERS(6)
-     OUT_CSAU_Cne= OUTPUT_PARAMETERS(7)
+     OUT_CNEO_CTe= OUTPUT_PARAMETERS(6)
+     OUT_CSAU_CnC= OUTPUT_PARAMETERS(7)
      OUT_CSAU_CnD= OUTPUT_PARAMETERS(8)
-     OUT_CSAU_CnC= OUTPUT_PARAMETERS(9)
-     OUT_CSAU_CTe= OUTPUT_PARAMETERS(10)
+     OUT_CSAU_Cne= OUTPUT_PARAMETERS(9)
+     OUT_CSAU_CTC= OUTPUT_PARAMETERS(10)
      OUT_CSAU_CTD= OUTPUT_PARAMETERS(11)
-     OUT_CSAU_CTC= OUTPUT_PARAMETERS(12)
+     OUT_CSAU_CTe= OUTPUT_PARAMETERS(12)
 
 
      WRITE(*,*)OUTPUT_PARAMETERS
