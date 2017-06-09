@@ -209,7 +209,7 @@ then
    echo "             -omfitres <resolution>"
    echo "              <resolution>=low,medium,high (default medium)."
    echo
-   echo "GFILE MERGE MODE"
+   echo "input.profiles SANITIZE, or GFILE MERGE MODE"
    echo
    echo "             -i <data>"
    echo "             Data in input.profiles format."
@@ -222,6 +222,9 @@ then
    echo
    echo "             -gmerge"
    echo "             Toggle gmerge mode."
+   echo
+   echo "             -ions"
+   echo "             Ion string (in iterdb format): for example, -ions d,c"
    echo
    echo "VELOCITY GENERATION (VGEN) MODE"
    echo
@@ -250,6 +253,8 @@ then
    echo "             Minimum and maximum theta resolutions.  Default -nth 17,39"
    echo
    echo "             -n <mpi tasks>"
+   echo
+   echo "             -nn"
    echo
    echo "LOCAL PARAMETER MODE"
    echo 
@@ -369,6 +374,7 @@ VGEN_VEL=2
 VGEN_IX=2
 VGEN_NTH=17,39
 VGEN_FLAG=0
+VGEN_NN_FLAG=0
 NPROC=1
 NOMP=1
 NUMA=0
@@ -400,6 +406,7 @@ CREATEHELP_FLAG=0
 # Plotting in locpargen
 PLOT_FLAG=0
 
+IONS=d,c
 #=============================================================
 
 #=============================================================
@@ -446,6 +453,8 @@ while [ $# -gt 0 ] ; do
   -vgen) VGEN_FLAG=1 ;;
 
   -n) shift ; NPROC=$1 ;;
+  
+  -nn) shift ; VGEN_NN_FLAG=1 ;;
 
   -in) shift ; VGEN_IN=$1 ;;
 
@@ -481,6 +490,8 @@ while [ $# -gt 0 ] ; do
   -dens) shift ; DUMP_DENS_METHOD=$1 ;; 
 
   -gmerge) GMERGE_FLAG=1 ;;  
+
+  -ions) shift ; IONS=$1 ;;
 
   -plot) PLOT_FLAG=1 ;;  
   
@@ -622,6 +633,7 @@ fi
 #=============================================================
 # If file is GACODE, parse it.
 if [ "$itype" == "GACODE" ] ; then
+  cp -f input.profiles input.profiles.save
   python $GACODE_ROOT/shared/bin/profile_parse.py $FILE
 fi
 #=============================================================
@@ -754,6 +766,8 @@ then
    then
       echo $i >> vgen.dat
    fi
+   
+   echo "$VGEN_NN_FLAG" >> vgen.dat
 
    # Launch parallel vgen executable
    $GACODE_ROOT/platform/exec/exec.$GACODE_PLATFORM \
@@ -1102,6 +1116,19 @@ else
    echo "1" >> $CONFIG
    echo "0" >> $CONFIG
 fi 
+#==============================================================
+
+#==============================================================
+# More ion parameters for sanitize mode
+#
+p=0
+for i in $(echo $IONS | tr "," "\n")
+do
+    p=$(($p+1))
+    ions="$ions $i"
+done
+echo $p >> $CONFIG
+echo $ions >> $CONFIG 
 #==============================================================
 
 #==============================================================

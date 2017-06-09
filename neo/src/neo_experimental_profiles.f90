@@ -44,7 +44,7 @@ subroutine neo_experimental_profiles
   if (adiabatic_ele_model == 1) then
      n_species_exp = n_species + 1
   else
-     if (Z(n_species) /= -1) then
+     if (Z(n_species) > 0.0) then
         call neo_error('ERROR: (NEO) For exp. profiles, electron species must be n_species')
         return
      endif

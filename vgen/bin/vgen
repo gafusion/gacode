@@ -31,6 +31,9 @@ then
   echo "         -nomp <MPI tasks>" 
   echo "         Number of MPI tasks."
   echo
+  echo "         -nn"
+  echo "         Run NEO-NN , instead of NEO to computed jbs and jsauter"
+  echo 
   echo "UTILITIES"
   echo
   echo "         -h" 

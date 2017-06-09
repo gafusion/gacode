@@ -34,6 +34,7 @@ module neo_globals
   real :: s_zmag_in
   real :: beta_star_in
   integer :: geo_ny_in
+  
   real, dimension(8,0:32) :: geo_yin_in
   !
   real :: profile_delta_scale
@@ -51,7 +52,7 @@ module neo_globals
   real :: dlntdre_ade_in
   real :: dlnndre_ade_in
   !
-  integer, dimension(11) :: z_in 
+  real, dimension(11) :: z_in 
   real, dimension(11) :: mass_in
   real, dimension(11) :: dens_in
   real, dimension(11) :: temp_in
@@ -135,7 +136,7 @@ module neo_globals
   !---------------------------------------------------------------
   ! Charge and mass
   !
-  integer, dimension(:), allocatable :: z     ! charge (ns)
+  real, dimension(:), allocatable :: z        ! charge (ns)
   real, dimension(:), allocatable :: mass     ! m/m_0  (ns)
   !---------------------------------------------------------------
 
@@ -241,16 +242,16 @@ module neo_globals
   !                  5-> vpol,  6-> vtor
   real, dimension(11,6) :: neo_dke_out=0.0
 
-  ! species-independent transport coeff (currently just jpar)
-  real                 :: neo_dke_1d_out= 0.0
+  ! species-independent transport coeff (jpar, jtor)
+  real, dimension(2)    :: neo_dke_1d_out= 0.0
 
   ! (n_species_max, transport coeff)  
   ! gyro-viscous fluxes: 1-> gamma, 2-> Q, 3->Pi, 4-> Q-omega*Pi
   real, dimension(11,4) :: neo_gv_out=0.0
 
   ! pure plasma theory
-  ! Gamma_HH, Qi_HH, Qe_HH, Qi_CH, jpar_S, jpar_K, jpar_N
-  real, dimension(7)   :: neo_th_out=0.0
+  ! Gamma_HH, Qi_HH, Qe_HH, Qi_CH, jpar_S, jpar_K, jpar_N, jtor_S
+  real, dimension(8)   :: neo_th_out=0.0
 
   ! nclass (n_species_max, transport coeff)
   ! transport coeff: 1-> gamma, 2-> Q, 3-> vpol,  4-> vtor, 5-> visc coeff

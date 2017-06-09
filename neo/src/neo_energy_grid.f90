@@ -765,7 +765,7 @@ contains
     if(coll_uncoupledei_model == 1 .or. coll_uncoupledei_model == 2) then
        is_ele = -1
        do is=1, n_species
-          if(Z(is) == -1) then
+          if(Z(is) < 0.0) then
              is_ele = is
              exit
           endif

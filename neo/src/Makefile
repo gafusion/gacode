@@ -12,7 +12,18 @@ endif
 
 EXEC = neo
 
+ifdef FANN_ROOT
+    # neural-net file
+    JBSNN=neo_jbs_nn.fann
+    JBSNN_LIBS=-I$(GACODE_ROOT)/shared/neural/ -L$(GACODE_ROOT)/shared/neural/ -lbrainfuse -L${FANN_ROOT}/ -lfann
+else
+    #stub file
+    JBSNN=neo_jbs_nn
+endif
+    
+
 OBJECTS = neo_globals.o \
+          neo_jbsnn_globals.o\
           neo_energy_grid.o \
           neo_interface.o \
           neo_profile_exp.o \
@@ -37,18 +48,19 @@ OBJECTS = neo_globals.o \
           neo_read_input.o \
           neo_harvest.o \
           neo_run.o \
-          neo_spitzer.o 
-
+          neo_spitzer.o \
+          $(JBSNN).o 
+        
 .SUFFIXES : .o .f90
 
-all: neo_lib.a $(EXEC).o $(EXTRA_LIBS)
-	$(FC) $(FFLAGS)  $(neo_libs) -o $(EXEC) $(EXEC).o neo_lib.a $(EXTRA_LIBS) $(LMATH)
+all: neo_lib.a $(EXEC).o $(EXTRA_LIBS) $(JBSNN_LIBS)
+	$(FC) $(FFLAGS)  $(neo_libs) -o $(EXEC) $(EXEC).o neo_lib.a $(EXTRA_LIBS) $(LMATH) $(JBSNN_LIBS)
 
 neo_lib.a: $(OBJECTS)
 	$(ARCH) neo_lib.a $(OBJECTS)
 
 .f90.o :
-	$(FC) $(FMATH) $(FFLAGS) $(neo_libs) -c $<
+	$(FC) $(FMATH) $(FFLAGS) $(neo_libs) -c $< $(JBSNN_LIBS)
 
 clean:  
 	rm -rf *.o neo_lib.a $(EXEC) *~

@@ -1,5 +1,6 @@
 [Parsing data in input.tglf]
+no mpi
   D(R) = -0.0000E+00  D(I) =  0.0000E+00
-      Gam/Gam_GB   Q/Q_GB     Q_low/Q_GB   Pi/Pi_GB    S/S_GB
-elec -1.9939E+00  1.6210E+01  1.4422E+01  4.2262E-14  6.6613E+00
-ion1 -1.9939E+00  3.8412E+01  3.8512E+01 -1.5485E-11 -6.6613E+00
+      Gam/Gam_GB      Q/Q_GB  Q_low/Q_GB    Pi/Pi_GB      S/S_GB
+elec -1.9939E+00  1.6210E+01  1.4421E+01  3.7586E-14  6.6611E+00
+ion1 -1.9939E+00  3.8411E+01  3.8511E+01 -1.5100E-11 -6.6611E+00

@@ -111,7 +111,6 @@ subroutine cgyro_mpi_grid
      enddo
   enddo
 
-
   if (test_flag == 1) then
      ! Set dimensions for calculation of memory in test mode
      nv_loc = nv
@@ -208,6 +207,10 @@ subroutine cgyro_mpi_grid
 
   ! OMP code
   n_omp = omp_get_max_threads()
+
+  ! Restart file chunking logic (max_filesize is 8.0 GB)
+  max_filesize = 8.0e9
+  n_chunk = 1+int(16.0*n_toroidal*nc*nv/max_filesize)
 
 end subroutine cgyro_mpi_grid
 

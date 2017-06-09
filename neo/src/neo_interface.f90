@@ -46,7 +46,7 @@ module neo_interface
   integer :: neo_coll_uncoupledaniso_model_in = 0
   integer :: neo_n_species_in = 1
   real                   :: neo_nu_1_in = 0.1
-  integer, dimension(11) :: neo_z_in = (/1,1,1,1,1,1,1,1,1,1,1/)
+  real,    dimension(11) :: neo_z_in = (/1,1,1,1,1,1,1,1,1,1,1/)
   real,    dimension(11) :: neo_mass_in = (/1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0/)
   real,    dimension(11) :: neo_dens_in = (/1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0/)
   real,    dimension(11) :: neo_temp_in = (/1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0/)
@@ -89,6 +89,7 @@ module neo_interface
   ! the exception of the default is subroutine_flag
   integer :: neo_subroutine_flag = 1
   integer :: neo_test_flag_in = 0
+  integer :: neo_nn_flag_in = 0
   
   ! Output parameters
   ! theory
@@ -101,6 +102,7 @@ module neo_interface
   real    :: neo_jpar_thS_out    = 0.0
   real    :: neo_jpar_thK_out    = 0.0
   real    :: neo_jpar_thN_out    = 0.0
+  real    :: neo_jtor_thS_out    = 0.0
   ! drift-kinetic soln
   real, dimension(11) :: neo_pflux_dke_out    = 0.0
   real, dimension(11) :: neo_efluxtot_dke_out = 0.0
@@ -108,7 +110,8 @@ module neo_interface
   real, dimension(11) :: neo_mflux_dke_out    = 0.0
   real, dimension(11) :: neo_vpol_dke_out     = 0.0
   real, dimension(11) :: neo_vtor_dke_out     = 0.0
-  real               :: neo_jpar_dke_out     = 0.0
+  real                :: neo_jpar_dke_out     = 0.0
+  real                :: neo_jtor_dke_out     = 0.0
   ! gyro-viscosity
   real, dimension(11) :: neo_pflux_gv_out  = 0.0
   real, dimension(11) :: neo_efluxtot_gv_out  = 0.0
@@ -337,7 +340,7 @@ contains
     write(1,20) 'N_SPECIES=',neo_n_species_in
     write(1,30) 'NU_1=',neo_nu_1_in
 
-    write(1,20) 'Z_1=',neo_z_in(1)
+    write(1,30) 'Z_1=',neo_z_in(1)
     write(1,30) 'MASS_1=',neo_mass_in(1)
     write(1,30) 'DENS_1=',neo_dens_in(1)
     write(1,30) 'TEMP_1=',neo_temp_in(1)
@@ -351,7 +354,7 @@ contains
        write(1,30) 'DLNTDR_PERP_1=', neo_dlntdr_perp_in(1)  
     endif
     if (neo_n_species_in > 1) then
-       write(1,20) 'Z_2=',neo_z_in(2)
+       write(1,30) 'Z_2=',neo_z_in(2)
        write(1,30) 'MASS_2=',neo_mass_in(2)
        write(1,30) 'DENS_2=',neo_dens_in(2)
        write(1,30) 'TEMP_2=',neo_temp_in(2)
@@ -366,7 +369,7 @@ contains
        endif
     endif
     if (neo_n_species_in > 2) then
-       write(1,20) 'Z_3=',neo_z_in(3)
+       write(1,30) 'Z_3=',neo_z_in(3)
        write(1,30) 'MASS_3=',neo_mass_in(3)
        write(1,30) 'DENS_3=',neo_dens_in(3)
        write(1,30) 'TEMP_3=',neo_temp_in(3)
@@ -381,7 +384,7 @@ contains
        endif
     endif
     if (neo_n_species_in > 3) then
-       write(1,20) 'Z_4=',neo_z_in(4)
+       write(1,30) 'Z_4=',neo_z_in(4)
        write(1,30) 'MASS_4=',neo_mass_in(4)
        write(1,30) 'DENS_4=',neo_dens_in(4)
        write(1,30) 'TEMP_4=',neo_temp_in(4)
@@ -396,7 +399,7 @@ contains
        endif
     endif
     if (neo_n_species_in > 4) then
-       write(1,20) 'Z_5=',neo_z_in(5)
+       write(1,30) 'Z_5=',neo_z_in(5)
        write(1,30) 'MASS_5=',neo_mass_in(5)
        write(1,30) 'DENS_5=',neo_dens_in(5)
        write(1,30) 'TEMP_5=',neo_temp_in(5)
@@ -411,7 +414,7 @@ contains
        endif
     endif
     if (neo_n_species_in > 5) then
-       write(1,20) 'Z_6=',neo_z_in(6)
+       write(1,30) 'Z_6=',neo_z_in(6)
        write(1,30) 'MASS_6=',neo_mass_in(6)
        write(1,30) 'DENS_6=',neo_dens_in(6)
        write(1,30) 'TEMP_6=',neo_temp_in(6)
@@ -426,7 +429,7 @@ contains
        endif
     endif
     if (neo_n_species_in > 6) then
-       write(1,20) 'Z_7=',neo_z_in(7)
+       write(1,30) 'Z_7=',neo_z_in(7)
        write(1,30) 'MASS_7=',neo_mass_in(7)
        write(1,30) 'DENS_7=',neo_dens_in(7)
        write(1,30) 'TEMP_7=',neo_temp_in(7)
@@ -441,7 +444,7 @@ contains
        endif
     endif
     if (neo_n_species_in > 7) then
-       write(1,20) 'Z_8=',neo_z_in(8)
+       write(1,30) 'Z_8=',neo_z_in(8)
        write(1,30) 'MASS_8=',neo_mass_in(8)
        write(1,30) 'DENS_8=',neo_dens_in(8)
        write(1,30) 'TEMP_8=',neo_temp_in(8)
@@ -456,7 +459,7 @@ contains
        endif
     endif
     if (neo_n_species_in > 8) then
-       write(1,20) 'Z_9=',neo_z_in(9)
+       write(1,30) 'Z_9=',neo_z_in(9)
        write(1,30) 'MASS_9=',neo_mass_in(9)
        write(1,30) 'DENS_9=',neo_dens_in(9)
        write(1,30) 'TEMP_9=',neo_temp_in(9)
@@ -471,7 +474,7 @@ contains
        endif
     endif
     if (neo_n_species_in > 9) then
-       write(1,20) 'Z_10=',neo_z_in(10)
+       write(1,30) 'Z_10=',neo_z_in(10)
        write(1,30) 'MASS_10=',neo_mass_in(10)
        write(1,30) 'DENS_10=',neo_dens_in(10)
        write(1,30) 'TEMP_10=',neo_temp_in(10)
@@ -486,7 +489,7 @@ contains
        endif
     endif
     if (neo_n_species_in > 10) then
-       write(1,20) 'Z_11=',neo_z_in(11)
+       write(1,30) 'Z_11=',neo_z_in(11)
        write(1,30) 'MASS_11=',neo_mass_in(11)
        write(1,30) 'DENS_11=',neo_dens_in(11)
        write(1,30) 'TEMP_11=',neo_temp_in(11)

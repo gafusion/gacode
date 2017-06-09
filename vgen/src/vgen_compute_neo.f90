@@ -4,9 +4,12 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   use vgen_globals
   use neo_interface
   use EXPRO_interface
+  
   use mpi
 
   implicit none
+
+  
 
   integer, intent(in) :: i
   integer, intent(in) :: rotation_model
@@ -15,6 +18,27 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   real, intent(in)    :: omega_deriv    ! 1/(m s)
   real, intent(out)   :: vtor_diff      ! vtor_exp - vtor_neo (m/s) 
   integer, intent(out) :: simntheta
+  
+  ! NN
+  real :: nn_rmin_in
+  real :: nn_q_in
+  real :: nn_nuee_in
+  real :: nn_ni1_ne_in
+  real :: nn_ti1_te_in
+  
+  !Neural Network globals parameters 
+  real :: nn_vnorm
+  real :: nn_anorm
+  real :: nn_I_over_phi_prime
+  real :: nn_rho_star
+  real :: nn_1_over_Lte
+  real :: nn_1_over_Lne
+  real :: nn_ni1_dens
+  real :: nn_ni2_dens
+  real :: nn_1_over_LtD
+  real :: nn_1_over_LnD
+  real :: nn_1_over_LtC
+  real :: nn_1_over_LnC
 
   integer :: j, n, is
   real :: cc, loglam
@@ -61,7 +85,34 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   neo_zeta_in        = EXPRO_zeta(i) 
   neo_s_zeta_in      = EXPRO_szeta(i) 
   neo_zmag_over_a_in = EXPRO_zmag(i)/EXPRO_rmin(EXPRO_n_exp)
-  neo_s_zmag_in      = EXPRO_dzmag(i) 
+  neo_s_zmag_in      = EXPRO_dzmag(i)
+
+  ! Neural Network specific local parameters
+  
+  ! enorm=char_norm_fac in vgen_globals 
+  nn_vnorm=EXPRO_cs(i)                                              ! vnorm cs =(Te/mD)^0.5
+  nn_anorm=EXPRO_rmaj(i)                                            ! anorm = major Radius
+  nn_I_over_phi_prime=EXPRO_grad_r0(i)*EXPRO_bt0(i)/EXPRO_bp0(i)    !geometric factor dimensionless
+  nn_rho_star=EXPRO_rhos(i)/EXPRO_rmaj(i)                           ! normalized gyroadius 
+  nn_1_over_Lte=EXPRO_dlntedr(i)
+  nn_1_over_Lne=EXPRO_dlnnedr(i)
+  nn_ni1_dens=EXPRO_ni_new(i)
+  nn_ni2_dens=EXPRO_ni(2,i)
+  nn_1_over_LtD=EXPRO_dlntidr(1, i)
+  nn_1_over_LnD=EXPRO_dlnnidr_new(i)
+  nn_1_over_LtC=EXPRO_dlntidr(2,i)
+  nn_1_over_LnC=EXPRO_dlnnidr(2,i)
+  
+
+  ! nn inputs
+  
+  nn_rmin_in=EXPRO_rmin(i)/nn_anorm              ! rmin 
+  nn_q_in= abs(EXPRO_q(i))                       !q
+  nn_nuee_in=EXPRO_nuee(i)/nn_vnorm/nn_anorm     !nuee 
+  nn_ni1_ne_in=EXPRO_ni_new(i)/EXPRO_ne(i)       !ni1/ne
+  nn_ti1_te_in=EXPRO_ti(1,i)/EXPRO_te(i)         !ti1/te
+  
+  
   
   neo_rho_star_in = sqrt(temp_norm * temp_norm_fac &
        * mass_norm * mass_deuterium) &
@@ -167,6 +218,9 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
      write(1,'(e16.8)',advance='no') neo_dlntdr_in(is)
   enddo
   close(1)
+  
+  !Set the NN flag
+  neo_nn_flag_in = vgen_nn_flag
 
   ! Run NEO
   cpu_in = MPI_Wtime()

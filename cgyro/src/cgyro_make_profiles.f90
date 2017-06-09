@@ -284,7 +284,7 @@ subroutine cgyro_make_profiles
      case (1)
         call cgyro_info('ExB shear: Hammett discrete shift') 
      case (2)
-        call cgyro_info('ExB shear: Explicit wavenumber advection') 
+        call cgyro_info('ExB shear: Wavenumber advection') 
      case default
         call cgyro_error('Unknown ExB shear method') 
      end select

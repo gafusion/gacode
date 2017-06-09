@@ -69,7 +69,7 @@ then
   echo "          Add mesh to hb plot."
   echo
   echo "          -ymin <float>"
-  echo "          Minimumvalue of vertical axis (where applicable)."
+  echo "          Minimum value of vertical axis (where applicable)."
   echo "          *Affects: flux, ky_flux"
   echo
   echo "          -ymax <float>"

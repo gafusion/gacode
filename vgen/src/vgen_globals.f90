@@ -23,7 +23,7 @@ module vgen_globals
   
   real :: dens_norm, temp_norm, mass_norm, vth_norm, jbs_norm
 
-  integer, dimension(11) :: zfac
+  real, dimension(11) :: zfac
 
   real, dimension(:), allocatable :: vtor_measured
 
@@ -35,9 +35,13 @@ module vgen_globals
   real, dimension(:), allocatable :: jbs_koh
   real, dimension(:), allocatable :: jbs_nclass
   real, dimension(:), allocatable :: pflux_sum
-
+  real, dimension(:), allocatable :: jtor_neo
+  real, dimension(:), allocatable :: jtor_sauter
+  
   integer :: n_ions
 
   integer, parameter :: timing_flag = 0
+  
+  integer :: vgen_nn_flag
 
 end module vgen_globals

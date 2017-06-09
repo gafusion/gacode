@@ -114,9 +114,23 @@ subroutine prgen_write
 
   case (7)
 
-     write(1,40) '#          SHOT NUMBER : [DATA MODIFIED WITH GMERGE]'
+     if (gmerge_flag == 1) &
+          write(1,40) '#          SHOT NUMBER : [DATA MODIFIED WITH GMERGE]'
      write(1,20) '#'
-     write(1,'(10(a,1x))') '#                 IONS : ',trim(cer_file)
+     write(1,'(a)') '#'
+     write(1,'(a)') header
+
+     do i=1,n_ion
+        ion_name(i) = ion_sanitize(i)
+        ion_type(i) = type_therm
+        call onetwo_ion_zmass(ion_name(i),ion_z(i),ion_mass(i))
+        call prgen_ion_name(nint(ion_mass(i)),ion_z(i),iname)
+        write(1,'(a,t27,a,t36,i3,t42,f5.1,t48,a)') '#',&
+             iname,&
+             ion_z(i),&
+             ion_mass(i),&
+             ion_type(i)
+     enddo
 
   end select
   write(1,20) '# '
