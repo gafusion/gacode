@@ -2,7 +2,6 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
      omega, omega_deriv, simntheta)
 
   use vgen_globals
-  use neo_globals
   use neo_interface
   use EXPRO_interface
   
@@ -99,7 +98,7 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   nn_1_over_Lne=EXPRO_dlnnedr(i)
   nn_ni1_dens=EXPRO_ni_new(i)
   nn_ni2_dens=EXPRO_ni(2,i)
-  nn_1_over_LtD=EXPRO_dlntidr(i)
+  nn_1_over_LtD=EXPRO_dlntidr(1, i)
   nn_1_over_LnD=EXPRO_dlnnidr_new(i)
   nn_1_over_LtC=EXPRO_dlntidr(2,i)
   nn_1_over_LnC=EXPRO_dlnnidr(2,i)
