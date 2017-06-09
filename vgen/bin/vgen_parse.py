@@ -12,6 +12,7 @@ x.add('ERSPECIES_INDX','2')
 x.add('NTHETA_MIN','17')
 x.add('NTHETA_MAX','39')
 x.add('TYPE','DC')
+x.add('VGEN_NN_FLAG','1')
 
 # Perform the parsing
 x.read_input('input.vgen')

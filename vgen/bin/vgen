@@ -57,8 +57,10 @@ NPROC=1
 NOMP=1
 NUMA=0
 MPINUMA=0
+
 # Execute/test mode flags
 CLEAN_FLAG=0
+VGEN_NN_FLAG=0
 #=============================================================
 
 #=============================================================
@@ -78,6 +80,8 @@ while [ $# -gt 0 ] ; do
   -numa) shift ; NUMA=$1 ;;
 
   -mpinuma) shift ; MPINUMA=$1 ;;
+
+  -nn)   VGEN_NN_FLAG=1 ;;
 
   -clean) CLEAN_FLAG=1 ;;
 
@@ -131,6 +135,7 @@ VGEN_DIR=${GACODE_ROOT}/vgen
 TEMPLATE_DIR=${GACODE_ROOT}/vgen/templates
 
 # Determine species combination from TYPE variable
+echo "VGEN_NN_FLAG=$VGEN_NN_FLAG" >> input.vgen
 python ${VGEN_DIR}/bin/vgen_parse.py
 IN=`grep TYPE input.vgen.gen`
 VGEN_IN=(${IN// / })
