@@ -20,16 +20,14 @@
      use vgen_globals
 !    use jbsnn_globals, To use Later when NN will compute fluxes, rotation,...
      
-!
+
      IMPLICIT NONE
-!
+
      character(len=1000) :: jbsnn_model
 
      integer :: ierr
      real :: K_0, K_e, K_i1, Ki2
      
-     
-!
      real :: OUT_CNEO_CTD,OUT_CNEO_CTe,OUT_CNEO_CTi,OUT_CNEO_CnD,OUT_CNEO_Cne,OUT_CNEO_Cni
      real :: OUT_CSAU_CTD,OUT_CSAU_CTe,OUT_CSAU_CTi,OUT_CSAU_CnD,OUT_CSAU_Cne,OUT_SAU_Cni
 
@@ -54,8 +52,8 @@
      INPUT_PARAMETERS( 4)=nn_ni1_ne_in                              ! ni1/ne
      INPUT_PARAMETERS( 5)=nn_ti1_te_in                              ! ti1/te
     
-     ! INPUT_PARAMETERS( 6)=neo_mass_in(2)                           ! mi2/mD
-     ! INPUT_PARAMETERS( 7)=neo_z_in(2)                              ! zi2
+     ! INPUT_PARAMETERS( 6)=neo_mass_in(2)                          ! mi2/mD
+     ! INPUT_PARAMETERS( 7)=neo_z_in(2)                             ! zi2
      ! parameters mi2/mD are to be added when using model with random Z impurity...
     
 
@@ -92,13 +90,19 @@
 
      !!!!!!!!! Bootsrap Current Calculation !!!!!!!!!!!!!
      
-     ! K_0 in A.m^2
-     K_0=charge_norm_fac*nn_vnorm*nn_anorm*nn_I_over_phi_prime*nn_rho_star
-     !K_e in 1/m^2
-     K_e=abs(zfac(3))*dens_norm*((OUT_CNEO_CTe*nn_1_over_Lte)+(OUT_CNEO_Cne*nn_1_over_Lne))
+     ! K_0 in MA.m^2
+     K_0=charge_norm_fac*nn_vnorm*nn_anorm*nn_I_over_phi_prime*nn_rho_star/1e6
+     
+     !K_e in 1/m^4
+     K_e_NEO=abs(zfac(3))*dens_norm*((OUT_CNEO_CTe*nn_1_over_Lte)+(OUT_CNEO_Cne*nn_1_over_Lne))
+     K_e_SAU=abs(zfac(3))*dens_norm*((OUT_CSAU_CTe*nn_1_over_Lte)+(OUT_CSAU_Cne*nn_1_over_Lne))
+     
      ! likewise for K_i1, Ki2
-     K_i1=zfac(1)*nn_ni1_dens*((OUT_CNEO_CTD*nn_1_over_LtD)+(OUT_CNEO_CnD*nn_1_over_LnD))
-     K_i2=zfac(2)*nn_ni2_dens*((OUT_CNEO_CTC*nn_1_over_LtC)+(OUT_CNEO_CnC*nn_1_over_LnC))
+     K_i1_NEO=zfac(1)*nn_ni1_dens*((OUT_CNEO_CTD*nn_1_over_LtD)+(OUT_CNEO_CnD*nn_1_over_LnD))
+     K_i1_SAU=zfac(1)*nn_ni1_dens*((OUT_CSAU_CTD*nn_1_over_LtD)+(OUT_CSAU_CnD*nn_1_over_LnD))
+     
+     K_i2_NEO=zfac(2)*nn_ni2_dens*((OUT_CNEO_CTC*nn_1_over_LtC)+(OUT_CNEO_CnC*nn_1_over_LnC))
+     K_i2_SAU=zfac(2)*nn_ni2_dens*((OUT_CSAU_CTC*nn_1_over_LtC)+(OUT_CSAU_CnC*nn_1_over_LnC))
      
      
      
@@ -107,10 +111,12 @@
         
     !neo_th_out(5) = sauter ! Need to fill in sum over terms
 
-     neo_dke_1d_out_nn_normalized = K_0*(K_e+K_i1+K_i2)    !jbs_neo  in (A)  Need to fill in sum over terms
+     nn_NEO_jbs_in_A_m2 = K_0*(K_e_NEO+K_i1_NEO+K_i2_NEO)             !jbs_neo  in (A/m^2)  Need to fill in sum over terms
+     nn_SAU_jbs_in_A_m2 = K_0*(K_e_SAU+K_i1_SAU+K_i2_SAU)             !jbs_sau  in (A/m^2)  Need to fill in sum over terms
 
-     neo_dke_1d_out = neo_dke_1d_out_nn_normalized/jbs_norm 
 
+     neo_dke_1d_out(1) = nn_NEO_jbs_in_A_m2/jbs_norm                  ! dimensionless again to be consistent with full NEO.
+     neo_th_out(5) = nn_SAU_jbs_in_A_m2/jbs_norm  
      
         !!!!!!!!!!!!!!!
         
