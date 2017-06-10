@@ -18,6 +18,7 @@
      use neo_interface
      use EXPRO_interface
      use vgen_globals
+     use neo_nn_interface
 !    use jbsnn_globals, To use Later when NN will compute fluxes, rotation,...
      
 
@@ -26,13 +27,17 @@
      character(len=1000) :: jbsnn_model
 
      integer :: ierr
-     real :: K_0, K_e, K_i1, Ki2
+     real :: K_0, K_e_NEO, K_i1_NEO
+     real :: K_e_SAU, K_i1_SAU
+     real :: K_i2_NEO, K_i2_SAU
      
-     real :: OUT_CNEO_CTD,OUT_CNEO_CTe,OUT_CNEO_CTi,OUT_CNEO_CnD,OUT_CNEO_Cne,OUT_CNEO_Cni
-     real :: OUT_CSAU_CTD,OUT_CSAU_CTe,OUT_CSAU_CTi,OUT_CSAU_CnD,OUT_CSAU_Cne,OUT_SAU_Cni
+     !real :: OUT_CNEO_CTD,OUT_CNEO_CTe,OUT_CNEO_CTD,OUT_CNEO_CnD,OUT_CNEO_Cne,OUT_CNEO_CnC
+     !real :: OUT_CSAU_CTD,OUT_CSAU_CTe,OUT_CSAU_CTD,OUT_CSAU_CnD,OUT_CSAU_Cne,OUT_SAU_CnC
 
      real(4) :: INPUT_PARAMETERS(5)
      real(4) :: OUTPUT_PARAMETERS(12)
+
+    
      real :: start, finish
     
 
@@ -91,11 +96,11 @@
      !!!!!!!!! Bootsrap Current Calculation !!!!!!!!!!!!!
      
      ! K_0 in MA.m^2
-     K_0=charge_norm_fac*nn_vnorm*nn_anorm*nn_I_over_phi_prime*nn_rho_star/1e6
+     K_0=nn_charge_norm_fac*nn_vnorm*nn_anorm*nn_I_over_phi_prime*nn_rho_star/1e6
      
      !K_e in 1/m^4
-     K_e_NEO=abs(zfac(3))*dens_norm*((OUT_CNEO_CTe*nn_1_over_Lte)+(OUT_CNEO_Cne*nn_1_over_Lne))
-     K_e_SAU=abs(zfac(3))*dens_norm*((OUT_CSAU_CTe*nn_1_over_Lte)+(OUT_CSAU_Cne*nn_1_over_Lne))
+     K_e_NEO=abs(zfac(3))*nn_dens_norm*((OUT_CNEO_CTe*nn_1_over_Lte)+(OUT_CNEO_Cne*nn_1_over_Lne))
+     K_e_SAU=abs(zfac(3))*nn_dens_norm*((OUT_CSAU_CTe*nn_1_over_Lte)+(OUT_CSAU_Cne*nn_1_over_Lne))
      
      ! likewise for K_i1, Ki2
      K_i1_NEO=zfac(1)*nn_ni1_dens*((OUT_CNEO_CTD*nn_1_over_LtD)+(OUT_CNEO_CnD*nn_1_over_LnD))

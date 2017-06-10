@@ -23,7 +23,7 @@ endif
     
 
 OBJECTS = neo_globals.o \
-          neo_jbsnn_globals.o\
+          neo_nn_interface.o\
           neo_energy_grid.o \
           neo_interface.o \
           neo_profile_exp.o \

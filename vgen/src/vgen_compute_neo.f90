@@ -4,6 +4,8 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   use vgen_globals
   use neo_interface
   use EXPRO_interface
+  use neo_nn_interface
+  
   
   use mpi
 
@@ -20,25 +22,28 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   integer, intent(out) :: simntheta
   
   ! NN
-  real :: nn_rmin_in
-  real :: nn_q_in
-  real :: nn_nuee_in
-  real :: nn_ni1_ne_in
-  real :: nn_ti1_te_in
+  !real :: nn_rmin_in
+  !real :: nn_q_in
+  !real :: nn_nuee_in
+  !real :: nn_ni1_ne_in
+  !real :: nn_ti1_te_in
   
   !Neural Network globals parameters 
-  real :: nn_vnorm
-  real :: nn_anorm
-  real :: nn_I_over_phi_prime
-  real :: nn_rho_star
-  real :: nn_1_over_Lte
-  real :: nn_1_over_Lne
-  real :: nn_ni1_dens
-  real :: nn_ni2_dens
-  real :: nn_1_over_LtD
-  real :: nn_1_over_LnD
-  real :: nn_1_over_LtC
-  real :: nn_1_over_LnC
+  !real :: nn_vnorm
+  !real :: nn_anorm
+  !real :: nn_I_over_phi_prime
+  !real :: nn_rho_star
+  !real :: nn_1_over_Lte
+  !real :: nn_1_over_Lne
+  !real :: nn_ni1_dens
+  !real :: nn_ni2_dens
+  !real :: nn_1_over_LtD
+  !real :: nn_1_over_LnD
+  !real :: nn_1_over_LtC
+  !real :: nn_1_over_LnC
+  
+  real :: nn_charge_norm_fac
+  real :: nn_dens_norm_f
 
   integer :: j, n, is
   real :: cc, loglam
@@ -89,7 +94,9 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
 
   ! Neural Network specific local parameters
   
-  ! enorm=char_norm_fac in vgen_globals 
+  ! nn_enorm=char_norm_fac in vgen_globals
+  nn_charge_norm_fac= 1.6022
+  nn_dens_norm_f=EXPRO_ne(i)
   nn_vnorm=EXPRO_cs(i)                                              ! vnorm cs =(Te/mD)^0.5
   nn_anorm=EXPRO_rmaj(i)                                            ! anorm = major Radius
   nn_I_over_phi_prime=EXPRO_grad_r0(i)*EXPRO_bt0(i)/EXPRO_bp0(i)    !geometric factor dimensionless
