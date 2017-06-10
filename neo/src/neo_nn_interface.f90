@@ -11,7 +11,7 @@ module neo_nn_interface
   real :: nn_ti1_te_in
 
   real :: nn_charge_norm_fac
-  real :: nn_dens_norm    
+  real :: nn_dens_norm_f    
   real :: nn_vnorm
   real :: nn_anorm
   real :: nn_I_over_phi_prime

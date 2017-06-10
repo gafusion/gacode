@@ -99,8 +99,8 @@
      K_0=nn_charge_norm_fac*nn_vnorm*nn_anorm*nn_I_over_phi_prime*nn_rho_star/1e6
      
      !K_e in 1/m^4
-     K_e_NEO=abs(zfac(3))*nn_dens_norm*((OUT_CNEO_CTe*nn_1_over_Lte)+(OUT_CNEO_Cne*nn_1_over_Lne))
-     K_e_SAU=abs(zfac(3))*nn_dens_norm*((OUT_CSAU_CTe*nn_1_over_Lte)+(OUT_CSAU_Cne*nn_1_over_Lne))
+     K_e_NEO=abs(zfac(3))*nn_dens_norm_f*((OUT_CNEO_CTe*nn_1_over_Lte)+(OUT_CNEO_Cne*nn_1_over_Lne))
+     K_e_SAU=abs(zfac(3))*nn_dens_norm_f*((OUT_CSAU_CTe*nn_1_over_Lte)+(OUT_CSAU_Cne*nn_1_over_Lne))
      
      ! likewise for K_i1, Ki2
      K_i1_NEO=zfac(1)*nn_ni1_dens*((OUT_CNEO_CTD*nn_1_over_LtD)+(OUT_CNEO_CnD*nn_1_over_LnD))

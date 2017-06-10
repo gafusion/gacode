@@ -42,8 +42,8 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   !real :: nn_1_over_LtC
   !real :: nn_1_over_LnC
   
-  real :: nn_charge_norm_fac
-  real :: nn_dens_norm_f
+  !real :: nn_charge_norm_fac
+  ! real :: nn_dens_norm_f
 
   integer :: j, n, is
   real :: cc, loglam
