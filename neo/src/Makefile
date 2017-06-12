@@ -57,7 +57,7 @@ all: neo_lib.a $(EXEC).o $(EXTRA_LIBS)
 	$(FC) $(FFLAGS)  $(neo_libs) -o $(EXEC) $(EXEC).o neo_lib.a $(EXTRA_LIBS) $(LMATH) $(JBSNN_LIBS)
 
 neo_lib.a: $(OBJECTS)
-	$(ARCH) neo_lib.a $(OBJECTS)
+	$(ARCH) neo_lib.a $(OBJECTS) 
 
 .f90.o :
 	$(FC) $(FMATH) $(FFLAGS) $(neo_libs) -c $< $(JBSNN_LIBS)
