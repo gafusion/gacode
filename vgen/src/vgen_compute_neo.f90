@@ -228,6 +228,9 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   
   !Set the NN flag
   neo_nn_flag_in = vgen_nn_flag
+  
+  nn_jbs_norm = nn_charge_norm_fac*dens_norm*vth_norm &
+       *EXPRO_rmin(EXPRO_n_exp)/1e6
 
   ! Run NEO
   cpu_in = MPI_Wtime()

@@ -17,7 +17,7 @@
      use neo_globals
      use neo_interface
      use EXPRO_interface
-     use vgen_globals
+!     use vgen_globals
      use neo_nn_interface
 !    use jbsnn_globals, To use Later when NN will compute fluxes, rotation,...
      
@@ -99,29 +99,28 @@
      K_0=nn_charge_norm_fac*nn_vnorm*nn_anorm*nn_I_over_phi_prime*nn_rho_star/1e6
      
      !K_e in 1/m^4
-     K_e_NEO=abs(zfac(3))*nn_dens_norm_f*((OUT_CNEO_CTe*nn_1_over_Lte)+(OUT_CNEO_Cne*nn_1_over_Lne))
-     K_e_SAU=abs(zfac(3))*nn_dens_norm_f*((OUT_CSAU_CTe*nn_1_over_Lte)+(OUT_CSAU_Cne*nn_1_over_Lne))
+     K_e_NEO=abs(EXPRO_ctrl_z(3))*nn_dens_norm_f*((OUT_CNEO_CTe*nn_1_over_Lte)+(OUT_CNEO_Cne*nn_1_over_Lne))
+     K_e_SAU=abs(EXPRO_ctrl_z(3))*nn_dens_norm_f*((OUT_CSAU_CTe*nn_1_over_Lte)+(OUT_CSAU_Cne*nn_1_over_Lne))
      
      ! likewise for K_i1, Ki2
-     K_i1_NEO=zfac(1)*nn_ni1_dens*((OUT_CNEO_CTD*nn_1_over_LtD)+(OUT_CNEO_CnD*nn_1_over_LnD))
-     K_i1_SAU=zfac(1)*nn_ni1_dens*((OUT_CSAU_CTD*nn_1_over_LtD)+(OUT_CSAU_CnD*nn_1_over_LnD))
+     K_i1_NEO=EXPRO_ctrl_z(1)*nn_ni1_dens*((OUT_CNEO_CTD*nn_1_over_LtD)+(OUT_CNEO_CnD*nn_1_over_LnD))
+     K_i1_SAU=EXPRO_ctrl_z(1)*nn_ni1_dens*((OUT_CSAU_CTD*nn_1_over_LtD)+(OUT_CSAU_CnD*nn_1_over_LnD))
      
-     K_i2_NEO=zfac(2)*nn_ni2_dens*((OUT_CNEO_CTC*nn_1_over_LtC)+(OUT_CNEO_CnC*nn_1_over_LnC))
-     K_i2_SAU=zfac(2)*nn_ni2_dens*((OUT_CSAU_CTC*nn_1_over_LtC)+(OUT_CSAU_CnC*nn_1_over_LnC))
+     K_i2_NEO=EXPRO_ctrl_z(2)*nn_ni2_dens*((OUT_CNEO_CTC*nn_1_over_LtC)+(OUT_CNEO_CnC*nn_1_over_LnC))
+     K_i2_SAU=EXPRO_ctrl_z(2)*nn_ni2_dens*((OUT_CSAU_CTC*nn_1_over_LtC)+(OUT_CSAU_CnC*nn_1_over_LnC))
      
      
      
         
         !!!!!OUTPUT!!!!
         
-    !neo_th_out(5) = sauter ! Need to fill in sum over terms
 
-     nn_NEO_jbs_in_A_m2 = K_0*(K_e_NEO+K_i1_NEO+K_i2_NEO)             !jbs_neo  in (A/m^2)  Need to fill in sum over terms
-     nn_SAU_jbs_in_A_m2 = K_0*(K_e_SAU+K_i1_SAU+K_i2_SAU)             !jbs_sau  in (A/m^2)  Need to fill in sum over terms
+     nn_NEO_jbs_in_A_m2 = K_0*(K_e_NEO+K_i1_NEO+K_i2_NEO)             !jbs_neo  in (A/m^2)  
+     nn_SAU_jbs_in_A_m2 = K_0*(K_e_SAU+K_i1_SAU+K_i2_SAU)             !jbs_sau  in (A/m^2)  
 
 
-     neo_dke_1d_out(1) = nn_NEO_jbs_in_A_m2/jbs_norm                  ! dimensionless again to be consistent with full NEO.
-     neo_th_out(5) = nn_SAU_jbs_in_A_m2/jbs_norm  
+     neo_dke_1d_out(1) = nn_NEO_jbs_in_A_m2/nn_jbs_norm                  ! dimensionless again to be consistent with full NEO.
+     neo_th_out(5) = nn_SAU_jbs_in_A_m2/nn_jbs_norm  
      
         !!!!!!!!!!!!!!!
         

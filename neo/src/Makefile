@@ -15,7 +15,7 @@ EXEC = neo
 ifdef FANN_ROOT
     # neural-net file
     JBSNN=neo_jbs_nn.fann
-    JBSNN_LIBS=-I$(GACODE_ROOT)/shared/neural/ -L$(GACODE_ROOT)/shared/neural/ -lbrainfuse -L${FANN_ROOT}/ -lfann
+    JBSNN_LIBS=-I$(GACODE_ROOT)/shared/neural/ -L$(GACODE_ROOT)/shared/neural/ -lbrainfuse -L${FANN_ROOT}/lib -lfann
 else
     #stub file
     JBSNN=neo_jbs_nn
@@ -53,7 +53,7 @@ OBJECTS = neo_globals.o \
         
 .SUFFIXES : .o .f90
 
-all: neo_lib.a $(EXEC).o $(EXTRA_LIBS) $(JBSNN_LIBS)
+all: neo_lib.a $(EXEC).o $(EXTRA_LIBS) 
 	$(FC) $(FFLAGS)  $(neo_libs) -o $(EXEC) $(EXEC).o neo_lib.a $(EXTRA_LIBS) $(LMATH) $(JBSNN_LIBS)
 
 neo_lib.a: $(OBJECTS)

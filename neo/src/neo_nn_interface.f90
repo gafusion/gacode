@@ -14,6 +14,7 @@ module neo_nn_interface
   real :: nn_dens_norm_f    
   real :: nn_vnorm
   real :: nn_anorm
+  real :: nn_jbs_norm
   real :: nn_I_over_phi_prime
   real :: nn_rho_star
   real :: nn_1_over_Lte
