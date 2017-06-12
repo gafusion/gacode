@@ -8,7 +8,10 @@ endif
 
 vgen_libs = -L$(GACODE_ROOT)/shared/harvest_client/ \
               -I$(GACODE_ROOT)/shared/harvest_client/ \
-              -lharvest
+              -lharvest \
+              
+
+
 ifdef FANN_ROOT              
         JBSNN_LIBS=-I$(GACODE_ROOT)/shared/neural/ -L$(GACODE_ROOT)/shared/neural/ -lbrainfuse -L${FANN_ROOT}/lib -lfann
 endif
@@ -26,7 +29,7 @@ OBJECTS = vgen_globals.o \
 .SUFFIXES : .o .f90
 
 all: $(OBJECTS) $(EXTRA_LIBS)
-	$(FC) $(FFLAGS) $(vgen_libs) -o $(EXEC) $(OBJECTS) $(EXTRA_LIBS) $(LMATH) $(JBSNN_LIBS)
+	$(FC) $(FFLAGS) -o $(EXEC) $(OBJECTS) $(EXTRA_LIBS) $(LMATH) $(JBSNN_LIBS) $(vgen_libs)
 
 .f90.o :
 	$(FC) $(FMATH) $(FFLAGS) $(vgen_libs) -c $<
