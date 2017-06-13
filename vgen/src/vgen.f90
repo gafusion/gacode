@@ -1,5 +1,5 @@
 !------------------------------------------------------------------------
-! vgen.f90
+! vgen.f90 
 !
 ! PURPOSE: 
 !  Driver for the vgen (velocity-generation) capability of NEO.  This 
@@ -13,9 +13,10 @@ program vgen
   use vgen_globals
   use neo_interface
   use EXPRO_interface
+  use vgen_harvest
 
   implicit none
-
+  
   integer :: i
   integer :: j
   integer :: ix
@@ -29,9 +30,8 @@ program vgen
   real :: omega_deriv
   integer :: simntheta
   real :: cpu_tot_in, cpu_tot_out
-
   real, dimension(:), allocatable :: er_exp
-
+  
   !---------------------------------------------------------------------
   ! Initialize MPI_COMM_WORLD communicator.
   !
@@ -58,6 +58,7 @@ program vgen
   read(1,*) erspecies_indx
   read(1,*) nth_min
   read(1,*) nth_max
+  read(1,*) vgen_nn_flag
   close(1)
 
   select case(er_method)
@@ -417,6 +418,7 @@ program vgen
      call EXPRO_write_derived(1,'input.profiles.extra')
 
      ! 3. input.profiles.jbs
+ 
      open(unit=1,file='input.profiles.jbs',status='replace')
      write(1,'(a)') '#'
      write(1,'(a)') '# expro_rho'
@@ -430,11 +432,17 @@ program vgen
      write(1,'(a)') '# where jbs = < j_parallel B > / B_unit'
      write(1,'(a)') '# where jtor = < j_tor/R > / <1/R>'
      write(1,'(a)') '#'
+
+
      do i=1,EXPRO_n_exp
+
         write(1,'(8(1pe14.7,2x))') EXPRO_rho(i), pflux_sum(i), &
              jbs_neo(i), jbs_sauter(i), jbs_nclass(i), jbs_koh(i), &
              jtor_neo(i), jtor_sauter(i)
+
      enddo
+
+ 
      close(1)
      !----------------------------------------------------------------------
 
@@ -466,5 +474,7 @@ program vgen
        'Er_0(kV/m)=',1pe9.2,2x,&
        'vpol_1(km/s)=',1pe9.2,2x,&
        'nth=',i2,2x,'[',i2,']')
+
+  !call vgen_harvest_inputandoutput
 
 end program vgen

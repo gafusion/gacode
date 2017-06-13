@@ -89,6 +89,7 @@ module neo_interface
   ! the exception of the default is subroutine_flag
   integer :: neo_subroutine_flag = 1
   integer :: neo_test_flag_in = 0
+  integer :: neo_nn_flag_in = 0
   
   ! Output parameters
   ! theory

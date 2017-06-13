@@ -254,6 +254,8 @@ then
    echo
    echo "             -n <mpi tasks>"
    echo
+   echo "             -nn"
+   echo
    echo "LOCAL PARAMETER MODE"
    echo 
    echo "             -loc_rad <r/a>"
@@ -372,6 +374,7 @@ VGEN_VEL=2
 VGEN_IX=2
 VGEN_NTH=17,39
 VGEN_FLAG=0
+VGEN_NN_FLAG=0
 NPROC=1
 NOMP=1
 NUMA=0
@@ -450,6 +453,8 @@ while [ $# -gt 0 ] ; do
   -vgen) VGEN_FLAG=1 ;;
 
   -n) shift ; NPROC=$1 ;;
+  
+  -nn) shift ; VGEN_NN_FLAG=1 ;;
 
   -in) shift ; VGEN_IN=$1 ;;
 
@@ -761,6 +766,8 @@ then
    then
       echo $i >> vgen.dat
    fi
+   
+   echo "$VGEN_NN_FLAG" >> vgen.dat
 
    # Launch parallel vgen executable
    $GACODE_ROOT/platform/exec/exec.$GACODE_PLATFORM \

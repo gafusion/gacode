@@ -22,7 +22,7 @@ subroutine tgyro_tglf_map
   real :: gamma_p0
 
   include 'harvest_lib.inc'
-
+  CHARACTER(LEN=255) :: harvest_tag
   CHARACTER NUL
   PARAMETER(NUL = CHAR(0))
 
@@ -310,10 +310,14 @@ subroutine tgyro_tglf_map
   !----------------------------------------------------------------
   ! HARVEST: NEO AND TARGET FLUXES, GYRO-BOHM NORMALIZATIONS, SHOT
   !
-  if (i_tran == 0 .and. 0==1) then
+  harvest_tag='TGLF_14'//NUL
+  ierr = set_harvest_tag(trim(harvest_tag))
+  ierr = get_harvest_tag(harvest_tag,len(harvest_tag))
+  !write(*,*)trim(harvest_tag)
+  if ( (i_tran==0) .and. (len_trim(harvest_tag).gt.1) ) then
      ! Initialization
      tglf_harvest_extra_in = NUL
-     harvest_err=set_harvest_verbose(0)
+     harvest_err=set_harvest_verbose(1)
 
      ! Target fluxes
      harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_eflux_e_target'//NUL,eflux_e_target(i_r))
@@ -328,9 +332,6 @@ subroutine tgyro_tglf_map
      harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_pflux_e_neo'//NUL,pflux_e_neo(i_r))
      harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_sum_mflux_i_neo'//NUL,&
           & sum(mflux_i_neo(therm_vec(:),i_r)))
-
-     ! Turbulent fluxes interface
-     CALL tglf_harvest_local
 
      ! Gyrobohm normalizations
      harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_q_gb'//NUL,q_gb(i_r))

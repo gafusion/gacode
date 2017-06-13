@@ -6,12 +6,17 @@ import string
 workdir = 'bdir'
 tools   = os.environ['GACODE_ROOT']+'/neo/tools/'
 
+harvestdata={}
+jneo_harvest=[]
+jsauter_harvest=[]
+Ipsirho_harvest=[]
+
 if len(sys.argv) < 11:
-   print "python neo_boot.py <rmin> <q> <nuee> <ni1/ne> <zi1> <mi1/mD> <ti1/te> <zi2> <mi2/mD> <ti2/te>"
+   print "python neo_boot.py <rmin> <q> <nuee> <ni1/ne> <zi1> <mi1/mD> <ti1/te> <zi2> <mi2/mD> <ti2/te> <index>"
    sys.exit()
 
 # EXAMPLE:
-# python $GACODE_ROOT/neo/tools/neo_boot.py 0.17 2.0 0.1 0.9 1 1.0 1.0 6 6.0 1.0
+# python $GACODE_ROOT/neo/tools/neo_boot.py 0.17 2.0 0.1 0.9 1 1.0 1.0 6 6.0 1.0 (1992)
 
 # In the input.neo, there are 3 species:
 # electrons are species 1, main ions are species 2,
@@ -35,6 +40,19 @@ ti1  = sys.argv[7]   # main ion temperature: t_i/t_e
 zi2  = sys.argv[8]   # impurity ion charge (integer)
 mi2  = sys.argv[9]   # impurity ion mass: m_i2/m_deuterium
 ti2  = sys.argv[10]  # impurity ion temperature: t_i2/t_e
+if len(sys.argv)==12 and sys.argv[11]!='None':
+   harvestdata['IndexRS']=int(sys.argv[11])
+harvestdata['rmin']=float(rmin)
+harvestdata['q']=float(q)
+harvestdata['nuee']=float(nuee)
+harvestdata['ni1/ne']=float(ni1)
+harvestdata['zi1']=float(zi1)
+harvestdata['mi1/mD']=float(mi1)
+harvestdata['ti1/te']=float(ti1)
+harvestdata['zi2']=float(zi2)
+harvestdata['mi2/mD']=float(mi2)
+harvestdata['ti2/te']=float(ti2)
+
 
 # Prepare simulation directory
 os.system('rm -rf '+workdir)
@@ -115,9 +133,30 @@ for i in range(6):
    print 'jsauter     '+str(jsauter)
    print 'I*Psi*rho_* '+str(ipsi*rhostar)
 
+   jneo_harvest.append(jneo)
+   jsauter_harvest.append(jsauter)
+   Ipsirho_harvest.append(ipsi*rhostar)
+   
    cneo.append(jneo/(ipsi*rhostar*abs(z_all[i])*n_all[i]))
    csauter.append(jsauter/(ipsi*rhostar*abs(z_all[i])*n_all[i]))
+
+
+harvestdata['jneo']=jneo_harvest
+harvestdata['jsauter']=jsauter_harvest
+harvestdata['IPsirho']=Ipsirho_harvest
+harvestdata['NEO_Coef']=cneo
+harvestdata['SAUTER_Coef']=csauter
 
 print list
 print cneo
 print csauter
+
+sys.path.append(os.environ['GACODE_ROOT']+'/shared/harvest_client/')
+from harvest_lib import harvest_send
+
+import cPickle
+with open('neo_boot.pkl','w') as f:
+   cPickle.dump(harvestdata,f)
+
+
+harvest_send(harvestdata,'Neo_boot',verbose=True,protocol='TCP')

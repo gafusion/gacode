@@ -5,17 +5,17 @@ x = SimpleInput()
 
 x.set_extension('.gen')
 
-# VGEN input parameters
-x.add('ER_METHOD','1')
-x.add('VEL_METHOD','2')
-x.add('ERSPECIES_INDX','2')
+# JBSNNGEN input parameters
+x.add('IMPURITIES_SPEC','1')
+x.add('IMPURITIES_SPEC','2')
+x.add('PLASMA_SPEC','1')
+x.add('PLASMA_SPEC','2')
 x.add('NTHETA_MIN','17')
 x.add('NTHETA_MAX','39')
 x.add('TYPE','DC')
-x.add('VGEN_NN_FLAG','1')
 
 # Perform the parsing
-x.read_input('input.vgen')
+x.read_input('input.jbsnn')
 
 x.printmsg()        
 

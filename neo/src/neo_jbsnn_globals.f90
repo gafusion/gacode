@@ -1,4 +1,4 @@
-module vgen_globals
+module jbsnn_globals
   
   character(len=80) :: path
   
@@ -9,10 +9,10 @@ module vgen_globals
   integer :: i_loc,n_loc
   integer, dimension(:), allocatable :: i_glob
   
-  ! vgen inputs
-  integer :: er_method
-  integer :: erspecies_indx
-  integer :: vel_method
+  ! jbsnn inputs
+  
+  integer :: plasma_spec
+  integer :: impurities_spec
   integer :: nth_min
   integer :: nth_max
   
@@ -23,25 +23,18 @@ module vgen_globals
   
   real :: dens_norm, temp_norm, mass_norm, vth_norm, jbs_norm
 
-  real, dimension(11) :: zfac
-
-  real, dimension(:), allocatable :: vtor_measured
+  
 
   character(len=8) :: fmt='(I2.2)' 
   character(len=2), dimension(100) :: tag
 
-  real, dimension(:), allocatable :: jbs_neo
-  real, dimension(:), allocatable :: jbs_sauter
-  real, dimension(:), allocatable :: jbs_koh
-  real, dimension(:), allocatable :: jbs_nclass
-  real, dimension(:), allocatable :: pflux_sum
-  real, dimension(:), allocatable :: jtor_neo
-  real, dimension(:), allocatable :: jtor_sauter
-  
+ 
+   real, dimension(:), allocatable :: jbsnn_neo
+   real, dimension(:), allocatable :: jbsnn_sauter
+
+
   integer :: n_ions
 
   integer, parameter :: timing_flag = 0
-  
-  integer :: vgen_nn_flag
 
-end module vgen_globals
+end module jbsnn_globals

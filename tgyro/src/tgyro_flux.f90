@@ -40,6 +40,13 @@ subroutine tgyro_flux
   real :: Q_neo_GB
   real :: Pi_neo_GB
   !-------------------------------------------
+  ! HARVEST
+  !-------------------------------------------
+  integer :: harvest_err
+  include 'harvest_lib.inc'
+  CHARACTER(LEN=255) :: harvest_tag
+  CHARACTER NUL
+  PARAMETER(NUL = CHAR(0))
 
   call MPI_BARRIER(MPI_COMM_WORLD,ierr)
   if (i_proc_global == 0) then
@@ -248,6 +255,12 @@ subroutine tgyro_flux
         mflux_i_tur(i_ion,i_r) = -tglf_sign_It_in*tglf_ion_mflux_out(i0)
         expwd_i_tur(i_ion,i_r) = tglf_ion_expwd_out(i0)
      enddo
+
+     ! harvest TGLF turbulent fluxes
+     ierr = get_harvest_tag(harvest_tag,len(harvest_tag))
+     if ( (i_tran==0) .and. (len_trim(harvest_tag).gt.1) ) then
+        CALL tglf_harvest_local
+     endif
 
   case (3)  ! Map TGYRO parameters to GLF23
 
