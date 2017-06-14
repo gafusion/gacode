@@ -91,6 +91,7 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   neo_s_zeta_in      = EXPRO_szeta(i) 
   neo_zmag_over_a_in = EXPRO_zmag(i)/EXPRO_rmin(EXPRO_n_exp)
   neo_s_zmag_in      = EXPRO_dzmag(i)
+  nn_rho_in          =EXPRO_rho(i)
 
   ! Neural Network specific local parameters
   
