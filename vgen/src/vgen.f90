@@ -142,26 +142,11 @@ program vgen
 
 
   open(unit=4,file='input.profiles.jbsnn',status='replace')
-  write(4,'(a)') '#'
-  write(4,'(a)') '# expro_rho'
-  write(4,'(a)') '# ni1/ne'
-  write(4,'(a)') '# log10(nuee)'
-  write(4,'(a)') '# q'
-  write(4,'(a)') '# rmin'
-  write(4,'(a)') '# ti1/te'
-  write(4,'(a)') '# NEO_CnC'
-  write(4,'(a)') '# NEO_CnD'
-  write(4,'(a)') '# NEO_Cne'
-  write(4,'(a)') '# NEO_CTC'
-  write(4,'(a)') '# NEO_CTD'
-  write(4,'(a)') '# NEO_CTe'
-  write(4,'(a)') '# SAU_CnC'
-  write(4,'(a)') '# SAU_CnD'
-  write(4,'(a)') '# SAU_Cne'
-  write(4,'(a)') '# SAU_CTC'
-  write(4,'(a)') '# SAU_CTD'
-  write(4,'(a)') '# SAU_CTe'
-  write(4,'(a)') '#'
+  
+  
+  write(4,'(20(a12))') 'expro_rho(-)','ni1/ne(-)','log10(nuee)' ,'q(-)','rmin(-)','ti1/te(-)','NEO_CnC','NEO_CnD',&
+ 'NEO_Cne','NEO_CTC','NEO_CTD','NEO_CTe','SAU_CnC','SAU_CnD','SAU_Cne','SAU_CTC','SAU_CTD','SAU_CTe','jbsNEONN','jbsSAUNN'
+
 
   select case (er_method)
 

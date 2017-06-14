@@ -122,7 +122,8 @@
      
      !open(unit=1,file='input.profiles.jbsnn',position='append')
 
-     write(4,'(1(1pe11.4,1x))') nn_rho_in,INPUT_PARAMETERS,OUTPUT_PARAMETERS
+     
+     
      !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(1)
      !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(2)
      !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(3)
@@ -152,6 +153,8 @@
 
      nn_NEO_jbs_in_A_m2 = K_0*(K_e_NEO+K_i1_NEO+K_i2_NEO)             !jbs_neo  in (MA/m^2)  
      nn_SAU_jbs_in_A_m2 = K_0*(K_e_SAU+K_i1_SAU+K_i2_SAU)             !jbs_sau  in (MA/m^2)
+
+     write(4,'(20(1pe11.4,1x))') nn_rho_in,INPUT_PARAMETERS,OUTPUT_PARAMETERS,nn_NEO_jbs_in_A_m2,nn_SAU_jbs_in_A_m2
      
      !WRITE(*,*)nn_NEO_jbs_in_A_m2
      !WRITE(*,*)nn_SAU_jbs_in_A_m2
