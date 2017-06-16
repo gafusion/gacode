@@ -69,6 +69,7 @@
      !run NN
 
      call get_environment_variable('JBSNN_MODEL_DIR',jbsnn_model)
+    ! WRITE(*,*) TRIM(jbsnn_model)
     
      ierr=load_anns(0, TRIM(jbsnn_model)//NUL,'brainfuse'//NUL)
      ierr=load_anns_inputs(INPUT_PARAMETERS)
@@ -77,22 +78,23 @@
     
      ierr=get_anns_avg_array(OUTPUT_PARAMETERS)
     
-     OUT_CNEO_CnC= OUTPUT_PARAMETERS(1)
-     OUT_CNEO_CnD= OUTPUT_PARAMETERS(2)
-     OUT_CNEO_Cne= OUTPUT_PARAMETERS(3)
-     OUT_CNEO_CTC= OUTPUT_PARAMETERS(4)
-     OUT_CNEO_CTD= OUTPUT_PARAMETERS(5)
-     OUT_CNEO_CTe= OUTPUT_PARAMETERS(6)
-     OUT_CSAU_CnC= OUTPUT_PARAMETERS(7)
-     OUT_CSAU_CnD= OUTPUT_PARAMETERS(8)
-     OUT_CSAU_Cne= OUTPUT_PARAMETERS(9)
-     OUT_CSAU_CTC= OUTPUT_PARAMETERS(10)
-     OUT_CSAU_CTD= OUTPUT_PARAMETERS(11)
-     OUT_CSAU_CTe= OUTPUT_PARAMETERS(12)
+     OUT_CNEO_CTC= OUTPUT_PARAMETERS(1)
+     OUT_CNEO_CTD= OUTPUT_PARAMETERS(2)
+     OUT_CNEO_CTe= OUTPUT_PARAMETERS(3)
+     OUT_CNEO_CnC= OUTPUT_PARAMETERS(4)
+     OUT_CNEO_CnD= OUTPUT_PARAMETERS(5)
+     OUT_CNEO_Cne= OUTPUT_PARAMETERS(6)
+     OUT_CSAU_CTC= OUTPUT_PARAMETERS(7)
+     OUT_CSAU_CTD= OUTPUT_PARAMETERS(8)
+     OUT_CSAU_CTe= OUTPUT_PARAMETERS(9)
+     OUT_CSAU_CnC= OUTPUT_PARAMETERS(10)
+     OUT_CSAU_CnD= OUTPUT_PARAMETERS(11)
+     OUT_CSAU_Cne= OUTPUT_PARAMETERS(12)
 
 
      !WRITE(*,*)OUTPUT_PARAMETERS
      !WRITE(*,*)OUTPUT_PARAMETERS(10)
+     
 
      !!!!!!!!! Bootsrap Current Calculation !!!!!!!!!!!!!
      
@@ -167,7 +169,8 @@
         
         
      call cpu_time(finish)
-     !print '("Time = ",f12.6," seconds.")',finish-start
+     
+     !print '("Time = ",f16.12," seconds.")',finish-start
 
      
    END SUBROUTINE neo_jbs_nn
