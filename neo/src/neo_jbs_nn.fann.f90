@@ -51,24 +51,25 @@
      call cpu_time(start)
      !print '(a)','INFO: (JBSNN) Computing Bootstrap Current with NEO-NN'
     
-     INPUT_PARAMETERS(4)=nn_rmin_in                                ! rmin
-     INPUT_PARAMETERS(3)=nn_q_in                                   ! q
-     INPUT_PARAMETERS(2)=log10(nn_nuee_in)                         ! nuee nor
-     INPUT_PARAMETERS(1)=nn_ni1_ne_in                              ! ni1/ne
-     INPUT_PARAMETERS(5)=nn_ti1_te_in                              ! ti1/te
+     INPUT_PARAMETERS(4)= nn_rmin_in                                ! rmin
+     INPUT_PARAMETERS(3)= nn_q_in                                   ! q
+     INPUT_PARAMETERS(2)= log10(nn_nuee_in)                         ! nuee nor
+     INPUT_PARAMETERS(1)= nn_ni1_ne_in                              ! ni1/ne
+     INPUT_PARAMETERS(5)= nn_ti1_te_in                              ! ti1/te
     
      !INPUT_PARAMETERS( 6)=  6.0   !   neo_mass_in(2)                          ! mi2/mD
      !INPUT_PARAMETERS( 7)= 6.0    !   neo_z_in(2)                             ! zi2
      ! parameters mi2/mD are to be added when using model with random Z impurity...
     
 
-     WRITE(*,*)INPUT_PARAMETERS
+     !WRITE(*,*)INPUT_PARAMETERS
 
 
 
      !run NN
 
      call get_environment_variable('JBSNN_MODEL_DIR',jbsnn_model)
+    ! WRITE(*,*) TRIM(jbsnn_model)
     
      ierr=load_anns(0, TRIM(jbsnn_model)//NUL,'brainfuse'//NUL)
      ierr=load_anns_inputs(INPUT_PARAMETERS)
@@ -77,22 +78,23 @@
     
      ierr=get_anns_avg_array(OUTPUT_PARAMETERS)
     
-     OUT_CNEO_CnC= OUTPUT_PARAMETERS(1)
-     OUT_CNEO_CnD= OUTPUT_PARAMETERS(2)
-     OUT_CNEO_Cne= OUTPUT_PARAMETERS(3)
-     OUT_CNEO_CTC= OUTPUT_PARAMETERS(4)
-     OUT_CNEO_CTD= OUTPUT_PARAMETERS(5)
-     OUT_CNEO_CTe= OUTPUT_PARAMETERS(6)
-     OUT_CSAU_CnC= OUTPUT_PARAMETERS(7)
-     OUT_CSAU_CnD= OUTPUT_PARAMETERS(8)
-     OUT_CSAU_Cne= OUTPUT_PARAMETERS(9)
-     OUT_CSAU_CTC= OUTPUT_PARAMETERS(10)
-     OUT_CSAU_CTD= OUTPUT_PARAMETERS(11)
-     OUT_CSAU_CTe= OUTPUT_PARAMETERS(12)
+     OUT_CNEO_CTC= OUTPUT_PARAMETERS(1)
+     OUT_CNEO_CTD= OUTPUT_PARAMETERS(2)
+     OUT_CNEO_CTe= OUTPUT_PARAMETERS(3)
+     OUT_CNEO_CnC= OUTPUT_PARAMETERS(4)
+     OUT_CNEO_CnD= OUTPUT_PARAMETERS(5)
+     OUT_CNEO_Cne= OUTPUT_PARAMETERS(6)
+     OUT_CSAU_CTC= OUTPUT_PARAMETERS(7)
+     OUT_CSAU_CTD= OUTPUT_PARAMETERS(8)
+     OUT_CSAU_CTe= OUTPUT_PARAMETERS(9)
+     OUT_CSAU_CnC= OUTPUT_PARAMETERS(10)
+     OUT_CSAU_CnD= OUTPUT_PARAMETERS(11)
+     OUT_CSAU_Cne= OUTPUT_PARAMETERS(12)
 
 
-     WRITE(*,*)OUTPUT_PARAMETERS
+     !WRITE(*,*)OUTPUT_PARAMETERS
      !WRITE(*,*)OUTPUT_PARAMETERS(10)
+     
 
      !!!!!!!!! Bootsrap Current Calculation !!!!!!!!!!!!!
      
@@ -120,6 +122,31 @@
      !WRITE(*,*)(EXPRO_ctrl_z(1))
      !WRITE(*,*)(EXPRO_ctrl_z(2))
      
+     !open(unit=1,file='input.profiles.jbsnn',position='append')
+
+     
+     
+     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(1)
+     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(2)
+     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(3)
+     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(4)
+     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(5)
+
+     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(1)
+     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(2)
+     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(3)
+     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(4)
+     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(5)
+     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(6)
+     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(7)
+     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(8)
+     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(9)
+     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(10)
+     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(11)
+     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(12)
+
+     !INPUT_PARAMETERS,OUTPUT_PARAMETERS
+     !close(1)
      
      
         
@@ -128,6 +155,8 @@
 
      nn_NEO_jbs_in_A_m2 = K_0*(K_e_NEO+K_i1_NEO+K_i2_NEO)             !jbs_neo  in (MA/m^2)  
      nn_SAU_jbs_in_A_m2 = K_0*(K_e_SAU+K_i1_SAU+K_i2_SAU)             !jbs_sau  in (MA/m^2)
+
+     write(4,'(20(1pe11.4,1x))') nn_rho_in,INPUT_PARAMETERS,OUTPUT_PARAMETERS,nn_NEO_jbs_in_A_m2,nn_SAU_jbs_in_A_m2
      
      !WRITE(*,*)nn_NEO_jbs_in_A_m2
      !WRITE(*,*)nn_SAU_jbs_in_A_m2
@@ -140,7 +169,8 @@
         
         
      call cpu_time(finish)
-     !print '("Time = ",f12.6," seconds.")',finish-start
+     
+     !print '("Time = ",f16.12," seconds.")',finish-start
 
      
    END SUBROUTINE neo_jbs_nn

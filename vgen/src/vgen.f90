@@ -140,7 +140,15 @@ program vgen
   !    strong rotation
   ! 4. Return the given Er
 
-  select case (er_method) 
+
+  open(unit=4,file='input.profiles.jbsnn',status='replace')
+  
+  
+  write(4,'(20(a12))') 'expro_rho(-)','ni1/ne(-)','log10(nuee)' ,'q(-)','rmin(-)','ti1/te(-)','NEO_CnC','NEO_CnD',&
+ 'NEO_Cne','NEO_CTC','NEO_CTD','NEO_CTe','SAU_CnC','SAU_CnD','SAU_Cne','SAU_CTC','SAU_CTD','SAU_CTe','jbsNEONN','jbsSAUNN'
+
+
+  select case (er_method)
 
   case (1,4)
 
@@ -292,6 +300,8 @@ program vgen
         call bound_deriv(EXPRO_w0p(2:EXPRO_n_exp-1),EXPRO_w0(2:EXPRO_n_exp-1),&
              EXPRO_rmin,EXPRO_n_exp-2)
 
+      
+
         do i_loc=1,n_loc
 
            i = i_glob(i_loc)
@@ -299,7 +309,9 @@ program vgen
            rotation_model = 2  
            er0 = er_exp(i)
            omega = EXPRO_w0(i) 
-           omega_deriv = EXPRO_w0p(i) 
+           omega_deriv = EXPRO_w0p(i)
+
+           
            call vgen_compute_neo(i,vtor_diff, rotation_model, er0, omega, &
                 omega_deriv, simntheta)
 
@@ -307,6 +319,9 @@ program vgen
                 er_exp(i),EXPRO_vpol(1,i)/1e3,simntheta,i_proc
 
         enddo
+
+        
+        
 
         ! Reduce vpol,vtor
         do j=1,n_ions
@@ -317,6 +332,8 @@ program vgen
      endif
 
   end select
+
+  close(4)
   !======================================================================
 
   ! Additional reductions
@@ -444,7 +461,8 @@ program vgen
 
  
      close(1)
-     !----------------------------------------------------------------------
+     !---------------------------------------------------------------------
+
 
      call vgen_getgeo()
 
