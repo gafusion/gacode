@@ -1,0 +1,54 @@
+ CONTROL PARAMETERS
+ ------------------
+ sim_model                     : NUMERICAL (with theory)
+ collision_model               : FULL LINEARIZED FOKKER-PLANCK
+ equilibrium_model             : MILLER
+ profile_model                 : LOCAL
+ sign_q                        : POSITIVE
+ sign_bunit                    : POSITIVE (BT CW)
+ rotation model                : ROTATION EFFECTS NOT INCLUDED
+ spitzer_model:                : OFF (NEOCLASSICAL TRANSPORT)
+ threed_model:                 : AXISYMMETRIC EQUILIBRIUM
+
+ GRID DIMENSIONS
+ ---------------
+ n_radial         :   1
+ n_energy         :   6
+ n_xi             :  17
+ n_theta          :  17
+
+ PHYSICS PARAMETERS
+ ------------------
+       r/a:  2.9278E-02
+       R/a:  1.0000E+00        shift:  0.0000E+00
+         q:  7.6250E+00            s:  1.0000E+00
+     kappa:  1.0000E+00      s_kappa:  0.0000E+00
+     delta:  0.0000E+00      s_delta:  0.0000E+00
+      zeta:  0.0000E+00       s_zeta:  0.0000E+00
+      zmag:  0.0000E+00        dzmag:  0.0000E+00
+
+  dphi0/dr:  0.0000E+00
+     omega:  0.0000E+00    domega/dr:  0.0000E+00
+     epar0:  0.0000E+00
+
+indx   z       n/n_norm     T/T_norm     m/m_norm     a/Ln         a/Lt         nu
+  1   -1.000   1.0000E+00   1.0000E+00   2.7245E-04   0.0000E+00   0.0000E+00   1.1875E+01
+  2    1.000   9.3333E-01   7.0417E-01   1.0000E+00   0.0000E+00   0.0000E+00   3.0960E-01
+  3    6.000   1.1111E-02   7.0417E-01   6.0000E+00   0.0000E+00   1.0000E+00   1.9501E+00
+ ------------------
+
+ Estimated memory (GB) =  0.49326E+00
+ Begin matrix factor
+ Done matrix factor
+ Begin matrix solve
+ Done matrix solve
+
+ r/a =                 0.29278E-01
+ jpar =                0.95911E-05
+ sum Z_s Gamma_s =    -0.31693E-14
+  Z       pflux         eflux         mflux
+ -1.000   0.94488E-08   0.16779E-07  -0.16775E-20
+  1.000  -0.11377E-05  -0.96685E-06   0.49973E-17
+  6.000   0.19120E-06   0.34259E-06   0.80265E-19
+ ------------------
+

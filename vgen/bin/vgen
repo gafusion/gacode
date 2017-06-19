@@ -215,7 +215,7 @@ then
        echo "INFO: (profiles_gen) VGEN created vgen/input.profiles [new data]"
        echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.extra    [diagnostics]"
        echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.jbs      [boostrap current]"
-       echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.jbsnn    [jbsnn diagnostic]
+       #echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.jbsnn    [jbsnn diagnostic]
    fi
 
    exit 0
