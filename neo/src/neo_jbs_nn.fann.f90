@@ -91,6 +91,20 @@
      OUT_CSAU_CnD= OUTPUT_PARAMETERS(11)
      OUT_CSAU_Cne= OUTPUT_PARAMETERS(12)
 
+     !20/06/2017
+     !OUT_CNEO_CTC= OUTPUT_PARAMETERS(4)
+     !OUT_CNEO_CTD= OUTPUT_PARAMETERS(5)
+     !OUT_CNEO_CTe= OUTPUT_PARAMETERS(6)
+     !OUT_CNEO_CnC= OUTPUT_PARAMETERS(1)
+     !OUT_CNEO_CnD= OUTPUT_PARAMETERS(2)
+     !OUT_CNEO_Cne= OUTPUT_PARAMETERS(3)
+     !OUT_CSAU_CTC= OUTPUT_PARAMETERS(12)
+     !OUT_CSAU_CTD= OUTPUT_PARAMETERS(11)
+     !OUT_CSAU_CTe= OUTPUT_PARAMETERS(12)
+     !OUT_CSAU_CnC= OUTPUT_PARAMETERS(1)
+     !OUT_CSAU_CnD= OUTPUT_PARAMETERS(2)
+     !OUT_CSAU_Cne= OUTPUT_PARAMETERS(3)
+
 
      !WRITE(*,*)OUTPUT_PARAMETERS
      !WRITE(*,*)OUTPUT_PARAMETERS(10)
@@ -156,7 +170,21 @@
      nn_NEO_jbs_in_A_m2 = K_0*(K_e_NEO+K_i1_NEO+K_i2_NEO)             !jbs_neo  in (MA/m^2)  
      nn_SAU_jbs_in_A_m2 = K_0*(K_e_SAU+K_i1_SAU+K_i2_SAU)             !jbs_sau  in (MA/m^2)
 
-     write(4,'(20(1pe11.4,1x))') nn_rho_in,INPUT_PARAMETERS,OUTPUT_PARAMETERS,nn_NEO_jbs_in_A_m2,nn_SAU_jbs_in_A_m2
+     !write(4,'(20(1pe11.4,1x))') nn_rho_in,INPUT_PARAMETERS,OUTPUT_PARAMETERS,nn_NEO_jbs_in_A_m2,nn_SAU_jbs_in_A_m2
+
+     ! 21/06/2017
+     write(4,'(36(1pe11.4,1x))') nn_rho_in,INPUT_PARAMETERS,OUTPUT_PARAMETERS,nn_charge_norm_fac,nn_vnorm,&
+     nn_anorm,nn_I_over_phi_prime,nn_rho_star,nn_dens_norm_f,nn_1_over_Lte,nn_1_over_Lne,nn_1_over_LtD,&
+     nn_1_over_LnD,nn_1_over_LtC,nn_1_over_LnC,EXPRO_ctrl_z(1),EXPRO_ctrl_z(2),nn_ni1_dens,nn_ni2_dens,&
+     nn_NEO_jbs_in_A_m2,nn_SAU_jbs_in_A_m2
+     
+
+
+
+
+
+
+     
      
      !WRITE(*,*)nn_NEO_jbs_in_A_m2
      !WRITE(*,*)nn_SAU_jbs_in_A_m2
@@ -170,7 +198,7 @@
         
      call cpu_time(finish)
      
-     print '("Time = ",f16.12," seconds.")',finish-start
+     !print '("Time = ",f16.12," seconds.")',finish-start
 
      
    END SUBROUTINE neo_jbs_nn

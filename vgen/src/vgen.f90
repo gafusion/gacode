@@ -144,8 +144,10 @@ program vgen
   open(unit=4,file='input.profiles.jbsnn',status='replace')
   
   
-  write(4,'(20(a12))') 'expro_rho(-)','ni1/ne(-)','log10(nuee)' ,'q(-)','rmin(-)','ti1/te(-)','NEO_CnC','NEO_CnD',&
- 'NEO_Cne','NEO_CTC','NEO_CTD','NEO_CTe','SAU_CnC','SAU_CnD','SAU_Cne','SAU_CTC','SAU_CTD','SAU_CTe','jbsNEONN','jbsSAUNN'
+  write(4,'(36(a12))') 'expro_rho(-)','ni1/ne(-)','log10(nuee)' ,'q(-)','rmin(-)','ti1/te(-)','NEO_CTC','NEO_CTD',&
+ 'NEO_CTe','NEO_CnC','NEO_CnD','NEO_Cne','SAU_CTC','SAU_CTD','SAU_CTe','SAU_CnC','SAU_CnD','SAU_Cne','enorm',&
+ 'vnorm','anorm','I_over_psi','rhostar','ne','1_over_Lte','1_over_Lne','1_over_LtD','1_over_LnD','1_over_LTC',&
+ '1_over_LnC','zi1(zD)','zi2(zC)','ni1(nD)','ni2(nC)','jbsNEONN','jbsSAUNN'
 
 
   select case (er_method)
