@@ -255,6 +255,7 @@ then
    echo "             -n <mpi tasks>"
    echo
    echo "             -nn"
+   echo "             Run NEO-NN , instead of NEO to compute jboot NEO and SAUTER."
    echo
    echo "LOCAL PARAMETER MODE"
    echo 
@@ -802,7 +803,7 @@ then
        echo "INFO: (profiles_gen) VGEN created vgen/input.profiles [new data]"
        echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.extra    [diagnostics]"
        echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.jbs      [boostrap current]"
-       #echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.jbsnn      [jbsnn diagnostic]"
+       echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.jbsnn      [Neural Net diagnostic]"
        
    fi
 

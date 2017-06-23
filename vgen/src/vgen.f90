@@ -61,21 +61,25 @@ program vgen
   read(1,*) vgen_nn_flag
   close(1)
 
+  !Set the NN flag
+  neo_nn_flag_in = vgen_nn_flag  
+
+
   select case(er_method)
   case(1)
-     if(i_proc == 0) then
+     if((i_proc == 0).and.(neo_nn_flag_in .ne. 1)) then
         print '(a)','INFO: (VGEN) Computing omega0 (Er)  from force balance'
      endif
   case(2)
-     if(i_proc == 0) then
+     if((i_proc == 0).and.(neo_nn_flag_in .ne. 1)) then
         print '(a)', 'INFO: (VGEN) Computing omega0 (Er) from NEO (weak rotation limit)'
      endif
   case(4)
-     if(i_proc == 0) then
+     if((i_proc == 0).and.(neo_nn_flag_in .ne. 1)) then
         print '(a)','INFO: (VGEN) Returning given omega0 (Er)'
      endif
   case default
-     if(i_proc == 0) then
+     if((i_proc == 0).and.(neo_nn_flag_in .ne. 1)) then
         print '(a)','ERROR: Invalid er_method'
      endif
      call MPI_finalize(i_err)
@@ -84,25 +88,29 @@ program vgen
 
   select case(vel_method)
   case(1)
-     if (i_proc == 0) then
+     if ((i_proc == 0).and.(neo_nn_flag_in .ne. 1)) then
         print '(a)','INFO: (VGEN) Computing velocities from NEO (weak rotation limit)'
      endif
   case(2)
-     if (i_proc == 0) then
+     if ((i_proc == 0).and.(neo_nn_flag_in .ne. 1)) then
         print '(a)','INFO: (VGEN) Computing velocities from NEO (strong rotation limit)'
      endif
   case default
-     if (i_proc == 0) then
+     if ((i_proc == 0).and.(neo_nn_flag_in .ne. 1)) then
         print '(a)','ERROR: Invalid vel_method'
      endif
      call MPI_finalize(i_err)
      stop
   end select
 
-  if (i_proc == 0) then
+  if ((i_proc == 0).and.(neo_nn_flag_in .ne. 1)) then
      print '(a,i2,a,i2)','INFO: (VGEN) Using NEO Theta Resolution: ',nth_min,'-',nth_max
      print '(a,i2)','INFO: (VGEN) MPI tasks: ',n_proc
   endif
+
+  if (neo_nn_flag_in .eq. 1) then
+      print '(a)','INFO: (NEO-NN) Computing Jboot With  NEURAL NETWORKS (NN)'
+  endif    
 
   !---------------------------------------------------------------------
   ! Initialize vgen parameters
@@ -226,9 +234,14 @@ program vgen
         omega_deriv = EXPRO_w0p(i) 
 
         call vgen_compute_neo(i,vtor_diff,rotation_model,er0,omega,omega_deriv, simntheta)
-
-        print 10,EXPRO_rho(i),&
-             er_exp(i),EXPRO_vpol(1,i)/1e3,simntheta,i_proc
+        
+        if (neo_nn_flag_in .ne. 1) then
+            print 10,EXPRO_rho(i),&
+                 er_exp(i),EXPRO_vpol(1,i)/1e3,simntheta,i_proc
+        else
+             print 11,EXPRO_rho(i),&
+               jbs_neo(i),jbs_sauter(i)
+        endif
 
      enddo
 
@@ -269,9 +282,15 @@ program vgen
         do j=1,n_ions
            EXPRO_vtor(j,i) = EXPRO_vtor(j,i) + vtor_diff
         enddo
-
-        print 10,EXPRO_rho(i),&
-             er_exp(i),EXPRO_vpol(1,i)/1e3,simntheta, i_proc
+        
+        if (neo_nn_flag_in .ne. 1) then
+            print 10,EXPRO_rho(i),&
+                 er_exp(i),EXPRO_vpol(1,i)/1e3,simntheta,i_proc
+        else
+             print 11,EXPRO_rho(i),&
+               jbs_neo(i),jbs_sauter(i)
+        endif
+        
 
      enddo
 
@@ -316,9 +335,14 @@ program vgen
            
            call vgen_compute_neo(i,vtor_diff, rotation_model, er0, omega, &
                 omega_deriv, simntheta)
-
-           print 10,EXPRO_rho(i),&
-                er_exp(i),EXPRO_vpol(1,i)/1e3,simntheta,i_proc
+           if (neo_nn_flag_in .ne. 1) then
+                print 10,EXPRO_rho(i),&
+                     er_exp(i),EXPRO_vpol(1,i)/1e3,simntheta,i_proc
+           else
+                 print 11,EXPRO_rho(i),&
+                       jbs_neo(i),jbs_sauter(i)
+           endif 
+           
 
         enddo
 
@@ -495,6 +519,11 @@ program vgen
        'vpol_1(km/s)=',1pe9.2,2x,&
        'nth=',i2,2x,'[',i2,']')
 
+11 format(&
+       'rho=',f6.4,2x,&
+       'jbs_nn_NEO(MA/m^2)=',1pe9.2,2x,&   
+       'jbs_nn_SAU(MA/m^2)=',1pe9.2,2x)   
+          
   !call vgen_harvest_inputandoutput
 
 end program vgen

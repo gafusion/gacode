@@ -116,17 +116,13 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   ! nn inputs
   
   nn_rmin_in=EXPRO_rmin(i)/nn_anorm              ! rmin 
-  nn_q_in= abs(EXPRO_q(i))                       !q
-<<<<<<< HEAD
-  
-  nn_nuee_in=EXPRO_nuee(i)/(nn_vnorm/nn_anorm)   !nuee  emily
-  !nn_nuee_in_arsene=EXPRO_nuee(i)/nn_vnorm/nn_anorm     !nuee  arsene
+  nn_q_in= abs(EXPRO_q(i))                       !q  
+  !nn_nuee_in=EXPRO_nuee(i)/(nn_vnorm/nn_anorm)   !nuee  emily
+  !nn_nuee_in=EXPRO_nuee(i)/nn_vnorm/nn_anorm    !nuee  arsene
 
   !write (*,*) EXPRO_nuee(i)/nn_vnorm/nn_anorm , EXPRO_nuee(i)/(nn_vnorm/nn_anorm)
   
-=======
   nn_nuee_in=EXPRO_nuee(i)/(nn_vnorm/nn_anorm)   !nuee 
->>>>>>> 97efe58a713d70f33221f9a245f7ca4c978c01a0
   nn_ni1_ne_in=EXPRO_ni_new(i)/EXPRO_ne(i)       !ni1/ne
   nn_ti1_te_in=EXPRO_ti(1,i)/EXPRO_te(i)         !ti1/te
   
@@ -238,7 +234,7 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   close(1)
   
   !Set the NN flag
-  neo_nn_flag_in = vgen_nn_flag
+  !neo_nn_flag_in = vgen_nn_flag
   
   nn_jbs_norm = nn_charge_norm_fac*dens_norm*vth_norm &
        *EXPRO_rmin(EXPRO_n_exp)/1e6
