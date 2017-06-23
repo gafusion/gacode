@@ -24,7 +24,8 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   ! NN
   !real :: nn_rmin_in
   !real :: nn_q_in
-  !real :: nn_nuee_in
+  real :: nn_nuee_in_emily
+  real :: nn_nuee_in_arsene
   !real :: nn_ni1_ne_in
   !real :: nn_ti1_te_in
   
@@ -116,7 +117,12 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   
   nn_rmin_in=EXPRO_rmin(i)/nn_anorm              ! rmin 
   nn_q_in= abs(EXPRO_q(i))                       !q
-  nn_nuee_in=EXPRO_nuee(i)/nn_vnorm/nn_anorm     !nuee 
+  
+  nn_nuee_in=EXPRO_nuee(i)/(nn_vnorm/nn_anorm)   !nuee  emily
+  !nn_nuee_in_arsene=EXPRO_nuee(i)/nn_vnorm/nn_anorm     !nuee  arsene
+
+  !write (*,*) EXPRO_nuee(i)/nn_vnorm/nn_anorm , EXPRO_nuee(i)/(nn_vnorm/nn_anorm)
+  
   nn_ni1_ne_in=EXPRO_ni_new(i)/EXPRO_ne(i)       !ni1/ne
   nn_ti1_te_in=EXPRO_ti(1,i)/EXPRO_te(i)         !ti1/te
   

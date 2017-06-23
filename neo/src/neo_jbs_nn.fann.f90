@@ -36,6 +36,7 @@
 
      real(4) :: INPUT_PARAMETERS(5)
      real(4) :: OUTPUT_PARAMETERS(12)
+    
 
     
      real :: start, finish
@@ -63,7 +64,7 @@
     
 
      !WRITE(*,*)INPUT_PARAMETERS
-
+     !WRITE(*,*) EXPRO_nuee(i)/(nn_vnorm/nn_anorm) , 
 
 
      !run NN
@@ -168,9 +169,9 @@
         !!!!!!!!!!!!!!!
         
         
-     call cpu_time(finish)
+     !call cpu_time(finish)
      
-     print '("Time = ",f16.12," seconds.")',finish-start
+     !print '("Time = ",f16.12," seconds.")',finish-start
 
      
    END SUBROUTINE neo_jbs_nn
