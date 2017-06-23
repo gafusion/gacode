@@ -116,7 +116,7 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   
   nn_rmin_in=EXPRO_rmin(i)/nn_anorm              ! rmin 
   nn_q_in= abs(EXPRO_q(i))                       !q
-  nn_nuee_in=EXPRO_nuee(i)/nn_vnorm/nn_anorm     !nuee 
+  nn_nuee_in=EXPRO_nuee(i)/(nn_vnorm/nn_anorm)   !nuee 
   nn_ni1_ne_in=EXPRO_ni_new(i)/EXPRO_ne(i)       !ni1/ne
   nn_ti1_te_in=EXPRO_ti(1,i)/EXPRO_te(i)         !ti1/te
   
