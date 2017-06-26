@@ -35,7 +35,13 @@ subroutine cgyro_init_collision_simple
                       + (1.0-1.0/(2.0*xb*xb)) * erf(xb))
               else
                  ! e-i
-                 nu_d(ie,is,js) = tauinv_ab * (1.0/xa**3)
+                 if(z_eff_method == 2) then
+                    nu_d(ie,is,js) = tauinv_ab * (1.0/xa**3)
+                 else
+                    nu_d(ie,is,js) = tauinv_ab * (1.0/xa**3) &
+                         * z(is)**2 / z(js)**2 &
+                         * dens(is)/dens(js) * z_eff/(n_species-1)
+                 endif
               endif
            endif
 

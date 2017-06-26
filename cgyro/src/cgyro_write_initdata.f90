@@ -14,7 +14,7 @@ subroutine cgyro_write_initdata
   implicit none
 
   integer :: p,in,is
-  real :: kymax,z_eff
+  real :: kymax
   real, external :: spectraldiss
 
   !----------------------------------------------------------------------------
@@ -62,14 +62,6 @@ subroutine cgyro_write_initdata
         endif
 
      endif
-
-     ! Compute Z_eff (diagnostic only)
-     z_eff = 0.0
-     do is=1,n_species
-        if (z(is) > 0.0) then 
-           z_eff = z_eff+dens(is)*z(is)**2/dens_ele
-        endif
-     enddo
 
      ! Dissipation information
      write(io,*)

@@ -327,7 +327,7 @@
              call tglf_LS
            endif
          endif
-         if(ibranch_in.le.0)then
+         if(ibranch_in.eq.0)then
             branch = 1
             if(gamma_out(2).gt.gamma_out(1))branch = 2
          endif

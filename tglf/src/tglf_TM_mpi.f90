@@ -187,7 +187,7 @@
       REAL :: gamma_net_1
       REAL :: pflux1,eflux1
       REAL :: stress_tor1,stress_par1
-      REAL :: exch1
+      REAL :: exch1, gamma_max
       ! mpi 
       REAL :: ne_te_phase_spectrum_save(nkym,maxmodes)
       REAL :: eigenvalue_spectrum_save(2,nkym,maxmodes)
@@ -286,7 +286,8 @@
 !        write(*,*)"wdx=",wdx(1),"b0x=",b0x(1)
 !
         unstable=.TRUE.
-        if(gamma_out(1).eq.0.0.or.gamma_nb_min_out.eq.0.0)unstable=.FALSE.      
+        gamma_max = MAX(gamma_out(1),gamma_out(2)) ! this covers ibranch=-1,0
+        if(gamma_max.eq.0.0.or.gamma_nb_min_out.eq.0.0)unstable=.FALSE.      
         gamma_net_1 = gamma_nb_min_out 
         gamma_cutoff = (0.1*ky_in/R_unit)*SQRT(taus(1)*mass(2))  ! scaled like gamma
         rexp = 1.0
@@ -300,7 +301,7 @@
        endif
        if(sat_rule_in.eq.1)reduce=1.0
 ! 
-        if(unstable)then
+       if(unstable)then
 ! save the spectral shift of the radial wavenumber due to VEXB_SHEAR
          spectral_shift_save(i) = kx0_e
 ! save field_spectrum_out and eigenvalue_spectrum_out

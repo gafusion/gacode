@@ -21,10 +21,12 @@ subroutine cgyro_write_restart
   integer :: finfo
   integer :: fhv
   integer :: fstatus(MPI_STATUS_SIZE)
-  integer :: i1,i2,j
-  character (len=1) :: i_tag
   integer(kind=MPI_OFFSET_KIND) :: disp
   integer(kind=MPI_OFFSET_KIND) :: offset1
+  !
+  ! File chunking variables
+  !
+  integer :: i1,i2,j,n_loc,n_remain
   complex, dimension(:,:), allocatable :: h_chunk
   !----------------------------------------------
 
@@ -37,20 +39,18 @@ subroutine cgyro_write_restart
   filemode = IOR(MPI_MODE_RDWR,MPI_MODE_CREATE)
   disp     = 0
 
-  allocate(h_chunk(nc/n_chunk,nv_loc))
+  n_loc = nc/n_chunk
+  n_remain = nc-n_loc*n_chunk
+  allocate(h_chunk(n_loc+n_remain,nv_loc))
+
+  offset1 = size(h_chunk)*i_proc
 
   do j=1,n_chunk
-
-     if (n_chunk > 1) then
-        i_tag = achar(j+iachar("0"))
-     else
-        i_tag = ''
-     endif
 
      call MPI_INFO_CREATE(finfo,i_err)
 
      call MPI_FILE_OPEN(CGYRO_COMM_WORLD,&
-          trim(path)//runfile_restart//i_tag,&
+          trim(path)//runfile_restart//rtag(j),&
           filemode,&
           finfo,&
           fhv,&
@@ -64,13 +64,14 @@ subroutine cgyro_write_restart
           finfo,&
           i_err)
 
-     i1 = 1+(j-1)*(nc/n_chunk)
-     i2 = j*(nc/n_chunk)
-     if (j == n_chunk) i2 = nc
+     i1 = 1+(j-1)*n_loc
+     i2 = j*n_loc
+     if (j == n_chunk) then
+        i2 = nc
+        n_loc = n_loc+n_remain
+     endif
 
-     h_chunk(:,:) = h_x(i1:i2,:)
-
-     offset1 = size(h_chunk)*i_proc
+     h_chunk(1:n_loc,:) = h_x(i1:i2,:)
 
      call MPI_FILE_WRITE_AT(fhv,&
           offset1,&

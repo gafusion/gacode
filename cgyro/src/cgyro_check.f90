@@ -276,6 +276,18 @@ subroutine cgyro_check
        '  '//ctag(5)// &
        '   '//ctag(6)// &
        '     '//ctag(7))
+
+  if (collision_model == 5 .or. collision_model == 1) then
+     select case(z_eff_method)
+     case(1)
+        call cgyro_info('Collision model Z_eff: Using Z_eff input')
+     case(2)
+        call cgyro_info('Collision model Z_eff: Computed from ni and Zi')
+     case default
+        call cgyro_error('Invalid value for z_eff_method')
+        return  
+     end select
+  endif
   !------------------------------------------------------------------------
 
 

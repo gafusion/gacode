@@ -37,6 +37,8 @@ subroutine cgyro_freq
         ! Alternate method: use fixed wavenumber
         !--------------------------------------------------
 
+        mode_weight = 0.0        
+
         do ic=1,nc
            if (px(ir_c(ic)) == n*(px0+box_size)) then
               mode_weight(ic) = abs(field_old(1,ic))
@@ -44,12 +46,6 @@ subroutine cgyro_freq
            if (px(ir_c(ic)) == n*(px0-box_size)) then
               mode_weight(ic) = abs(field_old(1,ic))
            endif
-
-           !if (px(ir_c(ic)) == px0) then
-           !   mode_weight(ic) = abs(field_old(1,ic))
-           !else
-           !   mode_weight(ic) = 0.0
-           !endif
         enddo
 
      endif

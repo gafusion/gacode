@@ -16,14 +16,7 @@ subroutine cgyro_advect_wavenumber(ij)
   integer :: ir,l,ll,j
   complex, dimension(:,:),allocatable :: h0
   complex, dimension(nv_loc) :: dh
-  real, dimension(0:3) :: d_wave
 
-  d_wave(0) = pi/8
-  d_wave(1) = -2/pi
-  d_Wave(2) = 1/pi
-  d_wave(3) = -2/(9*pi)
-  d_wave = d_wave*(-0.1)
-  
   call timer_lib_in('shear')
 
   ! Wavenumber advection ExB shear
@@ -37,13 +30,10 @@ subroutine cgyro_advect_wavenumber(ij)
            h0(:,ir) = omega_eb*h_x(ic_c(ir,j),:)
         enddo
         do ir=1,n_radial
-           dh(:) = d_wave(0)*h0(:,ir)
+           dh(:) = 0.0
            do l=1,n_wave
               ll = 2*l-1
               dh(:) = dh(:)+c_wave(l)*(h0(:,ir+ll)-h0(:,ir-ll))
-           enddo
-           do l=1,3
-              dh(:) = dh(:)+d_wave(l)*(h0(:,ir+l)+h0(:,ir-l))
            enddo
            ic = ic_c(ir,j)
            rhs(ic,:,ij) = rhs(ic,:,ij)+dh(:)

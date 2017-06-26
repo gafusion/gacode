@@ -5,7 +5,7 @@ subroutine cgyro_equilibrium
 
   implicit none
 
-  integer :: it,ir,is,r
+  integer :: it,ir,is,r,pxx
   real :: gtheta_ave,gtheta0,err
   real, dimension(n_theta+1) :: x,y
 
@@ -188,10 +188,15 @@ subroutine cgyro_equilibrium
      omega_gammap(it) = GEO_bt/GEO_b*GEO_bigr/rmaj*gamma_p*mach_one_fac
 
      do ir=1,n_radial
-        k_perp(ic_c(ir,it)) = sqrt((2.0*pi*px(ir)*GEO_grad_r/length &
+        if (px0 < 0) then 
+           pxx = px(ir)
+        else
+           pxx = px(ir)+mx0*px0*n/(box_size/2)
+        endif
+        k_perp(ic_c(ir,it)) = sqrt((2.0*pi*pxx*GEO_grad_r/length &
              + k_theta*GEO_gq*GEO_captheta)**2 &
              + (k_theta*GEO_gq)**2)
-        k_x(ic_c(ir,it)) = 2.0*pi*px(ir)*GEO_grad_r/length &
+        k_x(ic_c(ir,it)) = 2.0*pi*pxx*GEO_grad_r/length &
              + k_theta*GEO_gq*GEO_captheta
      enddo
      
