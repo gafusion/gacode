@@ -51,7 +51,13 @@ subroutine cgyro_freq
      endif
 
      ! Define local frequencies
-     freq_loc(:) = (i_c/delta_t)*log(field_old(1,:)/field_old2(1,:))
+     do ic=1,nc
+        if (abs(field_old(1,ic)) > 1e-12 .and. abs(field_old2(1,ic)) > 1e-12) then
+           freq_loc(ic) = (i_c/delta_t)*log(field_old(1,ic)/field_old2(1,ic))
+        else
+           freq_loc(ic) = 0.0
+        endif
+     enddo
 
      total_weight = sum(mode_weight(:))
 

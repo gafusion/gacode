@@ -6,18 +6,19 @@ import string
 workdir = 'bdir'
 tools   = os.environ['GACODE_ROOT']+'/neo/tools/'
 
+<<<<<<< HEAD
 harvestdata={}
 jneo_harvest=[]
 jsauter_harvest=[]
 Ipsirho_harvest=[]
 
-if len(sys.argv) < 12:
-   print "python neo_boot.py <rmin> <q> <nuee> <ni1/ne> <zi1> <mi1/mD> <ti1/te> <zi2> <mi2/mD> <ti2/te> <delta> <index> "
+
+if len(sys.argv) < 13:
+   print "python neo_boot.py <rmin> <q> <nuee> <ni1/ne> <zi1> <mi1/mD> <ti1/te> <zi2> <mi2/mD> <ti2/te> <delta> <kappa> <index> "
    sys.exit()
 
 # EXAMPLE:
-# python $GACODE_ROOT/neo/tools/neo_boot.py 0.17 2.0 0.1 0.9 1 1.0 1.0 6 6.0 1.0 0.1 (1992)
-
+# python $GACODE_ROOT/neo/tools/neo_boot.py 0.17 2.0 0.1 0.9 1 1.0 1.0 6 6.0 1.0 0.1 1.0 (1992)
 
 # In the input.neo, there are 3 species:
 # electrons are species 1, main ions are species 2,
@@ -35,16 +36,17 @@ q      = sys.argv[2]  # safety factor
 nuee   = sys.argv[3]  # electron collision frequency/(c_s/a)
 ni1    = sys.argv[4]  # main ion density: n_i1/n_e
                       # (note: n_i2/n_e computed from quasi-neutrality)
-zi1  = sys.argv[5]    # main ion charge (integer)
-mi1  = sys.argv[6]   # main ion mass: m_i/m_deuterium
-ti1  = sys.argv[7]   # main ion temperature: t_i/t_e
-zi2  = sys.argv[8]   # impurity ion charge (integer)
-mi2  = sys.argv[9]   # impurity ion mass: m_i2/m_deuterium
-ti2  = sys.argv[10]  # impurity ion temperature: t_i2/t_e
+zi1   = sys.argv[5]    # main ion charge (integer)
+mi1   = sys.argv[6]   # main ion mass: m_i/m_deuterium
+ti1   = sys.argv[7]   # main ion temperature: t_i/t_e
+zi2   = sys.argv[8]   # impurity ion charge (integer)
+mi2   = sys.argv[9]   # impurity ion mass: m_i2/m_deuterium
+ti2   = sys.argv[10]  # impurity ion temperature: t_i2/t_e
 delta = sys.argv[11]  # triangularity
+kappa = sys.argv[12]  # elongation
 
-if len(sys.argv)==13 and sys.argv[12]!='None':
-   harvestdata['IndexRS']=int(sys.argv[12])
+if len(sys.argv)==14 and sys.argv[13]!='None':
+   harvestdata['IndexRS']=int(sys.argv[13])
 harvestdata['rmin']=float(rmin)
 harvestdata['q']=float(q)
 harvestdata['nuee']=float(nuee)
@@ -56,6 +58,8 @@ harvestdata['zi2']=float(zi2)
 harvestdata['mi2/mD']=float(mi2)
 harvestdata['ti2/te']=float(ti2)
 harvestdata['delta']=float(delta)
+harvestdata['kappa']=float(kappa)
+
 
 # Prepare simulation directory
 os.system('rm -rf '+workdir)
@@ -84,6 +88,9 @@ neoin.write('NU_1='+nuee+'\n')
 
 # Set input: delta
 neoin.write('DELTA='+delta+'\n')
+
+# Set input: kappa
+neoin.write('KAPPA='+kappa+'\n')
 
 # Set input: main ion charge, mass, temperature, density
 neoin.write('Z_2='+zi1+'\n')

@@ -425,7 +425,7 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine compute_Sauter(ir,jpar, kpar, uparB, jtor)
     use neo_globals
-    use neo_equilibrium, only: I_div_psip, ftrap, Btor, w_theta
+    use neo_equilibrium
     implicit none
     integer, intent (in) :: ir
     real, intent (out) :: jpar, kpar, uparB, jtor
@@ -548,12 +548,13 @@ contains
        jpar = jpar + L34_S * alpha_S * I_div_psip * rho(ir) &
             * dlntdr(is_ion,ir) * press_sum
 
-       ! Approximation for <jtor/R>/<1/R> ~ <jpar B/Bunit>/<BT/Bunit>
-       fac = 0.0
-       do it=1,n_theta
-          fac = fac + w_theta(it) * Btor(it)
+       ! Compute <jtor/R>/<1/R> (formula is exact)
+       jtor = jpar*Btor2_avg/Bmag2_avg
+       do is=1,n_species
+          jtor = jtor + rho(ir)*I_div_psip*dens(is,ir)*temp(is,ir) &
+               * (dlnndr(is,ir) + dlntdr(is,ir))*(1.0-Btor2_avg/Bmag2_avg)
        enddo
-       jtor = jpar/fac
+       jtor = jtor/(Btor_th0*bigR_th0*bigRinv_avg)
        
     end if
 

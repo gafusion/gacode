@@ -368,11 +368,7 @@ contains
                * w_theta(it) / bigR(it)
        enddo
     enddo
-    fac = 0.0
-    do it=1,n_theta
-       fac = fac + w_theta(it) / bigR(it)
-    enddo
-    jtor = jtor/fac
+    jtor = jtor/bigRinv_avg
     
     if(silent_flag == 0 .and. i_proc == 0) then
        open(unit=io_neoout,file=trim(path)//runfile_neoout,&

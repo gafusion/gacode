@@ -26,12 +26,21 @@ subroutine prgen_read_peqdsk
   nx = i
   call allocate_internals
   call allocate_peqdsk_vars
+  allocate(xv(ncol,i))
+  read(1,*) xv
+  peqdsk_psi(:) = xv(1,:)
+  deallocate(xv)
   close(1)
-  ! Replace old assignment of peqdsk_psi to fixed, uniform mesh
-  !  peqdsk_psi(:) = xv(1,:)
-  do i=1,nx
-     peqdsk_psi(i) = (i-1.0)/(nx-1)
-  enddo
+  ! Use ne grid as peqdsk_psi grid for all peqdsk quantities
+  ! Except if ne grid psi > 1.0, then use fixed, uniform mesh
+  if(peqdsk_psi(nx) > 1.0) then
+     print '(a)','INFO: (prgen) Using fixed, uniform psi grid.'
+     do i=1,nx
+        peqdsk_psi(i) = (i-1.0)/(nx-1)
+     enddo
+  else
+     print '(a)','INFO: (prgen) Using pfile.ne psi grid.'
+  endif
 
   ! psi_norm and ne(10^20/m^3)
   open(unit=1,file='pfile.ne',status='old')

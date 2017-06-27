@@ -96,8 +96,8 @@ subroutine cgyro_init_h
                  endif
               endif
 
-              if (px0 < 0) then
-                 ! px0 < 0  initial condition to isolate theta_0’s
+              if (px0 >= 0) then
+                 ! px0 > 0  initial condition to isolate theta_0’s
                  ! theta_0 = pi*px0/(n*box_size/2) with px0 = 0,1,2,...,box_size/2 
 
                  h_x(ic,iv_loc) = 0.0

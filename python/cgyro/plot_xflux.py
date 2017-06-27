@@ -11,7 +11,7 @@ ymin   = sys.argv[4]
 ymax   = sys.argv[5]
 
 sim = cgyrodata('./')
-sim.getexflux()
+sim.getxflux()
 
 ns = sim.n_species
 nl = sim.n_global+1
@@ -19,7 +19,6 @@ t  = sim.t
 
 ky  = sim.ky
 ave = np.zeros((sim.n_n,ns))
-
 
 # NOTE: lky_flux_* -> [ 2, nl , ns , n_n , nt ]
 #                       0  1    2     3    4 
@@ -87,18 +86,28 @@ t = 2*np.pi*np.arange(0.0,1.0,0.001)
 
 ax.set_title(r'$\mathrm{'+ntag+'} \quad $'+windowtxt)
 
+e = 0.2
 for ispec in range(ns):
     # Flux curve
     g = np.zeros(len(t))
     g = xr[ispec,0] 
     for l in range(1,nl):
         g = g+2*(np.cos(l*t)*xr[ispec,l]-np.sin(l*t)*xi[ispec,l])
-    # Flux average
+    ax.plot(t/(2*np.pi),g)
+
+    # Flux partial average
     g0 = xr[ispec,0]
+    for l in range(1,nl):
+        z = 2*np.pi*l*e
+        g0 = g0+2*np.sin(z)*xr[ispec,l]/z
+    ax.plot([0,e],[g0,g0],'o-',color='red')
+    ax.plot([1,1-e],[g0,g0],'o-',color='red')
+
     u     = specmap(sim.mass[ispec],sim.z[ispec])
     label = r'$'+mtag+'_'+u+'/'+mtag+'_\mathrm{GB}: '+str(round(g0,3))+'$'
-    # Plot
-    ax.plot(t/(2*np.pi),g)
+
+    # Flux partial average
+    g0 = xr[ispec,0]
     ax.plot([0,1],[g0,g0],label=label)
 
 if ymax != 'auto':
