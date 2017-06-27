@@ -199,7 +199,7 @@
         
      call cpu_time(finish)
      
-     print '("Time = ",f16.12," seconds.")',finish-start
+     !print '("Time = ",f16.12," seconds.")',finish-start
 
      
    END SUBROUTINE neo_jbs_nn
