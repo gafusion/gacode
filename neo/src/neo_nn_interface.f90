@@ -29,6 +29,7 @@ module neo_nn_interface
   real :: nn_SAU_jbs_in_A_m2
   real :: nn_rho_in
   real :: nn_delta_in
+  real :: nn_kappa_in
 
 
   real :: OUT_CNEO_CTD
