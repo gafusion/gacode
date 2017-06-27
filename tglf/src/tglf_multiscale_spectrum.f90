@@ -9,6 +9,10 @@
 !***********************************************************************
 !
 !  TGLF multiscale saturation rule: sat_rule_in = 1 option
+!  April 8, 2016: G.M. Staebler, J. Candy, N. T. Howard, and C. Holland
+!                  Physics of Plasmas, 23 (2016) 062518
+!  June 22, 2017: Retuned after coding error to Laplacian terms in Ampere 
+!                 and Poisson equations was fixed 
 !
 !***********************************************************************
 !
@@ -20,7 +24,7 @@
       IMPLICIT NONE
       !
       LOGICAL :: USE_MIX=.TRUE.
-      LOGICAL :: USE_TTF=.FALSE.
+      LOGICAL :: USE_X3=.FALSE.
       INTEGER :: i,is,k,j,j1,j2,jmax1,jmax2
       REAL :: test,testmax1,testmax2
       REAL :: gammamax1,kymax1,gammamax2,kymax2,ky0,ky1,ky2
@@ -40,7 +44,7 @@
       ! model fit parameters
       ! need to set alpha_zf_in = 1.0
       ! Miller geometry values igeo=1
-      if(xnu_model_in.eq.3)USE_TTF=.TRUE.
+      if(xnu_model_in.eq.3)USE_X3=.TRUE.
       czf = alpha_zf_in
       bz1=0.0
       bz2=0.0
@@ -62,13 +66,16 @@
       !   write(*,*)i,"gamma_net = ",gamma_net(i)
       enddo
       if(USE_MIX)then
-        kyetg=1.9*zs(2)/SQRT(taus(2)*mass(2))  ! fixed to ion gyroradius
+!original        kyetg=1.9*ABS(zs(2))/SQRT(taus(2)*mass(2))  ! fixed to ion gyroradius
         cky=3.0
         sqcky=SQRT(cky)
         cnorm = 14.29
         cz1=0.48*czf
-        cz2=0.92*czf  
-        if(USE_TTF)then
+!original         cz2=0.92*czf  
+! retuned June 22,2017
+        cz2 = 1.0*czf  
+        kyetg=1.05*ABS(zs(2))/SQRT(taus(2)*mass(2))  ! fixed to ion gyroradius
+        if(USE_X3)then
            bz1=1.0
            bz2=0.18
            cz1=0.48*czf
@@ -113,7 +120,7 @@
       testmax2 = 0.0
       jmax1=1
       jmax2=0
-      kycut=0.8/SQRT(taus_in(2)*mass_in(2))
+      kycut=0.8*ABS(zs(2))/SQRT(taus_in(2)*mass_in(2))
       kyhigh=0.15/SQRT(taus_in(1)*mass_in(1))
 !      write(*,*)" kycut = ",kycut," kyhigh = ",kyhigh
       j1=1
@@ -121,11 +128,11 @@
       ! find the low and high ky peaks of gamma/ky
       do j=2,nky
          ky0 = ky_spectrum(j)
-         if(ky0 .le. kycut)j1=j1+1
+         if(ky0 .lt. kycut)j1=j1+1
          if(ky0 .lt. kyhigh)j2=j2+1
 !         write(*,*)"j=",j,"ky = ",ky0," gamma_net = ",gamma_net(j)
          test = gamma_net(j)/ky0
-         if(ky0 .le. kycut)then
+         if(ky0 .lt. kycut)then
             if(test .gt. testmax1)then
               testmax1=test
               jmax1=j
@@ -201,7 +208,7 @@
 !          gamma=0.0
           gamma0 = gamma_net(j)
           ky0=ky_spectrum(j)
-          if(USE_TTF)then
+          if(USE_X3)then
             if(ky0.lt.kymax1)then
               gamma(j) = MAX(gamma0  - cz1*(kymax1 - ky0)*vzf3,0.0)
             else
@@ -244,7 +251,7 @@
         do i=1,nmodes_in
           gammaeff = 0.0
           if(gamma0.gt.small)gammaeff = gamma_mix(j)*(eigenvalue_spectrum_out(1,j,i)/gamma0)**2
-          if(USE_TTF)then
+          if(USE_X3)then
             if(ky0.gt.kyetg)gammaeff = gammaeff*(ky0/kyetg)
           else
             if(ky0.gt.kyetg)gammaeff = gammaeff*SQRT(ky0/kyetg)

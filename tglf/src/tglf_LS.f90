@@ -178,7 +178,7 @@
         ne_te_phase_out(j1) = 0.0
       enddo
 !
-      if(ibranch_in.ge.0)then
+      if(ibranch_in.eq.0)then
 !       write(*,*)"nmodes_in=",nmodes_in
       nmodes_out = nmodes_in
 !
@@ -198,7 +198,6 @@
 !          write(*,*)"debug sort",j1,rr(j1),ri(j1),me,mi
         endif
       enddo
-!      nmodes_out = mi+me
 ! find the most unstable mode for each branch
       if(me.gt.0)then
         zgamax = 0.0
@@ -222,10 +221,12 @@
         gamma_out(2)=rr(jmax(2))
         freq_out(2)=-ri(jmax(2))
       endif
-!        write(*,*)"debug sort"
+!        write(*,*)"debug sort", ky
+!        write(*,*)"nmodes_out = ",nmodes_out,nmodes_in
+!        write(*,*)"me = ",me,"mi = ",mi
 !        write(*,*)"gamma_out=",gamma_out(1),gamma_out(2)
 !        write(*,*)"freq_out=",freq_out(1),freq_out(2)
-      endif
+      endif ! ibranch_in .eq.0 
       if(ibranch_in.eq.-1)then
 !
 !  find the top nmodes most unstable modes
@@ -240,7 +241,7 @@
         enddo
 !      write(*,*)"debug jmax =",jmax(1),jmax(2)
 !      write(*,*)"debug nmodes_out = ",nmodes_out
-      endif
+      endif ! ibranch_in .eq. -1
 !
       if(alpha_quench_in.ne.0.0)then
 ! apply quench rule

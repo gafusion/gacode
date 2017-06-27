@@ -159,6 +159,9 @@ subroutine cgyro_experimental_profiles
      endif
   enddo
 
+  ! Z_eff
+  z_eff_exp(:) = EXPRO_z_eff(:)
+  
   ! Bunit 
 
   b_unit_exp(:) = EXPRO_bunit(:)

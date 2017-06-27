@@ -54,6 +54,8 @@ module cgyro_globals
   integer :: collision_field_model
   integer :: collision_ion_model
   real    :: collision_ele_scale
+  real    :: z_eff
+  integer :: z_eff_method
   integer :: zf_test_flag 
   integer :: nonlinear_flag 
   integer :: nonlinear_method
@@ -85,6 +87,7 @@ module cgyro_globals
   integer :: profile_shear_flag
   integer :: theta_plot
   integer :: px0
+  integer :: mx0
   !
   ! Geometry input
   !
@@ -211,6 +214,9 @@ module cgyro_globals
   character(len=20), dimension(3)  :: runfile_lky_flux = &
        (/'out.cgyro.lky_flux_n','out.cgyro.lky_flux_e','out.cgyro.lky_flux_v'/)
   integer, parameter :: io=1
+  ! Restart tags
+  character(len=8) :: fmt='(I2.2)' 
+  character(len=2), dimension(100) :: rtag
   !
   ! error checking
   integer :: error_status = 0

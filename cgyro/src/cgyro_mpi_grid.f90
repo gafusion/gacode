@@ -208,9 +208,19 @@ subroutine cgyro_mpi_grid
   ! OMP code
   n_omp = omp_get_max_threads()
 
-  ! Restart file chunking logic (max_filesize is 8.0 GB)
-  max_filesize = 8.0e9
+  !----------------------------------------------------------------------------
+  ! Restart file chunking logic 
+  ! MPI-IO limit seems to be 24GB, so set max_filesize to 16.0 GB
+  max_filesize = 16.0e9
   n_chunk = 1+int(16.0*n_toroidal*nc*nv/max_filesize)
+  
+  ! Obscure definition of number tags 
+  do ix=1,100
+     write (rtag(ix),fmt) ix-1
+  enddo
+
+  if (n_chunk == 1) rtag(1) = ''
+  !----------------------------------------------------------------------------
 
 end subroutine cgyro_mpi_grid
 

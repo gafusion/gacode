@@ -275,7 +275,7 @@ class cgyrodata:
             pass 
         #-----------------------------------------------------------------
 
-    def getexflux(self):
+    def getxflux(self):
 
         """Global flux files"""
 
@@ -317,7 +317,6 @@ class cgyrodata:
         except:
             pass 
         #-----------------------------------------------------------------
-
 
     def getbigfield(self):
 

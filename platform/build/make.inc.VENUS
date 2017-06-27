@@ -31,4 +31,4 @@ NETCDF_INC = /task/imd/local64/include
 
 ARCH = ar cr
 
-FANN_ROOT = /task/imd/fann
+FANN_ROOT = /task/imd/anaconda

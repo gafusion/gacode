@@ -57,7 +57,7 @@
      INPUT_PARAMETERS(2)= log10(nn_nuee_in)                         ! nuee nor
      INPUT_PARAMETERS(1)= nn_ni1_ne_in                              ! ni1/ne
      INPUT_PARAMETERS(5)= nn_ti1_te_in                              ! ti1/te
-    
+     !INPUT_PARAMETERS(6)=nn_delta_in                               ! delta (triangularity)
      !INPUT_PARAMETERS( 6)=  6.0   !   neo_mass_in(2)                          ! mi2/mD
      !INPUT_PARAMETERS( 7)= 6.0    !   neo_z_in(2)                             ! zi2
      ! parameters mi2/mD are to be added when using model with random Z impurity...
@@ -174,10 +174,10 @@
      !write(4,'(20(1pe11.4,1x))') nn_rho_in,INPUT_PARAMETERS,OUTPUT_PARAMETERS,nn_NEO_jbs_in_A_m2,nn_SAU_jbs_in_A_m2
 
      ! 21/06/2017
-     write(4,'(36(1pe11.4,1x))') nn_rho_in,INPUT_PARAMETERS,OUTPUT_PARAMETERS,nn_charge_norm_fac,nn_vnorm,&
+     write(4,'(38(1pe11.4,1x))') nn_rho_in,INPUT_PARAMETERS,OUTPUT_PARAMETERS,nn_charge_norm_fac,nn_vnorm,&
      nn_anorm,nn_I_over_phi_prime,nn_rho_star,nn_dens_norm_f,nn_1_over_Lte,nn_1_over_Lne,nn_1_over_LtD,&
      nn_1_over_LnD,nn_1_over_LtC,nn_1_over_LnC,EXPRO_ctrl_z(1),EXPRO_ctrl_z(2),nn_ni1_dens,nn_ni2_dens,&
-     nn_NEO_jbs_in_A_m2,nn_SAU_jbs_in_A_m2
+     nn_NEO_jbs_in_A_m2,nn_SAU_jbs_in_A_m2,nn_delta_in,nn_kappa_in
      
 
 
@@ -199,7 +199,7 @@
         
      call cpu_time(finish)
      
-     print '("Time = ",f16.12," seconds.")',finish-start
+     !print '("Time = ",f16.12," seconds.")',finish-start
 
      
    END SUBROUTINE neo_jbs_nn

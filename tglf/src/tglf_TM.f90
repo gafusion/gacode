@@ -186,7 +186,7 @@
       REAL :: gamma_net_1
       REAL :: pflux1,eflux1
       REAL :: stress_tor1,stress_par1
-      REAL :: exch1
+      REAL :: exch1, gamma_max
 !
 !
 ! setup the ky-spectrum
@@ -280,7 +280,8 @@
 !        write(*,*)"wdx=",wdx(1),"b0x=",b0x(1)
 !
         unstable=.TRUE.
-        if(gamma_out(1).eq.0.0.or.gamma_nb_min_out.eq.0.0)unstable=.FALSE.      
+        gamma_max = MAX(gamma_out(1),gamma_out(2)) ! this covers ibranch=-1,0
+        if(gamma_max.eq.0.0.or.gamma_nb_min_out.eq.0.0)unstable=.FALSE.      
         gamma_net_1 = gamma_nb_min_out 
         gamma_cutoff = (0.1*ky_in/R_unit)*SQRT(taus(1)*mass(2))  ! scaled like gamma
         rexp = 1.0

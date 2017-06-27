@@ -41,6 +41,7 @@ then
 fi
 
 cp -p $1/out.cgyro.ky_flux $SDIR
+cp -p $1/out.cgyro.lky_flux* $SDIR
 
 # We will have a version if NOT run through TGYRO
 if [ -f $1/out.cgyro.version ]

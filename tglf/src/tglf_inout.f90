@@ -256,7 +256,7 @@ SUBROUTINE put_switches(iflux,use_bper,use_bpar,use_mhd_rule,use_bisection, &
   if(nb_max.lt.0.or.nb_max.gt.nb)nb_max=nbasis_max_in
   if(nb_min.lt.0.or.nb_min.gt.nb)nb_min=nbasis_min_in
   if(nb_max.lt.nb_min)nb_max=nb_min
-  if(ibranch.lt.-1.or.ibranch.gt.2)ibranch=ibranch_in
+  if(ibranch.lt.-1.or.ibranch.gt.0)ibranch=ibranch_in
   if(nxgrid.lt.1.or.2*nxgrid-1.gt.nxm)nxgrid=MIN((nxm+1)/2,nxgrid_in)
   if(nmodes.lt.1.or.nmodes.gt.maxmodes)nmodes=nmodes_in
   if(nkys.lt.2.or.nkys.gt.nkym)nkys=nky_in
@@ -277,6 +277,7 @@ SUBROUTINE put_switches(iflux,use_bper,use_bpar,use_mhd_rule,use_bisection, &
   use_bisection_in = use_bisection
   ibranch_in = ibranch
   nmodes_in = nmodes
+  if(ibranch_in.eq.0)nmodes_in=2
   nbasis_max_in = nb_max
   nbasis_min_in = nb_min
   nxgrid_in = nxgrid
