@@ -6,7 +6,6 @@ import string
 workdir = 'bdir'
 tools   = os.environ['GACODE_ROOT']+'/neo/tools/'
 
-<<<<<<< HEAD
 harvestdata={}
 jneo_harvest=[]
 jsauter_harvest=[]
