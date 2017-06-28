@@ -174,10 +174,10 @@
      !write(4,'(20(1pe11.4,1x))') nn_rho_in,INPUT_PARAMETERS,OUTPUT_PARAMETERS,nn_NEO_jbs_in_A_m2,nn_SAU_jbs_in_A_m2
 
      ! 21/06/2017
-     write(4,'(38(1pe11.4,1x))') nn_rho_in,INPUT_PARAMETERS,OUTPUT_PARAMETERS,nn_charge_norm_fac,nn_vnorm,&
+     write(4,'(40(1pe11.4,1x))') nn_rho_in,INPUT_PARAMETERS,OUTPUT_PARAMETERS,nn_charge_norm_fac,nn_vnorm,&
      nn_anorm,nn_I_over_phi_prime,nn_rho_star,nn_dens_norm_f,nn_1_over_Lte,nn_1_over_Lne,nn_1_over_LtD,&
      nn_1_over_LnD,nn_1_over_LtC,nn_1_over_LnC,EXPRO_ctrl_z(1),EXPRO_ctrl_z(2),nn_ni1_dens,nn_ni2_dens,&
-     nn_NEO_jbs_in_A_m2,nn_SAU_jbs_in_A_m2,nn_delta_in,nn_kappa_in
+     nn_NEO_jbs_in_A_m2,nn_SAU_jbs_in_A_m2,nn_delta_in,nn_kappa_in,nn_sdelta_in,nn_skappa_in
      
 
 
