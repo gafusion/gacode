@@ -92,20 +92,6 @@
      OUT_CSAU_CnD= OUTPUT_PARAMETERS(11)
      OUT_CSAU_Cne= OUTPUT_PARAMETERS(12)
 
-     !20/06/2017
-     !OUT_CNEO_CTC= OUTPUT_PARAMETERS(4)
-     !OUT_CNEO_CTD= OUTPUT_PARAMETERS(5)
-     !OUT_CNEO_CTe= OUTPUT_PARAMETERS(6)
-     !OUT_CNEO_CnC= OUTPUT_PARAMETERS(1)
-     !OUT_CNEO_CnD= OUTPUT_PARAMETERS(2)
-     !OUT_CNEO_Cne= OUTPUT_PARAMETERS(3)
-     !OUT_CSAU_CTC= OUTPUT_PARAMETERS(12)
-     !OUT_CSAU_CTD= OUTPUT_PARAMETERS(11)
-     !OUT_CSAU_CTe= OUTPUT_PARAMETERS(12)
-     !OUT_CSAU_CnC= OUTPUT_PARAMETERS(1)
-     !OUT_CSAU_CnD= OUTPUT_PARAMETERS(2)
-     !OUT_CSAU_Cne= OUTPUT_PARAMETERS(3)
-
 
      !WRITE(*,*)OUTPUT_PARAMETERS
      !WRITE(*,*)OUTPUT_PARAMETERS(10)
@@ -115,11 +101,7 @@
      
      ! K_0 in MA.m^2
      K_0=nn_charge_norm_fac*nn_vnorm*nn_anorm*nn_I_over_phi_prime*nn_rho_star/1e6
-     
-     !K_e in 1/m^4
-     !K_e_NEO=abs(EXPRO_ctrl_z(3))*nn_dens_norm_f*((OUT_CNEO_CTe*nn_1_over_Lte)+(OUT_CNEO_Cne*nn_1_over_Lne))
-     !K_e_SAU=abs(EXPRO_ctrl_z(3))*nn_dens_norm_f*((OUT_CSAU_CTe*nn_1_over_Lte)+(OUT_CSAU_Cne*nn_1_over_Lne))
-
+     ! K_e
      K_e_NEO=nn_dens_norm_f*((OUT_CNEO_CTe*nn_1_over_Lte)+(OUT_CNEO_Cne*nn_1_over_Lne))
      K_e_SAU=nn_dens_norm_f*((OUT_CSAU_CTe*nn_1_over_Lte)+(OUT_CSAU_Cne*nn_1_over_Lne))
      
@@ -129,55 +111,18 @@
      
      K_i2_NEO=EXPRO_ctrl_z(2)*nn_ni2_dens*((OUT_CNEO_CTC*nn_1_over_LtC)+(OUT_CNEO_CnC*nn_1_over_LnC))
      K_i2_SAU=EXPRO_ctrl_z(2)*nn_ni2_dens*((OUT_CSAU_CTC*nn_1_over_LtC)+(OUT_CSAU_CnC*nn_1_over_LnC))
-
-     !WRITE(*,*)abs(EXPRO_ctrl_z(3))
-     !WRITE(*,*) K_e_NEO
-     !WRITE(*,*) K_e_SAU
      
-     !WRITE(*,*)(EXPRO_ctrl_z(1))
-     !WRITE(*,*)(EXPRO_ctrl_z(2))
-     
-     !open(unit=1,file='input.profiles.jbsnn',position='append')
-
-     
-     
-     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(1)
-     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(2)
-     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(3)
-     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(4)
-     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(5)
-
-     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(1)
-     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(2)
-     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(3)
-     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(4)
-     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(5)
-     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(6)
-     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(7)
-     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(8)
-     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(9)
-     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(10)
-     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(11)
-     !write(4,'(1(1pe11.4,1x))') INPUT_PARAMETERS(12)
-
-     !INPUT_PARAMETERS,OUTPUT_PARAMETERS
-     !close(1)
-     
-     
-        
-        !!!!!OUTPUT!!!!
+     !!!!!OUTPUT!!!!
         
 
      nn_NEO_jbs_in_A_m2 = K_0*(K_e_NEO+K_i1_NEO+K_i2_NEO)             !jbs_neo  in (MA/m^2)  
      nn_SAU_jbs_in_A_m2 = K_0*(K_e_SAU+K_i1_SAU+K_i2_SAU)             !jbs_sau  in (MA/m^2)
 
-     !write(4,'(20(1pe11.4,1x))') nn_rho_in,INPUT_PARAMETERS,OUTPUT_PARAMETERS,nn_NEO_jbs_in_A_m2,nn_SAU_jbs_in_A_m2
-
      ! 21/06/2017
-     write(4,'(38(1pe11.4,1x))') nn_rho_in,INPUT_PARAMETERS,OUTPUT_PARAMETERS,nn_charge_norm_fac,nn_vnorm,&
+     write(4,'(40(1pe11.4,1x))') nn_rho_in,INPUT_PARAMETERS,OUTPUT_PARAMETERS,nn_charge_norm_fac,nn_vnorm,&
      nn_anorm,nn_I_over_phi_prime,nn_rho_star,nn_dens_norm_f,nn_1_over_Lte,nn_1_over_Lne,nn_1_over_LtD,&
      nn_1_over_LnD,nn_1_over_LtC,nn_1_over_LnC,EXPRO_ctrl_z(1),EXPRO_ctrl_z(2),nn_ni1_dens,nn_ni2_dens,&
-     nn_NEO_jbs_in_A_m2,nn_SAU_jbs_in_A_m2,nn_delta_in,nn_kappa_in
+     nn_NEO_jbs_in_A_m2,nn_SAU_jbs_in_A_m2,nn_delta_in,nn_kappa_in,nn_sdelta_in,nn_skappa_in
      
 
 
