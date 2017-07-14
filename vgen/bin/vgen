@@ -215,7 +215,9 @@ then
        echo "INFO: (profiles_gen) VGEN created vgen/input.profiles [new data]"
        echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.extra    [diagnostics]"
        echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.jbs      [boostrap current]"
-       echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.jbsnn    [Neural Net diagnostic]
+       if [ "$VGEN_NN_FLAG" == "1" ] ; then
+          echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.jbsnn    [Neural Net diagnostic]''
+       fi   
    fi
 
    exit 0
