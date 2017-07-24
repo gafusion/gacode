@@ -1,0 +1,28 @@
+#---------------------------------------------------
+# GA THETA at General Atomics:
+#
+#---------------------------------------------------
+
+IDENTITY="GA theta cluster"
+CORES_PER_NODE=288
+NUMAS_PER_NODE=1
+
+FC  = mpif90 -std=f2008 -I$(GACODE_ROOT)/modules -L/usr/local/lib
+F77 = mpif77 -I$(GACODE_ROOT)/modules -L/usr/local/lib
+
+FOMP   = -fopenmp
+FMATH  = -fdefault-real-8 -J $(GACODE_ROOT)/modules
+FOPT   = -Ofast -mavx -mavx2 -mavx512f -mavx512pf -mavx512er -mavx512cd
+FDEBUG = -Wall -W -fcheck=mem,bounds -g -fbacktrace -ffpe-trap=invalid,zero,overflow -mavx -mavx2 -mavx512f -mavx512pf -mavx512er -mavx512cd
+
+# System math libraries
+
+LMATH  = $(LLIBS) -llapack -lblas -L$(FFTW_DIR)/lib -lfftw3
+FFTW_INC = $(FFTW_DIR)/include
+
+#NETCDF = -L$(NETCDF_DIR)/lib -lnetcdff -lnetcdf -Wl,-rpath,$(NETCDF_DIR)/lib
+#NETCDF_INC = $(NETCDF_DIR)/include
+
+# Archive
+
+ARCH = ar cr
