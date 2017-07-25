@@ -115,7 +115,8 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   nn_1_over_LnD=EXPRO_dlnnidr_new(i)
   nn_1_over_LtC=EXPRO_dlntidr(2,i)
   nn_1_over_LnC=EXPRO_dlnnidr(2,i)
-  
+  nn_ti1_in=EXPRO_ti(1,i)
+  nn_te_in=EXPRO_te(i)
 
   ! nn inputs
   
@@ -128,7 +129,7 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   
   nn_nuee_in=EXPRO_nuee(i)/(nn_vnorm/nn_anorm)   !nuee 
   nn_ni1_ne_in=EXPRO_ni_new(i)/EXPRO_ne(i)       !ni1/ne
-  nn_ti1_te_in=EXPRO_ti(1,i)/EXPRO_te(i)         !ti1/te
+  nn_ti1_te_in=nn_ti1_in/nn_te_in                !ti1/te
   
   
   

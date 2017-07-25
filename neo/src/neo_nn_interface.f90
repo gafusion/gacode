@@ -32,6 +32,8 @@ module neo_nn_interface
   real :: nn_kappa_in
   real :: nn_sdelta_in
   real :: nn_skappa_in
+  real :: nn_ti1_in
+  real :: nn_te_in
 
 
   real :: OUT_CNEO_CTD
