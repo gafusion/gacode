@@ -12,12 +12,12 @@ jsauter_harvest=[]
 Ipsirho_harvest=[]
 
 
-if len(sys.argv) < 15:
-   print "python neo_boot.py <rmin> <q> <nuee> <ni1/ne> <zi1> <mi1/mD> <ti1/te> <zi2> <mi2/mD> <ti2/te> <delta> <kappa> <sdelta> <skappa> <index> "
+if len(sys.argv) < 22:
+   print "python neo_boot.py <rmin> <q> <nuee> <ni1/ne> <zi1> <mi1/mD> <ti1/te> <zi2> <mi2/mD> <ti2/te> <delta> <kappa> <sdelta> <skappa> <zeta> <szeta> <shift> <zmagovera> <szmag> <shear> <betastar> <index> "
    sys.exit()
 
 # EXAMPLE:
-# python $GACODE_ROOT/neo/tools/neo_boot.py 0.17 2.0 0.1 0.9 1 1.0 1.0 6 6.0 1.0 0.1 1.0 0.0 0.0 (1992)
+# python $GACODE_ROOT/neo/tools/neo_boot.py 0.17 2.0 0.1 0.9 1 1.0 1.0 6 6.0 1.0 0.1 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 (1992)
 
 # In the input.neo, there are 3 species:
 # electrons are species 1, main ions are species 2,
@@ -46,10 +46,17 @@ delta  = sys.argv[11]  # triangularity
 kappa  = sys.argv[12]  # elongation
 sdelta = sys.argv[13]  # triangularity radial derivative (dimensionless)
 skappa = sys.argv[14]  # elongation radial derivative (dimensionless)
+zeta   = sys.argv[15]  # squareness 
+szeta  = sys.argv[16]  # squareness shear
+shift  = sys.argv[17]  # shafranov shift
+zmagovera = sys.argv[18] # normalized elevation
+szmag  = sys.argv[19]  # gradient of elevation
+shear  = sys.argv[20]  # magnetic shear
+betastar = sys.argv[21] # normalized total beta NOTE: This parameter is not used in the standard kinetic equation calculation! But it is used in the case of an anisotropic temperature species 
 
 
-if len(sys.argv)==16 and sys.argv[15]!='None':
-   harvestdata['IndexRS']=int(sys.argv[15])
+if len(sys.argv)==23 and sys.argv[22]!='None':
+   harvestdata['IndexRS']=int(sys.argv[22])
 harvestdata['rmin']=float(rmin)
 harvestdata['q']=float(q)
 harvestdata['nuee']=float(nuee)
@@ -64,6 +71,14 @@ harvestdata['delta']=float(delta)
 harvestdata['kappa']=float(kappa)
 harvestdata['sdelta']=float(sdelta)
 harvestdata['skappa']=float(skappa)
+harvestdata['zeta']=float(zeta)
+harvestdata['szeta']=float(szeta)
+harvestdata['shift']=float(shift)
+harvestdata['zmagovera']=float(zmagovera)
+harvestdata['szmag']=float(szmag)
+harvestdata['shear']=float(shear)
+harvestdata['betastar']=float(betastar)
+
 # Prepare simulation directory
 os.system('rm -rf '+workdir)
 os.system('mkdir '+workdir)
@@ -100,6 +115,27 @@ neoin.write('S_DELTA='+sdelta+'\n')
 
 # Set input: skappa
 neoin.write('S_KAPPA='+skappa+'\n')
+
+# Set input: zeta
+neoin.write('ZETA='+zeta+'\n')
+
+# Set input: szeta
+neoin.write('S_ZETA='+szeta+'\n')
+
+# Set input: shift
+neoin.write('SHIFT='+shift+'\n')
+
+# Set input: zmagovera
+neoin.write('ZMAG_OVER_A='+zmagovera+'\n')
+
+# Set input: szmag
+neoin.write('S_ZMAG='+szmag+'\n')
+
+# Set input: shear
+neoin.write('SHEAR='+shear+'\n')
+
+# Set input: betastar
+neoin.write('BETA_STAR='+betastar+'\n')
 
 # Set input: main ion charge, mass, temperature, density
 neoin.write('Z_2='+zi1+'\n')
