@@ -119,17 +119,12 @@
      nn_SAU_jbs_in_A_m2 = K_0*(K_e_SAU+K_i1_SAU+K_i2_SAU)             !jbs_sau  in (MA/m^2)
 
      ! 21/06/2017
-     write(4,'(42(1pe11.4,1x))') nn_rho_in,INPUT_PARAMETERS,OUTPUT_PARAMETERS,nn_charge_norm_fac,nn_vnorm,&
+     write(4,'(49(1pe11.4,1x))') nn_rho_in,INPUT_PARAMETERS,OUTPUT_PARAMETERS,nn_charge_norm_fac,nn_vnorm,&
      nn_anorm,nn_I_over_phi_prime,nn_rho_star,nn_dens_norm_f,nn_1_over_Lte,nn_1_over_Lne,nn_1_over_LtD,&
      nn_1_over_LnD,nn_1_over_LtC,nn_1_over_LnC,EXPRO_ctrl_z(1),EXPRO_ctrl_z(2),nn_ni1_dens,nn_ni2_dens,&
-     nn_NEO_jbs_in_A_m2,nn_SAU_jbs_in_A_m2,nn_delta_in,nn_kappa_in,nn_sdelta_in,nn_sdelta_in,nn_te_in,nn_ti1_in
+     nn_NEO_jbs_in_A_m2,nn_SAU_jbs_in_A_m2,nn_delta_in,nn_kappa_in,nn_skappa_in,nn_sdelta_in,nn_te_in,nn_ti1_in,&
+     nn_zeta_in,nn_szeta_in,nn_shift_in,nn_zmag_over_a_in,nn_szmag_in,nn_shear_in,neo_beta_star_in
      
-
-
-
-
-
-
      
      
      !WRITE(*,*)nn_NEO_jbs_in_A_m2

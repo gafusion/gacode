@@ -92,12 +92,22 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   neo_s_zeta_in       = EXPRO_szeta(i) 
   neo_zmag_over_a_in  = EXPRO_zmag(i)/EXPRO_rmin(EXPRO_n_exp)
   neo_s_zmag_in       = EXPRO_dzmag(i)
-  nn_rho_in           =EXPRO_rho(i)
-  nn_delta_in         =EXPRO_delta(i)
-  nn_kappa_in         =EXPRO_kappa(i)
-  nn_sdelta_in        =EXPRO_sdelta(i)
-  nn_skappa_in        =EXPRO_skappa(i)
-
+  
+  nn_rho_in           = EXPRO_rho(i)
+  nn_delta_in         = EXPRO_delta(i)
+  nn_kappa_in         = EXPRO_kappa(i)
+  nn_sdelta_in        = EXPRO_sdelta(i)
+  nn_skappa_in        = EXPRO_skappa(i)
+  
+  ! New parameters for test
+  nn_zeta_in          = EXPRO_zeta(i) 
+  nn_szeta_in         = EXPRO_szeta(i)
+  nn_shift_in         = EXPRO_drmaj(i)
+  nn_zmag_over_a_in   = EXPRO_zmag(i)/EXPRO_rmin(EXPRO_n_exp)
+  nn_szmag_in         = EXPRO_dzmag(i)
+  nn_shear_in         = EXPRO_s(i)
+  !nn_betastar_in      = 
+  
   ! Neural Network specific local parameters
   
   ! nn_enorm=char_norm_fac in vgen_globals
@@ -120,10 +130,10 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
 
   ! nn inputs
   
-  nn_rmin_in=EXPRO_rmin(i)/nn_anorm              ! rmin 
-  nn_q_in= abs(EXPRO_q(i))                       !q  
+  nn_rmin_in=EXPRO_rmin(i)/nn_anorm               ! rmin 
+  nn_q_in= abs(EXPRO_q(i))                        !q  
   !nn_nuee_in=EXPRO_nuee(i)/(nn_vnorm/nn_anorm)   !nuee  emily
-  !nn_nuee_in=EXPRO_nuee(i)/nn_vnorm/nn_anorm    !nuee  arsene
+  !nn_nuee_in=EXPRO_nuee(i)/nn_vnorm/nn_anorm     !nuee  arsene
 
   !write (*,*) EXPRO_nuee(i)/nn_vnorm/nn_anorm , EXPRO_nuee(i)/(nn_vnorm/nn_anorm)
   

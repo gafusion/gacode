@@ -34,7 +34,14 @@ module neo_nn_interface
   real :: nn_skappa_in
   real :: nn_ti1_in
   real :: nn_te_in
-
+  
+  real :: nn_zeta_in
+  real :: nn_szeta_in
+  real :: nn_shift_in
+  real :: nn_zmag_over_a_in
+  real :: nn_szmag_in
+  real :: nn_shear_in
+  real :: nn_betastar_in
 
   real :: OUT_CNEO_CTD
   real :: OUT_CNEO_CTe
