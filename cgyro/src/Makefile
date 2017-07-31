@@ -50,9 +50,6 @@ OBJECTS = cgyro_globals.o \
           cgyro_shear.o \
           cgyro_shear_interface.o \
           cgyro_shear_hammett.o \
-          cgyro_shear_linear.o \
-          cgyro_shear_crank.o \
-          cgyro_shear_cip.o \
 	  cgyro_step_gk.o \
           cgyro_write_initdata.o \
           cgyro_read_restart.o \

@@ -14,8 +14,8 @@ subroutine cgyro_write_initdata
   implicit none
 
   integer :: p,in,is
-  real :: kymax,z_eff
-  real, external ::spectraldiss
+  real :: kymax
+  real, external :: spectraldiss
 
   !----------------------------------------------------------------------------
   ! Runfile to give complete summary to user
@@ -62,14 +62,6 @@ subroutine cgyro_write_initdata
         endif
 
      endif
-
-     ! Compute Z_eff (diagnostic only)
-     z_eff = 0.0
-     do is=1,n_species
-        if (z(is) > 0.0) then 
-           z_eff = z_eff+dens(is)*z(is)**2/dens_ele
-        endif
-     enddo
 
      ! Dissipation information
      write(io,*)
@@ -203,7 +195,11 @@ subroutine cgyro_write_initdata
      write(io,'(1pe12.5)') energy(:)
      write(io,'(1pe12.5)') xi(:)
      write(io,'(1pe12.5)') transpose(thetab(:,:))
-     write(io,'(1pe12.5)') (rho*q/rmin*in,in=0,n_toroidal-1)
+     if (n_toroidal > 1) then
+        write(io,'(1pe12.5)') (rho*q/rmin*in,in=0,n_toroidal-1)
+     else
+        write(io,'(1pe12.5)') rho*q/rmin
+     endif
      write(io,'(1pe12.5)') (spectraldiss((pi/n_toroidal)*in,nup_alpha),in=0,n_toroidal-1)
      write(io,'(1pe12.5)') (spectraldiss((2*pi/n_radial)*p,nup_radial),p=-n_radial/2,n_radial/2-1)
      close(io)

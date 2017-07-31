@@ -92,12 +92,12 @@ subroutine neo_do
         ! (n_species_max, transport coeff)
         ! transport coeff: 1-> gamma, 2-> Q, 3->Pi, 4-> upar
         if(ir == 1) then
-           neo_dke_out(:,:) = 0.0
-           neo_dke_1d_out   = 0.0
-           neo_gv_out(:,:)  = 0.0
-           neo_th_out(:)    = 0.0
-           neo_th_out(1)    = pflux_HH
-           neo_th_out(2)    = efluxi_HH
+           neo_dke_out(:,:)  = 0.0
+           neo_dke_1d_out(:) = 0.0
+           neo_gv_out(:,:)   = 0.0
+           neo_th_out(:)     = 0.0
+           neo_th_out(1)     = pflux_HH
+           neo_th_out(2)     = efluxi_HH
            do is=1, n_species
               if(Z(is) == -1) then
                  neo_th_out(3) = efluxe_HH
@@ -106,6 +106,7 @@ subroutine neo_do
            neo_th_out(4)     = efluxi_CH
            neo_th_out(5)     = jpar_S
            neo_th_out(6)     = jpar_K
+           neo_th_out(8)     = jtor_S
            neo_thHS_out(:,:) = 0.0
            do is=1, n_species
               neo_thHS_out(is,1) = pflux_multi_HS(is) 
@@ -559,7 +560,8 @@ subroutine neo_do
            neo_gv_out(is,3)  = mflux_gv(is)
            neo_gv_out(is,4)  = eflux_gv(is) - omega_rot(ir)*mflux_gv(is)
         enddo
-        neo_dke_1d_out    = jpar
+        neo_dke_1d_out(1)    = jpar
+        neo_dke_1d_out(2)    = jtor
         neo_th_out(:) = 0.0
         neo_th_out(1) = pflux_HH
         neo_th_out(2) = efluxi_HH
@@ -571,6 +573,7 @@ subroutine neo_do
         neo_th_out(4) = efluxi_CH
         neo_th_out(5)     = jpar_S
         neo_th_out(6)     = jpar_K
+        neo_th_out(8)     = jtor_S
         if(sim_model == 1) then
            neo_th_out(7)     = jbs_nc
         endif

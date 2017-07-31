@@ -122,15 +122,20 @@ for line in open(fdata):
                 f0=float(fmin)
                 f1=float(fmax)
 
-            fig = plt.figure(figsize=(10,10))
-            fig.subplots_adjust(left=0.08,right=0.96,top=0.94,bottom=0.08)
+            xp = x/(2*np.pi)*sim.length
+            yp = y/sim.ky[1]
+            aspect = max(yp)/max(xp)
+
+            fig = plt.figure(figsize=(10,10*aspect))
+            fig.subplots_adjust(left=0.08,right=0.96,top=0.94,bottom=0.1)
             ax = fig.add_subplot(111)
             ax.set_title(title,fontsize=16)
             ax.set_xlabel(r'$x/\rho_s$',fontsize=16)
             ax.set_ylabel(r'$y/\rho_s$',fontsize=16)
+            ax.set_aspect('equal')
         
             levels = np.arange(f0,f1,(f1-f0)/256)
-            ax.contourf(x/2/np.pi*sim.length,y/sim.ky[1],np.transpose(f),levels,cmap=plt.get_cmap(colormap))
+            ax.contourf(xp,yp,np.transpose(f),levels,cmap=plt.get_cmap(colormap))
             print 'INFO: (plot_fluct) min,max = ',f0,f1
 
             if ftype == 'screen':

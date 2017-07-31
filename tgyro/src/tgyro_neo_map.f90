@@ -80,13 +80,18 @@ subroutine tgyro_neo_map
   do is=1,neo_n_species_in
      if (therm_flag(is) == 0 .and. tgyro_quickfast_flag == 1) cycle
      i0 = i0 + 1
-     neo_z_in(i0)      = int(zi_vec(is))
+     neo_z_in(i0)      = zi_vec(is)
      neo_mass_in(i0)   = mi(is)/m_norm
      neo_dens_in(i0)   = ni(is,i_r)/n_norm
      neo_temp_in(i0)   = ti(is,i_r)/t_norm
      neo_dlnndr_in(i0) = r_min*dlnnidr(is,i_r)
      neo_dlntdr_in(i0) = r_min*dlntidr(is,i_r)
   enddo
+
+  ! Setting density gradient artificially to zero to compute D and v
+  if (tgyro_zero_dens_grad_flag /= 0) then
+     neo_dlnndr_in(tgyro_zero_dens_grad_flag) = 0
+  endif
 
   ! Rotation is always *on* in NEO.
   !

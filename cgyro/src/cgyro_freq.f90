@@ -1,3 +1,10 @@
+!---------------------------------------------------------
+! cgyro_freq.f90
+!
+! PURPOSE:
+!  Comput estimates of linear growth rates
+!---------------------------------------------------------
+
 subroutine cgyro_freq
 
   use cgyro_globals
@@ -15,11 +22,42 @@ subroutine cgyro_freq
 
   else
 
-     ! Use potential to compute frequency
-     mode_weight(:) = abs(field_old(1,:))
+     if (px0 < 0) then
+
+        !--------------------------------------------------
+        ! Standard method: sum all wavenumbers at a given n
+        !--------------------------------------------------
+
+        ! Use potential to compute frequency
+        mode_weight(:) = abs(field_old(1,:))
+
+     else
+
+        !--------------------------------------------------
+        ! Alternate method: use fixed wavenumber
+        !--------------------------------------------------
+
+        mode_weight = 0.0        
+
+        do ic=1,nc
+           if (px(ir_c(ic)) == n*(px0+box_size)) then
+              mode_weight(ic) = abs(field_old(1,ic))
+           endif
+           if (px(ir_c(ic)) == n*(px0-box_size)) then
+              mode_weight(ic) = abs(field_old(1,ic))
+           endif
+        enddo
+
+     endif
 
      ! Define local frequencies
-     freq_loc(:) = (i_c/delta_t)*log(field_old(1,:)/field_old2(1,:))
+     do ic=1,nc
+        if (abs(field_old(1,ic)) > 1e-12 .and. abs(field_old2(1,ic)) > 1e-12) then
+           freq_loc(ic) = (i_c/delta_t)*log(field_old(1,ic)/field_old2(1,ic))
+        else
+           freq_loc(ic) = 0.0
+        endif
+     enddo
 
      total_weight = sum(mode_weight(:))
 

@@ -13,6 +13,7 @@ reg10: sug+cem+lin+ie +loc+mil+nrot [high-k]
 reg11: lor+es +lin+ie +loc+mil+nrot [simple lor]
 reg12: sug+es +zf +ie +loc+mil+nrot
 
-nl01: 16  mode nl performance optimization case
-nl02: 64  mode nl performance optimization case
-nl03: 384 mode nl performance optimization case
+nl01:  16x96-mode nl performance optimization case
+nl01p: 32x192-mode nl performance optimization case
+nl02:  64x512-mode nl performance optimization case
+nl03: 384x1024-mode nl performance optimization case

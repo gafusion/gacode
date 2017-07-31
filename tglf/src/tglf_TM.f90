@@ -186,7 +186,7 @@
       REAL :: gamma_net_1
       REAL :: pflux1,eflux1
       REAL :: stress_tor1,stress_par1
-      REAL :: exch1
+      REAL :: exch1, gamma_max
 !
 !
 ! setup the ky-spectrum
@@ -201,10 +201,12 @@
        do k=1,nmodes_in
         do t = 1,2
           eigenvalue_spectrum_out(t,i,k) = 0.0
+        enddo
+        do t = 1,4
           field_spectrum_out(t,i,k) = 0.0
         enddo
         do is=ns0,ns
-          do t=1,2
+          do t=1,4
             intensity_spectrum_out(t,is,i,k) = 0.0
           enddo
           do j=1,3
@@ -247,6 +249,7 @@
           do j=1,nx
             wdx_save(i,j) = wdx(j)
             b0x_save(i,j) = b0x(j)
+            b2x_save(i,j) = b2x(j)
             cx_par_par_save(i,j) = cx_par_par(j)
             cx_tor_par_save(i,j) = cx_tor_par(j)
             cx_tor_per_save(i,j) = cx_tor_per(j)
@@ -261,6 +264,7 @@
           do j=1,nx
              wdx(j) = wdx_save(i,j)
              b0x(j) = b0x_save(i,j)
+             b2x(j) = b2x_save(i,j)
              cx_par_par(j) = cx_par_par_save(i,j)
              cx_tor_par(j) = cx_tor_par_save(i,j)
              cx_tor_per(j) = cx_tor_per_save(i,j)
@@ -278,7 +282,8 @@
 !        write(*,*)"wdx=",wdx(1),"b0x=",b0x(1)
 !
         unstable=.TRUE.
-        if(gamma_out(1).eq.0.0.or.gamma_nb_min_out.eq.0.0)unstable=.FALSE.      
+        gamma_max = MAX(gamma_out(1),gamma_out(2)) ! this covers ibranch=-1,0
+        if(gamma_max.eq.0.0.or.gamma_nb_min_out.eq.0.0)unstable=.FALSE.      
         gamma_net_1 = gamma_nb_min_out 
         gamma_cutoff = (0.1*ky_in/R_unit)*SQRT(taus(1)*mass(2))  ! scaled like gamma
         rexp = 1.0
@@ -299,6 +304,8 @@
          do imax=1,nmodes_out
            field_spectrum_out(1,i,imax) = reduce*v_bar_out(imax)
            field_spectrum_out(2,i,imax) = reduce*phi_bar_out(imax)
+           field_spectrum_out(3,i,imax) = reduce*a_par_bar_out(imax)
+           field_spectrum_out(4,i,imax) = reduce*b_par_bar_out(imax)
            eigenvalue_spectrum_out(1,i,imax)=gamma_out(imax)
            eigenvalue_spectrum_out(2,i,imax)=freq_out(imax)
            if(ky_in.le.1.0.and.gamma_out(imax).gt.gmax)then
@@ -314,6 +321,8 @@
           do imax=1,nmodes_out
             intensity_spectrum_out(1,is,i,imax) = n_bar_out(imax,is)
             intensity_spectrum_out(2,is,i,imax) = t_bar_out(imax,is)
+            intensity_spectrum_out(3,is,i,imax) = u_bar_out(imax,is)
+            intensity_spectrum_out(4,is,i,imax) = q_bar_out(imax,is)
            enddo !imax
          enddo  ! is
 ! save flux_spectrum_out 

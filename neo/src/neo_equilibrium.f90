@@ -39,6 +39,8 @@ module neo_equilibrium
   real :: I_div_psip    ! I(psi)/psi_prime = q f / r
   real :: Bmag2_avg     ! <(B/Bunit)^2>
   real :: Bmag2inv_avg  ! <(Bunit/B)^2>
+  real :: Btor2_avg     ! <(Btor/Bunit)^2>
+  real :: bigRinv_avg   ! <a/R> 
   real :: gradpar_Bmag2_avg ! <(bhat dot grad/aBmag/Bunit)^2>
   
   logical, private :: initialized = .false.
@@ -294,13 +296,17 @@ contains
     v_prime_g(ir) = r(ir)*rmaj(ir)*sum/n_theta * 4 * pi * pi
 
     ! Flux surface averages of B^2 and 1/B^2
-    Bmag2_avg = 0.0
-    Bmag2inv_avg = 0.0
+    Bmag2_avg         = 0.0
+    Bmag2inv_avg      = 0.0
     gradpar_Bmag2_avg = 0.0
+    Btor2_avg         = 0.0
+    bigRinv_avg       = 0.0
     do it=1,n_theta
        Bmag2_avg    = Bmag2_avg    + w_theta(it)*Bmag(it)**2
        Bmag2inv_avg = Bmag2inv_avg + w_theta(it)/Bmag(it)**2
        gradpar_Bmag2_avg = gradpar_Bmag2_avg + w_theta(it)*gradpar_Bmag(it)**2
+       Btor2_avg = Btor2_avg + w_theta(it)*Btor(it)**2
+       bigRinv_avg =  bigRinv_avg + w_theta(it) / bigR(it)
     enddo
 
     call compute_fractrap(ftrap)

@@ -13,6 +13,7 @@ subroutine cgyro_init_arrays
   integer :: ir,it,is,ie,ix
   integer :: jr,jt,id,ccw_fac
   integer :: i_field
+  integer :: l,ll
   complex :: thfac,carg
   real, dimension(nc,n_species) :: res_loc
   real, dimension(:,:), allocatable :: jloc_c
@@ -73,11 +74,11 @@ subroutine cgyro_init_arrays
         
         jxvec_c(1,ic,iv_loc) =  fac * (bmag(it) * jloc_c(2,ic))
         
-        if(n_field > 1) then
+        if (n_field > 1) then
            efac = -xi(ix)*sqrt(2.0*energy(ie))*vth(is)
            jxvec_c(2,ic,iv_loc) = efac * fac * (bmag(it) * jloc_c(2,ic))
            
-           if(n_field > 2) then
+           if (n_field > 2) then
               if(n==0) then
                  jxvec_c(3,ic,iv_loc) = 0.0
               else
@@ -243,12 +244,13 @@ subroutine cgyro_init_arrays
   !-------------------------------------------------------------------------
 
   !-------------------------------------------------------------------------
-  ! Wavenumber derivative and dissipation stencils
+  ! Wavenumber advection stencil (coefficients of triangle wave)
   !
-  allocate(der_wave(-nup_wave:nup_wave))
-  allocate(dis_wave(-nup_wave:nup_wave))
-  ! Wavenumber spacing (dx) is 1.0
-  call advect_schemes(1.0,nup_wave,der_wave,dis_wave)
+  allocate(c_wave(n_wave))
+  do l=1,n_wave
+     ll = 2*l-1
+     c_wave(l) = 2.0/pi/ll**2*(-1)**(l-1)
+  enddo
   !-------------------------------------------------------------------------
 
   !-------------------------------------------------------------------------

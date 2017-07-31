@@ -34,11 +34,10 @@ module cgyro_globals
   real    :: up_radial
   real    :: up_theta
   real    :: up_alpha
-  real    :: up_wave
   integer :: nup_radial
   integer :: nup_theta
   integer :: nup_alpha
-  integer :: nup_wave
+  integer :: n_wave
   integer :: constant_stream_flag
   real    :: ky
   integer :: box_size
@@ -55,6 +54,8 @@ module cgyro_globals
   integer :: collision_field_model
   integer :: collision_ion_model
   real    :: collision_ele_scale
+  real    :: z_eff
+  integer :: z_eff_method
   integer :: zf_test_flag 
   integer :: nonlinear_flag 
   integer :: nonlinear_method
@@ -68,7 +69,6 @@ module cgyro_globals
   integer :: h_print_flag
   integer :: moment_print_flag
   integer :: kxkyflux_print_flag
-  integer :: globalflux_print_flag
   real :: amp0
   real :: amp
   real :: gamma_e
@@ -82,9 +82,12 @@ module cgyro_globals
   integer :: udsymmetry_flag
   integer :: shear_method
   integer :: n_global
+  real    :: nu_global
   integer :: psym_flag
   integer :: profile_shear_flag
   integer :: theta_plot
+  integer :: px0
+  integer :: mx0
   !
   ! Geometry input
   !
@@ -119,6 +122,7 @@ module cgyro_globals
   integer :: subroutine_flag  ! only used for cgyro_read_input
 
   ! Re-scaling parameters for experimental profiles
+  integer :: quasineutral_flag
   real :: lambda_star_scale
   real :: gamma_e_scale
   real :: gamma_p_scale
@@ -182,36 +186,37 @@ module cgyro_globals
   !
   real, parameter    :: pi   = 3.1415926535897932
   complex, parameter :: i_c  = (0.0,1.0)
-  real, parameter    :: num1 = 1.0
-  real, parameter    :: num0 = 0.0
   !---------------------------------------------------------------
 
   !---------------------------------------------------------------
   ! I/O and error management variables
   !
   character(len=80) :: path
-  character(len=18) :: runfile_info    = 'out.cgyro.info'
-  character(len=18) :: runfile_mpi     = 'out.cgyro.mpi'
-  character(len=18) :: runfile_extend  = 'out.cgyro.extend'
-  character(len=18) :: runfile_memory  = 'out.cgyro.memory'
-  character(len=18) :: runfile_restart = 'out.cgyro.restart'
-  character(len=18) :: runfile_restart_tag = 'out.cgyro.tag'
-  character(len=18) :: runfile_hb      = 'out.cgyro.hb'
-  character(len=18) :: runfile_grids   = 'out.cgyro.grids'
-  character(len=18) :: runfile_prec    = 'out.cgyro.prec'
-  character(len=18) :: runfile_time    = 'out.cgyro.time'
-  character(len=18) :: runfile_timers  = 'out.cgyro.timing'
-  character(len=18) :: runfile_freq    = 'out.cgyro.freq'
+  character(len=14) :: runfile_info    = 'out.cgyro.info'
+  character(len=13) :: runfile_mpi     = 'out.cgyro.mpi'
+  character(len=16) :: runfile_extend  = 'out.cgyro.extend'
+  character(len=16) :: runfile_memory  = 'out.cgyro.memory'
+  character(len=17) :: runfile_restart = 'out.cgyro.restart'
+  character(len=13) :: runfile_restart_tag = 'out.cgyro.tag'
+  character(len=12) :: runfile_hb      = 'out.cgyro.hb'
+  character(len=15) :: runfile_grids   = 'out.cgyro.grids'
+  character(len=14) :: runfile_prec    = 'out.cgyro.prec'
+  character(len=14) :: runfile_time    = 'out.cgyro.time'
+  character(len=16) :: runfile_timers  = 'out.cgyro.timing'
+  character(len=14) :: runfile_freq    = 'out.cgyro.freq'
   character(len=18) :: runfile_kxky_phi = 'out.cgyro.kxky_phi'
   character(len=21) :: runfile_kxky_flux = 'out.cgyro.kxky_flux_e'
-  character(len=19) :: runfile_ky_flux = 'out.cgyro.ky_flux'
+  character(len=17) :: runfile_ky_flux = 'out.cgyro.ky_flux'
   character(len=15), dimension(3)  :: runfile_fieldb = &
        (/'out.cgyro.phib ','out.cgyro.aparb','out.cgyro.bparb'/)
   character(len=16), dimension(2)  :: runfile_kxky = &
        (/'out.cgyro.kxky_n','out.cgyro.kxky_e'/)
-  character(len=20), dimension(2)  :: runfile_lky_flux = &
-       (/'out.cgyro.lky_flux_n','out.cgyro.lky_flux_e'/)
+  character(len=20), dimension(3)  :: runfile_lky_flux = &
+       (/'out.cgyro.lky_flux_n','out.cgyro.lky_flux_e','out.cgyro.lky_flux_v'/)
   integer, parameter :: io=1
+  ! Restart tags
+  character(len=8) :: fmt='(I2.2)' 
+  character(len=2), dimension(100) :: rtag
   !
   ! error checking
   integer :: error_status = 0
@@ -220,6 +225,8 @@ module cgyro_globals
   integer :: io_control
   integer :: signal
   integer :: restart_flag
+  integer :: n_chunk
+  real :: max_filesize
   !
   ! Standard precision for IO (there are optionally reset to higher precision later)
   character(len=8)  :: fmtstr    ='(es11.4)'
@@ -278,8 +285,7 @@ module cgyro_globals
   complex, dimension(:,:), allocatable :: dtheta_up
   !
   ! Wavenumber advection
-  real, dimension(:), allocatable :: der_wave
-  real, dimension(:), allocatable :: dis_wave
+  real, dimension(:), allocatable :: c_wave
   !
   ! Distributions
   complex, dimension(:,:,:), allocatable :: rhs
@@ -377,8 +383,8 @@ module cgyro_globals
   ! Equilibrium/geometry arrays
   integer :: it0
   integer, dimension(:), allocatable :: itp
-  real :: bigR_th0
-  real :: bigR_r_th0
+  real :: bigr_th0
+  real :: bigr_r_th0
   real, dimension(:,:), allocatable :: thetab
   real, dimension(:), allocatable   :: w_theta
   real, dimension(:), allocatable   :: g_theta
@@ -388,8 +394,8 @@ module cgyro_globals
   real, dimension(:), allocatable   :: bmag
   real, dimension(:), allocatable   :: btor
   real, dimension(:), allocatable   :: bpol
-  real, dimension(:), allocatable   :: bigR
-  real, dimension(:), allocatable   :: bigR_r
+  real, dimension(:), allocatable   :: bigr
+  real, dimension(:), allocatable   :: bigr_r
   real, dimension(:,:), allocatable :: omega_stream
   real, dimension(:,:), allocatable :: omega_trap
   real, dimension(:,:), allocatable :: omega_rdrift

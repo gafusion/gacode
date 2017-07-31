@@ -5,7 +5,7 @@ subroutine cgyro_equilibrium
 
   implicit none
 
-  integer :: it,ir,is,r
+  integer :: it,ir,is,r,pxx
   real :: gtheta_ave,gtheta0,err
   real, dimension(n_theta+1) :: x,y
 
@@ -114,15 +114,15 @@ subroutine cgyro_equilibrium
   enddo
 
   call GEO_interp(0.0)
-  bigR_th0   = GEO_bigr
-  bigR_r_th0 = GEO_bigr_r
+  bigr_th0   = GEO_bigr
+  bigr_r_th0 = GEO_bigr_r
   
   do it=1,n_theta
 
      call GEO_interp(theta(it))     
 
-     bigR(it)   = GEO_bigr
-     bigR_r(it) = GEO_bigr_r
+     bigr(it)   = GEO_bigr
+     bigr_r(it) = GEO_bigr_r
      bmag(it)   = GEO_b
      btor(it)   = GEO_bt
      bpol(it)   = GEO_bp
@@ -146,11 +146,15 @@ subroutine cgyro_equilibrium
 
   mach_one_fac = 1.0
   
-  ! Compute rotation (M^2) terms
-  ! Note that this changes beta_star and thus GEO
-  ! (which affects gcos2 and captheta)
+  ! 1. Compute rotation (M^2) terms IF required
+  !
+  ! NOTE: this changes beta_star and thus GEO (which affects gcos2 
+  ! and captheta)
   call cgyro_init_rotation
 
+
+  ! 2. Compute terms required for O(M) rotation, and no rotation.
+  ! 
   do it=1,n_theta
 
      call GEO_interp(theta(it))
@@ -184,10 +188,15 @@ subroutine cgyro_equilibrium
      omega_gammap(it) = GEO_bt/GEO_b*GEO_bigr/rmaj*gamma_p*mach_one_fac
 
      do ir=1,n_radial
-        k_perp(ic_c(ir,it)) = sqrt((2.0*pi*px(ir)*GEO_grad_r/length &
+        if (px0 < 0) then 
+           pxx = px(ir)
+        else
+           pxx = px(ir)+mx0*px0*n/(box_size/2)
+        endif
+        k_perp(ic_c(ir,it)) = sqrt((2.0*pi*pxx*GEO_grad_r/length &
              + k_theta*GEO_gq*GEO_captheta)**2 &
              + (k_theta*GEO_gq)**2)
-        k_x(ic_c(ir,it)) = 2.0*pi*px(ir)*GEO_grad_r/length &
+        k_x(ic_c(ir,it)) = 2.0*pi*pxx*GEO_grad_r/length &
              + k_theta*GEO_gq*GEO_captheta
      enddo
      

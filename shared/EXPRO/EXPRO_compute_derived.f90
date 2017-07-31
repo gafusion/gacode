@@ -19,11 +19,15 @@ subroutine EXPRO_compute_derived
 
   real, parameter :: k  = 1.6022e-12 ! erg/eV
   real, parameter :: mp = 1.6726e-24 ! g
+  real, parameter :: me = 0.00027230 ! m_ele/m_deuterium (dimensionless)
   real, parameter :: e  = 4.8032e-10 ! statcoul
   real, parameter :: c  = 2.9979e10  ! cm/s
+  real, parameter :: pi = 3.1415926535897932
 
   real, dimension(:), allocatable :: rho
   real, dimension(:), allocatable :: dummy
+  real, dimension(:), allocatable :: cc
+  real, dimension(:), allocatable :: loglam
 
   real :: r_min
   real :: fa,fb
@@ -278,6 +282,19 @@ subroutine EXPRO_compute_derived
   EXPRO_rhos(:) = EXPRO_rhos(:)/100.0
   !-----------------------------------------------------------------
 
+  !-----------------------------------------------------------------
+  ! Compute the electron-electron collision frequency (1/s)
+  allocate(cc(EXPRO_n_exp))
+  allocate(loglam(EXPRO_n_exp))
+  cc(:) = sqrt(2.0) * pi * 1.6022**4 * 1.0 / (4.0 * pi * 8.8542)**2 &
+          * 1.0 / (sqrt(3.3452) * 1602.2**1.5) * 1e9
+  loglam(:) = 24.0 - log(sqrt(EXPRO_ne(:)*1e13)/(EXPRO_te(:)*1e3))
+  EXPRO_nuee(:) = cc(:) * loglam(:) * EXPRO_ne(:) &
+       / (sqrt(me) * EXPRO_te(:)**1.5)
+  deallocate(cc)
+  deallocate(loglam)
+  !-----------------------------------------------------------------
+  
   !--------------------------------------------------------------
   ! Compute w0p, gamma_e, gamma_p and mach:
   !
@@ -306,6 +323,10 @@ subroutine EXPRO_compute_derived
      call bound_deriv(EXPRO_dlnnidr_new(:),-log(EXPRO_ni_new(:)),&
           EXPRO_rmin,EXPRO_n_exp)
 
+     ! sni = -ni''/ni (1/m^2)
+     call bound_deriv(EXPRO_sdlnnidr_new(:),EXPRO_ni_new(:)*EXPRO_dlnnidr_new(:),EXPRO_rmin,EXPRO_n_exp)
+     EXPRO_sdlnnidr_new(:) = EXPRO_sdlnnidr_new(:)/EXPRO_ni_new(:)
+     
      if (minval(EXPRO_ni_new(:)) <= 0.0) then
         EXPRO_error = 1
      endif
@@ -314,6 +335,7 @@ subroutine EXPRO_compute_derived
 
      EXPRO_ni_new(:) = EXPRO_ni(1,:)
      EXPRO_dlnnidr_new(:) = EXPRO_dlnnidr(1,:)
+     EXPRO_sdlnnidr_new(:) = EXPRO_sdlnnidr(1,:)
 
   endif
 

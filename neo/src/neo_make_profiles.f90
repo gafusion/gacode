@@ -29,7 +29,7 @@ subroutine neo_make_profiles
   
   num_ele = 0
   do is=1, n_species
-     if(z_in(is) == -1) then
+     if(z_in(is) < 0.0) then
         num_ele = num_ele + 1
      endif
   enddo
@@ -126,7 +126,7 @@ subroutine neo_make_profiles
            dlntdr_para(is,ir) = dlntdr(is,ir)
            dlntdr_perp(is,ir) = dlntdr(is,ir)
         endif
-        nu(is,ir)     = nu_1_in *(1.0*z(is))**4/(1.0*z(1))**4 &
+        nu(is,ir)     = nu_1_in * z(is)**4 / z(1)**4 &
              * dens(is,ir) / dens(1,ir) &
              * sqrt(mass(1)/mass(is)) * (temp(1,ir)/temp(is,ir))**1.5
      enddo

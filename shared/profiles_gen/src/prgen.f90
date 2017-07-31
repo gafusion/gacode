@@ -51,9 +51,12 @@ program prgen
   read(1,*) n_lump
   allocate(lump_vec(n_lump))
   read(1,*) lump_vec(:)
+  read(1,*) n_ion_sanitize
+  allocate(ion_sanitize(n_ion_sanitize))
+  read(1,*) ion_sanitize(:)
   close(1)
   !--------------------------------------------------
-
+  
   !------------------------------------------------------------------
   ! Read the iterdb file and define standard variables.
   !
@@ -142,6 +145,7 @@ program prgen
   endif
   !------------------------------------------------------------------
   
+  
   !---------------------------------------------------
   ! Read the GATO file for "better" geometry.  At this
   ! point, GATO has already run and we are just reading 
@@ -150,6 +154,7 @@ program prgen
   select case (efit_method)
   case (1)
      ! Use geometry data contained in profile data 
+     print '(a)','INFO: (prgen) Using original geometry data.'
   case (2)
      ! Use GATO-EFIT mapper
      call prgen_read_gato
@@ -188,8 +193,9 @@ program prgen
 
   ! Handle special case of generating input.profiles.extra
   if (format_type == 7 .and. gmerge_flag == 0) then
-     call EXPRO_write_derived
+     call EXPRO_write_derived(1,'input.profiles.extra')
      print '(a)','INFO: (prgen) Wrote input.profiles.extra.'
+     call prgen_write
   else
      call prgen_write
   endif

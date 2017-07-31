@@ -7,7 +7,12 @@
 !  questions  should be addressed to
 !  Gary Staebler 858-455-3466  or email: gary.staebler@gat.com
 !***********************************************************************
+!
 !  TGLF multiscale saturation rule: sat_rule_in = 1 option
+!  April 8, 2016: G.M. Staebler, J. Candy, N. T. Howard, and C. Holland
+!                  Physics of Plasmas, 23 (2016) 062518
+!  June 22, 2017: Retuned after coding error to Laplacian terms in Ampere 
+!                 and Poisson equations was fixed 
 !
 !***********************************************************************
 !
@@ -19,16 +24,18 @@
       IMPLICIT NONE
       !
       LOGICAL :: USE_MIX=.TRUE.
-      LOGICAL :: USE_TTF=.FALSE.
-      INTEGER :: i,is,k,j,j1,jmax1,jmax2
+      LOGICAL :: USE_X3=.FALSE.
+      INTEGER :: i,is,k,j,j1,j2,jmax1,jmax2
       REAL :: test,testmax1,testmax2
       REAL :: gammamax1,kymax1,gammamax2,kymax2,ky0,ky1,ky2
       REAL :: f0,f1,f2,a,b,c,x0,x02,dky,xmax
-      REAL :: gamma0,gammaeff
-      REAL :: cnorm, phinorm, kylow, czf, cz1, cz2, kyetg
+      REAL :: gamma0,gamma1,gammaeff,dgamma
+      REAL :: cnorm, phinorm, czf, cz1, cz2, kyetg
+      REAL :: kyhigh, kycut
       REAL :: cky,sqcky,delta,ax,ay,kx
       REAL :: mix1,mix2,mixnorm,gamma_ave
-      REAL :: vzf,dvzf,vzf1,vzf2,bz
+      REAL :: vzf,dvzf,vzf1,vzf2,vzf3,vzf4
+      REAL :: bz1,bz2
       REAL,DIMENSION(nkym) :: gamma_net=0.0
       REAL,DIMENSION(nkym) :: gamma=0.0
       REAL,DIMENSION(nkym) :: gamma_mix=0.0
@@ -37,13 +44,13 @@
       ! model fit parameters
       ! need to set alpha_zf_in = 1.0
       ! Miller geometry values igeo=1
-      If(xnu_model_in.eq.3)USE_TTF=.TRUE.
+      if(xnu_model_in.eq.3)USE_X3=.TRUE.
       czf = alpha_zf_in
-      bz=0.0
+      bz1=0.0
+      bz2=0.0
       kyetg=1.28
       cnorm=14.21
-!      cz1=0.48*czf
-      cz1 = 0.48
+      cz1=0.48*czf
       cz2=1.0*czf
       ax=0.0
       ay=0.0
@@ -59,22 +66,28 @@
       !   write(*,*)i,"gamma_net = ",gamma_net(i)
       enddo
       if(USE_MIX)then
-        kyetg=1.9
+!original        kyetg=1.9*ABS(zs(2))/SQRT(taus(2)*mass(2))  ! fixed to ion gyroradius
         cky=3.0
         sqcky=SQRT(cky)
         cnorm = 14.29
-!        cz1=0.48*czf
-        cz1 = 0.48
-        cz2=0.92*czf  
-        if(USE_TTF)then
-           bz=0.18
-           cz2=1.35*czf*(1.5638/q_in)**2
-           kyetg=2.4
+        cz1=0.48*czf
+!original         cz2=0.92*czf  
+! retuned June 22,2017
+        cz2 = 1.0*czf  
+        kyetg=1.05*ABS(zs(2))/SQRT(taus(2)*mass(2))  ! fixed to ion gyroradius
+        if(USE_X3)then
+           bz1=1.0
+           bz2=0.18
+           cz1=0.48*czf
+           cz2=1.6*czf
+!           cz2=1.35*czf*(1.563824/q_in)
+!           cz1=0.48*czf*((3.0*2.0/0.5)*(rmin_input/(Rmaj_input*q_in)))**2
+!           cz2=1.35*czf*((3.098143*1.563824/0.600049)*(rmin_input/(Rmaj_input*q_in)))
+           kyetg=0.8*0.04/SQRT(taus(1)*mass(1))  ! fixed streamer size to electron gyroradius
            cky=3.0
            sqcky=SQRT(cky)
         endif  
-      endif    
-      kyetg = kyetg*ABS(zs(2))/SQRT(taus(2)*mass(2))
+      endif   
       if(igeo.eq.0)then ! s-alpha 
        cnorm=14.63
        cz1=0.90*czf
@@ -88,8 +101,12 @@
             phinorm=1.0
             if(ABS(field_spectrum_out(2,j,i)).gt.small)phinorm=field_spectrum_out(2,j,i)
             do is=1,ns
+               field_spectrum_out(3,j,i) = field_spectrum_out(3,j,i)/phinorm
+               field_spectrum_out(4,j,i) = field_spectrum_out(4,j,i)/phinorm
                intensity_spectrum_out(1,is,j,i) = intensity_spectrum_out(1,is,j,i)/phinorm
                intensity_spectrum_out(2,is,j,i) = intensity_spectrum_out(2,is,j,i)/phinorm
+               intensity_spectrum_out(3,is,j,i) = intensity_spectrum_out(3,is,j,i)/phinorm
+               intensity_spectrum_out(4,is,j,i) = intensity_spectrum_out(4,is,j,i)/phinorm
                do k=1,3
                   flux_spectrum_out(1,is,k,j,i) = flux_spectrum_out(1,is,k,j,i)/phinorm
                   flux_spectrum_out(2,is,k,j,i) = flux_spectrum_out(2,is,k,j,i)/phinorm
@@ -103,25 +120,41 @@
       ! find the maximum of gamma/ky 
       gammamax1= gamma_net(1)
       kymax1 = ky_spectrum(1)
-      testmax2 = gammamax1/kymax1
-      testmax1 = testmax2
+      testmax1 = gammamax1/kymax1
+      testmax2 = 0.0
       jmax1=1
-      jmax2=nky-2
-      kylow=MIN(0.8/SQRT(taus_in(2)/mass_in(2)),ky_spectrum(nky-1))
-      j1=0
+      jmax2=0
+      kycut=0.8*ABS(zs(2))/SQRT(taus_in(2)*mass_in(2))
+      kyhigh=0.15/SQRT(taus_in(1)*mass_in(1))
+!      write(*,*)" kycut = ",kycut," kyhigh = ",kyhigh
+      j1=1
+      j2=1
+      ! find the low and high ky peaks of gamma/ky
       do j=2,nky
          ky0 = ky_spectrum(j)
-         if(ky0 .lt. kylow)j1=j1+1
+         if(ky0 .lt. kycut)j1=j1+1
+         if(ky0 .lt. kyhigh)j2=j2+1
+!         write(*,*)"j=",j,"ky = ",ky0," gamma_net = ",gamma_net(j)
          test = gamma_net(j)/ky0
-         if(test .gt. testmax2)then
-           testmax2 = test
-           jmax2=j
-           if(ky0 .lt. kylow)then
-             testmax1=testmax2 
-             jmax1=jmax2
-           endif      
+         if(ky0 .lt. kycut)then
+            if(test .gt. testmax1)then
+              testmax1=test
+              jmax1=j
+            endif 
+         endif 
+         if(ky0 .gt. kycut)then
+           if(test .gt. testmax2)then    
+             testmax2 = test
+             jmax2=j
+           endif
          endif        
       enddo
+!      write(*,*)"j1 = ",j1," j2 = ",j2
+      ! handle exceptions
+      if(j1.eq.nky)then  ! the maximum ky in the ky-spectrum is less than kycut
+         j1=nky-1        ! note that j2=nky in this case     
+      endif
+      if(jmax2.eq.0)jmax2=j2    ! there was no high-k peak set kymax2 to kyhigh or the highest ky 
 !      if(jmax1.lt.nky)then
 !        test=gamma_net(jmax1+1)/ky_spectrum(jmax1+1)
 !        if(testmax1.le.test)then
@@ -134,11 +167,12 @@
       kymax2 = ky_spectrum(jmax2)
       gammamax1 = gamma_net(jmax1)
       kymax1 = ky_spectrum(jmax1)
-!      write(*,*)" jmax1 = ",jmax1," jmax2= ",jmax2
-!      write(*,*)" g/k 1 = ",gammamax1/kymax1," g/k 2 = ",gammamax2/kymax2
+ !     write(*,*)" jmax1 = ",jmax1," jmax2= ",jmax2
+ !     write(*,*)" g/k 1 = ",gammamax1/kymax1," g/k 2 = ",gammamax2/kymax2
       !interpolate to find a more accurate low-k maximum gamma/ky 
       ! this is cut of at j1 since a maximum may not exist in the low-k range
       if(jmax1.gt.1.and.jmax1.lt.j1)then
+!      write(*,*)"refining low-k maximum"
          f0 =  gamma_net(jmax1-1)/ky_spectrum(jmax1-1)
          f1 =  gamma_net(jmax1)/ky_spectrum(jmax1)
          f2 =  gamma_net(jmax1+1)/ky_spectrum(jmax1+1)
@@ -160,30 +194,35 @@
            gammamax1 = (a+b*xmax+c*xmax*xmax)*kymax1
          endif     
       endif
-!      write(*,*)"gammamax1 = ",gammamax1," kymax1 = ",kymax1," kylow = ",kylow
+!      write(*,*)"gammamax1 = ",gammamax1," kymax1 = ",kymax1
+!      write(*,*)"gammamax2 = ",gammamax2," kymax2 = ",kymax2
       ! compute multi-scale phi-intensity spectrum field_spectrum(2,,) = phi_bar_out
       ! note that the field_spectrum(1,,) = v_bar_out = 1.0 for sat_rule_in = 1
       vzf1 = gammamax1/kymax1
       vzf2 = gammamax2/kymax2
       dvzf = MAX(vzf2-vzf1,0.0)
+      dgamma= dvzf*kymax1
+      gamma1=gammamax1
 !      write(*,*)"dvzf = ",dvzf," vzf1 = ",vzf1," vzf2 = ",vzf2
-      vzf = vzf1 
+!      write(*,*)"gamma1 = ",gamma1
+      vzf3 = MAX(vzf1 - bz1*dvzf,0.0)
+      vzf4 = MAX(vzf1 - bz2*dvzf,0.0)
       do j=1,nky
 ! include zonal flow effects on growthrate model
 !          gamma=0.0
           gamma0 = gamma_net(j)
           ky0=ky_spectrum(j)
-          if(USE_TTF)then
+          if(USE_X3)then
             if(ky0.lt.kymax1)then
-              gamma(j) = Max(gamma0 + bz*dvzf*kymax1  - cz1*(kymax1 - ky0)*vzf,0.0)
+              gamma(j) = MAX(gamma0  - cz1*(kymax1 - ky0)*vzf3,0.0)
             else
-              gamma(j) = gammamax1  + bz*dvzf*kymax1 +  Max(gamma0 - cz2*vzf*ky0,0.0)          
+              gamma(j) = MAX(gamma0  - cz2*vzf4*ky0 ,gamma1)          
             endif 
           else
             if(ky0.lt.kymax1)then
-              gamma(j) = Max(gamma0  - cz1*(kymax1 - ky0)*vzf,0.0)
+              gamma(j) = MAX(gamma0  - cz1*(kymax1 - ky0)*vzf1,0.0)
             else
-              gamma(j) = cz2*gammamax1  +  Max(gamma0 - cz2*vzf*ky0,0.0)          
+              gamma(j) = cz2*gammamax1  +  Max(gamma0 - cz2*vzf1*ky0,0.0)          
             endif 
           endif
           gamma_mix(j) = gamma(j)
@@ -216,7 +255,7 @@
         do i=1,nmodes_in
           gammaeff = 0.0
           if(gamma0.gt.small)gammaeff = gamma_mix(j)*(eigenvalue_spectrum_out(1,j,i)/gamma0)**2
-          if(USE_TTF)then
+          if(USE_X3)then
             if(ky0.gt.kyetg)gammaeff = gammaeff*(ky0/kyetg)
           else
             if(ky0.gt.kyetg)gammaeff = gammaeff*SQRT(ky0/kyetg)
@@ -227,15 +266,21 @@
      ! recompute the intensity and flux spectra
       do j=1,nky
          do i=1,nmodes_in
+            phinorm=field_spectrum_out(2,j,i) 
+            field_spectrum_out(1,j,i) = phinorm
+            field_spectrum_out(3,j,i) = field_spectrum_out(3,j,i)*phinorm
+            field_spectrum_out(4,j,i) = field_spectrum_out(4,j,i)*phinorm
             do is=1,ns
-               intensity_spectrum_out(1,is,j,i) = intensity_spectrum_out(1,is,j,i)*field_spectrum_out(2,j,i)
-               intensity_spectrum_out(2,is,j,i) = intensity_spectrum_out(2,is,j,i)*field_spectrum_out(2,j,i)
+               intensity_spectrum_out(1,is,j,i) = intensity_spectrum_out(1,is,j,i)*phinorm
+               intensity_spectrum_out(2,is,j,i) = intensity_spectrum_out(2,is,j,i)*phinorm
+               intensity_spectrum_out(3,is,j,i) = intensity_spectrum_out(3,is,j,i)*phinorm
+               intensity_spectrum_out(4,is,j,i) = intensity_spectrum_out(4,is,j,i)*phinorm
                do k=1,3
-                  flux_spectrum_out(1,is,k,j,i) = flux_spectrum_out(1,is,k,j,i)*field_spectrum_out(2,j,i)
-                  flux_spectrum_out(2,is,k,j,i) = flux_spectrum_out(2,is,k,j,i)*field_spectrum_out(2,j,i)
-                  flux_spectrum_out(3,is,k,j,i) = flux_spectrum_out(3,is,k,j,i)*field_spectrum_out(2,j,i)
-                  flux_spectrum_out(4,is,k,j,i) = flux_spectrum_out(4,is,k,j,i)*field_spectrum_out(2,j,i)
-                  flux_spectrum_out(5,is,k,j,i) = flux_spectrum_out(5,is,k,j,i)*field_spectrum_out(2,j,i)
+                  flux_spectrum_out(1,is,k,j,i) = flux_spectrum_out(1,is,k,j,i)*phinorm
+                  flux_spectrum_out(2,is,k,j,i) = flux_spectrum_out(2,is,k,j,i)*phinorm
+                  flux_spectrum_out(3,is,k,j,i) = flux_spectrum_out(3,is,k,j,i)*phinorm
+                  flux_spectrum_out(4,is,k,j,i) = flux_spectrum_out(4,is,k,j,i)*phinorm
+                  flux_spectrum_out(5,is,k,j,i) = flux_spectrum_out(5,is,k,j,i)*phinorm
               enddo
            enddo
         enddo

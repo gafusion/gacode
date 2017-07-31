@@ -75,9 +75,9 @@ OBJECTS += tgyro_globals.o \
 all: $(OBJECTS) $(EXTRA_LIBS)
 	$(FC) $(FFLAGS) -o $(EXEC) $(OBJECTS) $(EXTRA_LIBS) $(LMATH) $(TGYRO_LIBS)
 
+tgyro_read_input.o: $(GACODE_ROOT)/tgyro/bin/tgyro_parse.py
 .f90.o :
 	$(FC) $(FMATH) $(FFLAGS) $(TGYRO_LIBS) -c $<  
-
 clean:
 	rm -f $(EXEC)
 	rm -f *.o ${GACODE_ROOT}/modules/tgyro*.mod

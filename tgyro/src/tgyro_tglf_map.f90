@@ -13,7 +13,7 @@ subroutine tgyro_tglf_map
   implicit none
 
   ! Local variables
-  integer :: i_ion,i0 
+  integer :: i_ion,i0
   integer :: harvest_err
   real :: q_abs
   real :: q_prime
@@ -88,7 +88,15 @@ subroutine tgyro_tglf_map
      tglf_rlts_in(i0) = r_min*dlntidr(i_ion,i_r)
      tglf_taus_in(i0) = ti(i_ion,i_r)/te(i_r)
   enddo
+  
+  ! Setting density gradient artificially to zero to compute D and v
+  if (tgyro_zero_dens_grad_flag /= 0) then
+     tglf_rlns_in(tgyro_zero_dens_grad_flag) = 0
+  endif
+  
   !----------------------------------------------------------------
+  !   debye length/rhos   te in ev, rho_s in cm ne in 10^13/cm^3
+  tglf_debye_in = 7.43D2*SQRT(te(i_r)/(ne(i_r)*1.D13))/ABS(rho_s(i_r))
 
   !----------------------------------------------------------------
   ! TGLF-specific quantities
@@ -148,7 +156,6 @@ subroutine tgyro_tglf_map
   ! Electron beta used for electromagnetic calculations
   tglf_betae_in = betae_unit(i_r)*loc_betae_scale
   !----------------------------------------------------------------
-
   !----------------------------------------------------------------
   ! Collisions:
   !
@@ -184,9 +191,8 @@ subroutine tgyro_tglf_map
   ! Linear mode selection
   !
   ! i_branch_tg = -1: use nmodes_tg modes (default for transport)
-  ! i_branch_tg =  0: most unstable mode
-  ! i_branch_tg =  1: most unstable electron mode
-  ! i_branch_tg =  2: most unstable ion mode
+  ! i_branch_tg =  0: most unstable electron mode (1) and ion mode (2)
+  !
   tglf_ibranch_in = -1
   !
   ! Number of modes in transport calculation;
@@ -225,14 +231,9 @@ subroutine tgyro_tglf_map
   !----------------------------------------------------------------
   ! CONTROL PARAMETERS
   !
-  ! Include B_parallal
-  tglf_use_bpar_in = .false.
-  !
-  ! Include A_parallel (B_perp)
-  if (loc_betae_scale > 0.0) then
-     tglf_use_bper_in = .true.
-  else
-     tglf_use_bper_in = .false.
+  if (loc_betae_scale == 0.0) then
+    tglf_use_bper_in = .false.
+    tglf_use_bpar_in = .false.
   endif
   !
   ! Use adiabatic electrons
@@ -243,7 +244,7 @@ subroutine tgyro_tglf_map
   !----------------------------------------------------------------
 
   !----------------------------------------------------------------
-  ! OTHER DEFAULT PARAMETERS
+  ! OTHER DEFAULT CONTROL PARAMETERS
   !
   !  tglf_find_width_in    = .true.
   !  tglf_iflux_in         = .true.
@@ -251,7 +252,6 @@ subroutine tgyro_tglf_map
   !  tglf_xnu_factor_in    = 1.0
   !  tglf_debye_factor_in  = 1.0
   !  tglf_filter_in        = 2.0
-  !  tglf_debye_in         = 0.0
   !----------------------------------------------------------------
 
   !----------------------------------------------------------------

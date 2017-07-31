@@ -18,7 +18,7 @@ FC	= ${MF90} -std=f2008 -I$(GACODE_ROOT)/modules -J$(GACODE_ROOT)/modules -g -I/
 F77	= ${MF90} -g 
 
 FMATH	= -fdefault-real-8
-FOPT	= -O3
+FOPT	= -O3 -m64
 FDEBUG	= -Wall -fcheck=all -fbacktrace -fbounds-check -O0 -Wextra -finit-real=nan -Wunderflow -ffpe-trap=invalid,zero,overflow
 FBOUND	= -Wall -fbounds-check
 FOMP	= -fopenmp

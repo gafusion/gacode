@@ -58,16 +58,13 @@ subroutine gyro_bessel_operator(rho,a,u,v,g,itype)
   integer :: p
   integer :: p0
   integer :: m
-  integer :: ierr
   !
   real :: x
-  real :: bessel(0:2)
   real :: func(-n_x/2:n_x/2-1)
   complex :: g0
   complex :: gp
   !
-  real, external :: BESJ0
-  real, external :: BESEI0
+  real, external :: besei0
   !-----------------------------------------
 
   p0 = n_x/2
@@ -78,16 +75,16 @@ subroutine gyro_bessel_operator(rho,a,u,v,g,itype)
 
      ! J_0
      do p=-p0,p0-1
-        x = rho*sqrt((pi_2*p*a+u)**2+v**2)
-        func(p)=BESJ0(abs(x))/n_x
+        x = abs(rho)*sqrt((pi_2*p*a+u)**2+v**2)
+        func(p) = bessel_j0(x)/n_x
      enddo
 
   case (2)
 
      ! J_0^2
      do p=-p0,p0-1
-        x = rho*sqrt((pi_2*p*a+u)**2+v**2)
-        func(p)=BESJ0(abs(x))**2/n_x
+        x = abs(rho)*sqrt((pi_2*p*a+u)**2+v**2)
+        func(p) = bessel_j0(x)**2/n_x
      enddo
 
   case (3)
@@ -96,44 +93,40 @@ subroutine gyro_bessel_operator(rho,a,u,v,g,itype)
 
      ! The factor -(i/2) will be applied outside this loop
      do p=-p0,p0-1
-        x = rho*sqrt((pi_2*p*a+u)**2+v**2)
-        call RJBESL(abs(x),0.0,3,bessel,ierr)
-        func(p) = (pi_2*p*a+u)*rho*(bessel(0)+bessel(2))/n_x
+        x = abs(rho)*sqrt((pi_2*p*a+u)**2+v**2)
+        func(p) = (pi_2*p*a+u)*rho*(bessel_j0(x)+bessel_jn(2,x))/n_x
      enddo
 
   case (4)
 
      ! G = (1/2)*[ J_0(z)+J_2(z) ]
      do p=-p0,p0-1
-        x = rho*sqrt((pi_2*p*a+u)**2+v**2)
-        call RJBESL(abs(x),0.0,3,bessel,ierr)
-        func(p) = 0.5*(bessel(0)+bessel(2))/n_x
+        x = abs(rho)*sqrt((pi_2*p*a+u)**2+v**2)
+        func(p) = 0.5*(bessel_j0(x)+bessel_jn(2,x))/n_x
      enddo
 
   case (5)
 
      ! G^2
      do p=-p0,p0-1
-        x = rho*sqrt((pi_2*p*a+u)**2+v**2)
-        call RJBESL(abs(x),0.0,3,bessel,ierr)
-        func(p) = (0.5*(bessel(0)+bessel(2)))**2/n_x
+        x = abs(rho)*sqrt((pi_2*p*a+u)**2+v**2)
+        func(p) = (0.5*(bessel_j0(x)+bessel_jn(2,x)))**2/n_x
      enddo
 
   case (6)
 
      ! G * J_0
      do p=-p0,p0-1
-        x = rho*sqrt((pi_2*p*a+u)**2+v**2)
-        call RJBESL(abs(x),0.0,3,bessel,ierr)
-        func(p) = 0.5*(bessel(0)+bessel(2))*bessel(0)/n_x
+        x = abs(rho)*sqrt((pi_2*p*a+u)**2+v**2)
+        func(p) = 0.5*(bessel_j0(x)+bessel_jn(2,x))*bessel_j0(x)/n_x
      enddo
 
   case (7)
 
      ! I_0
      do p=-p0,p0-1
-        x = rho*sqrt((pi_2*p*a+u)**2+v**2)
-        func(p) = BESEI0(x*x)/n_x
+        x = abs(rho)*sqrt((pi_2*p*a+u)**2+v**2)
+        func(p) = besei0(x*x)/n_x
      enddo
 
   case (8)
@@ -143,9 +136,8 @@ subroutine gyro_bessel_operator(rho,a,u,v,g,itype)
      ! The factor i will be applied outside this loop
      if (u**2+v**2 > 1e-8) then
         do p=-p0,p0-1
-           x = rho*sqrt((pi_2*p*a+u)**2+v**2)
-           call RJBESL(abs(x),0.0,3,bessel,ierr)
-           func(p) = (pi_2*p*a+u)*rho*(bessel(0)-bessel(1)/x)/x**2/n_x
+           x = abs(rho)*sqrt((pi_2*p*a+u)**2+v**2)
+           func(p) = (pi_2*p*a+u)*rho*(bessel_j0(x)-bessel_j1(x)/x)/x**2/n_x
         enddo
      else
         ! Case is n=0, which will ultimately give zero contribution so we 
@@ -161,7 +153,6 @@ subroutine gyro_bessel_operator(rho,a,u,v,g,itype)
   ! Construct real-space forms by summing over Fourier modes.
   ! Real-space gridpoints in truncated region are ignored.
   !
-!$omp parallel do private(g0) schedule(static)
   do m=-m_gyro,m_gyro-i_gyro
      g0 = (0.0,0.0)
      do p=-p0,p0-1
@@ -239,3 +230,4 @@ subroutine gyro_bessel_operator(rho,a,u,v,g,itype)
   endif
 
 end subroutine gyro_bessel_operator
+

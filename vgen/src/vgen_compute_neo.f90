@@ -97,7 +97,7 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   
   ! Species 2
   do is=2,neo_n_species_in
-     if(neo_z_in(is) /= -1) then
+     if(neo_z_in(is) > 0.0) then
         neo_dens_in(is)   = EXPRO_ni(is,i) / dens_norm
         neo_dlnndr_in(is) = EXPRO_dlnnidr(is,i) * EXPRO_rmin(EXPRO_n_exp)
         neo_temp_in(is)   = EXPRO_ti(is,i) / temp_norm 
@@ -203,11 +203,13 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   enddo
   jbs_norm = charge_norm_fac*dens_norm*vth_norm &
        *EXPRO_rmin(EXPRO_n_exp)/1e6
-  jbs_neo(i)    = neo_jpar_dke_out*jbs_norm
-  jbs_sauter(i) = neo_jpar_thS_out*jbs_norm
-  jbs_koh(i)    = neo_jpar_thK_out*jbs_norm
-  jbs_nclass(i) = neo_jpar_thN_out*jbs_norm
-  pflux_sum(i)  = 0.0
+  jbs_neo(i)     = neo_jpar_dke_out*jbs_norm
+  jbs_sauter(i)  = neo_jpar_thS_out*jbs_norm
+  jbs_koh(i)     = neo_jpar_thK_out*jbs_norm
+  jbs_nclass(i)  = neo_jpar_thN_out*jbs_norm
+  jtor_neo(i)    = neo_jtor_dke_out*jbs_norm
+  jtor_sauter(i) = neo_jtor_thS_out*jbs_norm
+  pflux_sum(i)   = 0.0
   do j=1,neo_n_species_in
      pflux_sum(i) = pflux_sum(i) + zfac(j)*neo_pflux_dke_out(j)
   enddo

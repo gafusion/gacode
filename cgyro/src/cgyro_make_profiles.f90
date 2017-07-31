@@ -222,6 +222,18 @@ subroutine cgyro_make_profiles
      
   endif
 
+  ! z_eff -- only use value from input.cgyro or input.profiles
+  ! if simple electron Lorentz collisions (1,5) and z_eff_method=1
+  ! else compute z_eff from the input ions' densities and charges
+  if(.not. (z_eff_method == 1 .and. &
+       (collision_model==1 .or. collision_model==5))) then
+     z_eff = 0.0
+     do is=1,n_species
+        if (z(is) > 0.0) then 
+           z_eff = z_eff+dens(is)*z(is)**2/dens_ele
+        endif
+     enddo
+  endif
   
   !-------------------------------------------------------------
   ! Manage simulation type (n=0,linear,nonlinear)
@@ -284,13 +296,9 @@ subroutine cgyro_make_profiles
      case (1)
         call cgyro_info('ExB shear: Hammett discrete shift') 
      case (2)
-        call cgyro_info('ExB shear: Explicit wavenumber advection') 
-     case (3)
-        call cgyro_info('ExB shear: Linearized Hammett shift') 
-     case (4)
-        call cgyro_info('ExB shear: Implicit wavenumber advection') 
-     case (5)
-        call cgyro_info('ExB shear: Compact-difference wavenumber advection') 
+        call cgyro_info('ExB shear: Wavenumber advection') 
+     case default
+        call cgyro_error('Unknown ExB shear method') 
      end select
   else
      omega_eb = 0.0

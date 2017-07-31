@@ -14,11 +14,11 @@ subroutine cgyro_init_rotation
   integer, dimension(:), allocatable :: thcyc
   real, dimension(:), allocatable :: thcderiv
   real :: x, x0, fac, sum_zn, dsum_zn
-  integer :: is, it, j, id, jt, ir
+  integer :: is, it, j, id, jt
   integer, parameter :: jmax = 200
   
-  if(rotation_model == 1) then
-     ! O(mach) terms only
+  if (rotation_model == 1) then
+     ! O(M) terms only
      dens_rot(:,:)          = 1.0
      dens_ele_rot(:)        = 1.0
      lambda_rot(:,:)        = 0.0
@@ -46,7 +46,7 @@ subroutine cgyro_init_rotation
   do is=1, n_species
      do it=1,n_theta
         dens_rot(it,is) = exp(0.5 * (mach/vth(is))**2 &
-             * (bigR(it)**2 - bigR_th0**2) / rmaj**2) 
+             * (bigr(it)**2 - bigr_th0**2) / rmaj**2) 
      enddo
   enddo
 
@@ -54,7 +54,7 @@ subroutine cgyro_init_rotation
      dens_ele_rot(:) = 1.0
   else
      dens_ele_rot(:) = exp(0.5 * (mach/vth(is_ele))**2 &
-          * (bigR(:)**2 - bigR_th0**2) / rmaj**2)
+          * (bigr(:)**2 - bigr_th0**2) / rmaj**2)
   endif
      
   phi_rot_avg = 0.0
@@ -75,7 +75,7 @@ subroutine cgyro_init_rotation
            dsum_zn = dsum_zn - fac * z(is)/temp(is) 
         enddo
         
-        if(ae_flag == 1) then
+        if (ae_flag == 1) then
            fac = -dens_ele * dens_ele_rot(it) * exp(x/temp_ele)
            sum_zn  = sum_zn  + fac
            dsum_zn = dsum_zn + fac/temp_ele 
@@ -91,7 +91,7 @@ subroutine cgyro_init_rotation
         
      enddo
 
-     if(j > jmax) then
+     if (j > jmax) then
         call cgyro_error('ERROR: (CGYRO) Rotation poloidal density computation failed to converge')
         return
      endif
@@ -160,19 +160,19 @@ subroutine cgyro_init_rotation
         phi_rot_rderiv(it) = phi_rot_rderiv(it) &
              + z(is)*dens(is)*dens_rot(it,is)*(-dlnndr(is) &
              - dlntdr(is)*(z(is)/temp(is)*phi_rot(it) &
-             - 0.5*(mach/rmaj/vth(is))**2 * (bigR(it)**2 - bigR_th0**2)) &
-             + (mach/rmaj/vth(is))**2 * (bigR(it) * bigR_r(it) &
-             - bigR_th0 * bigR_r_th0) + (mach/rmaj)/vth(is)**2 &
-             * (-gamma_p/rmaj) * (bigR(it)**2 - bigR_th0**2))
+             - 0.5*(mach/rmaj/vth(is))**2 * (bigr(it)**2 - bigr_th0**2)) &
+             + (mach/rmaj/vth(is))**2 * (bigr(it) * bigr_r(it) &
+             - bigr_th0 * bigr_r_th0) + (mach/rmaj)/vth(is)**2 &
+             * (-gamma_p/rmaj) * (bigr(it)**2 - bigr_th0**2))
         
         ! effective pressure gradient
         pr_r(it) = pr_r(it) &
              + temp(is)*dens(is)*dens_rot(it,is)*(-dlnndr(is) &
              - dlntdr(is)*(1.0 + z(is)/temp(is)*phi_rot(it) &
-             - 0.5*(mach/rmaj/vth(is))**2 * (bigR(it)**2 - bigR_th0**2)) &
-             - (mach/rmaj/vth(is))**2 * (bigR_th0 * bigR_r_th0) &
+             - 0.5*(mach/rmaj/vth(is))**2 * (bigr(it)**2 - bigr_th0**2)) &
+             - (mach/rmaj/vth(is))**2 * (bigr_th0 * bigr_r_th0) &
              + (mach/rmaj)/vth(is)**2 &
-             * (-gamma_p/rmaj) * (bigR(it)**2 - bigR_th0**2))
+             * (-gamma_p/rmaj) * (bigr(it)**2 - bigr_th0**2))
 
      enddo
      if(ae_flag == 1) then
@@ -235,7 +235,7 @@ subroutine cgyro_init_rotation
   !enddo
   
   ! Put rotation in equilibrium only if Mach^2 effects are included
-  if(rotation_model == 2 .or. rotation_model == 3) then
+  if (rotation_model == 2 .or. rotation_model == 3) then
      GEO_beta_star_in   = beta_star(0)
      GEO_beta_star_1_in = beta_star(1)
      GEO_beta_star_2_in = beta_star(2)
@@ -252,7 +252,7 @@ subroutine cgyro_init_rotation
      do is=1,n_species
      
         lambda_rot(it,is) = z(is)/temp(is) * (phi_rot(it) - phi_rot_avg) &
-             - 0.5 * (mach * bigR(it) / rmaj / vth(is))**2
+             - 0.5 * (mach * bigr(it) / rmaj / vth(is))**2
 
         ! bhat dot grad lambda
         dlambda_rot(it,is) = z(is)/temp(is) * phi_rot_tderiv(it) &
@@ -265,9 +265,9 @@ subroutine cgyro_init_rotation
         omega_rot_u(it,is) = -vth(is)/sqrt(2.0)*dlambda_rot(it,is)
         
         omega_rot_star(it,is) = dlntdr(is) * (z(is)/temp(is)*phi_rot(it) &
-             - 0.5*(mach/vth(is))**2 * (GEO_bigr**2 - bigR_th0**2)/rmaj**2)  &
-             + mach*gamma_p/vth(is)**2 * (GEO_bigr**2 - bigR_th0**2)/rmaj**2 &
-             + (mach/vth(is))**2 * bigR_th0/rmaj**2 * bigR_r_th0 
+             - 0.5*(mach/vth(is))**2 * (GEO_bigr**2 - bigr_th0**2)/rmaj**2)  &
+             + mach*gamma_p/vth(is)**2 * (GEO_bigr**2 - bigr_th0**2)/rmaj**2 &
+             + (mach/vth(is))**2 * bigr_th0/rmaj**2 * bigr_r_th0 
 
         omega_rot_drift(it,is) = -(mach/rmaj)**2 * GEO_bigr * rho &
              * mass(is)/(z(is)*GEO_b) * GEO_gq &
@@ -290,13 +290,13 @@ subroutine cgyro_init_rotation
   enddo  
   
 
-  if(rotation_model == 3) then
+  if (rotation_model == 3) then
      ! O(mach^2) terms only 
      ! no O(mach) terms
      mach_one_fac = 0.0
   endif
 
-  if(rotation_model == 4) then
+  if (rotation_model == 4) then
      ! O(mach^2) terms from "GKW CF TRAP" only
      ! no O(mach) terms and no "GKW CF DRIFT" term
      mach_one_fac = 0.0
@@ -306,7 +306,7 @@ subroutine cgyro_init_rotation
 
   endif
 
-  if(rotation_model == 5) then
+  if (rotation_model == 5) then
      ! O(mach^2) terms from "GKW CF DRIFT" only
      ! no O(mach) terms and no "GKW CF TRAP" term
      mach_one_fac = 0.0

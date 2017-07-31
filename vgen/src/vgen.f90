@@ -324,7 +324,9 @@ program vgen
   call vgen_reduce(jbs_sauter(2:EXPRO_n_exp-1),EXPRO_n_exp-2)
   call vgen_reduce(jbs_nclass(2:EXPRO_n_exp-1),EXPRO_n_exp-2)
   call vgen_reduce(jbs_koh(2:EXPRO_n_exp-1),EXPRO_n_exp-2)
-
+  call vgen_reduce(jtor_neo(2:EXPRO_n_exp-1),EXPRO_n_exp-2)
+  call vgen_reduce(jtor_sauter(2:EXPRO_n_exp-1),EXPRO_n_exp-2)
+  
   !------------------------------------------------------------------------
   ! Extrapolation for r=0 and r=n_exp boundary points
   !
@@ -371,6 +373,12 @@ program vgen
   call bound_extrap(ya,yb,jbs_nclass,EXPRO_rmin,EXPRO_n_exp)
   jbs_nclass(1)           = ya
   jbs_nclass(EXPRO_n_exp) = yb
+  call bound_extrap(ya,yb,jtor_neo,EXPRO_rmin,EXPRO_n_exp)
+  jtor_neo(1)           = ya
+  jtor_neo(EXPRO_n_exp) = yb
+  call bound_extrap(ya,yb,jtor_sauter,EXPRO_rmin,EXPRO_n_exp)
+  jtor_sauter(1)           = ya
+  jtor_sauter(EXPRO_n_exp) = yb
   call bound_extrap(ya,yb,pflux_sum,EXPRO_rmin,EXPRO_n_exp)
   pflux_sum(1)           = ya
   pflux_sum(EXPRO_n_exp) = yb
@@ -417,11 +425,15 @@ program vgen
      write(1,'(a)') '# jbs_sauter (MA/m^2)'
      write(1,'(a)') '# jbs_nclass (MA/m^2)'
      write(1,'(a)') '# jbs_koh    (MA/m^2)'
+     write(1,'(a)') '# jtor_neo    (MA/m^2)'
+     write(1,'(a)') '# jtor_sauter (MA/m^2)'
      write(1,'(a)') '# where jbs = < j_parallel B > / B_unit'
+     write(1,'(a)') '# where jtor = < j_tor/R > / <1/R>'
      write(1,'(a)') '#'
      do i=1,EXPRO_n_exp
-        write(1,'(6(1pe14.7,2x))') EXPRO_rho(i), pflux_sum(i), &
-             jbs_neo(i), jbs_sauter(i), jbs_nclass(i), jbs_koh(i)
+        write(1,'(8(1pe14.7,2x))') EXPRO_rho(i), pflux_sum(i), &
+             jbs_neo(i), jbs_sauter(i), jbs_nclass(i), jbs_koh(i), &
+             jtor_neo(i), jtor_sauter(i)
      enddo
      close(1)
      !----------------------------------------------------------------------

@@ -207,7 +207,7 @@ subroutine neo_check
            call neo_error('ERROR: (NEO) collision frequency must be positive')
            return
         endif
-        if (int(z(is)) == 0) then
+        if (abs(z(is))< epsilon(0.0)) then
            call neo_error('ERROR: (NEO) charge must be non-zero')
            return
         endif
@@ -487,9 +487,9 @@ subroutine neo_check
 
         write(io_neoout,*)
         write(io_neoout,'(a)') &
-             'indx  z     n/n_norm     T/T_norm     m/m_norm      a/Ln         a/Lt         nu'
+             'indx   z       n/n_norm     T/T_norm     m/m_norm     a/Ln         a/Lt         nu'
         do is=1,n_species
-           write(io_neoout,'(t2,i2,2x,i2,2x,6(1pe11.4,2x))') &
+           write(io_neoout,'(t2,i2,2x,f7.3,2x,6(1pe11.4,2x))') &
                 is,Z(is),dens(is,ir),temp(is,ir),mass(is),dlnndr(is,ir),dlntdr(is,ir),nu(is,ir)
         enddo
 
@@ -503,10 +503,10 @@ subroutine neo_check
            write(io_neoout,*)
            write(io_neoout,'(a)') 'Anisotropic Species'
            write(io_neoout,'(a)') &
-                'indx  z   Tpar/T_norm  Tperp/T_norm a/Lt_par     a/Lt_perp'
+                'indx   z       Tpar/T_norm  Tperp/T_norm a/Lt_par     a/Lt_perp'
            do is=1,n_species
               if (aniso_model(is) >= 2) then
-                 write(io_neoout,'(t2,i2,2x,i2,2x,4(1pe11.4,2x))') &
+                 write(io_neoout,'(t2,i2,2x,f7.3,2x,4(1pe11.4,2x))') &
                       is,Z(is),temp_para(is,ir),temp_perp(is,ir), &
                       dlntdr_para(is,ir),dlntdr_perp(is,ir)
               endif

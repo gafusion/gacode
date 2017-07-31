@@ -6,12 +6,12 @@ import string
 workdir = 'bdir'
 tools   = os.environ['GACODE_ROOT']+'/neo/tools/'
 
-if len(sys.argv) < 11:
-   print "python neo_boot.py <rmin> <q> <nuee> <ni1/ne> <zi1> <mi1/mD> <ti1/te> <zi2> <mi2/mD> <ti2/te>"
+if len(sys.argv) < 15:
+   print "python neo_boot.py <rmin> <q> <nuee> <ni1/ne> <zi1> <mi1/mD> <ti1/te> <zi2> <mi2/mD> <ti2/te> <delta> <kappa> <sdelta> <skappa>"
    sys.exit()
 
 # EXAMPLE:
-# python $GACODE_ROOT/neo/tools/neo_boot.py 0.17 2.0 0.1 0.9 1 1.0 1.0 6 6.0 1.0
+# python $GACODE_ROOT/neo/tools/neo_boot.py 0.17 2.0 0.1 0.9 1 1.0 1.0 6 6.0 1.0 0.1 1.0 0.0 0.0
 
 # In the input.neo, there are 3 species:
 # electrons are species 1, main ions are species 2,
@@ -24,17 +24,21 @@ if len(sys.argv) < 11:
 # m_norm = m_deuterium
 # v_norm = sqrt(T_norm/m_norm) = c_s (sound speed)
 
-rmin  = sys.argv[1]  # r/a (Minor radius divided by minor radius of LCFS) 
-q     = sys.argv[2]  # safety factor
-nuee  = sys.argv[3]  # electron collision frequency/(c_s/a)
-ni1   = sys.argv[4]  # main ion density: n_i1/n_e
+rmin   = sys.argv[1]  # r/a (Minor radius divided by minor radius of LCFS) 
+q      = sys.argv[2]  # safety factor
+nuee   = sys.argv[3]  # electron collision frequency/(c_s/a)
+ni1    = sys.argv[4]  # main ion density: n_i1/n_e
                      # (note: n_i2/n_e computed from quasi-neutrality)
-zi1  = sys.argv[5]   # main ion charge (integer)
-mi1  = sys.argv[6]   # main ion mass: m_i/m_deuterium
-ti1  = sys.argv[7]   # main ion temperature: t_i/t_e
-zi2  = sys.argv[8]   # impurity ion charge (integer)
-mi2  = sys.argv[9]   # impurity ion mass: m_i2/m_deuterium
-ti2  = sys.argv[10]  # impurity ion temperature: t_i2/t_e
+zi1    = sys.argv[5]   # main ion charge (integer)
+mi1    = sys.argv[6]   # main ion mass: m_i/m_deuterium
+ti1    = sys.argv[7]   # main ion temperature: t_i/t_e
+zi2    = sys.argv[8]   # impurity ion charge (integer)
+mi2    = sys.argv[9]   # impurity ion mass: m_i2/m_deuterium
+ti2    = sys.argv[10]  # impurity ion temperature: t_i2/t_e
+delta  = sys.argv[11]  # triangularity (dimensionless)
+kappa  = sys.argv[12]  # elongation (dimensionless)
+sdelta = sys.argv[13]  # triangularity radial derivative (dimensionless)
+skappa = sys.argv[14]  # elongation radial derivative (dimensionless)
 
 # Prepare simulation directory
 os.system('rm -rf '+workdir)
@@ -61,6 +65,18 @@ neoin.write('Q='+q+'\n')
 # Set input: nu_ee/(cs/a)
 neoin.write('NU_1='+nuee+'\n')
 
+# Set input: delta
+neoin.write('DELTA='+delta+'\n')
+
+# Set input: kappa
+neoin.write('KAPPA='+kappa+'\n')
+
+# Set input: sdelta
+neoin.write('S_DELTA='+sdelta+'\n')
+
+# Set input: skappa
+neoin.write('S_KAPPA='+skappa+'\n')
+
 # Set input: main ion charge, mass, temperature, density
 neoin.write('Z_2='+zi1+'\n')
 neoin.write('MASS_2='+mi1+'\n')
@@ -77,6 +93,9 @@ ni2 = str(ni2)
 neoin.write('DENS_3='+ni2+'\n')
 
 neoin.close()
+
+z_all = [-1,float(zi1),float(zi2),-1,float(zi1),float(zi2)]
+n_all = [1.0,float(ni1),float(ni2),1.0,float(ni1),float(ni2)]
 
 cneo = []
 csauter = []
@@ -112,8 +131,8 @@ for i in range(6):
    print 'jsauter     '+str(jsauter)
    print 'I*Psi*rho_* '+str(ipsi*rhostar)
 
-   cneo.append(jneo/(ipsi*rhostar))
-   csauter.append(jsauter/(ipsi*rhostar))
+   cneo.append(jneo/(ipsi*rhostar*abs(z_all[i])*n_all[i]))
+   csauter.append(jsauter/(ipsi*rhostar*abs(z_all[i])*n_all[i]))
 
 print list
 print cneo

@@ -121,7 +121,7 @@ module neo_rotation
             dsum_zn = dsum_zn / ne_ade(ir)
          else
             do is=1, n_species
-               if(Z(is) == -1) then
+               if(Z(is) < 0.0) then
                   is_ele = is
                   exit
                endif

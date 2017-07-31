@@ -209,7 +209,7 @@ then
    echo "             -omfitres <resolution>"
    echo "              <resolution>=low,medium,high (default medium)."
    echo
-   echo "GFILE MERGE MODE"
+   echo "input.profiles SANITIZE, or GFILE MERGE MODE"
    echo
    echo "             -i <data>"
    echo "             Data in input.profiles format."
@@ -222,6 +222,9 @@ then
    echo
    echo "             -gmerge"
    echo "             Toggle gmerge mode."
+   echo
+   echo "             -ions"
+   echo "             Ion string (in iterdb format): for example, -ions d,c"
    echo
    echo "VELOCITY GENERATION (VGEN) MODE"
    echo
@@ -400,6 +403,7 @@ CREATEHELP_FLAG=0
 # Plotting in locpargen
 PLOT_FLAG=0
 
+IONS=d,c
 #=============================================================
 
 #=============================================================
@@ -481,6 +485,8 @@ while [ $# -gt 0 ] ; do
   -dens) shift ; DUMP_DENS_METHOD=$1 ;; 
 
   -gmerge) GMERGE_FLAG=1 ;;  
+
+  -ions) shift ; IONS=$1 ;;
 
   -plot) PLOT_FLAG=1 ;;  
   
@@ -622,6 +628,7 @@ fi
 #=============================================================
 # If file is GACODE, parse it.
 if [ "$itype" == "GACODE" ] ; then
+  cp -f input.profiles input.profiles.save
   python $GACODE_ROOT/shared/bin/profile_parse.py $FILE
 fi
 #=============================================================
@@ -1102,6 +1109,19 @@ else
    echo "1" >> $CONFIG
    echo "0" >> $CONFIG
 fi 
+#==============================================================
+
+#==============================================================
+# More ion parameters for sanitize mode
+#
+p=0
+for i in $(echo $IONS | tr "," "\n")
+do
+    p=$(($p+1))
+    ions="$ions $i"
+done
+echo $p >> $CONFIG
+echo $ions >> $CONFIG 
 #==============================================================
 
 #==============================================================

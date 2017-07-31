@@ -67,6 +67,12 @@ then
   echo "                                   -moment 3 (all fields)],"
   echo "                    moment_zero"
   echo
+  echo "          -ymin <float>"
+  echo "          Minimum value of vertical axis (where applicable)."
+  echo
+  echo "          -ymax <float>"
+  echo "          Maximum value of vertical axis (where applicable)."
+  echo
   echo "          -lx <length>"
   echo "          Plot width"
   echo
@@ -115,7 +121,8 @@ LY=6
 INTERACTIVE=
 #TITLE=`basename $PWD`
 TITLE=null
-YMAX=-1.0
+YMIN=0.0
+YMAX=auto
 X1=-1.0
 X2=-1.0
 #==============================================================================
@@ -155,6 +162,7 @@ while [ $# -gt 0 ] ; do
 
   -title) shift ; TITLE=$1 ;;
 
+  -ymin) shift ; YMIN=$1 ;;
   -ymax) shift ; YMAX=$1 ;;
 
   -x1) shift ; X1=$1 ;;
@@ -212,13 +220,13 @@ case "$PLOT_TYPE" in
 
    gbflux)
        python $INTERACTIVE  $PYROOT/gbflux.py $SIMDIR $I_FIELD $I_MOMENT $WINDOW $FTYPE \
-	      $DATAFILE $LX $LY $TITLE $YMAX $X1 $X2;;
+	      $DATAFILE $LX $LY $TITLE $YMIN $YMAX $X1 $X2;;
 
    gbflux_n)
         python $INTERACTIVE  $PYROOT/gbflux_n.py $SIMDIR $I_FIELD $I_MOMENT $WINDOW $FTYPE $DATAFILE ;;
 
    gbflux_i)
-        python $INTERACTIVE  $PYROOT/gbflux_i.py $SIMDIR $I_FIELD $I_MOMENT $WINDOW $FTYPE $DATAFILE ;;
+        python $INTERACTIVE  $PYROOT/gbflux_i.py $SIMDIR $I_FIELD $I_MOMENT $WINDOW $FTYPE $YMIN $YMAX ;;
 
    gbflux_rt)
         python $INTERACTIVE  $PYROOT/gbflux_rt.py $SIMDIR $I_FIELD $I_MOMENT $WINDOW $FTYPE $DATAFILE ;;

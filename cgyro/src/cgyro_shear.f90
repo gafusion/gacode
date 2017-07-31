@@ -14,20 +14,10 @@ subroutine cgyro_shear
 
   ! Spectral ExB shear
   call timer_lib_in('shear')
-  select case(shear_method)
-  case (1)
+  if (shear_method == 1) then
      ! Discrete shift (Hammett) 
      call cgyro_shear_hammett
-  case (3)
-     ! Linear shift (more accurate than discrete shift)
-     call cgyro_shear_linear
-  case (4)
-     ! Linear shift (more accurate than discrete shift)
-     call cgyro_shear_crank
-  case (6)
-     ! Linear shift (more accurate than discrete shift)
-     call cgyro_shear_cip
-  end select
+  endif
   call timer_lib_out('shear')
 
 end subroutine cgyro_shear

@@ -68,10 +68,11 @@ subroutine neo_run()
   enddo
 
   ! Hinton-Hazeltine and Sauter bootstrap current
-  neo_jpar_thS_out    = neo_th_out(5)                ! <j B> / j_norm (Sauter)
-  neo_jpar_thK_out    = neo_th_out(6)                ! <j B> / j_norm (Koh)
-  neo_jpar_thN_out    = neo_th_out(7)                ! <j B> / j_norm (NCLASS)
-
+  neo_jpar_thS_out    = neo_th_out(5)                ! <jpar B> / j_norm (Sauter)
+  neo_jpar_thK_out    = neo_th_out(6)                ! <jpar B> / j_norm (Koh)
+  neo_jpar_thN_out    = neo_th_out(7)                ! <jpar B> / j_norm (NCLASS)
+  neo_jtor_thS_out    = neo_th_out(8)                ! <jtor/R> / <1/R> j_norm (Sauter)
+  
   !!!!!!!!!!!!!!!!!!
   ! NCLASS results
   !!!!!!!!!!!!!!!!!!
@@ -95,8 +96,9 @@ subroutine neo_run()
      neo_vpol_dke_out(is)     = neo_dke_out(is,5)    ! v_theta/vt_norm (at theta=0)
      neo_vtor_dke_out(is)     = neo_dke_out(is,6)    ! v_phi/vt_norm (at theta=0)
   enddo
-  neo_jpar_dke_out = neo_dke_1d_out                  ! <j B> / j_norm
-
+  neo_jpar_dke_out = neo_dke_1d_out(1)               ! <jpar B> / j_norm
+  neo_jtor_dke_out = neo_dke_1d_out(2)               ! <jtor/R>/<1/R>/j_norm
+  
   ! gyro-viscosity results
   do is=1,11
      neo_pflux_gv_out(is)     = neo_gv_out(is,1)     ! Gamma_is/Gamma_norm

@@ -49,6 +49,23 @@ See [[https://fusion.gat.com/theory/Gyro|TGYRO Wiki]] for more details.
 
 {{https://fusion.gat.com/theory-wiki/images/5/51/Candy-supertorus-2.jpg|GYRO in action.}}
 
+=== Building NN-enabled code ===
+
+Get FANN from https://github.com/libfann/fann and build
+
+In .bashrc, set 
+
+{{{
+export FANN_ROOT=/home/SOFTWARE/fann
+}}}
+
+Execute these git commands:
+
+{{{
+git submodule init
+git submodule update
+}}}
+
 === Automagic version logging ===
 
 When building a version of gacode pulled from GitHub, the system will query git for the current revision, 

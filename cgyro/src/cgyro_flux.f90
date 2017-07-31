@@ -16,12 +16,12 @@ subroutine cgyro_flux
   integer :: ie,ix,is,it,ir,l
   real :: dv,cn
   real :: vpar
-  real :: prod,prod2
+  real :: prod
   real, dimension(n_field) :: fprod,fprod2
   real :: dvr
   real :: erot
   real :: flux_norm
-  complex :: cprod
+  complex :: cprod, cprod2
 
   !-----------------------------------------------------
   ! 1. Compute kx-ky fluxes (no field breakdown)
@@ -43,6 +43,9 @@ subroutine cgyro_flux
 
      ! Integration weight
      dv = w_xi(ix)*w_e(ie)
+
+     ! Parallel velocity
+     vpar = vth(is)*sqrt(2.0)*vel(ie)*xi(ix)
 
      do ic=1,nc
 
@@ -70,12 +73,28 @@ subroutine cgyro_flux
 
         ! Global fluxes (complex)
         do l=0,n_global
-           if (ir-l > 0) then
-              cprod = i_c*cap_h_c(ic,iv_loc)*conjg(psi(ic_c(ir-l,it),iv_loc))
 
-              gflux_loc(l,is,1) = gflux_loc(l,is,1)+cprod*dvr
-              gflux_loc(l,is,2) = gflux_loc(l,is,2)+cprod*dvr*erot 
+           cprod  = 0.0 
+           cprod2 = 0.0
+
+           ! i H * J0 phi^* - i H^* J0 phi
+
+           if (ir-l > 0) then
+              cprod  = cprod +i_c*cap_h_c(ic,iv_loc)*conjg(psi(ic_c(ir-l,it),iv_loc))
+              cprod2 = cprod2+i_c*cap_h_c(ic,iv_loc)*conjg(i_c*chi(ic_c(ir-l,it),iv_loc))
            endif
+           if (ir+l <= n_radial) then
+              cprod  = cprod -i_c*conjg(cap_h_c(ic,iv_loc))*psi(ic_c(ir+l,it),iv_loc)
+              cprod2 = cprod2-i_c*conjg(cap_h_c(ic,iv_loc))*(i_c*chi(ic_c(ir+l,it),iv_loc))
+           endif
+
+           gflux_loc(l,is,1) = gflux_loc(l,is,1)+cprod*dvr
+           gflux_loc(l,is,2) = gflux_loc(l,is,2)+cprod*dvr*erot
+
+           cprod = cprod*(mach*bigr(it)/rmaj+btor(it)/bmag(it)*vpar)+cprod2
+
+           gflux_loc(l,is,3) = gflux_loc(l,is,3)+cprod*dvr*bigr(it)*mass(is)
+
         enddo
 
      enddo
@@ -106,7 +125,9 @@ subroutine cgyro_flux
 
         it = it_c(ic)
 
-        fprod(:)  = aimag(cap_h_c(ic,iv_loc)*conjg( jvec_c(:,ic,iv_loc)*field(:,ic)))
+        ! Im [ H * J0 phi^* ]
+
+        fprod(:)  = aimag(cap_h_c(ic,iv_loc)*conjg(jvec_c(:,ic,iv_loc)*field(:,ic)))
         fprod2(:) = aimag(cap_h_c(ic,iv_loc)*conjg(i_c*jxvec_c(:,ic,iv_loc)*field(:,ic)))
 
         dvr  = w_theta(it)*dens_rot(it,is)*dens(is)*dv
@@ -118,10 +139,10 @@ subroutine cgyro_flux
         ! Energy flux : Q_a
         fflux_loc(is,2,:) = fflux_loc(is,2,:)-fprod(:)*dvr*erot
 
-        fprod(:) = fprod(:)*(mach*bigR(it)/rmaj+btor(it)/bmag(it)*vpar)+fprod2(:)
+        fprod(:) = fprod(:)*(mach*bigr(it)/rmaj+btor(it)/bmag(it)*vpar)+fprod2(:)
 
         ! Momentum flux: Pi_a
-        fflux_loc(is,3,:) = fflux_loc(is,3,:)-fprod(:)*dvr*bigR(it)*mass(is)
+        fflux_loc(is,3,:) = fflux_loc(is,3,:)-fprod(:)*dvr*bigr(it)*mass(is)
 
      enddo
 
@@ -131,7 +152,7 @@ subroutine cgyro_flux
   ! 3. Renormalize fluxes to GB or quasilinear forms
   !~----------------------------------------------------
 
-  if (nonlinear_flag == 0) then
+  if (nonlinear_flag == 0 .and. n > 0) then
 
      ! Quasilinear normalization (divide by |phi|^2)
      flux_norm = 0.0
@@ -148,9 +169,9 @@ subroutine cgyro_flux
 
   else
 
-     ! Complete definition of fluxes
+     ! Complete definition of fluxes (NOTE: no factor of 2 in gflux; see above)
      flux_loc  =  flux_loc*(2*k_theta*rho)
-     gflux_loc = gflux_loc*(2*k_theta*rho)
+     gflux_loc = gflux_loc*(k_theta*rho)
      fflux_loc = fflux_loc*(2*k_theta*rho)
 
      ! GyroBohm normalizations

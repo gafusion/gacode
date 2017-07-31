@@ -264,7 +264,7 @@ class cgyrodata:
             print "INFO: (data.py) Read data in out.cgyro.kxky_flux_e. TIME = "+str(end-start)
         except:
             pass
-        
+
         try:
             start = time.time()
             data = np.fromfile(self.dir+'out.cgyro.kxky_flux_n',dtype='float',sep=" ")
@@ -275,7 +275,7 @@ class cgyrodata:
             pass 
         #-----------------------------------------------------------------
 
-    def getexflux(self):
+    def getxflux(self):
 
         """Global flux files"""
 
@@ -307,8 +307,16 @@ class cgyrodata:
             print "INFO: (data.py) Read data in out.cgyro.lky_flux_e. TIME = "+str(end-start)
         except:
             pass 
-        #-----------------------------------------------------------------
 
+        try:
+            start = time.time()
+            data = np.fromfile(self.dir+'out.cgyro.lky_flux_v',dtype='float',sep=" ")
+            end = time.time()
+            self.lky_flux_v = np.reshape(data[0:nd],(2,ng,self.n_species,self.n_n,nt),'F')
+            print "INFO: (data.py) Read data in out.cgyro.lky_flux_v. TIME = "+str(end-start)
+        except:
+            pass 
+        #-----------------------------------------------------------------
 
     def getbigfield(self):
 
@@ -316,7 +324,7 @@ class cgyrodata:
 
         import numpy as np
         import time
-        
+
         # Convenience definition
         nt = self.n_time
 

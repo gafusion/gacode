@@ -58,7 +58,7 @@ subroutine cgyro_kernel
 
   call timer_lib_in('io_init')
   call cgyro_write_timedata
-  call timer_lib_in('io_init')
+  call timer_lib_out('io_init')
   io_control = 2*(1-silent_flag)
 
   do i_time=1,n_time
@@ -139,8 +139,8 @@ subroutine cgyro_kernel
   if(allocated(bpol))           deallocate(bpol)
   if(allocated(k_perp))         deallocate(k_perp)
   if(allocated(k_x))            deallocate(k_x)
-  if(allocated(bigR))           deallocate(bigR)
-  if(allocated(bigR_r))         deallocate(bigR_r)
+  if(allocated(bigr))           deallocate(bigr)
+  if(allocated(bigr_r))         deallocate(bigr_r)
   if(allocated(omega_stream))   then
 !$acc exit data delete(omega_stream)
      deallocate(omega_stream)

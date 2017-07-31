@@ -10,6 +10,7 @@ modules/*.mod
 */*/*.o
 */*/*/*.a
 */*/*/*.o
+*/*/*/*/*.o
 */*.pyc
 */*/*.pyc
 */*/*/*.pyc
@@ -34,9 +35,9 @@ le3/.VERSION
 # Executables
 gato/gato
 glf23/src/glf23
-gks/src/gks_analysis
 gyro/src/gyro
 cgyro/src/cgyro
+cgyro/tools/globalmap/src/globalmap
 le3/src/le3
 le3/profiles_3d/profiles_3d
 neo/src/neo
@@ -50,7 +51,6 @@ tglf/src/tglf
 tglf/src/tglf_mpi
 tglf/src/tglf_driver_mpi
 tgyro/src/tgyro_main
-xptor/driver/xptor
 le3/src/le3
 le3/profiles_3d/profiles_3d
 quick/src/quick

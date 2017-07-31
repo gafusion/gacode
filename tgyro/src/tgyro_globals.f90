@@ -324,6 +324,7 @@ module tgyro_globals
   real :: tgyro_ped_scale
   real :: tgyro_tglf_nn_max_error
   integer :: tgyro_quickfast_flag
+  integer :: tgyro_zero_dens_grad_flag
   !
   ! Iteration variables (global)
   !
