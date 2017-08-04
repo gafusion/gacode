@@ -2,7 +2,7 @@
 ! neo_harvest.f90
 !
 ! PURPOSE:
-!  subroutines to send neo input and ouptput parameters
+!  subroutines to send neo input and output parameters
 !  to harvest
 !---------------------------------------------------------
 
