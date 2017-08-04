@@ -64,7 +64,6 @@ program vgen
   !Set the NN flag
   neo_nn_flag_in = vgen_nn_flag
 
-
   select case(er_method)
   case(1)
      if((i_proc == 0).and.(neo_nn_flag_in .ne. 1)) then
@@ -108,9 +107,23 @@ program vgen
      print '(a,i2)','INFO: (VGEN) MPI tasks: ',n_proc
   endif
 
+  !---------------------------------------------------------------------
+  ! Deal with neural network
+  !
   if (neo_nn_flag_in .eq. 1) then
-      print '(a)','INFO: (NEO-NN) Computing Jboot With  NEURAL NETWORKS (NN)'
+     print '(a)','INFO: (VGEN) Computing bootstrap current with neural networks (NN)'
+     open(unit=4,file='input.profiles.jbsnn',status='replace')
+     write(4,'(49(a12))') 'expro_rho(-)',&
+       'ni1/ne(-)','log10(nuee)' ,'q(-)','rmin(-)','ti1/te(-)',&
+       'NEO_CTC','NEO_CTD','NEO_CTe','NEO_CnC','NEO_CnD','NEO_Cne',&
+       'SAU_CTC','SAU_CTD','SAU_CTe','SAU_CnC','SAU_CnD','SAU_Cne',&
+       'enorm','vnorm','anorm','I_over_psi','rhostar','ne',&
+       '1_over_Lte','1_over_Lne','1_over_LtD','1_over_LnD','1_over_LTC','1_over_LnC',&
+       'zi1(zD)','zi2(zC)','ni1(nD)','ni2(nC)','jbsNEONN','jbsSAUNN',&
+       'delta','kappa','skappa','sdelta','te','ti1',&
+       'zeta','szeta','shift','zmag_over_a','szmag','shear','betastar'
   endif
+  !---------------------------------------------------------------------
 
   !---------------------------------------------------------------------
   ! Initialize vgen parameters
@@ -148,15 +161,6 @@ program vgen
   !    strong rotation
   ! 4. Return the given Er
 
-
-  open(unit=4,file='input.profiles.jbsnn',status='replace')
-
-
-  write(4,'(49(a12))') 'expro_rho(-)','ni1/ne(-)','log10(nuee)' ,'q(-)','rmin(-)','ti1/te(-)','NEO_CTC','NEO_CTD',&
- 'NEO_CTe','NEO_CnC','NEO_CnD','NEO_Cne','SAU_CTC','SAU_CTD','SAU_CTe','SAU_CnC','SAU_CnD','SAU_Cne','enorm',&
- 'vnorm','anorm','I_over_psi','rhostar','ne','1_over_Lte','1_over_Lne','1_over_LtD','1_over_LnD','1_over_LTC',&
- '1_over_LnC','zi1(zD)','zi2(zC)','ni1(nD)','ni2(nC)','jbsNEONN','jbsSAUNN','delta','kappa','skappa','sdelta','te','ti1',&
- 'zeta','szeta','shift','zmag_over_a','szmag','shear','betastar'
 
   select case (er_method)
 
@@ -236,11 +240,10 @@ program vgen
         call vgen_compute_neo(i,vtor_diff,rotation_model,er0,omega,omega_deriv, simntheta)
 
         if (neo_nn_flag_in .ne. 1) then
-            print 10,EXPRO_rho(i),&
+           print 10,EXPRO_rho(i),&
                  er_exp(i),EXPRO_vpol(1,i)/1e3,simntheta,i_proc
         else
-             print 11,EXPRO_rho(i),&
-               jbs_neo(i),jbs_sauter(i)
+           print 11,EXPRO_rho(i),jbs_neo(i),jbs_sauter(i)
         endif
 
      enddo
@@ -284,11 +287,10 @@ program vgen
         enddo
 
         if (neo_nn_flag_in .ne. 1) then
-            print 10,EXPRO_rho(i),&
+           print 10,EXPRO_rho(i),&
                  er_exp(i),EXPRO_vpol(1,i)/1e3,simntheta,i_proc
         else
-             print 11,EXPRO_rho(i),&
-               jbs_neo(i),jbs_sauter(i)
+           print 11,EXPRO_rho(i),jbs_neo(i),jbs_sauter(i)
         endif
 
 
@@ -321,8 +323,6 @@ program vgen
         call bound_deriv(EXPRO_w0p(2:EXPRO_n_exp-1),EXPRO_w0(2:EXPRO_n_exp-1),&
              EXPRO_rmin,EXPRO_n_exp-2)
 
-
-
         do i_loc=1,n_loc
 
            i = i_glob(i_loc)
@@ -331,23 +331,17 @@ program vgen
            er0 = er_exp(i)
            omega = EXPRO_w0(i)
            omega_deriv = EXPRO_w0p(i)
-
-
            call vgen_compute_neo(i,vtor_diff, rotation_model, er0, omega, &
                 omega_deriv, simntheta)
+
            if (neo_nn_flag_in .ne. 1) then
-                print 10,EXPRO_rho(i),&
-                     er_exp(i),EXPRO_vpol(1,i)/1e3,simntheta,i_proc
+              print 10,EXPRO_rho(i),&
+                    er_exp(i),EXPRO_vpol(1,i)/1e3,simntheta,i_proc
            else
-                 print 11,EXPRO_rho(i),&
-                       jbs_neo(i),jbs_sauter(i)
+              print 11,EXPRO_rho(i),jbs_neo(i),jbs_sauter(i)
            endif
 
-
         enddo
-
-
-
 
         ! Reduce vpol,vtor
         do j=1,n_ions
@@ -358,8 +352,11 @@ program vgen
      endif
 
   end select
+  
+  if (neo_nn_flag_in .eq. 1) then
+     close(4)
+  endif
 
-  close(4)
   !======================================================================
 
   ! Additional reductions
@@ -461,7 +458,6 @@ program vgen
      call EXPRO_write_derived(1,'input.profiles.extra')
 
      ! 3. input.profiles.jbs
-
      open(unit=1,file='input.profiles.jbs',status='replace')
      write(1,'(a)') '#'
      write(1,'(a)') '# expro_rho'
@@ -475,20 +471,15 @@ program vgen
      write(1,'(a)') '# where jbs = < j_parallel B > / B_unit'
      write(1,'(a)') '# where jtor = < j_tor/R > / <1/R>'
      write(1,'(a)') '#'
-
-
      do i=1,EXPRO_n_exp
-
         write(1,'(8(1pe14.7,2x))') EXPRO_rho(i), pflux_sum(i), &
              jbs_neo(i), jbs_sauter(i), jbs_nclass(i), jbs_koh(i), &
              jtor_neo(i), jtor_sauter(i)
-
      enddo
 
 
      close(1)
      !---------------------------------------------------------------------
-
 
      call vgen_getgeo()
 
@@ -523,7 +514,5 @@ program vgen
        'rho=',f6.4,2x,&
        'jbs_nn_NEO(MA/m^2)=',1pe9.2,2x,&
        'jbs_nn_SAU(MA/m^2)=',1pe9.2,2x)
-
-  !call vgen_harvest_inputandoutput
 
 end program vgen
