@@ -255,7 +255,7 @@ then
    echo "             -n <mpi tasks>"
    echo
    echo "             -nn"
-   echo "             Run NEO-NN , instead of NEO to compute jboot NEO and SAUTER."
+   echo "             Run NEO-NN instead of NEO to compute NEO and SAUTER jboot."
    echo
    echo "LOCAL PARAMETER MODE"
    echo 
