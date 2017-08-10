@@ -767,7 +767,6 @@ then
    then
       echo $i >> vgen.dat
    fi
-   
    echo "$VGEN_NN_FLAG" >> vgen.dat
 
    # Launch parallel vgen executable
@@ -805,9 +804,7 @@ then
        echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.jbs      [boostrap current]"
        if [ "$VGEN_NN_FLAG" == "1" ] ; then
           echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.jbsnn    [Neural Net diagnostic]"
-       fi 
-       
-       
+       fi        
    fi
 
    exit 0

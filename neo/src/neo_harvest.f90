@@ -32,7 +32,6 @@ contains
     ierr=init_harvest('Neo_jbs'//NUL,harvest_sendline,len(harvest_sendline))
     ierr=set_harvest_protocol('UDP'//NUL)
     ierr=set_harvest_port(41000)
-
     ierr=set_harvest_payload_int(harvest_sendline,"neo_n_energy_in"//NUL,neo_n_energy_in)
     ierr=set_harvest_payload_int(harvest_sendline,"neo_n_xi_in"//NUL,neo_n_xi_in)
     ierr=set_harvest_payload_int(harvest_sendline,"neo_n_theta_in"//NUL,neo_n_theta_in)

@@ -79,8 +79,7 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   nn_shift_in         = EXPRO_drmaj(i)
   nn_zmag_over_a_in   = EXPRO_zmag(i)/EXPRO_rmin(EXPRO_n_exp)
   nn_szmag_in         = EXPRO_dzmag(i)
-  nn_shear_in         = EXPRO_s(i)
-    
+  nn_shear_in         = EXPRO_s(i)    
   ! nn_enorm=char_norm_fac in vgen_globals
   nn_charge_norm_fac = charge_norm_fac
   nn_dens_norm_f = EXPRO_ne(i)
@@ -104,7 +103,6 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   nn_ni1_ne_in = EXPRO_ni_new(i)/EXPRO_ne(i)       !ni1/ne
   nn_ti1_te_in = nn_ti1_in/nn_te_in                !ti1/te
   
-
   if(neo_equilibrium_model_in == 3) then
      neo_geo_ny_in = EXPRO_nfourier
      neo_geo_yin_in(:,:) = 0.0

@@ -9,7 +9,6 @@
 !
 !-------------------------------------------------------------------------------
 
-
 SUBROUTINE neo_jbs_nn
   !
   !  Execution of the NN
@@ -19,29 +18,19 @@ SUBROUTINE neo_jbs_nn
   use neo_interface
   use EXPRO_interface
   use neo_nn_interface
-
-
-
+  
   IMPLICIT NONE
 
   character(len=1000) :: jbsnn_model
-
   integer :: ierr
   real :: K_0, K_e_NEO, K_i1_NEO
   real :: K_e_SAU, K_i1_SAU
   real :: K_i2_NEO, K_i2_SAU
-
-  !real :: OUT_CNEO_CTD,OUT_CNEO_CTe,OUT_CNEO_CTD,OUT_CNEO_CnD,OUT_CNEO_Cne,OUT_CNEO_CnC
-  !real :: OUT_CSAU_CTD,OUT_CSAU_CTe,OUT_CSAU_CTD,OUT_CSAU_CnD,OUT_CSAU_Cne,OUT_SAU_CnC
-
+  ! 5 input parameters , when geometric effects are not included, 12 outputs(Neo and Sauter Coefficients).
   real(4) :: INPUT_PARAMETERS(5)
   real(4) :: OUTPUT_PARAMETERS(12)
 
-
-
   real :: start, finish
-
-
   CHARACTER NUL
   PARAMETER(NUL = CHAR(0))
 
@@ -63,15 +52,13 @@ SUBROUTINE neo_jbs_nn
   ! parameters mi2/mD are to be added when using model with random Z impurity...
 
   !run NN
-
   call get_environment_variable('JBSNN_MODEL_DIR',jbsnn_model)
   ! WRITE(*,*) TRIM(jbsnn_model)
-
   ierr=load_anns(0, TRIM(jbsnn_model)//NUL,'brainfuse'//NUL)
   ierr=load_anns_inputs(INPUT_PARAMETERS)
   ierr=run_anns()
   ierr=get_anns_avg_array(OUTPUT_PARAMETERS)
-
+  ! Getting coeffcients computed by the NN.
   OUT_CNEO_CTC= OUTPUT_PARAMETERS(1)
   OUT_CNEO_CTD= OUTPUT_PARAMETERS(2)
   OUT_CNEO_CTe= OUTPUT_PARAMETERS(3)

@@ -5,7 +5,6 @@ import string
 
 workdir = 'bdir'
 tools   = os.environ['GACODE_ROOT']+'/neo/tools/'
-
 harvestdata={}
 jneo_harvest=[]
 jsauter_harvest=[]
@@ -52,7 +51,6 @@ zmagovera = sys.argv[18] # normalized elevation
 szmag  = sys.argv[19]  # gradient of elevation
 shear  = sys.argv[20]  # magnetic shear
 betastar = sys.argv[21] # normalized total beta NOTE: This parameter is not used in the standard kinetic equation calculation! But it is used in the case of an anisotropic temperature species
-
 
 if len(sys.argv)==23 and sys.argv[22]!='None':
    harvestdata['IndexRS']=int(sys.argv[22])
@@ -196,8 +194,7 @@ for i in range(6):
 
    cneo.append(jneo/(ipsi*rhostar*abs(z_all[i])*n_all[i]))
    csauter.append(jsauter/(ipsi*rhostar*abs(z_all[i])*n_all[i]))
-
-
+   
 harvestdata['jneo']=jneo_harvest
 harvestdata['jsauter']=jsauter_harvest
 harvestdata['IPsirho']=Ipsirho_harvest
@@ -210,7 +207,6 @@ print csauter
 
 sys.path.append(os.environ['GACODE_ROOT']+'/shared/harvest_client/')
 from harvest_lib import harvest_send
-
 import cPickle
 with open('neo_boot.pkl','w') as f:
    cPickle.dump(harvestdata,f)

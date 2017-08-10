@@ -1,15 +1,14 @@
-
-
 module neo_nn_interface
 
-  implicit none 
-
+  implicit none
+  
+  ! Neural Net dimensionless input parameters.  
   real :: nn_rmin_in
   real :: nn_q_in
   real :: nn_nuee_in
   real :: nn_ni1_ne_in
   real :: nn_ti1_te_in
-
+  ! Parameters needed  for Current profile reconstruction   
   real :: nn_charge_norm_fac
   real :: nn_dens_norm_f    
   real :: nn_vnorm
@@ -34,7 +33,7 @@ module neo_nn_interface
   real :: nn_skappa_in
   real :: nn_ti1_in
   real :: nn_te_in
-  
+  ! Geometric input parameters
   real :: nn_zeta_in
   real :: nn_szeta_in
   real :: nn_shift_in
@@ -42,7 +41,7 @@ module neo_nn_interface
   real :: nn_szmag_in
   real :: nn_shear_in
   real :: nn_betastar_in
-
+  ! NEO and Sauter Coefficients  
   real :: OUT_CNEO_CTD
   real :: OUT_CNEO_CTe
   real :: OUT_CNEO_CTC
@@ -55,7 +54,5 @@ module neo_nn_interface
   real :: OUT_CSAU_CnD
   real :: OUT_CSAU_Cne
   real :: OUT_CSAU_CnC
-
- 
   
 end module neo_nn_interface

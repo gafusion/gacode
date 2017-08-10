@@ -39,9 +39,7 @@ module vgen_globals
   real, dimension(:), allocatable :: jtor_sauter
   
   integer :: n_ions
-
   integer, parameter :: timing_flag = 0
-  
   integer :: vgen_nn_flag
 
 end module vgen_globals

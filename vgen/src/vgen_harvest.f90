@@ -33,7 +33,6 @@ contains
     ierr=init_harvest('Vgen_jbs'//NUL,harvest_sendline,len(harvest_sendline))
     ierr=set_harvest_protocol('UDP'//NUL)
     ierr=set_harvest_port(41000)
-
     ierr=set_harvest_payload_int(harvest_sendline,'vel_method'//NUL,vel_method)
     ierr=set_harvest_payload_int(harvest_sendline,'erspecies_indx'//NUL,erspecies_indx)
     ierr=set_harvest_payload_int(harvest_sendline,'nth_min'//NUL,nth_min)
