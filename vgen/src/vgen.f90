@@ -1,9 +1,9 @@
 !------------------------------------------------------------------------
-! vgen.f90 
+! vgen.f90
 !
-! PURPOSE: 
-!  Driver for the vgen (velocity-generation) capability of NEO.  This 
-!  will write a new input.profiles with NEO-computed electric field 
+! PURPOSE:
+!  Driver for the vgen (velocity-generation) capability of NEO.  This
+!  will write a new input.profiles with NEO-computed electric field
 !  and/or velocities. A new input.profiles.extra will also be generated.
 !------------------------------------------------------------------------
 
@@ -16,11 +16,11 @@ program vgen
   use vgen_harvest
 
   implicit none
-  
+
   integer :: i
   integer :: j
   integer :: ix
-  integer :: rotation_model 
+  integer :: rotation_model
   real :: grad_p
   real :: ya
   real :: yb
@@ -31,7 +31,7 @@ program vgen
   integer :: simntheta
   real :: cpu_tot_in, cpu_tot_out
   real, dimension(:), allocatable :: er_exp
-  
+
   !---------------------------------------------------------------------
   ! Initialize MPI_COMM_WORLD communicator.
   !
@@ -45,7 +45,7 @@ program vgen
   ! Path is cwd:
   path= './'
 
-  ! Obscure definition of number tags 
+  ! Obscure definition of number tags
   do ix=1,100
      write (tag(ix),fmt) ix-1
   enddo
@@ -62,8 +62,7 @@ program vgen
   close(1)
 
   !Set the NN flag
-  neo_nn_flag_in = vgen_nn_flag  
-
+  neo_nn_flag_in = vgen_nn_flag
 
   select case(er_method)
   case(1)
@@ -108,9 +107,23 @@ program vgen
      print '(a,i2)','INFO: (VGEN) MPI tasks: ',n_proc
   endif
 
+  !---------------------------------------------------------------------
+  ! Deal with neural network
+  !
   if (neo_nn_flag_in .eq. 1) then
-      print '(a)','INFO: (NEO-NN) Computing Jboot With  NEURAL NETWORKS (NN)'
-  endif    
+     print '(a)','INFO: (VGEN) Computing bootstrap current with neural networks (NN)'
+     open(unit=4,file='input.profiles.jbsnn',status='replace')
+     write(4,'(49(a12))') 'expro_rho(-)',&
+       'ni1/ne(-)','log10(nuee)' ,'q(-)','rmin(-)','ti1/te(-)',&
+       'NEO_CTC','NEO_CTD','NEO_CTe','NEO_CnC','NEO_CnD','NEO_Cne',&
+       'SAU_CTC','SAU_CTD','SAU_CTe','SAU_CnC','SAU_CnD','SAU_Cne',&
+       'enorm','vnorm','anorm','I_over_psi','rhostar','ne',&
+       '1_over_Lte','1_over_Lne','1_over_LtD','1_over_LnD','1_over_LTC','1_over_LnC',&
+       'zi1(zD)','zi2(zC)','ni1(nD)','ni2(nC)','jbsNEONN','jbsSAUNN',&
+       'delta','kappa','skappa','sdelta','te','ti1',&
+       'zeta','szeta','shift','zmag_over_a','szmag','shear','betastar'
+  endif
+  !---------------------------------------------------------------------
 
   !---------------------------------------------------------------------
   ! Initialize vgen parameters
@@ -141,22 +154,13 @@ program vgen
   !======================================================================
   ! Four alternatives for Er calculation:
   !
-  ! 1. Compute Er from force balance using measured vpol and vtor 
+  ! 1. Compute Er from force balance using measured vpol and vtor
   ! 2. Compute Er by matching vtor_measured with vtor_neo at theta=0 assuming
   !    weak rotation
   ! 3. Compute Er by matching vtor_measured with vtor_neo at theta=0 assuming
   !    strong rotation
   ! 4. Return the given Er
 
-
-  open(unit=4,file='input.profiles.jbsnn',status='replace')
-  
-  
-  write(4,'(49(a12))') 'expro_rho(-)','ni1/ne(-)','log10(nuee)' ,'q(-)','rmin(-)','ti1/te(-)','NEO_CTC','NEO_CTD',&
- 'NEO_CTe','NEO_CnC','NEO_CnD','NEO_Cne','SAU_CTC','SAU_CTD','SAU_CTe','SAU_CnC','SAU_CnD','SAU_Cne','enorm',&
- 'vnorm','anorm','I_over_psi','rhostar','ne','1_over_Lte','1_over_Lne','1_over_LtD','1_over_LnD','1_over_LTC',&
- '1_over_LnC','zi1(zD)','zi2(zC)','ni1(nD)','ni2(nC)','jbsNEONN','jbsSAUNN','delta','kappa','skappa','sdelta','te','ti1',&
- 'zeta','szeta','shift','zmag_over_a','szmag','shear','betastar'
 
   select case (er_method)
 
@@ -180,7 +184,7 @@ program vgen
            endif
            er_exp(i) = (grad_p * EXPRO_grad_r0(i) &
                 * EXPRO_ti(erspecies_indx,i)*temp_norm_fac &
-                / (EXPRO_ctrl_z(erspecies_indx) * charge_norm_fac) & 
+                / (EXPRO_ctrl_z(erspecies_indx) * charge_norm_fac) &
                 + EXPRO_vtor(erspecies_indx,i) * EXPRO_bp0(i) &
                 - EXPRO_vpol(erspecies_indx,i) * EXPRO_bt0(i)) &
                 / 1000
@@ -191,7 +195,7 @@ program vgen
                 / (EXPRO_ctrl_z(erspecies_indx) * charge_norm_fac) / 1000
            write(1,'(e16.8)',advance='no') EXPRO_vtor(erspecies_indx,i) * EXPRO_bp0(i)/1000
            write(1,'(e16.8)',advance='no') -EXPRO_vpol(erspecies_indx,i) * EXPRO_bt0(i)/1000
-           write(1,*) 
+           write(1,*)
            close(1)
         enddo
 
@@ -230,17 +234,16 @@ program vgen
            rotation_model = 2   ! strong rotation
         endif
         er0 = er_exp(i)
-        omega = EXPRO_w0(i) 
-        omega_deriv = EXPRO_w0p(i) 
+        omega = EXPRO_w0(i)
+        omega_deriv = EXPRO_w0p(i)
 
         call vgen_compute_neo(i,vtor_diff,rotation_model,er0,omega,omega_deriv, simntheta)
-        
+
         if (neo_nn_flag_in .ne. 1) then
-            print 10,EXPRO_rho(i),&
+           print 10,EXPRO_rho(i),&
                  er_exp(i),EXPRO_vpol(1,i)/1e3,simntheta,i_proc
         else
-             print 11,EXPRO_rho(i),&
-               jbs_neo(i),jbs_sauter(i)
+           print 11,EXPRO_rho(i),jbs_neo(i),jbs_sauter(i)
         endif
 
      enddo
@@ -253,8 +256,8 @@ program vgen
 
   case (2)
 
-     ! Compute Er using NEO (weak rotation limit) 
-     ! by matching vtor_measured with vtor_neo at theta=0 
+     ! Compute Er using NEO (weak rotation limit)
+     ! by matching vtor_measured with vtor_neo at theta=0
 
      do i_loc=1,n_loc
 
@@ -282,15 +285,14 @@ program vgen
         do j=1,n_ions
            EXPRO_vtor(j,i) = EXPRO_vtor(j,i) + vtor_diff
         enddo
-        
+
         if (neo_nn_flag_in .ne. 1) then
-            print 10,EXPRO_rho(i),&
+           print 10,EXPRO_rho(i),&
                  er_exp(i),EXPRO_vpol(1,i)/1e3,simntheta,i_proc
         else
-             print 11,EXPRO_rho(i),&
-               jbs_neo(i),jbs_sauter(i)
+           print 11,EXPRO_rho(i),jbs_neo(i),jbs_sauter(i)
         endif
-        
+
 
      enddo
 
@@ -312,7 +314,7 @@ program vgen
         if (i_proc == 0) print '(a)', 'INFO: (VGEN) Recomputing flows using NEO in the strong rotation limit.'
 
         ! Re-compute the flows using strong rotation
-        ! omega and omega_deriv 
+        ! omega and omega_deriv
         do i=2,EXPRO_n_exp-1
            EXPRO_w0(i) = 2.9979e10*EXPRO_q(i)*(er_exp(i)/30.0)/ &
                 ((1e4*EXPRO_bunit(i))*(1e2*EXPRO_rmin(i))*EXPRO_grad_r0(i))
@@ -321,33 +323,25 @@ program vgen
         call bound_deriv(EXPRO_w0p(2:EXPRO_n_exp-1),EXPRO_w0(2:EXPRO_n_exp-1),&
              EXPRO_rmin,EXPRO_n_exp-2)
 
-      
-
         do i_loc=1,n_loc
 
            i = i_glob(i_loc)
 
-           rotation_model = 2  
+           rotation_model = 2
            er0 = er_exp(i)
-           omega = EXPRO_w0(i) 
+           omega = EXPRO_w0(i)
            omega_deriv = EXPRO_w0p(i)
-
-           
            call vgen_compute_neo(i,vtor_diff, rotation_model, er0, omega, &
                 omega_deriv, simntheta)
+
            if (neo_nn_flag_in .ne. 1) then
-                print 10,EXPRO_rho(i),&
-                     er_exp(i),EXPRO_vpol(1,i)/1e3,simntheta,i_proc
+              print 10,EXPRO_rho(i),&
+                    er_exp(i),EXPRO_vpol(1,i)/1e3,simntheta,i_proc
            else
-                 print 11,EXPRO_rho(i),&
-                       jbs_neo(i),jbs_sauter(i)
-           endif 
-           
+              print 11,EXPRO_rho(i),jbs_neo(i),jbs_sauter(i)
+           endif
 
         enddo
-
-        
-        
 
         ! Reduce vpol,vtor
         do j=1,n_ions
@@ -358,8 +352,11 @@ program vgen
      endif
 
   end select
+  
+  if (neo_nn_flag_in .eq. 1) then
+     close(4)
+  endif
 
-  close(4)
   !======================================================================
 
   ! Additional reductions
@@ -370,7 +367,7 @@ program vgen
   call vgen_reduce(jbs_koh(2:EXPRO_n_exp-1),EXPRO_n_exp-2)
   call vgen_reduce(jtor_neo(2:EXPRO_n_exp-1),EXPRO_n_exp-2)
   call vgen_reduce(jtor_sauter(2:EXPRO_n_exp-1),EXPRO_n_exp-2)
-  
+
   !------------------------------------------------------------------------
   ! Extrapolation for r=0 and r=n_exp boundary points
   !
@@ -461,7 +458,6 @@ program vgen
      call EXPRO_write_derived(1,'input.profiles.extra')
 
      ! 3. input.profiles.jbs
- 
      open(unit=1,file='input.profiles.jbs',status='replace')
      write(1,'(a)') '#'
      write(1,'(a)') '# expro_rho'
@@ -475,20 +471,15 @@ program vgen
      write(1,'(a)') '# where jbs = < j_parallel B > / B_unit'
      write(1,'(a)') '# where jtor = < j_tor/R > / <1/R>'
      write(1,'(a)') '#'
-
-
      do i=1,EXPRO_n_exp
-
         write(1,'(8(1pe14.7,2x))') EXPRO_rho(i), pflux_sum(i), &
              jbs_neo(i), jbs_sauter(i), jbs_nclass(i), jbs_koh(i), &
              jtor_neo(i), jtor_sauter(i)
-
      enddo
 
- 
+
      close(1)
      !---------------------------------------------------------------------
-
 
      call vgen_getgeo()
 
@@ -521,9 +512,7 @@ program vgen
 
 11 format(&
        'rho=',f6.4,2x,&
-       'jbs_nn_NEO(MA/m^2)=',1pe9.2,2x,&   
-       'jbs_nn_SAU(MA/m^2)=',1pe9.2,2x)   
-          
-  !call vgen_harvest_inputandoutput
+       'jbs_nn_NEO(MA/m^2)=',1pe9.2,2x,&
+       'jbs_nn_SAU(MA/m^2)=',1pe9.2,2x)
 
 end program vgen

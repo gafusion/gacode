@@ -20,7 +20,7 @@ else
     #stub file
     JBSNN=neo_jbs_nn
 endif
-    
+
 
 OBJECTS = neo_globals.o \
           neo_nn_interface.o\
@@ -49,20 +49,20 @@ OBJECTS = neo_globals.o \
           neo_harvest.o \
           neo_run.o \
           neo_spitzer.o \
-          $(JBSNN).o 
-        
+          $(JBSNN).o
+
 .SUFFIXES : .o .f90
 
-all: neo_lib.a $(EXEC).o $(EXTRA_LIBS) 
+all: neo_lib.a $(EXEC).o $(EXTRA_LIBS)
 	$(FC) $(FFLAGS)  $(neo_libs) -o $(EXEC) $(EXEC).o neo_lib.a $(EXTRA_LIBS) $(LMATH) $(JBSNN_LIBS)
 
 neo_lib.a: $(OBJECTS)
-	$(ARCH) neo_lib.a $(OBJECTS) 
+	$(ARCH) neo_lib.a $(OBJECTS)
 
 .f90.o :
 	$(FC) $(FMATH) $(FFLAGS) $(neo_libs) -c $< $(JBSNN_LIBS)
 
-clean:  
+clean:
 	rm -rf *.o neo_lib.a $(EXEC) *~
 	cd ${GACODE_ROOT}/modules ; rm -f neo*.mod
 

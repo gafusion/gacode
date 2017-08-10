@@ -40,9 +40,10 @@ subroutine neo_run()
   neo_thHS_out=0.0
 
   if (neo_nn_flag_in .ne. 1) then
-    ! Run NEO
+    ! Run full NEO
     call neo_do  
   else
+    ! Run NN bootstrap current calculation (jbs)
     call neo_jbs_nn
   endif
 
