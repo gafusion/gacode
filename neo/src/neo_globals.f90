@@ -34,7 +34,6 @@ module neo_globals
   real :: s_zmag_in
   real :: beta_star_in
   integer :: geo_ny_in
-  
   real, dimension(8,0:32) :: geo_yin_in
   !
   real :: profile_delta_scale

@@ -11,7 +11,6 @@ jneo_harvest=[]
 jsauter_harvest=[]
 Ipsirho_harvest=[]
 
-
 if len(sys.argv) < 22:
    print "python neo_boot.py <rmin> <q> <nuee> <ni1/ne> <zi1> <mi1/mD> <ti1/te> <zi2> <mi2/mD> <ti2/te> <delta> <kappa> <sdelta> <skappa> <zeta> <szeta> <shift> <zmagovera> <szmag> <shear> <betastar> <index> "
    sys.exit()
@@ -30,7 +29,7 @@ if len(sys.argv) < 22:
 # m_norm = m_deuterium
 # v_norm = sqrt(T_norm/m_norm) = c_s (sound speed)
 
-rmin   = sys.argv[1]  # r/a (Minor radius divided by minor radius of LCFS) 
+rmin   = sys.argv[1]  # r/a (Minor radius divided by minor radius of LCFS)
 q      = sys.argv[2]  # safety factor
 nuee   = sys.argv[3]  # electron collision frequency/(c_s/a)
 ni1    = sys.argv[4]  # main ion density: n_i1/n_e
@@ -46,13 +45,13 @@ delta  = sys.argv[11]  # triangularity
 kappa  = sys.argv[12]  # elongation
 sdelta = sys.argv[13]  # triangularity radial derivative (dimensionless)
 skappa = sys.argv[14]  # elongation radial derivative (dimensionless)
-zeta   = sys.argv[15]  # squareness 
+zeta   = sys.argv[15]  # squareness
 szeta  = sys.argv[16]  # squareness shear
 shift  = sys.argv[17]  # shafranov shift
 zmagovera = sys.argv[18] # normalized elevation
 szmag  = sys.argv[19]  # gradient of elevation
 shear  = sys.argv[20]  # magnetic shear
-betastar = sys.argv[21] # normalized total beta NOTE: This parameter is not used in the standard kinetic equation calculation! But it is used in the case of an anisotropic temperature species 
+betastar = sys.argv[21] # normalized total beta NOTE: This parameter is not used in the standard kinetic equation calculation! But it is used in the case of an anisotropic temperature species
 
 
 if len(sys.argv)==23 and sys.argv[22]!='None':
@@ -93,7 +92,7 @@ list = ['DLNNDR_1',
 
 # Open input.neo, append parameters, close
 
-neoin = open(workdir+'/input.neo','a') 
+neoin = open(workdir+'/input.neo','a')
 
 # Set input: r_min
 neoin.write('RMIN_OVER_A='+rmin+'\n')
@@ -162,29 +161,29 @@ csauter = []
 
 # Run NEO
 for i in range(6):
-   neoin = open(workdir+'/input.neo','a') 
+   neoin = open(workdir+'/input.neo','a')
    # Overlay gradients
    neoin.write('# '+str(i)+'\n')
    for j in range(6):
       if j == i:
          neoin.write(list[j]+'=1\n')
-      else:        
+      else:
          neoin.write(list[j]+'=0\n')
    neoin.close()
    os.system('neo -e '+workdir)
 
    # Harvest output
-   neoout = np.loadtxt(workdir+'/out.neo.transport') 
+   neoout = np.loadtxt(workdir+'/out.neo.transport')
    jneo=neoout[2]
 
-   neoout = open(workdir+'/out.neo.diagnostic_geo','r') 
+   neoout = open(workdir+'/out.neo.diagnostic_geo','r')
    line = neoout.readlines()[0]
    ipsi = float(string.splitfields(line,'=')[1].rstrip())
 
-   neoout = np.loadtxt(workdir+'/out.neo.equil') 
+   neoout = np.loadtxt(workdir+'/out.neo.equil')
    rhostar=neoout[3]
 
-   neoout = np.loadtxt(workdir+'/out.neo.theory') 
+   neoout = np.loadtxt(workdir+'/out.neo.theory')
    jsauter=neoout[10]
 
    print 'jneo        '+str(jneo)
@@ -194,7 +193,7 @@ for i in range(6):
    jneo_harvest.append(jneo)
    jsauter_harvest.append(jsauter)
    Ipsirho_harvest.append(ipsi*rhostar)
-   
+
    cneo.append(jneo/(ipsi*rhostar*abs(z_all[i])*n_all[i]))
    csauter.append(jsauter/(ipsi*rhostar*abs(z_all[i])*n_all[i]))
 
@@ -215,6 +214,5 @@ from harvest_lib import harvest_send
 import cPickle
 with open('neo_boot.pkl','w') as f:
    cPickle.dump(harvestdata,f)
-
 
 harvest_send(harvestdata,'Neo_boot',verbose=True,protocol='TCP',port=31000)

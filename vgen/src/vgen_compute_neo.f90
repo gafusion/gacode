@@ -5,13 +5,9 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   use neo_interface
   use EXPRO_interface
   use neo_nn_interface
-  
-  
   use mpi
 
   implicit none
-
-  
 
   integer, intent(in) :: i
   integer, intent(in) :: rotation_model
@@ -21,31 +17,6 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   real, intent(out)   :: vtor_diff      ! vtor_exp - vtor_neo (m/s) 
   integer, intent(out) :: simntheta
   
-  ! NN
-  !real :: nn_rmin_in
-  !real :: nn_q_in
-  real :: nn_nuee_in_emily
-  real :: nn_nuee_in_arsene
-  !real :: nn_ni1_ne_in
-  !real :: nn_ti1_te_in
-  
-  !Neural Network globals parameters 
-  !real :: nn_vnorm
-  !real :: nn_anorm
-  !real :: nn_I_over_phi_prime
-  !real :: nn_rho_star
-  !real :: nn_1_over_Lte
-  !real :: nn_1_over_Lne
-  !real :: nn_ni1_dens
-  !real :: nn_ni2_dens
-  !real :: nn_1_over_LtD
-  !real :: nn_1_over_LnD
-  !real :: nn_1_over_LtC
-  !real :: nn_1_over_LnC
-  
-  !real :: nn_charge_norm_fac
-  ! real :: nn_dens_norm_f
-
   integer :: j, n, is
   real :: cc, loglam
 
@@ -79,75 +50,61 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   
   ! Geometry parameters
   
-  neo_rmin_over_a_in  = EXPRO_rmin(i)/EXPRO_rmin(EXPRO_n_exp)
-  neo_rmaj_over_a_in  = EXPRO_rmaj(i)/EXPRO_rmin(EXPRO_n_exp)
-  neo_q_in            = abs(EXPRO_q(i))
-  neo_shear_in        = EXPRO_s(i)
-  neo_shift_in        = EXPRO_drmaj(i)
-  neo_kappa_in        = EXPRO_kappa(i)
-  neo_s_kappa_in      = EXPRO_skappa(i)
-  neo_delta_in        = EXPRO_delta(i)
-  neo_s_delta_in      = EXPRO_sdelta(i)
-  neo_zeta_in         = EXPRO_zeta(i) 
-  neo_s_zeta_in       = EXPRO_szeta(i) 
-  neo_zmag_over_a_in  = EXPRO_zmag(i)/EXPRO_rmin(EXPRO_n_exp)
-  neo_s_zmag_in       = EXPRO_dzmag(i)
+  neo_rmin_over_a_in = EXPRO_rmin(i)/EXPRO_rmin(EXPRO_n_exp)
+  neo_rmaj_over_a_in = EXPRO_rmaj(i)/EXPRO_rmin(EXPRO_n_exp)
+  neo_q_in           = abs(EXPRO_q(i))
+  neo_shear_in       = EXPRO_s(i)
+  neo_shift_in       = EXPRO_drmaj(i)
+  neo_kappa_in       = EXPRO_kappa(i)
+  neo_s_kappa_in     = EXPRO_skappa(i)
+  neo_delta_in       = EXPRO_delta(i)
+  neo_s_delta_in     = EXPRO_sdelta(i)
+  neo_zeta_in        = EXPRO_zeta(i) 
+  neo_s_zeta_in      = EXPRO_szeta(i) 
+  neo_zmag_over_a_in = EXPRO_zmag(i)/EXPRO_rmin(EXPRO_n_exp)
+  neo_s_zmag_in      = EXPRO_dzmag(i)
+  neo_rho_star_in    = sqrt(temp_norm * temp_norm_fac &
+       * mass_norm * mass_deuterium) &
+       / (charge_norm_fac * abs(EXPRO_bunit(i))) &
+       * 1.0e-4 / EXPRO_rmin(EXPRO_n_exp)
   
-  nn_rho_in           = EXPRO_rho(i)
-  nn_delta_in         = EXPRO_delta(i)
-  nn_kappa_in         = EXPRO_kappa(i)
-  nn_sdelta_in        = EXPRO_sdelta(i)
-  nn_skappa_in        = EXPRO_skappa(i)
-  
-  ! New parameters for test
+  ! NN input parameters
+  nn_rho_in          = EXPRO_rho(i)
+  nn_delta_in        = EXPRO_delta(i)
+  nn_kappa_in        = EXPRO_kappa(i)
+  nn_sdelta_in       = EXPRO_sdelta(i)
+  nn_skappa_in       = EXPRO_skappa(i)
   nn_zeta_in          = EXPRO_zeta(i) 
   nn_szeta_in         = EXPRO_szeta(i)
   nn_shift_in         = EXPRO_drmaj(i)
   nn_zmag_over_a_in   = EXPRO_zmag(i)/EXPRO_rmin(EXPRO_n_exp)
   nn_szmag_in         = EXPRO_dzmag(i)
   nn_shear_in         = EXPRO_s(i)
-  !nn_betastar_in      = 
-  
-  ! Neural Network specific local parameters
-  
+    
   ! nn_enorm=char_norm_fac in vgen_globals
-  nn_charge_norm_fac= 1.6022
-  nn_dens_norm_f=EXPRO_ne(i)
-  nn_vnorm=EXPRO_cs(i)                                              ! vnorm cs =(Te/mD)^0.5
-  nn_anorm=EXPRO_rmaj(i)                                            ! anorm = major Radius
-  nn_I_over_phi_prime=EXPRO_grad_r0(i)*EXPRO_bt0(i)/EXPRO_bp0(i)    !geometric factor dimensionless
-  nn_rho_star=EXPRO_rhos(i)/EXPRO_rmaj(i)                           ! normalized gyroadius 
-  nn_1_over_Lte=EXPRO_dlntedr(i)
-  nn_1_over_Lne=EXPRO_dlnnedr(i)
-  nn_ni1_dens=EXPRO_ni_new(i)
-  nn_ni2_dens=EXPRO_ni(2,i)
-  nn_1_over_LtD=EXPRO_dlntidr(1, i)
-  nn_1_over_LnD=EXPRO_dlnnidr_new(i)
-  nn_1_over_LtC=EXPRO_dlntidr(2,i)
-  nn_1_over_LnC=EXPRO_dlnnidr(2,i)
-  nn_ti1_in=EXPRO_ti(1,i)
-  nn_te_in=EXPRO_te(i)
+  nn_charge_norm_fac = charge_norm_fac
+  nn_dens_norm_f = EXPRO_ne(i)
+  nn_vnorm = EXPRO_cs(i)                                              ! vnorm cs = (Te/mD)^0.5
+  nn_anorm = EXPRO_rmaj(i)                                            ! anorm = major Radius
+  nn_I_over_phi_prime = EXPRO_grad_r0(i)*EXPRO_bt0(i)/EXPRO_bp0(i)    !geometric factor dimensionless
+  nn_rho_star = EXPRO_rhos(i)/EXPRO_rmaj(i)                           ! normalized gyroadius 
+  nn_1_over_Lte = EXPRO_dlntedr(i)
+  nn_1_over_Lne = EXPRO_dlnnedr(i)
+  nn_ni1_dens = EXPRO_ni_new(i)
+  nn_ni2_dens = EXPRO_ni(2,i)
+  nn_1_over_LtD = EXPRO_dlntidr(1, i)
+  nn_1_over_LnD = EXPRO_dlnnidr_new(i)
+  nn_1_over_LtC = EXPRO_dlntidr(2,i)
+  nn_1_over_LnC = EXPRO_dlnnidr(2,i)
+  nn_ti1_in = EXPRO_ti(1,i)
+  nn_te_in = EXPRO_te(i)
+  nn_rmin_in = EXPRO_rmin(i)/nn_anorm              ! rmin 
+  nn_q_in =  abs(EXPRO_q(i))                       !q  
+  nn_nuee_in = EXPRO_nuee(i)/(nn_vnorm/nn_anorm)   !nuee 
+  nn_ni1_ne_in = EXPRO_ni_new(i)/EXPRO_ne(i)       !ni1/ne
+  nn_ti1_te_in = nn_ti1_in/nn_te_in                !ti1/te
+  
 
-  ! nn inputs
-  
-  nn_rmin_in=EXPRO_rmin(i)/nn_anorm               ! rmin 
-  nn_q_in= abs(EXPRO_q(i))                        !q  
-  !nn_nuee_in=EXPRO_nuee(i)/(nn_vnorm/nn_anorm)   !nuee  emily
-  !nn_nuee_in=EXPRO_nuee(i)/nn_vnorm/nn_anorm     !nuee  arsene
-
-  !write (*,*) EXPRO_nuee(i)/nn_vnorm/nn_anorm , EXPRO_nuee(i)/(nn_vnorm/nn_anorm)
-  
-  nn_nuee_in=EXPRO_nuee(i)/(nn_vnorm/nn_anorm)   !nuee 
-  nn_ni1_ne_in=EXPRO_ni_new(i)/EXPRO_ne(i)       !ni1/ne
-  nn_ti1_te_in=nn_ti1_in/nn_te_in                !ti1/te
-  
-  
-  
-  neo_rho_star_in = sqrt(temp_norm * temp_norm_fac &
-       * mass_norm * mass_deuterium) &
-       / (charge_norm_fac * abs(EXPRO_bunit(i))) &
-       * 1.0e-4 / EXPRO_rmin(EXPRO_n_exp)
-  
   if(neo_equilibrium_model_in == 3) then
      neo_geo_ny_in = EXPRO_nfourier
      neo_geo_yin_in(:,:) = 0.0
@@ -247,10 +204,7 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
      write(1,'(e16.8)',advance='no') neo_dlntdr_in(is)
   enddo
   close(1)
-  
-  !Set the NN flag
-  !neo_nn_flag_in = vgen_nn_flag
-  
+
   nn_jbs_norm = nn_charge_norm_fac*dens_norm*vth_norm &
        *EXPRO_rmin(EXPRO_n_exp)/1e6
 
@@ -289,11 +243,13 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   enddo
   jbs_norm = charge_norm_fac*dens_norm*vth_norm &
        *EXPRO_rmin(EXPRO_n_exp)/1e6
-  jbs_neo(i)    = neo_jpar_dke_out*jbs_norm
-  jbs_sauter(i) = neo_jpar_thS_out*jbs_norm
-  jbs_koh(i)    = neo_jpar_thK_out*jbs_norm
-  jbs_nclass(i) = neo_jpar_thN_out*jbs_norm
-  pflux_sum(i)  = 0.0
+  jbs_neo(i)     = neo_jpar_dke_out*jbs_norm
+  jbs_sauter(i)  = neo_jpar_thS_out*jbs_norm
+  jbs_koh(i)     = neo_jpar_thK_out*jbs_norm
+  jbs_nclass(i)  = neo_jpar_thN_out*jbs_norm
+  jtor_neo(i)    = neo_jtor_dke_out*jbs_norm
+  jtor_sauter(i) = neo_jtor_thS_out*jbs_norm
+  pflux_sum(i)   = 0.0
   do j=1,neo_n_species_in
      pflux_sum(i) = pflux_sum(i) + zfac(j)*neo_pflux_dke_out(j)
   enddo
