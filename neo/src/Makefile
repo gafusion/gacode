@@ -20,7 +20,6 @@ else
     #stub file
     JBSNN=neo_jbs_nn
 endif
-    
 
 OBJECTS = neo_globals.o \
           neo_nn_interface.o\

@@ -93,6 +93,8 @@ class NEOData:
             sys.exit()
             
         n_spec = self.grid['n_species']
+        if len(equil.shape)==1:
+            equil = equil[None,equil.shape[0]]
 
         self.equil['r_over_a']      = equil[:,0]
         self.equil['dphidr']        = equil[:,1]
