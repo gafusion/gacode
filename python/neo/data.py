@@ -7,7 +7,7 @@ class NEOData:
         >>> from pyrats.neo.data import NEOData
         >>> sim1 = NEOData('example_directory')
     """
-    
+
     #-------------------------------------------------------------------------#
     # Methods
 
@@ -20,12 +20,12 @@ class NEOData:
         self.read_grid()
         self.read_equil()
         self.read_theory()
-        self.read_theory_nclass()
+        #self.read_theory_nclass()
         self.read_transport()
         self.read_transport_gv()
-        self.read_expnorm()
+        #self.read_expnorm()
         self.read_transport_exp()
-        self.read_phi()
+        #self.read_phi()
         self.read_vel()
         self.read_rotation()
 
@@ -55,7 +55,7 @@ class NEOData:
 
         from os.path import expanduser, expandvars
         self.dirname = expanduser(expandvars(path))
-    
+
     #-------------------------------------------------------------------------#
 
     def read_grid(self):
@@ -63,13 +63,13 @@ class NEOData:
 
         import sys
         import numpy as np
- 
+
         try:
             data = np.loadtxt(self.dirname+'/out.neo.grid')
         except:
             print "ERROR (NEOData): Fatal error!  Missing out.neo.grid."
             sys.exit()
-                
+
         self.grid['n_species'] = int(data[0])
         self.grid['n_energy']  = int(data[1])
         self.grid['n_xi']      = int(data[2])
@@ -85,16 +85,16 @@ class NEOData:
 
         import sys
         import numpy as np
- 
+
         try:
             equil = np.loadtxt(self.dirname+'/out.neo.equil')
         except:
             print "ERROR (NEOData): Fatal error!  Missing out.neo.equil."
             sys.exit()
-            
+
         n_spec = self.grid['n_species']
         if len(equil.shape)==1:
-            equil = equil[None,equil.shape[0]]
+            equil = equil[None,:equil.shape[0]]
 
         self.equil['r_over_a']      = equil[:,0]
         self.equil['dphidr']        = equil[:,1]
@@ -116,14 +116,17 @@ class NEOData:
 
         import sys
         import numpy as np
- 
+
         try:
             data = np.loadtxt(self.dirname+'/out.neo.theory')
         except:
             print "ERROR (NEOData): Fatal error!  Missing out.neo.theory."
             sys.exit()
-            
+
         n_spec = self.grid['n_species']
+
+        if len(data.shape)==1:
+            data = data[None,:data.shape[0]]
 
         self.theory['r_over_a'] = data[:,0]
         self.theory['HHGamma']  = data[:,1]
@@ -148,17 +151,19 @@ class NEOData:
 
     def read_transport(self):
         """Reads out.neo.transport."""
-        
+
         import sys
         import numpy as np
- 
+
         try:
             data = np.loadtxt(self.dirname+'/out.neo.transport')
         except:
             print "ERROR (NEOData): Fatal error!  Missing out.neo.transport."
-            sys.exit()
-            
+            return
+
         n_spec = self.grid['n_species']
+        if len(data.shape)==1:
+            data = data[None,:data.shape[0]]
 
         self.transport['r_over_a'] = data[:,0]
         self.transport['phisq']    = data[:,1]
@@ -176,39 +181,41 @@ class NEOData:
 
     #-------------------------------------------------------------------------#
 
-    def read_transport(self):
+    def read_transport_gv(self):
         """Reads out.neo.transport_gv."""
-        
+
         import sys
         import numpy as np
-        
+
         try:
             data = np.loadtxt(self.dirname+'/out.neo.transport_gv')
         except:
             print "ERROR (NEOData): Fatal error!  Missing out.neo.transport_gv."
-            sys.exit()
-            
+            return
+
         n_spec = self.grid['n_species']
+        if len(data.shape)==1:
+            data = data[None,:data.shape[0]]
 
         self.transport_gv['r_over_a'] = data[:,0]
         self.transport_gv['Gamma_gv'] = data[:,1+0*n_spec:1+1*n_spec]
         self.transport_gv['Q_gv']     = data[:,1+1*n_spec:1+2*n_spec]
         self.transport_gv['Pi_gv']    = data[:,1+2*n_spec:1+3*n_spec]
-        
+
     #-------------------------------------------------------------------------#
 
     def read_transport_exp(self):
         """Reads out.neo.transport_exp."""
-        
+
         import sys
         import numpy as np
- 
+
         try:
             data = np.loadtxt(self.dirname+'/out.neo.transport_exp')
         except:
             print "ERROR (NEOData): Fatal error!  Missing out.neo.transport_exp."
-            sys.exit()
-            
+            return
+
         n_spec = self.grid['n_species']
 
         self.transport_exp['r']       = data[:,0]
@@ -236,7 +243,7 @@ class NEOData:
         n_spec   = self.grid['n_species']
         n_theta  = self.grid['n_theta']
         n_radial = self.grid['n_radial']
- 
+
         try:
             data = np.loadtxt(self.dirname+'/out.neo.rotation')
             self.rotation['r_over_a'] = data[:,0]
@@ -254,16 +261,16 @@ class NEOData:
 
     def read_vel(self):
         """Reads out.neo.vel."""
-        
+
         import sys
         import numpy as np
- 
+
         try:
             data = np.loadtxt(self.dirname+'/out.neo.vel')
         except:
             print "ERROR (NEOData): Missing out.neo.vel."
             sys.exit()
-                   
+
         self.vel = data.reshape((self.grid['n_radial'],
                                  self.grid['n_species'],
                                  self.grid['n_theta']))
