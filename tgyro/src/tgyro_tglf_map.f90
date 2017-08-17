@@ -317,7 +317,6 @@ subroutine tgyro_tglf_map
   if ( (i_tran==0) .and. (len_trim(harvest_tag).gt.1) ) then
      ! Initialization
      tglf_harvest_extra_in = NUL
-     harvest_err=set_harvest_verbose(1)
 
      ! Target fluxes
      harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_eflux_e_target'//NUL,eflux_e_target(i_r))

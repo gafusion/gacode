@@ -37,9 +37,7 @@
     ENDIF
 
     ierr=init_harvest('TGYRO_TGLF_NEO'//NUL,harvest_sendline,LEN(harvest_sendline))
-    ierr=set_harvest_verbose(1)
     ierr=set_harvest_protocol('UDP'//NUL)
-    ierr=set_harvest_port(42000)
 
     ierr=set_harvest_payload_str(harvest_sendline,'VERSION'//NUL,'APS15_1'//NUL) !no underscore to allow different versions of the same run
 
