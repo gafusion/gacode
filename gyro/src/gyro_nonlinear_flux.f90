@@ -41,7 +41,8 @@ subroutine gyro_nonlinear_flux
   excparts(:,:)     = 0.0
   momparts(:,:)     = 0.0
 
-!$omp parallel private(exctemp,momtemp,p_nek_loc,ie,k,ck) reduction(+:momparts,excparts)
+!$omp parallel private(exctemp,momtemp,p_nek_loc,p_nek,ie,k,ck,m,ix,is,i) &
+!$omp reduction(+:momparts,excparts)
   exctemp(:)        = 0.0
   momtemp(:)        = 0.0
 

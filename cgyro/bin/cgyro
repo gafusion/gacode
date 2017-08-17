@@ -145,6 +145,7 @@ while [ $# -gt 0 ] ; do
   -compress) COMPRESS_FLAG=1 ;;
 
   -globalmap) GLOBALMAP_FLAG=1 ;;
+
   -rhos) shift ; RHOS=$1 ;;
 
   *) echo "ERROR (cgyro script): unknown option $1." ; exit 1 ;;
@@ -319,8 +320,8 @@ then
       rm -f out.cgyro.*
    fi
     
-   # If there is no restart file, its safe to overwrite the log file
-   if [ ! -f out.cgyro.restart ]
+   # If there are no restart files, its safe to overwrite the log file
+   if [ ! -f out.cgyro.restar* ]
    then
       > out.cgyro.version
    fi

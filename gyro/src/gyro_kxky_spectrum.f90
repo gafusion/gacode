@@ -39,7 +39,7 @@ subroutine gyro_kxky_spectrum
   f_bar = (0.0,0.0)
 
   ! Compute FT of phi.
-!$omp parallel
+!$omp parallel private(i,p,j)
   do i=1,n_x  
      do p = ibeg, iend
         do j=1,n_theta_int

@@ -64,7 +64,7 @@ subroutine gyro_operators_on_h
 
         if (n_field < 3) then
 
-!$omp parallel do default(shared) private(i_diff,m,temp)
+!$omp parallel do private(m,i_diff,temp)
            do i=1,n_x
               do m=1,n_stack
                  temp = (0.0,0.0)
@@ -79,7 +79,7 @@ subroutine gyro_operators_on_h
 
         else
 
-!$omp parallel do default(shared) private(i_diff,m,temp,temp2)
+!$omp parallel do private(i_diff,m,temp,temp2)
            do i=1,n_x
               do m=1,n_stack
                  temp = (0.0,0.0)

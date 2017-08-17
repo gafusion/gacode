@@ -140,7 +140,8 @@ subroutine tgyro_read_input
   call tgyro_readbc_real(tgyro_ped_ratio)
   call tgyro_readbc_real(tgyro_ped_scale)
   call tgyro_readbc_real(tgyro_tglf_nn_max_error)
-  call tgyro_readbc_real(tgyro_quickfast_flag)
+  call tgyro_readbc_int(tgyro_quickfast_flag)
+  call tgyro_readbc_int(tgyro_zero_dens_grad_flag)
   ! ** END input read; ADD NEW PARAMETERS ABOVE HERE!!
   call tgyro_readbc_int(n_inst)
   !-------------------------------------------------------

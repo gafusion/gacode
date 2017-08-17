@@ -21,7 +21,8 @@ subroutine gyro_timestep_error
   !---------------------------------------------------
   rk_error_loc(:,:) = 0.0
 
-!$omp parallel reduction(+:rk_error_loc)
+!$omp parallel private(is,p_nek_loc,i,m) &
+!$omp reduction(+:rk_error_loc)
   do is=1,n_kinetic
      do p_nek_loc=1,n_nek_loc_1
         do i = ibeg, iend

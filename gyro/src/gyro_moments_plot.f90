@@ -44,7 +44,7 @@ subroutine gyro_moments_plot
 
   do is=1,n_kinetic
 
-!$omp parallel private(p_nek_loc,ie,k,ck,m0)
+!$omp parallel private(p_nek_loc,ie,k,ck,m0,p_nek,i,m,i_diff,j)
      vel_sum_loc(:,ibeg:iend,:) = (0.0,0.0)
 
      ! First compute gyro_h = <h+z*alpha*<U>>

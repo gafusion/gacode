@@ -16,19 +16,16 @@ OBJECTS = math_constants.o \
           cub_spline_deriv2.o \
           energy_integral.o \
           gacode_system.o \
-          gamma.o \
           gauss_legendre.o \
           gauss_integ.o \
           i0.o \
-          j0y0.o \
+          math_scaleint.o \
+          math_scaleintv.o \
           parallel_dim.o \
           polydiff.o \
           poly2diff.o \
           proc_time.o \
           pseudospec_lib.o \
-          rjbesl.o \
-          math_scaleint.o \
-          math_scaleintv.o \
           timer_lib.o
 
 .SUFFIXES : .o .f90 .f

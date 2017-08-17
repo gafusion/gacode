@@ -88,6 +88,11 @@ subroutine tgyro_neo_map
      neo_dlntdr_in(i0) = r_min*dlntidr(is,i_r)
   enddo
 
+  ! Setting density gradient artificially to zero to compute D and v
+  if (tgyro_zero_dens_grad_flag /= 0) then
+     neo_dlnndr_in(tgyro_zero_dens_grad_flag) = 0
+  endif
+
   ! Rotation is always *on* in NEO.
   !
   ! COORDINATES: The signs of all rotation-related quantities below are 

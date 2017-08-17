@@ -101,8 +101,12 @@
             phinorm=1.0
             if(ABS(field_spectrum_out(2,j,i)).gt.small)phinorm=field_spectrum_out(2,j,i)
             do is=1,ns
+               field_spectrum_out(3,j,i) = field_spectrum_out(3,j,i)/phinorm
+               field_spectrum_out(4,j,i) = field_spectrum_out(4,j,i)/phinorm
                intensity_spectrum_out(1,is,j,i) = intensity_spectrum_out(1,is,j,i)/phinorm
                intensity_spectrum_out(2,is,j,i) = intensity_spectrum_out(2,is,j,i)/phinorm
+               intensity_spectrum_out(3,is,j,i) = intensity_spectrum_out(3,is,j,i)/phinorm
+               intensity_spectrum_out(4,is,j,i) = intensity_spectrum_out(4,is,j,i)/phinorm
                do k=1,3
                   flux_spectrum_out(1,is,k,j,i) = flux_spectrum_out(1,is,k,j,i)/phinorm
                   flux_spectrum_out(2,is,k,j,i) = flux_spectrum_out(2,is,k,j,i)/phinorm
@@ -262,15 +266,21 @@
      ! recompute the intensity and flux spectra
       do j=1,nky
          do i=1,nmodes_in
+            phinorm=field_spectrum_out(2,j,i) 
+            field_spectrum_out(1,j,i) = phinorm
+            field_spectrum_out(3,j,i) = field_spectrum_out(3,j,i)*phinorm
+            field_spectrum_out(4,j,i) = field_spectrum_out(4,j,i)*phinorm
             do is=1,ns
-               intensity_spectrum_out(1,is,j,i) = intensity_spectrum_out(1,is,j,i)*field_spectrum_out(2,j,i)
-               intensity_spectrum_out(2,is,j,i) = intensity_spectrum_out(2,is,j,i)*field_spectrum_out(2,j,i)
+               intensity_spectrum_out(1,is,j,i) = intensity_spectrum_out(1,is,j,i)*phinorm
+               intensity_spectrum_out(2,is,j,i) = intensity_spectrum_out(2,is,j,i)*phinorm
+               intensity_spectrum_out(3,is,j,i) = intensity_spectrum_out(3,is,j,i)*phinorm
+               intensity_spectrum_out(4,is,j,i) = intensity_spectrum_out(4,is,j,i)*phinorm
                do k=1,3
-                  flux_spectrum_out(1,is,k,j,i) = flux_spectrum_out(1,is,k,j,i)*field_spectrum_out(2,j,i)
-                  flux_spectrum_out(2,is,k,j,i) = flux_spectrum_out(2,is,k,j,i)*field_spectrum_out(2,j,i)
-                  flux_spectrum_out(3,is,k,j,i) = flux_spectrum_out(3,is,k,j,i)*field_spectrum_out(2,j,i)
-                  flux_spectrum_out(4,is,k,j,i) = flux_spectrum_out(4,is,k,j,i)*field_spectrum_out(2,j,i)
-                  flux_spectrum_out(5,is,k,j,i) = flux_spectrum_out(5,is,k,j,i)*field_spectrum_out(2,j,i)
+                  flux_spectrum_out(1,is,k,j,i) = flux_spectrum_out(1,is,k,j,i)*phinorm
+                  flux_spectrum_out(2,is,k,j,i) = flux_spectrum_out(2,is,k,j,i)*phinorm
+                  flux_spectrum_out(3,is,k,j,i) = flux_spectrum_out(3,is,k,j,i)*phinorm
+                  flux_spectrum_out(4,is,k,j,i) = flux_spectrum_out(4,is,k,j,i)*phinorm
+                  flux_spectrum_out(5,is,k,j,i) = flux_spectrum_out(5,is,k,j,i)*phinorm
               enddo
            enddo
         enddo

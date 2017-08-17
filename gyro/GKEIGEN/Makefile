@@ -30,4 +30,4 @@ clean:
 	rm -rf *.o $(LLIB).a
 	rm -rf ${GACODE_ROOT}/modules/gkeigen*.mod	                
 
-include ${GACODE_ROOT}/gyro/install/make.ext.${GACODE_PLATFORM}
+-include ${GACODE_ROOT}/gyro/install/make.ext.${GACODE_PLATFORM}

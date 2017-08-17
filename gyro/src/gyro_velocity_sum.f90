@@ -26,7 +26,7 @@ subroutine gyro_velocity_sum(field)
   !----------------------------------------------------
   ! Now, compute blending projections:
   !
-!$omp parallel private(p_nek_loc,k,ck,gz,m0)
+!$omp parallel private(p_nek_loc,p_nek,k,ck,gz,m0,is,m,j,i)
   sum_loc(:,ibeg:iend) = (0.0,0.0)
   !
   select case (field)

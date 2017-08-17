@@ -38,7 +38,7 @@ subroutine gyro_collision_main
      !
      ! We will ignore d(Psi_a)/dt
 
-!$omp parallel private(p_nek_loc,ie,k)
+!$omp parallel private(p_nek_loc,ie,k,p_nek,m,i)
      p_nek_loc = 0
      do p_nek=1+i_proc_1,n_nek_1,n_proc_1
 
@@ -48,7 +48,7 @@ subroutine gyro_collision_main
         k  = nek_k(p_nek)   
 
         do m=1,n_stack
-           do i = ibeg, iend
+           do i=ibeg,iend
 
               f_coll(m,i,p_nek_loc) = h(m,i,p_nek_loc,is)+&
                    z(is)*alpha_s(is,i)*gyro_u(m,i,p_nek_loc,is)

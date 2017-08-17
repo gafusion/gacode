@@ -82,9 +82,7 @@ windowtxt = r'$['+str(t[imin])+' < (c_s/a) t < '+str(t[-1])+']$'
 
 ax.set_title(r'$\mathrm{'+ntag+'} \quad $'+windowtxt)
     
-t = 2*np.pi*np.arange(0.0,1.0,0.001)
-
-ax.set_title(r'$\mathrm{'+ntag+'} \quad $'+windowtxt)
+t = -np.pi+2*np.pi*np.arange(0.0,1.0,0.001)
 
 e = 0.2
 for ispec in range(ns):
@@ -100,20 +98,20 @@ for ispec in range(ns):
     for l in range(1,nl):
         z = 2*np.pi*l*e
         g0 = g0+2*np.sin(z)*xr[ispec,l]/z
-    ax.plot([0,e],[g0,g0],'o-',color='red')
-    ax.plot([1,1-e],[g0,g0],'o-',color='red')
+    ax.plot([-e,e],[g0,g0],'o-',color='red')
 
     u     = specmap(sim.mass[ispec],sim.z[ispec])
     label = r'$'+mtag+'_'+u+'/'+mtag+'_\mathrm{GB}: '+str(round(g0,3))+'$'
 
     # Flux partial average
     g0 = xr[ispec,0]
-    ax.plot([0,1],[g0,g0],label=label)
+    ax.plot([-0.5,0.5],[g0,g0],label=label)
 
 if ymax != 'auto':
     ax.set_ylim([float(ymin),float(ymax)])
 
-ax.axvspan(0.25,0.75,facecolor='g',alpha=0.1)
+ax.axvspan(-0.25,0.25,facecolor='g',alpha=0.1)
+ax.set_xlim([-0.5,0.5])
 
 ax.legend(loc=2)
 

@@ -84,8 +84,11 @@ program tglf
      ! write temperature fluctuation amplitude spectrum to file out.tglf.temperature_spectrum
      CALL write_tglf_temperature_spectrum
 
-     ! write potential fluctuation amplitude spectrum to file out.tglf.potential_spectrum
-     CALL write_tglf_potential_spectrum
+     ! write intensity fluctuation amplitude spectrum to file out.tglf.intensity_spectrum
+     CALL write_tglf_intensity_spectrum
+
+     ! write field fluctuation amplitude spectrum to file out.tglf.field_spectrum
+     CALL write_tglf_field_spectrum
 
      ! write eigenvalue spectrum to file out.tglf.eigenvalue_spectrum
      CALL write_tglf_eigenvalue_spectrum
@@ -96,6 +99,7 @@ program tglf
   else
 
      print 10,'     ky:',tglf_ky_in
+     print 10,'     ft:',get_ft()
      print 10,'Guassian width = ',get_gaussian_width()
      ! Collect linear eigenvalues
      do i=1,tglf_nmodes_in

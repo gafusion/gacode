@@ -22,7 +22,7 @@ subroutine gyro_get_delta_he
 
   n_s2 = n_stack/2
 
-!$omp parallel private(p_nek_loc,k,ck)
+!$omp parallel private(p_nek_loc,k,ck,p_nek,i,mp,m)
   p_nek_loc = 0
 
   do p_nek=1+i_proc_1,n_nek_1,n_proc_1

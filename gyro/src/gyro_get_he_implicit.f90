@@ -18,7 +18,7 @@ subroutine gyro_get_he_implicit
   complex :: temp
   !---------------------------
 
-!$omp parallel private(p_nek_loc,temp)
+!$omp parallel private(p_nek_loc,temp,p_nek,i,m,j)
   if (n_field == 1) then
 
      ! ELECTROSTATIC

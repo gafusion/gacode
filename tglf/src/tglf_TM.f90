@@ -201,10 +201,12 @@
        do k=1,nmodes_in
         do t = 1,2
           eigenvalue_spectrum_out(t,i,k) = 0.0
+        enddo
+        do t = 1,4
           field_spectrum_out(t,i,k) = 0.0
         enddo
         do is=ns0,ns
-          do t=1,2
+          do t=1,4
             intensity_spectrum_out(t,is,i,k) = 0.0
           enddo
           do j=1,3
@@ -302,6 +304,8 @@
          do imax=1,nmodes_out
            field_spectrum_out(1,i,imax) = reduce*v_bar_out(imax)
            field_spectrum_out(2,i,imax) = reduce*phi_bar_out(imax)
+           field_spectrum_out(3,i,imax) = reduce*a_par_bar_out(imax)
+           field_spectrum_out(4,i,imax) = reduce*b_par_bar_out(imax)
            eigenvalue_spectrum_out(1,i,imax)=gamma_out(imax)
            eigenvalue_spectrum_out(2,i,imax)=freq_out(imax)
            if(ky_in.le.1.0.and.gamma_out(imax).gt.gmax)then
@@ -317,6 +321,8 @@
           do imax=1,nmodes_out
             intensity_spectrum_out(1,is,i,imax) = n_bar_out(imax,is)
             intensity_spectrum_out(2,is,i,imax) = t_bar_out(imax,is)
+            intensity_spectrum_out(3,is,i,imax) = u_bar_out(imax,is)
+            intensity_spectrum_out(4,is,i,imax) = q_bar_out(imax,is)
            enddo !imax
          enddo  ! is
 ! save flux_spectrum_out 

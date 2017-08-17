@@ -22,9 +22,9 @@ subroutine gyro_field_time_derivative
   real :: minus_n_omega
   !---------------------------------------------------
 
-!$omp parallel private(minus_n_omega)
+!$omp parallel private(minus_n_omega,is,i,m)
   do is=1,n_kinetic
-     do i = ibeg, iend
+     do i=ibeg,iend
         do m=1,n_stack
 
            h_cap(m,i,:,is) = h(m,i,:,is) &

@@ -1,5 +1,5 @@
 !------------------------------------------------
-! gyro_write_restart.f90 [caller: gyro_fulladvance]
+! gyro_write_restart.mpiio.f90
 !
 ! PURPOSE:
 !  This is the master file controlling output of
@@ -15,13 +15,22 @@ subroutine gyro_write_restart
   !----------------------------------------------
   implicit none
   !
-  integer :: io
+  real :: t_current_old
   !
+  integer :: io
   integer :: data_step_old
   integer :: n_proc_old
   integer :: i_restart_old
+  character (len=1) :: i_tag
   !
-  real :: t_current_old
+  ! Required for MPI-IO: 
+  !
+  integer :: filemode
+  integer :: finfo
+  integer :: fhv
+  integer :: fstatus(MPI_STATUS_SIZE)
+  integer(kind=MPI_OFFSET_KIND) :: disp
+  integer(kind=MPI_OFFSET_KIND) :: offset1
   !----------------------------------------------
 
   !---------------------------------------------
@@ -38,59 +47,86 @@ subroutine gyro_write_restart
   i_restart = 1-i_restart 
   !------------------------------
 
-  !-----------------------------------------------
-  ! Dump h:
-  !
-  if (i_proc == 0) then
-     open(unit=io,file=trim(path)//file_restart(i_restart),status='replace')
-     write(io,fmtstr2) h
+  if (i_proc == 0 .and. debug_flag == 1) then
+     print *,'[Saving to ',trim(path)//file_restart(i_restart),']'
   endif
 
-  do i_proc_w=1,n_proc-1
+  !-----------------------------------------------
+  ! Dump h and blending coefficients:
+  !
+  filemode = IOR(MPI_MODE_RDWR,MPI_MODE_CREATE)
+  disp     = 0
 
-     if (i_proc == 0) then
+  if (huge_restart == 0) then
 
-        call MPI_RECV(h_0,&
-             size(h_0),&
-             MPI_DOUBLE_COMPLEX,&
-             i_proc_w,&
-             i_proc_w,&
-             GYRO_COMM_WORLD,&
-             recv_status,&
+     call MPI_INFO_CREATE(finfo,i_err)
+
+     call MPI_FILE_OPEN(GYRO_COMM_WORLD,&
+          trim(path)//file_restart(i_restart),&
+          filemode,&
+          finfo,&
+          fhv,&
+          i_err)
+
+     call MPI_FILE_SET_VIEW(fhv,&
+          disp,&
+          MPI_COMPLEX16,&
+          MPI_COMPLEX16,&
+          'native',&
+          finfo,&
+          i_err)
+
+     offset1 = size(h)*i_proc
+
+     call MPI_FILE_WRITE_AT(fhv,&
+          offset1,&
+          h,&
+          size(h),&
+          MPI_COMPLEX16,&
+          fstatus,&
+          i_err)
+
+     call MPI_FILE_SYNC(fhv,i_err)
+     call MPI_FILE_CLOSE(fhv,i_err)
+
+  else
+
+     do is=1,n_kinetic
+        i_tag = achar(is-1+iachar("0"))
+
+        call MPI_INFO_CREATE(finfo,i_err)
+
+        call MPI_FILE_OPEN(GYRO_COMM_WORLD,&
+             trim(path)//file_restart(i_restart)//i_tag,&
+             filemode,&
+             finfo,&
+             fhv,&
              i_err)
 
-        write(io,fmtstr2) h_0
-
-        ! Determine correct integer format for printing
-        ! brackets:
-
-        if (debug_flag == 1) then
-           if (i_proc_w < 10) then
-              write(6,'(a,i1,a)',advance='no') '[',i_proc_w,']'
-           else if (i_proc_w < 100) then
-              write(6,'(a,i2,a)',advance='no') '[',i_proc_w,']'
-           else
-              write(6,'(a,i3,a)',advance='no') '[',i_proc_w,']'
-           endif
-           if (modulo(i_proc_w,8) == 0) print *
-        endif
-
-     else if (i_proc == i_proc_w) then
-
-        call MPI_SEND(h,&
-             size(h),&
-             MPI_DOUBLE_COMPLEX,&
-             0,&
-             i_proc_w,&
-             GYRO_COMM_WORLD,&
+        call MPI_FILE_SET_VIEW(fhv,&
+             disp,&
+             MPI_COMPLEX16,&
+             MPI_COMPLEX16,&
+             'native',&
+             finfo,&
              i_err)
 
-     endif
+        offset1 = size(h(:,:,:,is))*i_proc
 
-  enddo
+        call MPI_FILE_WRITE_AT(fhv,&
+             offset1,&
+             h(:,:,:,is),&
+             size(h(:,:,:,is)),&
+             MPI_COMPLEX16,&
+             fstatus,&
+             i_err)
 
-  if (i_proc == 0) close(io)
-  !------------------------------------------------
+        call MPI_FILE_SYNC(fhv,i_err)
+        call MPI_FILE_CLOSE(fhv,i_err)
+
+     enddo
+
+  endif
 
   !---------------------------------------------------------
   ! Dump restart parameters
@@ -112,6 +148,7 @@ subroutine gyro_write_restart
         write(io,*) n_proc_old
         write(io,*) i_restart_old
         close(io)
+
      endif
 
      open(unit=io,file=trim(path)//file_tag_restart(1),status='replace')
@@ -122,8 +159,6 @@ subroutine gyro_write_restart
      close(io)
 
   endif
-  !---------------------------------------------------------
 
-  ! ** Keep this consistent with gyro_read_restart.f90
 
 end subroutine gyro_write_restart

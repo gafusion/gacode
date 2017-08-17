@@ -31,21 +31,17 @@ VGEN_DIR=${GACODE_ROOT}/vgen/templates
 # VGEN exec directory
 VGEN_EXE=${GACODE_ROOT}/vgen/src
 # - profiles_gen converter executable
-EXEC=${GACODE_ROOT}/shared/profiles_gen/src/prgen
+EXEC=${GACODE_ROOT}/profiles_gen/src/prgen
 # - GATO executable
 GATO=${GACODE_ROOT}/gato/gato
 # - OMFIT script
 OMFIT=${OMFIT_ROOT}/src/omfit.py
 # - locpargen executable
-LOCPARGEN=${GACODE_ROOT}/shared/profiles_gen/locpargen/locpargen
+LOCPARGEN=${GACODE_ROOT}/profiles_gen/locpargen/locpargen
 # - exprodump executable
-EXPRODUMP=${GACODE_ROOT}/shared/profiles_gen/exprotools/exprodump
+EXPRODUMP=${GACODE_ROOT}/profiles_gen/exprotools/exprodump
 # - create executable
-CREATE=${GACODE_ROOT}/shared/profiles_gen/exprotools/create
-# - ASTRA converter
-ASTRA=${GACODE_ROOT}/shared/profiles_gen/astra/astra2gyro.py
-# - ASTRA default map file
-ASTRAMAP=${GACODE_ROOT}/shared/profiles_gen/astra/astra_map_gyro
+CREATE=${GACODE_ROOT}/profiles_gen/exprotools/create
 #=============================================================
 
 #=============================================================

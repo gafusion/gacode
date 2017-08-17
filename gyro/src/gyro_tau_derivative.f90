@@ -43,7 +43,8 @@ subroutine gyro_tau_derivative
 
   ! We should be calling this for gyrokinetic species only
 
-!$omp parallel private(upwind,p_nek_loc,ie,k,ck,p,mff,mf,mc,mb,mbb,pff,pf,pc,pb,pbb,temp1,temp2)
+!$omp parallel private(upwind,p_nek_loc,ie,k,ck,p,mff,mf,mc,mb,mbb,pff,pf,pc,pb,pbb,temp1,temp2) &
+!$omp private(is,p_nek,i,m)
   do is=1,n_gk
 
      ! q has sign ipccw*btccw, but upwind dissipation must have 

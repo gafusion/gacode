@@ -25,7 +25,7 @@ subroutine gyro_conserve_number
   ! Now, compute blending projections:
   !
   !
-!$omp parallel private(p_nek_loc,ie,k,ck,m0)
+!$omp parallel private(p_nek_loc,ie,k,ck,m0,p_nek,i,m)
   vel_sum_loc(:,ibeg:iend) = (0.0,0.0)
 
   p_nek_loc = 0
@@ -38,8 +38,7 @@ subroutine gyro_conserve_number
 
      ck = class(k)
 
-     do i = ibeg, iend
-
+     do i=ibeg,iend
 
         do m=1,n_stack
 
@@ -92,7 +91,7 @@ subroutine gyro_conserve_number
   !---------------------------------------------------
   ! Correct distribution
   !
-!$omp parallel private(p_nek_loc,ie,k,ck,m0,is)
+!$omp parallel private(p_nek_loc,ie,k,ck,m0,is,p_nek,i,m)
   p_nek_loc = 0
   do p_nek=1+i_proc_1,n_nek_1,n_proc_1
 
@@ -103,7 +102,7 @@ subroutine gyro_conserve_number
 
      ck = class(k)
 
-     do i = ibeg, iend
+     do i=ibeg,iend
 
         do m=1,n_stack
 

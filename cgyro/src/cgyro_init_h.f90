@@ -97,16 +97,22 @@ subroutine cgyro_init_h
               endif
 
               if (px0 >= 0) then
-                 ! px0 > 0  initial condition to isolate theta_0’s
-                 ! theta_0 = pi*px0/(n*box_size/2) with px0 = 0,1,2,...,box_size/2 
 
-                 h_x(ic,iv_loc) = 0.0
+                 if (amp > 0) then
 
-                 if (px(ir_c(ic)) == n*(px0+box_size)) then
-                    h_x(ic,iv_loc) = amp*rho/n**2
-                 endif
-                 if (px(ir_c(ic)) == n*(px0-box_size)) then
-                    h_x(ic,iv_loc) = amp*rho/n**2
+                    ! px0 > 0  initial condition to isolate theta_0’s
+                    ! theta_0 = pi*px0/(n*box_size/2) with px0 = 0,1,2,...,box_size/2 
+
+                    h_x(ic,iv_loc) = 0.0
+
+                    if (px(ir_c(ic)) == n*(px0+box_size)) then
+                       h_x(ic,iv_loc) = amp*rho/n**2
+                    endif
+                    if (px(ir_c(ic)) == n*(px0-box_size)) then
+                       h_x(ic,iv_loc) = amp*rho/n**2
+                    endif
+                 else
+                    h_x(ic,iv_loc) = amp*rho
                  endif
 
               endif

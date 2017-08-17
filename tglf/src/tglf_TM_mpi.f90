@@ -191,8 +191,8 @@
       ! mpi 
       REAL :: ne_te_phase_spectrum_save(nkym,maxmodes)
       REAL :: eigenvalue_spectrum_save(2,nkym,maxmodes)
-      REAL :: field_spectrum_save(2,nkym,maxmodes)
-      REAL :: intensity_spectrum_save(2,nsm,nkym,maxmodes)
+      REAL :: field_spectrum_save(4,nkym,maxmodes)
+      REAL :: intensity_spectrum_save(4,nsm,nkym,maxmodes)
       REAL :: flux_spectrum_save(5,nsm,3,nkym,maxmodes)
       REAL :: spectral_shift_save(nkym)
       INTEGER :: ierr
@@ -209,10 +209,12 @@
        do k=1,nmodes_in
         do t = 1,2
           eigenvalue_spectrum_save(t,i,k) = 0.0
+        enddo
+        do t=1,4
           field_spectrum_save(t,i,k) = 0.0
         enddo
         do is=ns0,ns
-          do t=1,2
+          do t=1,4
             intensity_spectrum_save(t,is,i,k) = 0.0
           enddo
           do j=1,3
@@ -308,6 +310,8 @@
          do imax=1,nmodes_out
            field_spectrum_save(1,i,imax) = reduce*v_bar_out(imax)
            field_spectrum_save(2,i,imax) = reduce*phi_bar_out(imax)
+           field_spectrum_save(3,i,imax) = reduce*a_par_bar_out(imax)
+           field_spectrum_save(4,i,imax) = reduce*b_par_bar_out(imax)
            eigenvalue_spectrum_save(1,i,imax)=gamma_out(imax)
            eigenvalue_spectrum_save(2,i,imax)=freq_out(imax)
            if(ky_in.le.1.0.and.gamma_out(imax).gt.gmax)then
@@ -321,8 +325,10 @@
 ! save intensity_spectrum_out
          do is=ns0,ns
           do imax=1,nmodes_out
-            intensity_spectrum_save(1,is,i,imax) = n_bar_out(imax,is)
-            intensity_spectrum_save(2,is,i,imax) = t_bar_out(imax,is)
+            intensity_spectrum_save(1,is,i,imax) = N_bar_out(imax,is)
+            intensity_spectrum_save(2,is,i,imax) = T_bar_out(imax,is)
+            intensity_spectrum_save(3,is,i,imax) = U_bar_out(imax,is)
+            intensity_spectrum_save(4,is,i,imax) = Q_bar_out(imax,is)
            enddo !imax
          enddo  ! is
 ! save flux_spectrum_out 
@@ -373,14 +379,14 @@
                         ,ierr)
       call MPI_ALLREDUCE(field_spectrum_save         &
                         ,field_spectrum_out          &
-                        ,2*nkym*maxmodes             &
+                        ,4*nkym*maxmodes             &
                         ,MPI_DOUBLE_PRECISION        &
                         ,MPI_SUM                     &
                         ,iCommTglf                   &
                         ,ierr)
       call MPI_ALLREDUCE(intensity_spectrum_save     &
                         ,intensity_spectrum_out      &
-                        ,2*nsm*nkym*maxmodes         &
+                        ,4*nsm*nkym*maxmodes         &
                         ,MPI_DOUBLE_PRECISION        &
                         ,MPI_SUM                     &
                         ,iCommTglf                   &

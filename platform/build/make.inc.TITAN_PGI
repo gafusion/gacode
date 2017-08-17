@@ -13,30 +13,24 @@ NUMAS_PER_NODE=2
 # Compilers and flags
 
 # Fortran 90/95 compiler
-FC = ftn -module ${GACODE_ROOT}/modules -Mpreprocess -DUSE_INLINE 
+FC = ftn -module ${GACODE_ROOT}/modules -Mpreprocess -DUSE_INLINE
 
 # Fortran 77 compiler
-F77 = ${FC} 
+F77 = ${FC}
 
 # Compiler options/flags
-FACC   = -acc -Minfo=accel -Mcuda=kepler,nollvm,keepgpu 
-FOMP   = -mp -Mstack_arrays ${FACC}
-FMATH  = -r8 -Mr8 -Mr8intrinsics
-FOPT   = -fast -fastsse -Mvect -Minfo=all
-FDEBUG = -g -Kieee -Ktrap=fp,divz -Mbounds -Mchkptr -Mchkstk -traceback -Minform=inform
+FACC   =-acc -Minfo=accel -Mcuda=kepler,nollvm,keepgpu
+FOMP   =-mp -Mstack_arrays ${FACC}
+FMATH  =-r8
+FOPT   =-fast -fastsse -Mvect -Minfo=all
+FDEBUG =-g -Kieee -Ktrap=fp,divz -Mbounds -Mchkptr -Mchkstk -traceback -Minform=inform
 
 # System math libraries
-#LMATH = -L/opt/fftw/3.3.0.1/x86_64/lib -Wl,-rpath=/opt/fftw/3.3.0.1/x86_64/lib \
-#        -lfftw3_threads -lfftw3f_threads -lfftw3 -lfftw3f
-LMATH=-I$FFTW_INC -L$FFTW_DIR \
-         -lfftw3_threads -lfftw3f_threads -lfftw3f -lfftw3 \
-         -lfftw3_threads -lfftw3f_threads -lfftw3f -lfftw3   \
-         -lcufft
-
+LMATH=-lfftw3_threads -lfftw3f_threads -lfftw3f -lfftw3 -lcufft
 
 # NetCDF
-NETCDF = ${NETCDF_DIR}/lib/libnetcdff.a ${NETCDF_DIR}/lib/libnetcdf.a
-NETCDF_INC = ${NETCDF_DIR}/include
+NETCDF =-L${NETCDF_DIR}/lib -lnetcdff -lnetcdf -L${NETCDF_DIR}/lib -L${NETCDF_DIR}/lib -lz -lm
+NETCDF_INC =${NETCDF_DIR}/include
 
 # Archive
 ARCH = ar cr

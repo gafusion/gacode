@@ -100,7 +100,7 @@ def setlimits(a,fmin,fmax):
 def specmap(m_in,z_in):
  
   # Assume Deuterium normalization
-  m = int(m_in)*2
+  m = int(m_in*2)
   z = int(z_in)
 
   if z < 0:

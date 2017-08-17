@@ -16,6 +16,7 @@
       USE tglf_global
       USE tglf_species
       USE tglf_eigen
+      USE tglf_weight
 !
       IMPLICIT NONE
       REAL,PARAMETER :: epsilon1 = 1.E-12
@@ -23,13 +24,7 @@
       INTEGER :: imax,is
       INTEGER :: mi,me
       REAL :: zgamax
-      REAL :: particle_QL(nsm,3),energy_QL(nsm,3)
-      REAL :: stress_par_QL(nsm,3),stress_tor_QL(nsm,3)
-      REAL :: exchange_QL(nsm,3)
-      REAL :: phi_QL,N_QL(nsm),T_QL(nsm)
-      REAL :: Ne_Te_phase
-      REAL :: wd_bar,b0_bar,modB_bar
-      REAL :: kx_bar,kpar_bar,v2_bar,kyi
+      REAL :: v2_bar,kyi
       REAL :: sum_v_bar, sum_modB_bar
       REAL :: get_intensity, get_gamma_net
 !  ZGESV storage
@@ -160,7 +155,11 @@
         gamma_out(j1) = 0.0
         freq_out(j1) = 0.0
         phi_QL_out(j1) = 0.0
+        a_par_QL_out(j1) = 0.0
+        b_par_QL_out(j1) = 0.0
         phi_bar_out(j1) = 0.0
+        a_par_bar_out(j1) = 0.0
+        b_par_bar_out(j1) = 0.0
         v_bar_out(j1) = 0.0
         do is=1,nsm
           do j=1,3
@@ -172,8 +171,12 @@
           enddo
           N_QL_out(j1,is) = 0.0
           T_QL_out(j1,is) = 0.0
+          U_QL_out(j1,is) = 0.0
+          Q_QL_out(j1,is) = 0.0
           N_bar_out(j1,is) = 0.0
           T_bar_out(j1,is) = 0.0
+          U_bar_out(j1,is) = 0.0
+          Q_bar_out(j1,is) = 0.0
         enddo
         ne_te_phase_out(j1) = 0.0
       enddo
@@ -276,31 +279,34 @@
 !  alpha/beta=-xi*(frequency+xi*growthrate)
           eigenvalue = xi*alpha(jmax(imax))/beta(jmax(imax))  
 !          write(*,*)"eigenvalue=",eigenvalue,imax
-          call get_QL_weights(particle_QL,energy_QL,stress_par_QL,stress_tor_QL, &
-               exchange_QL,phi_QL,N_QL,T_QL,wd_bar,b0_bar,modB_bar,    &
-               kx_bar,kpar_bar,NE_Te_phase,field_weight)
+          call get_QL_weights
+!
           wd_bar_out(imax)=wd_bar
           b0_bar_out(imax)=b0_bar
           modB_bar_out(imax)=modB_bar
-          phi_QL_out(imax)=phi_QL
+          phi_QL_out(imax)=phi_weight
+          a_par_QL_out(imax)=a_par_weight
+          b_par_QL_out(imax)=b_par_weight
           kx_bar_out(imax)=kx_bar
           kpar_bar_out(imax)=kpar_bar/(R_unit*q_unit*width_in)
-          do i=1,nbasis
-            do j=1,3
-             field_weight_out(imax,j,i)=field_weight(j,i)
-            enddo
-          enddo
+!          do i=1,nbasis
+!            do j=1,3
+!             field_weight_out(imax,j,i)=field_weight(j,i)
+!            enddo
+ !         enddo
 !
           do is=ns0,ns
             do j=1,3
-              particle_QL_out(imax,is,j)=particle_QL(is,j)
-              energy_QL_out(imax,is,j)=energy_QL(is,j)
-              stress_par_QL_out(imax,is,j)=stress_par_QL(is,j)
-              stress_tor_QL_out(imax,is,j)=stress_tor_QL(is,j)
-              exchange_QL_out(imax,is,j)=exchange_QL(is,j)
+              particle_QL_out(imax,is,j)=particle_weight(is,j)
+              energy_QL_out(imax,is,j)=energy_weight(is,j)
+              stress_par_QL_out(imax,is,j)=stress_par_weight(is,j)
+              stress_tor_QL_out(imax,is,j)=stress_tor_weight(is,j)
+              exchange_QL_out(imax,is,j)=exchange_weight(is,j)
             enddo 
-            N_QL_out(imax,is)=N_QL(is)
-            T_QL_out(imax,is)=T_QL(is)
+            N_QL_out(imax,is)=N_weight(is)
+            T_QL_out(imax,is)=T_weight(is)
+            U_QL_out(imax,is)=U_weight(is)
+            Q_QL_out(imax,is)=Q_weight(is)
           enddo
           ne_te_phase_out(imax) = Ne_Te_phase
           kyi=ky
@@ -309,9 +315,13 @@
           v_bar_out(imax) = v2_bar
 !
           phi_bar_out(imax) = v2_bar*phi_QL_out(imax)
+          a_par_bar_out(imax) = v2_bar*a_par_QL_out(imax)
+          b_par_bar_out(imax) = v2_bar*b_par_QL_out(imax)
           do is=ns0,ns
-            n_bar_out(imax,is)=v2_bar*N_QL_out(imax,is)
-            t_bar_out(imax,is)=v2_bar*T_QL_out(imax,is)
+            N_bar_out(imax,is)=v2_bar*N_QL_out(imax,is)
+            T_bar_out(imax,is)=v2_bar*T_QL_out(imax,is)
+            U_bar_out(imax,is)=v2_bar*U_QL_out(imax,is)
+            Q_bar_out(imax,is)=v2_bar*Q_QL_out(imax,is)
           enddo
          endif
         enddo
@@ -546,10 +556,7 @@
 !
       END SUBROUTINE sort_eigenvalues
 !
-      SUBROUTINE get_QL_weights(particle_weight,energy_weight, &
-        stress_par_weight,stress_tor_weight,exchange_weight, &
-        phi_weight,N_weight,T_weight,wd_bar,b0_bar,modB_bar,kx_bar,kpar_bar, &
-        Ne_Te_phase,field_weight)
+      SUBROUTINE get_QL_weights
 ! **************************************************************
 !
 ! compute the quasilinear weights for a single eigenmode
@@ -563,6 +570,7 @@
 !      USE tglf_hermite
       USE tglf_eigen
       USE tglf_coeff
+      USE tglf_weight
 ! 
       IMPLICIT NONE
 !
@@ -593,16 +601,8 @@
       COMPLEX :: phi_kpar_phi,kpar_phi
       COMPLEX :: freq_QL
       REAL :: betae_psi,betae_sig
-      REAL :: phi_norm,vnorm
-      REAL :: particle_weight(nsm,3)
-      REAL :: energy_weight(nsm,3)
-      REAL :: stress_par_weight(nsm,3)
-      REAL :: stress_tor_weight(nsm,3)
-      REAL :: exchange_weight(nsm,3)
-      REAL :: N_weight(nsm),T_weight(nsm)
-      REAL :: wd_bar,b0_bar,modB_bar,kx_bar,kpar_bar
-      REAL :: phi_weight,epsilon1
-      REAL :: Ne_Te_phase,Ne_Te_cos,Ne_Te_sin
+      REAL :: phi_norm,psi_norm,bsig_norm,vnorm
+      REAL :: epsilon1
       REAL :: stress_correction,wp
 !
 !      xi=(0.0,1.0)
@@ -697,11 +697,15 @@
         enddo
       enddo
 !
-!  compute phi_norm
+!  compute phi_norm, psi_norm, sig_norm
 !
       phi_norm = 0.0
+      psi_norm = 0.0
+      bsig_norm = 0.0
       do i=1,nbasis
         phi_norm = phi_norm + REAL(phi(i)*CONJG(phi(i)))
+        psi_norm = psi_norm + REAL(psi(i)*CONJG(psi(i)))
+        bsig_norm = bsig_norm + REAL(bsig(i)*CONJG(bsig(i)))
       enddo
       if(phi_norm.lt.epsilon1)phi_norm = epsilon1
 !      write(*,*)"phi_norm =",phi_norm
@@ -849,15 +853,23 @@
       do is=ns0,ns
         N_weight(is)=0.0
         T_weight(is)=0.0
+        U_weight(is)=0.0
+        Q_weight(is)=0.0
         do i=1,nbasis
           temp(is,i) = p_tot(is,i) - n(is,i)
           N_weight(is) = N_weight(is) + REAL(n(is,i)*CONJG(n(is,i)))
           T_weight(is) = T_weight(is) + REAL(temp(is,i)*CONJG(temp(is,i)))
+          U_weight(is) = U_weight(is) + REAL(u_par(is,i)*CONJG(u_par(is,i)))
+          Q_weight(is) = Q_weight(is) + REAL(q_tot(is,i)*CONJG(q_tot(is,i)))
         enddo
         N_weight(is) = N_weight(is)/vnorm
         T_weight(is) = T_weight(is)/vnorm 
+        U_weight(is) = U_weight(is)/vnorm
+        Q_weight(is) = Q_weight(is)/vnorm 
       enddo
       phi_weight = phi_norm/vnorm 
+      a_par_weight = psi_norm/vnorm
+      b_par_weight = bsig_norm/vnorm
 !
 !      write(*,*) 'ns = ',ns
 !      write(*,*) 'is  particle_weight   energy_weight'

@@ -1,1 +1,0 @@
-GATOFLAGS = --default-real-8 -fno-align-commons -O0

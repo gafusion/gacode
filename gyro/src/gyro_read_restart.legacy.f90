@@ -1,10 +1,9 @@
-!------------------------------------------------------
-! gyro_read_restart.mpiio.f90
+!--------------------------------------------------------
+! gyro_read_restart.f90
 !
 ! PURPOSE:
-!  This is the master file controlling the restart
-!  for systems with MPI-IO.
-!------------------------------------------------------
+!  This is the master file controlling the restart.
+!--------------------------------------------------------
 
 subroutine gyro_read_restart
 
@@ -12,24 +11,16 @@ subroutine gyro_read_restart
   use gyro_globals
   use gyro_pointers
 
-  !---------------------------------------------------
+  !------------------------------------------------------------
   ! Local variables:
   !
   implicit none
   !
   integer :: n_proc_old
   integer :: io
-  character (len=1) :: i_tag
   !
-  ! Required for MPI-IO: 
-  !
-  integer :: filemode
-  integer :: finfo
-  integer :: fhv
-  integer :: fstatus(MPI_STATUS_SIZE)
-  integer(kind=MPI_OFFSET_KIND) :: disp
-  integer(kind=MPI_OFFSET_KIND) :: offset1
-  !---------------------------------------------------
+  complex, dimension(n_stack,n_x,n_nek_loc_1,n_kinetic) :: h_in
+  !------------------------------------------------------------
 
   io = io_restart
 
@@ -53,7 +44,7 @@ subroutine gyro_read_restart
 
      if (i_err /= 0 .and. restart_method > 0) then
         call send_message(&
-             'INFO: Restart data not available.  Reseting restart_method.')
+             'INFO: (gyro) Restart data not available.  Reseting restart_method.')
         restart_method = 0
      endif
 
@@ -90,7 +81,7 @@ subroutine gyro_read_restart
      data_step = 0
 
      ! i_restart is always tagged to most recent output 
-     ! files.  If late_restart = 0, then we want 1-i_restart
+     ! files.  If restart_new_flag = 0, then we want 1-i_restart
 
   case (1,2,3)
 
@@ -141,77 +132,53 @@ subroutine gyro_read_restart
         call catch_error('ERROR: (GYRO) Processor number changed.')
      endif
 
-     ! Determine which file to read
-
-     filemode = IOR(MPI_MODE_RDWR,MPI_MODE_CREATE)
-     disp     = 0
-
-     if (huge_restart == 0) then
-
-        call MPI_INFO_CREATE(finfo,i_err)
-
-        call MPI_FILE_OPEN(GYRO_COMM_WORLD,&
-             trim(path)//file_restart(i_restart),&
-             filemode,&
-             finfo,&
-             fhv,&
-             i_err)
-
-        call MPI_FILE_SET_VIEW(fhv,&
-             disp,&
-             MPI_COMPLEX16,&
-             MPI_COMPLEX16,&
-             'native',&
-             finfo,&
-             i_err)
-
-        offset1 = size(h)*i_proc
-
-        call MPI_FILE_READ_AT(fhv,&
-             offset1,&
-             h,&
-             size(h),&
-             MPI_COMPLEX16,&
-             fstatus,&
-             i_err)
-
-        call MPI_FILE_CLOSE(fhv,i_err)
-
-     else
-
-        do is=1,n_kinetic
-           i_tag = achar(is-1+iachar("0"))
-
-           call MPI_INFO_CREATE(finfo,i_err)
-
-           call MPI_FILE_OPEN(GYRO_COMM_WORLD,&
-                trim(path)//file_restart(i_restart)//i_tag,&
-                filemode,&
-                finfo,&
-                fhv,&
-                i_err)
-
-           call MPI_FILE_SET_VIEW(fhv,&
-                disp,&
-                MPI_COMPLEX16,&
-                MPI_COMPLEX16,&
-                'native',&
-                finfo,&
-                i_err)
-
-           offset1 = size(h(:,:,:,is))*i_proc
-
-           call MPI_FILE_READ_AT(fhv,&
-                offset1,&
-                h(:,:,:,is),&
-                size(h(:,:,:,is)),&
-                MPI_COMPLEX16,&
-                fstatus,&
-                i_err)
-
-           call MPI_FILE_CLOSE(fhv,i_err)
-        enddo
+     if (i_proc == 0) then
+        open(unit=io,file=trim(path)//file_restart(i_restart),status='old')
+        read(io,fmtstr2) h
+        call send_line('INFO: (GYRO) Restarting.')
      endif
+
+     do i_proc_w=1,n_proc-1
+
+        if (i_proc == 0) then
+
+           if (debug_flag == 1) then
+              if (i_proc_w < 10) then
+                 write(*,'(a,i1,a)',advance='no') '[',i_proc_w,']'
+              else if (i_proc_w < 100) then
+                 write(*,'(a,i2,a)',advance='no') '[',i_proc_w,']'
+              else
+                 write(*,'(a,i3,a)',advance='no') '[',i_proc_w,']'
+              endif
+              if (modulo(i_proc_w,8) == 0) print *
+           endif
+
+           read(io,fmtstr2) h_in
+
+           call MPI_SEND(h_in,&
+                size(h_in),&
+                MPI_DOUBLE_COMPLEX,&
+                i_proc_w,&
+                i_proc_w,&
+                GYRO_COMM_WORLD,&
+                i_err)
+
+        else if (i_proc == i_proc_w) then
+
+           call MPI_RECV(h,&
+                size(h),&
+                MPI_DOUBLE_COMPLEX,&
+                0,&
+                i_proc_w,&
+                GYRO_COMM_WORLD,&
+                recv_status,&
+                i_err)
+
+        endif
+
+     enddo
+
+     if (i_proc == 0) close(io)
 
   case default
 
@@ -224,7 +191,7 @@ subroutine gyro_read_restart
   call gyro_field_solve_explicit
 
   if (debug_flag == 1 .and. i_proc == 0) then
-     print *,'[gyro_read_restart (MPI-IO) done]'
+     print *,'[gyro_read_restart done]'
   endif
 
 end subroutine gyro_read_restart

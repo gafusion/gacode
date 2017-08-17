@@ -36,7 +36,7 @@ subroutine gyro_phi_kp_squared
   real, dimension(n_field) :: ave_phi_n
   !--------------------------------------------------  
 
-!$omp parallel private(p_nek_loc,ie,k,k2phi,inqr,ip)
+!$omp parallel private(p_nek_loc,ie,k,k2phi,inqr,ip,p_nek,m,i,i_diff)
   moment(ibeg:iend,:) = 0.0
 
   !-----------------------------------------------------------

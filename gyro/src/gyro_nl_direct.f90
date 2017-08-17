@@ -43,7 +43,7 @@ subroutine gyro_nl_direct
 
         ! fn, gn and fgp have ip indices;
         ! must be zeroed.
-!$omp parallel private(add1,add2,add3)
+!$omp parallel private(add1,add2,add3,i,nn,i_diff,n1)
         do i = ibeg, iend
            do nn=0,n_max
               gn(nn,i) = h_tran(i,i_split,i_p(nn),is)

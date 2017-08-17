@@ -30,7 +30,7 @@ subroutine gyro_collision_kernel(ic)
      i  = ine_i(p_ine)
      ie = ine_e(p_ine)
 
-!$omp parallel do private(p) schedule(static)
+!$omp parallel do private(p,m) schedule(static)
      do k=1,n_lambda
         do m=1,n_stack
            p = m + (k - 1)*n_stack
@@ -42,7 +42,7 @@ subroutine gyro_collision_kernel(ic)
      !----------------------------------------------- 
      ! This is essentially the full collision advance
      !
-!$omp parallel do default(shared) private(pp) schedule(static)
+!$omp parallel do private(pp) schedule(static)
      do p=1,n_rbf
         fcp(p) = 0.0
         do pp=1,n_rbf
@@ -51,7 +51,7 @@ subroutine gyro_collision_kernel(ic)
      enddo
      !----------------------------------------------- 
 
-!$omp parallel do private(p) schedule(static)
+!$omp parallel do private(p,m) schedule(static)
      do k=1,n_lambda
         do m=1,n_stack
            p = m + (k - 1)*n_stack
