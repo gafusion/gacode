@@ -55,7 +55,10 @@ class GYROData:
             print 'Warning: Error reading %s/out.gyro.t'%(self.simdir)
         else:
             if create_netcdf and self.n>1:
-                self.convert_to_netcdf()
+                try:
+                    self.convert_to_netcdf()
+                except:
+                    print 'Can not convert GYRO results to netcdf'
         # The rest of the possible read routines should NOT be done automatically.
 
         #self.read_freq()
