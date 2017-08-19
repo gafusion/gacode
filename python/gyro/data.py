@@ -34,8 +34,6 @@ class GYROData:
     #---------------------------------------------------------------------------#
     # Methods
 
-    def __init__(self, sim_directory):
-        """Constructor reads in data from sim_directory and creates new object.
     def __init__(self, sim_directory, create_netcdf=1e6):
         """
         Constructor reads in data from sim_directory and creates new object.
@@ -1206,6 +1204,8 @@ class GYROData:
         units[:] = self.units
         nc.createDimension('species',self.profile['n_spec'])
         nc.species = ','.join(self.tagspec)
+        nc.createDimension('kinetic',self.profile['n_kinetic'])
+        nc.kinetic = ','.join(self.tagspec)
         nc.createDimension('ky',self.profile['n_n'])
         ky = nc.createVariable('ky',self.profile['kt_rho'].dtype,('ky',))
         ky[:] = self.profile['kt_rho']
@@ -1221,24 +1221,26 @@ class GYROData:
             self.read_gbflux_i()
         times.append(time.time())
         gbflux_i = nc.createVariable('gbflux_i',self.gbflux_i.dtype,
-                      ('species','fields','moments', 'r','t'))
-        #print gbflux_i.shape,self.gbflux_i.shape
+                      ('kinetic','fields','moments', 'r','t'))
         gbflux_i[:] = self.gbflux_i[...,:self.n]
         times.append(time.time())
-        if 'gbflux_n' not in self.loaded:
-            self.read_gbflux_n()
-        gbflux_n = nc.createVariable('gbflux_n',self.gbflux_n.dtype,
-                      ('species','fields','moments', 'ky','t'))
-        #print gbflux_n.shape,self.gbflux_n.shape
-        gbflux_n[:] = self.gbflux_n[...,:self.n]
+        try:
+            if 'gbflux_n' not in self.loaded:
+                self.read_gbflux_n()
+            gbflux_n = nc.createVariable('gbflux_n',self.gbflux_n.dtype,
+                          ('kinetic','fields','moments', 'ky','t'))
+            #print gbflux_n.shape,self.gbflux_n.shape
+            gbflux_n[:] = self.gbflux_n[...,:self.n]
+        except IOError:
+            print 'No out.gyro.gbflux_n file'
         try:
             if 'gbflux_exc' not in self.loaded:
                 self.read_gbflux_exc()
             gbflux_exc = nc.createVariable('gbflux_exc',self.gbflux_exc.dtype,
-                          ('species','moments','t'))
+                          ('kinetic','moments','t'))
             gbflux_exc[:] = self.gbflux_exc[...,:self.n]
         except IOError:
-            pass
+            print 'No out.gyro.gbflux_exc file'
         for moment in ['u','n','v','e']:
             try:
                 print 'Loading moment_'+moment
