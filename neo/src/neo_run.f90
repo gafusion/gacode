@@ -18,6 +18,7 @@ subroutine neo_run()
   ! Map INTERFACE parameters -> GLOBAL variables
   call map_interface2global
   call neo_harvest_input
+  
   ! Can exit if we are in test mode
   if (neo_test_flag_in == 1) return
   
@@ -39,14 +40,9 @@ subroutine neo_run()
   neo_nclass_out=0.0
   neo_thHS_out=0.0
 
-  if (neo_nn_flag_in .ne. 1) then
-    ! Run full NEO
-    call neo_do  
-  else
-    ! Run NN bootstrap current calculation (jbs)
-    call neo_jbs_nn
-  endif
-
+  ! Run NEO
+  call neo_do
+  
   ! ----------------------------------------------------------------------
   ! OUTPUT NORMALIZATION
   !
@@ -115,5 +111,7 @@ subroutine neo_run()
 
   neo_error_status_out  = error_status
   neo_error_message_out = error_message
+  
   call neo_harvest_output
+
 end subroutine neo_run

@@ -15,6 +15,7 @@ module vgen_globals
   integer :: vel_method
   integer :: nth_min
   integer :: nth_max
+  integer :: nn_flag
   
   real, parameter :: pi=3.1415926535897932
   real, parameter :: mass_deuterium = 3.3452   ! (x 1e-27 kg)
@@ -39,7 +40,7 @@ module vgen_globals
   real, dimension(:), allocatable :: jtor_sauter
   
   integer :: n_ions
+
   integer, parameter :: timing_flag = 0
-  integer :: vgen_nn_flag
 
 end module vgen_globals

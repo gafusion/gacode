@@ -23,6 +23,7 @@ subroutine neo_do
   use neo_g_velocitygrids
   use neo_allocate_profile
   use neo_3d_driver
+  use neo_neural
   use mpi
   implicit none
 
@@ -41,7 +42,7 @@ subroutine neo_do
 
   integer, parameter :: io_neo=10, io_f=11
   character(len=80)  :: runfile_f = 'out.neo.f'
-
+  
   ! First, define some grid dimensions for band-diagonal LAPACK
   if (threed_model == 1) then
      nb    = (n_energy+1)*n_species*tpmatsize
@@ -120,6 +121,35 @@ subroutine neo_do
      return
   end if
 
+  if(sim_model == 4) then
+     ! Neural Network calculation only -- no numerical kinetic calculation
+     call EQUIL_alloc(1)
+     call NEURAL_alloc(1)
+     do ir=1, n_radial
+        call EQUIL_do(ir)
+        call NEURAL_do(ir)
+        call NEURAL_write(ir)
+        if(error_status > 0) goto 100
+        ! Store the local neo transport values at ir=1 in neo_xtheory_out
+        ! (n_species_max, transport coeff)
+        if(ir == 1) then
+           neo_dke_out(:,:)  = 0.0
+           neo_dke_1d_out(:) = 0.0
+           neo_gv_out(:,:)   = 0.0
+           neo_th_out(:)     = 0.0
+           neo_thHS_out(:,:) = 0.0
+           neo_th_out(5)     = jpar_nn_sau
+           neo_th_out(8)     = jtor_nn_sau
+           neo_dke_1d_out(1) = jpar_nn_neo
+           neo_dke_1d_out(2) = jtor_nn_neo
+        endif
+     enddo
+     call NEURAL_alloc(0)
+     call EQUIL_alloc(0)
+     deallocate(thcyc)
+     return
+  end if
+  
   ! Set-up the energy grids for basis ints (indep of r)
   call ENERGY_basis_ints_alloc(1)
   call ENERGY_basis_ints

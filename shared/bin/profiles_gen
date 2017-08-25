@@ -251,7 +251,7 @@ then
    echo "             -n <mpi tasks>"
    echo
    echo "             -nn"
-   echo "             Run NEO-NN instead of NEO to compute NEO and SAUTER jboot."
+   echo "             Use the NEO neural network instead of NEO DKE solve."
    echo
    echo "LOCAL PARAMETER MODE"
    echo 
@@ -797,10 +797,7 @@ then
        cat input.profiles.new >> input.profiles
        echo "INFO: (profiles_gen) VGEN created vgen/input.profiles [new data]"
        echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.extra    [diagnostics]"
-       echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.jbs      [boostrap current]"
-       if [ "$VGEN_NN_FLAG" == "1" ] ; then
-          echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.jbsnn    [Neural Net diagnostic]"
-       fi        
+       echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.jbs      [boostrap current]"    
    fi
 
    exit 0

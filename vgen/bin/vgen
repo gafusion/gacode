@@ -32,7 +32,7 @@ then
   echo "         Number of MPI tasks."
   echo
   echo "         -nn"
-  echo "         Run NEO-NN instead of NEO to compute NEO and SAUTER jboot."
+  echo "         Use the NEO neural network instead of NEO DKE solve."
   echo 
   echo "UTILITIES"
   echo
@@ -134,9 +134,9 @@ NEO_DIR=${GACODE_ROOT}/neo
 VGEN_DIR=${GACODE_ROOT}/vgen
 TEMPLATE_DIR=${GACODE_ROOT}/vgen/templates
 
-# Determine species combination from TYPE variable
-echo "VGEN_NN_FLAG=$VGEN_NN_FLAG" >> input.vgen
+echo "NN_FLAG=$VGEN_NN_FLAG" >> input.vgen
 python ${VGEN_DIR}/bin/vgen_parse.py
+# Determine species combination from TYPE variable
 IN=`grep TYPE input.vgen.gen`
 VGEN_IN=(${IN// / })
 
@@ -215,9 +215,6 @@ then
        echo "INFO: (profiles_gen) VGEN created vgen/input.profiles [new data]"
        echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.extra    [diagnostics]"
        echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.jbs      [boostrap current]"
-       if [ "$VGEN_NN_FLAG" == "1" ] ; then
-          echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.jbsnn    [Neural Net diagnostic]''
-       fi   
    fi
 
    exit 0
