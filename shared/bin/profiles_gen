@@ -711,6 +711,14 @@ fi
 #
 if [ $VGEN_FLAG -eq 1 ]
 then
+   if [ $VGEN_NN_FLAG -eq 1 ]
+   then
+     if [ $VGEN_ER -ne 4 ]
+     then
+       echo "ERROR: (profiles_gen) With -nn, must specify -er 4"
+       exit
+     fi
+   fi
 
    NEO_DIR=$GACODE_ROOT/neo
 
