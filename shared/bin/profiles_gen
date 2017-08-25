@@ -451,7 +451,7 @@ while [ $# -gt 0 ] ; do
 
   -n) shift ; NPROC=$1 ;;
   
-  -nn) shift ; VGEN_NN_FLAG=1 ;;
+  -nn) VGEN_NN_FLAG=1 ;;
 
   -in) shift ; VGEN_IN=$1 ;;
 

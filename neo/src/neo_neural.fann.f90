@@ -133,6 +133,10 @@ contains
     
     ! Run the NN
     call get_environment_variable('JBSNN_MODEL_DIR',jbsnn_model)
+    if(len_trim(jbsnn_model)==0) then
+        call get_environment_variable('GACODE_ROOT',jbsnn_model)
+        jbsnn_model = trim(jbsnn_model) // '/shared/neural/neojbsnn/models/D_C/'
+    endif
     ierr=load_anns(0, trim(jbsnn_model)//char(0),'brainfuse'//char(0))
     ierr=load_anns_inputs(nn_in)
     ierr=run_anns()
