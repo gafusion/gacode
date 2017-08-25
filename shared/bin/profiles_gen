@@ -250,6 +250,9 @@ then
    echo
    echo "             -n <mpi tasks>"
    echo
+   echo "             -nn"
+   echo "             Use the NEO neural network instead of NEO DKE solve."
+   echo
    echo "LOCAL PARAMETER MODE"
    echo 
    echo "             -loc_rad <r/a>"
@@ -368,6 +371,7 @@ VGEN_VEL=2
 VGEN_IX=2
 VGEN_NTH=17,39
 VGEN_FLAG=0
+VGEN_NN_FLAG=0
 NPROC=1
 NOMP=1
 NUMA=0
@@ -446,6 +450,8 @@ while [ $# -gt 0 ] ; do
   -vgen) VGEN_FLAG=1 ;;
 
   -n) shift ; NPROC=$1 ;;
+  
+  -nn) VGEN_NN_FLAG=1 ;;
 
   -in) shift ; VGEN_IN=$1 ;;
 
@@ -705,6 +711,14 @@ fi
 #
 if [ $VGEN_FLAG -eq 1 ]
 then
+   if [ $VGEN_NN_FLAG -eq 1 ]
+   then
+     if [ $VGEN_ER -ne 4 ]
+     then
+       echo "ERROR: (profiles_gen) With -nn, must specify -er 4"
+       exit
+     fi
+   fi
 
    NEO_DIR=$GACODE_ROOT/neo
 
@@ -757,6 +771,7 @@ then
    then
       echo $i >> vgen.dat
    fi
+   echo "$VGEN_NN_FLAG" >> vgen.dat
 
    # Launch parallel vgen executable
    $GACODE_ROOT/platform/exec/exec.$GACODE_PLATFORM \
@@ -790,7 +805,7 @@ then
        cat input.profiles.new >> input.profiles
        echo "INFO: (profiles_gen) VGEN created vgen/input.profiles [new data]"
        echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.extra    [diagnostics]"
-       echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.jbs      [boostrap current]"
+       echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.jbs      [boostrap current]"    
    fi
 
    exit 0

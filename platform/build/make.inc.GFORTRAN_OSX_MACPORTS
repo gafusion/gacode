@@ -15,7 +15,7 @@ MF90 = mpif90
 #
 
 FC	= ${MF90} -std=f2008 -I$(GACODE_ROOT)/modules -J$(GACODE_ROOT)/modules -g -I/opt/local/include
-F77	= ${MF90} -g 
+F77	= ${MF90} -g
 
 FMATH	= -fdefault-real-8
 FOPT	= -O3 -m64

@@ -10,7 +10,6 @@
 
     INTEGER :: ierr, i, j, nky, get_nky_out
     CHARACTER(LEN=65507) :: harvest_sendline
-    CHARACTER(LEN=255) :: harvest_tag
     CHARACTER(LEN=2) :: NUM
     CHARACTER NUL
     PARAMETER(NUL = CHAR(0))
@@ -18,7 +17,7 @@
     REAL, DIMENSION(10) :: tmp
     INTEGER, DIMENSION(10) :: ions_order
     
-    REAL, DIMENSION(:), ALLOCATABLE :: spectrum
+    !REAL, DIMENSION(:), ALLOCATABLE :: spectrum
 
     EXTERNAL :: get_nky_out
 
@@ -37,7 +36,8 @@
        RETURN
     ENDIF
 
-    ierr=init_harvest('TGLF_spectrum_3'//NUL,harvest_sendline,LEN(harvest_sendline))
+    ierr=init_harvest('TGYRO_TGLF_NEO'//NUL,harvest_sendline,LEN(harvest_sendline))
+    ierr=set_harvest_protocol('UDP'//NUL)
 
     ierr=set_harvest_payload_str(harvest_sendline,'VERSION'//NUL,'APS15_1'//NUL) !no underscore to allow different versions of the same run
 
@@ -222,45 +222,41 @@
 
    ENDDO
 
-!   ---------------------------------------------------
-!    Spectra
-!   ---------------------------------------------------
-   nky = get_nky_out()
+! !   ---------------------------------------------------
+! !    Spectra (to gather the spectra this function must be in TGLF itself)
+! !   ---------------------------------------------------
+!    nky = get_nky_out()
 
-   ALLOCATE(spectrum(nky))
+!    ALLOCATE(spectrum(nky))
    
-   DO i = 1, nky
-      spectrum(i) = get_ky_spectrum_out(i)
-   ENDDO
+!    DO i = 1, nky
+!       spectrum(i) = get_ky_spectrum_out(i)
+!    ENDDO
 
-   ierr=set_harvest_payload_dbl_array(harvest_sendline,'KY_SPECTRUM'//NUL,spectrum,nky)
+!    ierr=set_harvest_payload_dbl_array(harvest_sendline,'KY_SPECTRUM'//NUL,spectrum,nky)
    
-   DO i = 1, tglf_nmodes_in
-      IF (i < 10) THEN
-         write (NUM, "(I01,A1)") i,NUL
-      ELSE
-         write (NUM, "(I02,A1)") i,NUL
-      ENDIF
+!    DO i = 1, tglf_nmodes_in
+!       IF (i < 10) THEN
+!          write (NUM, "(I01,A1)") i,NUL
+!       ELSE
+!          write (NUM, "(I02,A1)") i,NUL
+!       ENDIF
       
-      DO j = 1, nky
-         spectrum(j) = get_eigenvalue_spectrum_out(1,j,i)
-      ENDDO 
-      ierr=set_harvest_payload_dbl_array(harvest_sendline,'OUT_EIGENVALUE_SPECTRUM_GAMMA'//NUM,spectrum,nky)
-      DO j = 1, nky
-         spectrum(j) = get_eigenvalue_spectrum_out(2,j,i)
-      ENDDO
-      ierr=set_harvest_payload_dbl_array(harvest_sendline,'OUT_EIGENVALUE_SPECTRUM_OMEGA'//NUM,spectrum,nky)
-   ENDDO
-   DEALLOCATE(spectrum)
+!       DO j = 1, nky
+!          spectrum(j) = get_eigenvalue_spectrum_out(1,j,i)
+!       ENDDO 
+!       ierr=set_harvest_payload_dbl_array(harvest_sendline,'OUT_EIGENVALUE_SPECTRUM_GAMMA'//NUM,spectrum,nky)
+!       DO j = 1, nky
+!          spectrum(j) = get_eigenvalue_spectrum_out(2,j,i)
+!       ENDDO
+!       ierr=set_harvest_payload_dbl_array(harvest_sendline,'OUT_EIGENVALUE_SPECTRUM_OMEGA'//NUM,spectrum,nky)
+!    ENDDO
+!    DEALLOCATE(spectrum)
 
 !   ---------------------------------------------------
-!    Additional entries only if an harvest_tag is set
+!   Additional entries
 !   ---------------------------------------------------
-   harvest_tag = NUL
-   ierr = get_harvest_tag(harvest_tag,len(harvest_tag))
-   if ( len_trim(harvest_tag) .gt. 1) then
-      ierr=set_harvest_payload_raw(harvest_sendline,TRIM(tglf_harvest_extra_in)//NUL)
-   endif
+    ierr=set_harvest_payload_raw(harvest_sendline,TRIM(tglf_harvest_extra_in)//NUL)
 
 !   ---------------------------------------------------
 !    Send data

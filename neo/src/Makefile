@@ -1,5 +1,9 @@
 include ${GACODE_ROOT}/platform/build/make.inc.${GACODE_PLATFORM}
 
+neo_libs= -L$(GACODE_ROOT)/shared/harvest_client/ \
+              -I$(GACODE_ROOT)/shared/harvest_client/ \
+              -lharvest
+
 ifeq ($(OPT),debug)
    FFLAGS=${FDEBUG}
 else
@@ -7,6 +11,15 @@ else
 endif
 
 EXEC = neo
+
+ifdef FANN_ROOT
+    # neural-net file
+    NEONN=neo_neural.fann
+    NEONN_LIBS=-I$(GACODE_ROOT)/shared/neural/ -L$(GACODE_ROOT)/shared/neural/ -lbrainfuse -L${FANN_ROOT}/lib -lfann
+else
+    #stub file
+    NEONN=neo_neural
+endif
 
 OBJECTS = neo_globals.o \
           neo_energy_grid.o \
@@ -23,6 +36,7 @@ OBJECTS = neo_globals.o \
           neo_3d_driver.o \
           neo_check.o \
           neo_compute_fcoll.o \
+	  $(NEONN).o \
           neo_do.o \
           neo_error.o \
           neo_experimental_profiles.o \
@@ -31,21 +45,22 @@ OBJECTS = neo_globals.o \
           neo_make_profiles.o \
           neo_map_experimental_profiles.o \
           neo_read_input.o \
+          neo_harvest.o \
           neo_run.o \
           neo_spitzer.o 
 
 .SUFFIXES : .o .f90
 
 all: neo_lib.a $(EXEC).o $(EXTRA_LIBS)
-	$(FC) $(FFLAGS) -o $(EXEC) $(EXEC).o neo_lib.a $(EXTRA_LIBS) $(LMATH)
+	$(FC) $(FFLAGS)  $(neo_libs) -o $(EXEC) $(EXEC).o neo_lib.a $(EXTRA_LIBS) $(LMATH) $(NEONN_LIBS)
 
 neo_lib.a: $(OBJECTS)
 	$(ARCH) neo_lib.a $(OBJECTS)
 
 .f90.o :
-	$(FC) $(FMATH) $(FFLAGS) -c $<
+	$(FC) $(FMATH) $(FFLAGS) $(neo_libs) -c $< $(NEONN_LIBS)
 
-clean:  
+clean:
 	rm -rf *.o neo_lib.a $(EXEC) *~
 	cd ${GACODE_ROOT}/modules ; rm -f neo*.mod
 
