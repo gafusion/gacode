@@ -24,6 +24,7 @@ subroutine neo_do
   use neo_allocate_profile
   use neo_3d_driver
   use neo_neural
+  use neo_harvest, ONLY: neo_harvest_input, neo_harvest_output
   use mpi
   implicit none
 
@@ -42,6 +43,8 @@ subroutine neo_do
 
   integer, parameter :: io_neo=10, io_f=11
   character(len=80)  :: runfile_f = 'out.neo.f'
+
+  call neo_harvest_input
   
   ! First, define some grid dimensions for band-diagonal LAPACK
   if (threed_model == 1) then
@@ -653,6 +656,7 @@ subroutine neo_do
   if(allocated(driftxrot1)) deallocate(driftxrot1)
   if(allocated(driftxrot2)) deallocate(driftxrot2)
   if(allocated(driftxrot3)) deallocate(driftxrot3)
+  call neo_harvest_output
 
 contains
 
