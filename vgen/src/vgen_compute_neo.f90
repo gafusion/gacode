@@ -109,7 +109,7 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
         neo_dlntdr_in(is) = EXPRO_dlntedr(i) * EXPRO_rmin(EXPRO_n_exp)
      endif
   enddo
-
+  
   nmin = (nth_min - 1)/2
   nmax = (nth_max - 1)/2
   nth = nint(nmin*sqrt(EXPRO_thetascale(i)/EXPRO_thetascale(2)))

@@ -56,7 +56,7 @@ contains
     integer :: is_ele, is_i1, is_i2
     real    :: d_max
     character(len=1000) :: jbsnn_model
-    real(4), dimension(5)  :: nn_in
+    real(4), dimension(6)  :: nn_in
     real(4), dimension(12) :: nn_out
     real :: CTi2_neo, CTi1_neo, CTe_neo, CNi2_neo, CNi1_neo, CNe_neo
     real :: CTi2_sau, CTi1_sau, CTe_sau, CNi2_sau, CNi1_sau, CNe_sau
@@ -124,12 +124,13 @@ contains
     endif
     
     ! Set the input parameters for the NN
-    nn_in(4) = r(ir)/rmaj(ir)                      ! r/R
-    nn_in(3) = abs(q(ir))                          ! q
-    nn_in(1) = dens(is_i1,ir)/dens(is_ele,ir)      ! ni1/ne
-    nn_in(5) = temp(is_i1,ir)/temp(is_ele,ir)      ! Ti1/Te
+    nn_in(1) = r(ir)/rmaj(ir)                      ! r/R
+    nn_in(2) = abs(q(ir))                          ! q
     ! log(nuee/cs/R)
-    nn_in(2) = log10(nu(is_ele,ir)*rmaj(ir)/sqrt(temp(is_ele,ir)))  
+    nn_in(3) = log10(nu(is_ele,ir)*rmaj(ir)/sqrt(temp(is_ele,ir)))
+    nn_in(4) = dens(is_i1,ir)/dens(is_ele,ir)      ! ni1/ne
+    nn_in(5) = temp(is_i1,ir)/temp(is_ele,ir)      ! Ti1/Te
+    nn_in(6) = geo_param(ir,2)                     ! geo param
     
     ! Run the NN
     call get_environment_variable('JBSNN_MODEL_DIR',jbsnn_model)
@@ -143,22 +144,16 @@ contains
     ierr=get_anns_avg_array(nn_out)
     
     ! Get coeffcients computed by the NN
-    CTi2_neo = nn_out(1)
-    CTi1_neo = nn_out(2)
-    CTe_neo  = nn_out(3)
-    CNi2_neo = nn_out(4)
-    CNi1_neo = nn_out(5)
-    CNe_neo  = nn_out(6)
-    CTi2_sau = nn_out(7)
-    CTi1_sau = nn_out(8)
-    CTe_sau  = nn_out(9)
-    Cni2_sau = nn_out(10)
-    Cni1_sau = nn_out(11)
-    Cne_sau  = nn_out(12)
-    
+    CNe_neo  = nn_out(1)
+    CNi1_neo = nn_out(2)
+    CNi2_neo = nn_out(3)
+    CTe_neo  = nn_out(4)
+    CTi1_neo = nn_out(5)
+    CTi2_neo = nn_out(6)
+  
     ! Reconstruct jpar from NEO NN and Sauter NN
     
-    jpar_nn_neo = I_div_psip * rho(ir) * temp(is_ele,ir) &
+    jpar_nn_neo = geo_param(ir,1) * rho(ir) * temp(is_ele,ir) &
          * (abs(Z(is_ele))*dens(is_ele,ir) &
          * (CTe_neo*dlntdr(is_ele,ir) + Cne_neo*dlnndr(is_ele,ir)) &
          + abs(Z(is_i1))*dens(is_i1,ir) &
@@ -166,7 +161,7 @@ contains
          + abs(Z(is_i2))*dens(is_i2,ir) &
          * (CTi2_neo*dlntdr(is_i2,ir) + Cni2_neo*dlnndr(is_i2,ir)))
     
-    jpar_nn_sau = I_div_psip * rho(ir) * temp(is_ele,ir) &
+    jpar_nn_sau = geo_param(ir,1) * rho(ir) * temp(is_ele,ir) &
          * (abs(Z(is_ele))*dens(is_ele,ir) &
          * (CTe_sau*dlntdr(is_ele,ir) + Cne_sau*dlnndr(is_ele,ir)) &
          + abs(Z(is_i1))*dens(is_i1,ir) &
@@ -179,9 +174,11 @@ contains
     jtor_nn_neo = jpar_nn_neo*Btor2_avg/Bmag2_avg
     jtor_nn_sau = jpar_nn_sau*Btor2_avg/Bmag2_avg
     do is=1, n_species
-       jtor_nn_neo = jtor_nn_neo + rho(ir)*I_div_psip*dens(is,ir)*temp(is,ir) &
+       jtor_nn_neo = jtor_nn_neo + rho(ir)*geo_param(ir,1) &
+            * dens(is,ir)*temp(is,ir) &
             * (dlnndr(is,ir) + dlntdr(is,ir))*(1.0-Btor2_avg/Bmag2_avg)
-       jtor_nn_sau = jtor_nn_sau + rho(ir)*I_div_psip*dens(is,ir)*temp(is,ir) &
+       jtor_nn_sau = jtor_nn_sau + rho(ir)*geo_param(ir,1) &
+            * dens(is,ir)*temp(is,ir) &
             * (dlnndr(is,ir) + dlntdr(is,ir))*(1.0-Btor2_avg/Bmag2_avg)
     enddo
     jtor_nn_neo = jtor_nn_neo/(Btor_th0*bigR_th0*bigRinv_avg)

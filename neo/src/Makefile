@@ -37,6 +37,7 @@ OBJECTS = neo_globals.o \
           neo_check.o \
           neo_compute_fcoll.o \
 	  $(NEONN).o \
+	  neo_harvest.o \
           neo_do.o \
           neo_error.o \
           neo_experimental_profiles.o \
@@ -45,7 +46,6 @@ OBJECTS = neo_globals.o \
           neo_make_profiles.o \
           neo_map_experimental_profiles.o \
           neo_read_input.o \
-          neo_harvest.o \
           neo_run.o \
           neo_spitzer.o 
 
