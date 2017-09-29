@@ -62,7 +62,7 @@ fdout2.write("#Scaled walclock values (by nnodes)\n")
 fdout3.write("#Scaled walclock values (by nnodes)\n")
 
 
-outstr="#test nmpi nnodes "
+outstr="#test variant nmpi nnodes "
 
 for i in range(11):
     outstr += " mean_%s"%titles[i]
@@ -77,6 +77,11 @@ fdout3.write("%s\n"%outstr)
 testlist=computed.keys()
 testlist.sort()
 for test in testlist:
+    tarr = test.split("_",1)
+    btest = tarr[0]
+    vtest = "noHT"
+    if (len(tarr)>1):
+      vtest = tarr[1]
     ndiv = 64
     ompstrarr= test.rsplit("_",1)
     if (len(ompstrarr)>1):
@@ -110,8 +115,8 @@ for test in testlist:
             outstr += " %i%%"%int(dperc*100)
             outstr2 += " %i%%"%int(dperc*100)
 
-        fdout.write("%s %i %i %s\n"%(test,nmpi,nnodes, outstr))
-        fdout2.write("%s %i %i %s\n"%(test,nmpi,nnodes, outstr2))
+        fdout.write( "%s %s %i %i %s\n"%(btest,vtest,nmpi,nnodes, outstr))
+        fdout2.write("%s %s %i %i %s\n"%(btest,vtest,nmpi,nnodes, outstr2))
 
 # here we order by base test name only
 btestdict={}
@@ -141,6 +146,10 @@ for btest in btests:
     mpilist=btestdict[btest][nnodes]
     mpilist.sort()
     for (test,nmpi) in mpilist:
+        tarr = test.split("_",1)
+        vtest = "noHT"
+        if (len(tarr)>1):
+           vtest = tarr[1]
         cel = computed[test][nmpi]
         outstr=""
         outstr2=""
@@ -164,7 +173,7 @@ for btest in btests:
             outstr += " %i%%"%int(dperc*100)
             outstr2 += " %i%%"%int(dperc*100)
 
-        fdout3.write("%s %i %i %s\n"%(test,nmpi,nnodes, outstr2))
+        fdout3.write("%s %s %i %i %s\n"%(btest,vtest,nmpi,nnodes, outstr2))
 
 
 fdout.close()
