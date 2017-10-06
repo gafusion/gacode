@@ -18,3 +18,10 @@ merge.py
 Get 2 raw3.abs|summary file names, and merge them together.
 Result is stdout.
 
+scaling.py
+==========
+Find and report the smallest total time x nnodes x test type.
+The result is a scaling plot.
+
+Input is a list of (fname,title) pairs.
+Output isin stdout, to go into a csv file
