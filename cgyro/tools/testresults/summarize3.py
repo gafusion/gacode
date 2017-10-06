@@ -88,6 +88,13 @@ for test in testlist:
       ompstr = ompstrarr[1]
       if (ompstr[0]=='o'): # _oXX
         ndiv /= int(ompstr[1:])/2
+      else: # try _oxx_r2
+        ompstrarr= ompstrarr[0].rsplit("_",1)
+        if (len(ompstrarr)>1):
+           ompstr = ompstrarr[1]
+           if (ompstr[0]=='o'): # _oXX
+             ndiv /= int(ompstr[1:])/2
+
     mpilist=computed[test].keys()
     mpilist.sort()
     for nmpi in mpilist:
@@ -130,6 +137,12 @@ for test in testlist:
       ompstr = ompstrarr[1]
       if (ompstr[0]=='o'): # _oXX
         ndiv /= int(ompstr[1:])/2
+      else: # try _oxx_r2
+        ompstrarr= ompstrarr[0].rsplit("_",1)
+        if (len(ompstrarr)>1):
+           ompstr = ompstrarr[1]
+           if (ompstr[0]=='o'): # _oXX
+             ndiv /= int(ompstr[1:])/2
     mpilist=computed[test].keys()
     for nmpi in mpilist:
         nnodes = nmpi/ndiv
