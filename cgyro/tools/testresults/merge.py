@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import sys
 
 f1=sys.argv[1]
