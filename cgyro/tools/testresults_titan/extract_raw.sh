@@ -1,5 +1,5 @@
 #!/bin/bash
-files=`/bin/ls */*/out.cgyro.timing`
+files=`/bin/ls */*/out.cgyro.timing | grep -v '_s/'`
 for f in $files; do 
 grep -A 4 str_com $f > a.txt; lines=`cat a.txt | wc -l`; 
 if [ $lines -gt 2 ]; then 
