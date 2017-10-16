@@ -62,7 +62,7 @@ fdout2.write("#Scaled walclock values (by nnodes)\n")
 fdout3.write("#Scaled walclock values (by nnodes)\n")
 
 
-outstr="#test variant nmpi nnodes "
+outstr="#test variant nmpi nnodes nprocsxnode nomp mpiorder"
 
 for i in range(11):
     outstr += " mean_%s"%titles[i]
@@ -74,6 +74,8 @@ fdout.write("%s\n"%outstr)
 fdout2.write("%s\n"%outstr)
 fdout3.write("%s\n"%outstr)
 
+coresxnode=16
+
 testlist=computed.keys()
 testlist.sort()
 for test in testlist:
@@ -82,7 +84,7 @@ for test in testlist:
     vtest = "noHT"
     if (len(tarr)>1):
       vtest = tarr[1]
-    ndiv = 8
+    ndiv = coresxnode/2
     ompstrarr= test.rsplit("_",1)
     if (len(ompstrarr)>1):
       ompstr = ompstrarr[1]
@@ -95,6 +97,9 @@ for test in testlist:
            if (ompstr[0]=='o'): # _oXX
              ndiv /= int(ompstr[1:])/2
 
+    mpiorder=1
+    if vtest.find("_r2")!=-1:
+      mpiorder=2
     mpilist=computed[test].keys()
     mpilist.sort()
     for nmpi in mpilist:
@@ -122,8 +127,10 @@ for test in testlist:
             outstr += " %i%%"%int(dperc*100)
             outstr2 += " %i%%"%int(dperc*100)
 
-        fdout.write( "%s %s %i %i %s\n"%(btest,vtest,nmpi,nnodes, outstr))
-        fdout2.write("%s %s %i %i %s\n"%(btest,vtest,nmpi,nnodes, outstr2))
+        nprocs = nmpi/nnodes
+        nomp = coresxnode/nprocs
+        fdout.write( "%s %s %i %i %i %i %i %s\n"%(btest,vtest,nmpi,nnodes, nprocs, nomp, mpiorder, outstr))
+        fdout2.write("%s %s %i %i %i %i %i %s\n"%(btest,vtest,nmpi,nnodes, nprocs, nomp, mpiorder, outstr2))
 
 # here we order by base test name only
 btestdict={}
@@ -131,7 +138,7 @@ for test in testlist:
     btest = test.split("_",1)[0]
     if btest not in btestdict.keys():
         btestdict[btest] = {}
-    ndiv = 8
+    ndiv = coresxnode/2
     ompstrarr= test.rsplit("_",1)
     if (len(ompstrarr)>1):
       ompstr = ompstrarr[1]
@@ -163,6 +170,9 @@ for btest in btests:
         vtest = "noHT"
         if (len(tarr)>1):
            vtest = tarr[1]
+        mpiorder=1
+        if vtest.find("_r2")!=-1:
+           mpiorder=2
         cel = computed[test][nmpi]
         outstr=""
         outstr2=""
@@ -186,7 +196,9 @@ for btest in btests:
             outstr += " %i%%"%int(dperc*100)
             outstr2 += " %i%%"%int(dperc*100)
 
-        fdout3.write("%s %s %i %i %s\n"%(btest,vtest,nmpi,nnodes, outstr2))
+        nprocs = nmpi/nnodes
+        nomp = coresxnode/nprocs
+        fdout3.write("%s %s %i %i %i %i %i %s\n"%(btest,vtest,nmpi,nnodes, nprocs, nomp, mpiorder, outstr2))
 
 
 fdout.close()
