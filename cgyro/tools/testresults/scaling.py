@@ -33,7 +33,7 @@ for i in range(nels):
     larr = line.split()
     tname = larr[0]
     nodes = int(larr[3])
-    totals = float(larr[14])
+    totals = float(larr[17])
 
     if not data.has_key(tname):
       data[tname]={}
