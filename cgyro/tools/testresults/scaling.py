@@ -32,6 +32,7 @@ for i in range(nels):
       continue
     larr = line.split()
     tname = larr[0]
+    tmode = "%s_%s"%(larr[1],larr[2])
     nodes = int(larr[3])
     totals = float(larr[17])
 
@@ -40,9 +41,9 @@ for i in range(nels):
     if not data[tname].has_key(nodes):
       data[tname][nodes]={}
     if not data[tname][nodes].has_key(i):
-      data[tname][nodes][i]=totals
-    elif (totals<data[tname][nodes][i]):
-      data[tname][nodes][i] = totals
+      data[tname][nodes][i]=(totals,tmode)
+    elif (totals<data[tname][nodes][i][0]):
+      data[tname][nodes][i] = (totals,tmode)
 
 
 tlist = data.keys()
@@ -59,12 +60,30 @@ for tname in tlist:
     sys.stdout.write("%s,%s"%(tname,nodes))
     for i in range(nels):
       if data[tname][nodes].has_key(i):
-        sys.stdout.write(",%6.1f"%data[tname][nodes][i])
+        sys.stdout.write(",%6.1f"%data[tname][nodes][i][0])
       else:
         sys.stdout.write(",")
     sys.stdout.write("\n")
 
   sys.stdout.write("\n")
 
+sys.stdout.write("\n#Test modes used\n\n")
+for tname in tlist:
+  sys.stdout.write("#%s,nnodes"%tname)
+  for title in titles:
+    sys.stdout.write(",mode_%s"%title)
+  sys.stdout.write("\n")
 
+  nlist = data[tname].keys()
+  nlist.sort()
+  for nodes in nlist:
+    sys.stdout.write("#%s,%s"%(tname,nodes))
+    for i in range(nels):
+      if data[tname][nodes].has_key(i):
+        sys.stdout.write(",%s"%data[tname][nodes][i][1])
+      else:
+        sys.stdout.write(",")
+    sys.stdout.write("\n")
+
+  sys.stdout.write("\n")
 
