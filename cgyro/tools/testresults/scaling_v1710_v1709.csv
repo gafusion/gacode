@@ -48,10 +48,15 @@ weak2,192,11629.0,18237.0
 weak2,384,25167.0,39514.0
 
 #weak3,nnodes,Totals1710,Totals1709
+weak3,36,14774.0,
 weak3,48,14960.0,14960.0
+weak3,72,15324.0,
 weak3,96,19629.0,19629.0
+weak3,144,14885.0,
 weak3,192,19706.0,20608.0
+weak3,288,17862.0,
 weak3,384,23725.0,39693.0
+weak3,576,37601.0,
 weak3,768,51684.0,
 
 #weak4,nnodes,Totals1710,Totals1709
@@ -114,10 +119,15 @@ weak4,768,53745.0,
 #weak2,384,HT2_o4_12288,HT2_24576
 
 #weak3,nnodes,mode_Totals1710,mode_Totals1709
+#weak3,36,noHT_2304,
 #weak3,48,noHT_3072,noHT_3072
+#weak3,72,HT2_4608,
 #weak3,96,noHT_6144,noHT_6144
+#weak3,144,noHT_9216,
 #weak3,192,HT2_o4_6144,noHT_12288
+#weak3,288,HT2_o4_9216,
 #weak3,384,HT2_o4_12288,HT2_24576
+#weak3,576,HT2_o4_18432,
 #weak3,768,HT2_o4_24576,
 
 #weak4,nnodes,mode_Totals1710,mode_Totals1709
