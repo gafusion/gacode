@@ -10,7 +10,6 @@ subroutine cgyro_rhs(ij)
   integer :: id,jc
   real :: rval,rval2
   complex :: rhs_stream
-  complex :: rhs_ij(nc,nv_loc)
 
   call timer_lib_in('str')
 
@@ -45,7 +44,7 @@ subroutine cgyro_rhs(ij)
   call timer_lib_in('str')
 
 !$acc data  &
-!$acc& pcopyout(rhs_ij) &
+!$acc& pcopyout(rhs(:,:,ij)) &
 !$acc& pcopyin(g_x,h_x,field,cap_h_c) &
 !$acc& present(is_v,ix_v,ie_v,it_c) &
 !$acc& present(omega_cap_h,omega_h,omega_s) &
@@ -58,7 +57,7 @@ subroutine cgyro_rhs(ij)
      do ic=1,nc
         iv_loc = iv-nv1+1
         ! Diagonal terms
-        rhs_ij(ic,iv_loc) = &
+        rhs(ic,iv_loc,ij) = &
              omega_cap_h(ic,iv_loc)*cap_h_c(ic,iv_loc)+&
              omega_h(ic,iv_loc)*h_x(ic,iv_loc)
 
@@ -72,20 +71,15 @@ subroutine cgyro_rhs(ij)
            jc = icd_c(id, ic)
            rhs_stream = rhs_stream &
                 -rval*dtheta(id, ic)*cap_h_c(jc,iv_loc)  &
-                -rval2*dtheta_up(id, ic)*g_x(jc,iv_loc) 
+                -rval2*dtheta_up(id, ic)*g_x(jc,iv_loc)
         enddo
 
-        rhs_ij(ic,iv_loc) = rhs_ij(ic,iv_loc) + &
+        rhs(ic,iv_loc,ij) = rhs(ic,iv_loc,ij) + rhs_stream +&
              sum(omega_s(:,ic,iv_loc)*field(:,ic))
-
-        rhs_ij(ic,iv_loc) = rhs_ij(ic,iv_loc)+rhs_stream
      enddo
   enddo
 
- ! GPUs work better on small rhs_ij
-
 !$acc end data	  
-   rhs(:,:,ij) = rhs_ij(:,:)
 
   call timer_lib_out('str')
 
