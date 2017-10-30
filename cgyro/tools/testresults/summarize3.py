@@ -85,19 +85,22 @@ for test in testlist:
     ompmul=1
     if (len(tarr)>1):
       vtest = tarr[1]
-      ompmul=2
+      if (vtest[:3]=='HT4'):
+        ompmul=4
+      else:
+        ompmul=2
     ndiv = coresxnode
     ompstrarr= test.rsplit("_",1)
     if (len(ompstrarr)>1):
       ompstr = ompstrarr[1]
       if (ompstr[0]=='o'): # _oXX
-        ndiv /= int(ompstr[1:])/2
+        ndiv /= int(ompstr[1:])/ompmul
       else: # try _oxx_r2
         ompstrarr= ompstrarr[0].rsplit("_",1)
         if (len(ompstrarr)>1):
            ompstr = ompstrarr[1]
            if (ompstr[0]=='o'): # _oXX
-             ndiv /= int(ompstr[1:])/2
+             ndiv /= int(ompstr[1:])/ompmul
 
     mpiorder=1
     if vtest.find("_r2")!=-1:
@@ -137,21 +140,30 @@ for test in testlist:
 # here we order by base test name only
 btestdict={}
 for test in testlist:
-    btest = test.split("_",1)[0]
+    tarr = test.split("_",1)
+    btest = tarr[0]
     if btest not in btestdict.keys():
         btestdict[btest] = {}
+    vtest = "noHT"
+    ompmul=1
+    if (len(tarr)>1):
+      vtest = tarr[1]
+      if (vtest[:3]=='HT4'):
+        ompmul=4
+      else:
+        ompmul=2
     ndiv = coresxnode
     ompstrarr= test.rsplit("_",1)
     if (len(ompstrarr)>1):
       ompstr = ompstrarr[1]
       if (ompstr[0]=='o'): # _oXX
-        ndiv /= int(ompstr[1:])/2
+        ndiv /= int(ompstr[1:])/ompmul
       else: # try _oxx_r2
         ompstrarr= ompstrarr[0].rsplit("_",1)
         if (len(ompstrarr)>1):
            ompstr = ompstrarr[1]
            if (ompstr[0]=='o'): # _oXX
-             ndiv /= int(ompstr[1:])/2
+             ndiv /= int(ompstr[1:])/ompmul
     mpilist=computed[test].keys()
     for nmpi in mpilist:
         nnodes = nmpi/ndiv
@@ -173,7 +185,10 @@ for btest in btests:
         ompmul=1
         if (len(tarr)>1):
            vtest = tarr[1]
-           ompmul=2
+           if (vtest[:3]=='HT4'):
+             ompmul=4
+           else:
+             ompmul=2
         mpiorder=1
         if vtest.find("_r2")!=-1:
            mpiorder=2
