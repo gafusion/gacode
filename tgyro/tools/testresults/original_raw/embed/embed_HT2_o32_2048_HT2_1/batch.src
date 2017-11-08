@@ -1,0 +1,11 @@
+#!/bin/bash -l
+#SBATCH -J tg_embed_2048_HT2_o32_1
+#SBATCH -A atom
+#SBATCH -C knl,quad,cache
+#SBATCH -o /global/cscratch1/sd/sfiligoi/v1710/trials/tg_embed_HT2/tg_embed_2048_HT2_o32_1/batch.out
+#SBATCH -e /global/cscratch1/sd/sfiligoi/v1710/trials/tg_embed_HT2/tg_embed_2048_HT2_o32_1/batch.err
+#SBATCH -p debug
+#SBATCH --qos=normal
+#SBATCH -t 00:30:00
+#SBATCH -N 512
+tgyro -e tg_embed_2048_HT2_o32_1 -n 2048 -nomp 32 -numa 1 -mpinuma 4 -p /global/cscratch1/sd/sfiligoi/v1710/trials/tg_embed_HT2
