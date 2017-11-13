@@ -1,5 +1,0 @@
-Setup time
- input       str_init    coll_init   io_init    
- 8.982E-03   5.842E+00   2.950E-02   1.840E+00
-Run time
- str        str_comm   nl         nl_comm    field      field_com  shear      coll       coll_comm  io         TOTAL     

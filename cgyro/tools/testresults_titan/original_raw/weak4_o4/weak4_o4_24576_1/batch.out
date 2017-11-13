@@ -1,8 +1,0 @@
-==========================================================
-CGYRO 2613ae2 TITAN_PGI Linux x86_64
-==========================================================
-> aprun -cc numa_node -n 24576 -d 4 -S 2 -sn 2 -ss /ccs/proj/fus116/igor/gacode/cgyro/src/cgyro
-[t: 0.000E+00][e: 0.000E+00 0.000E+00]
-[t: 2.000E-03][e: 2.434E-05 1.217E-07]
-[t: 4.000E-03][e: 2.343E-05 9.943E-08]
-Application 16037776 resources: utime ~10350136s, stime ~247160s, Rss ~504456, inblocks ~2516841872, outblocks ~897645108
