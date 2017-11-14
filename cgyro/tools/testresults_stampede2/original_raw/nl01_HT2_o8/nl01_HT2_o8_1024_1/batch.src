@@ -1,0 +1,9 @@
+#!/bin/bash -l
+#SBATCH -J nl01_HT2_o8_1024_1
+#SBATCH -o /scratch/05222/sfilig/tests/v1710/tests/nl01_HT2_o8/nl01_HT2_o8_1024_1/batch.out
+#SBATCH -e /scratch/05222/sfilig/tests/v1710/tests/nl01_HT2_o8/nl01_HT2_o8_1024_1/batch.err
+#SBATCH -p normal
+#SBATCH -t 00:10:00
+#SBATCH -N 64
+#SBATCH -n 1024
+cgyro -e nl01_HT2_o8_1024_1 -n 1024 -nomp 8 -numa 1 -mpinuma 16 -p /scratch/05222/sfilig/tests/v1710/tests/nl01_HT2_o8
