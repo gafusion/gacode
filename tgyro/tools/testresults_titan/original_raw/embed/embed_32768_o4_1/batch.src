@@ -1,0 +1,11 @@
+#!/bin/bash -l
+#PBS -N embed_32768_o4_1
+#PBS -A fus116
+#PBS -o /lustre/atlas/proj-shared/fus116/igor/v1711/tgyro/embed/embed_32768_o4_1/batch.out
+#PBS -e /lustre/atlas/proj-shared/fus116/igor/v1711/tgyro/embed/embed_32768_o4_1/batch.err
+#PBS -q batch
+#PBS -l walltime=00:20:00
+#PBS -l nodes=8192
+source /ccs/home/sfilig/gacode1711.source
+module load python
+tgyro -e embed_32768_o4_1 -n 32768 -nomp 4 -numa 2 -mpinuma 2 -p /lustre/atlas/proj-shared/fus116/igor/v1711/tgyro/embed
