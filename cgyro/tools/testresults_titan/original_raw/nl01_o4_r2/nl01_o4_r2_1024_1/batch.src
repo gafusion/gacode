@@ -1,0 +1,11 @@
+#!/bin/bash -l
+#PBS -N nl01_o4_r2_1024_1
+#PBS -A fus116
+#PBS -o /lustre/atlas/proj-shared/fus116/igor/v1711/tests/nl01_o4_r2/nl01_o4_r2_1024_1/batch.out
+#PBS -e /lustre/atlas/proj-shared/fus116/igor/v1711/tests/nl01_o4_r2/nl01_o4_r2_1024_1/batch.err
+#PBS -q batch
+#PBS -l walltime=00:10:00
+#PBS -l nodes=256
+source /ccs/home/sfilig/gacode1711.source
+module load python
+cgyro -e nl01_o4_r2_1024_1 -n 1024 -nomp 4 -numa 2 -mpinuma 2 -p /lustre/atlas/proj-shared/fus116/igor/v1711/tests/nl01_o4_r2
