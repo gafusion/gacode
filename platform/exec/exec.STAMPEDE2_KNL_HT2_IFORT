@@ -29,7 +29,7 @@ if [ "$nomp" -lt 2 ]; then
 fi
 
 export OMP_NUM_THREADS=$nomp
-export KMP_AFFINITY=compact
+export KMP_AFFINITY=spread
 export KMP_HW_SUBSET=2t
 export OMP_STACKSIZE=32M
 echo ibrun $exec
