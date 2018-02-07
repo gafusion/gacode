@@ -1,0 +1,9 @@
+#!/bin/bash -l
+#SBATCH -J weak1_o3_1536_1
+#SBATCH -o /scratch/05222/sfilig/tests/v1710_skx/tests/weak1_o3/weak1_o3_1536_1/batch.out
+#SBATCH -e /scratch/05222/sfilig/tests/v1710_skx/tests/weak1_o3/weak1_o3_1536_1/batch.err
+#SBATCH -p skx-normal
+#SBATCH -t 00:30:00
+#SBATCH -N 48
+#SBATCH -n 1536
+cgyro -e weak1_o3_1536_1 -n 1536 -nomp 3 -numa 1 -mpinuma 32 -p /scratch/05222/sfilig/tests/v1710_skx/tests/weak1_o3
