@@ -1,0 +1,9 @@
+#!/bin/bash -l
+#SBATCH -J embed_HT2_o3_16384_1
+#SBATCH -o /scratch/05222/sfilig/tests/v1710_skx/tgyro/embed/embed_HT2_o3_16384_1/batch.out
+#SBATCH -e /scratch/05222/sfilig/tests/v1710_skx/tgyro/embed/embed_HT2_o3_16384_1/batch.err
+#SBATCH -p skx-large
+#SBATCH -t 00:35:00
+#SBATCH -N 512
+#SBATCH -n 16384
+tgyro -e embed_HT2_o3_16384_1 -n 16384 -nomp 3 -numa 1 -mpinuma 32 -p /scratch/05222/sfilig/tests/v1710_skx/tgyro/embed
