@@ -1,0 +1,79 @@
+  == Non-Distributed ==
+ 
+ Pointers
+ 
+    0.002 MB   ie_v
+    0.002 MB   ix_v
+    0.262 MB   ir_c
+    0.262 MB   it_c
+    0.262 MB   ic_c
+    0.002 MB   iv_v
+    1.835 MB   icd_c
+    7.340 MB   dtheta
+    7.340 MB   dtheta_up
+ 
+ Fields and field solve
+ 
+    3.146 MB   field
+    3.146 MB   field_loc
+    3.146 MB   field_old
+    3.146 MB   field_old2
+    3.146 MB   field_old3
+    1.573 MB   fcoef
+    2.621 MB   gcoef
+    0.524 MB   sum_den_x
+    0.524 MB   sum_cur_x
+ 
+ Nonlinear
+ 
+    0.453 GB   fx
+    0.453 GB   gx
+    0.453 GB   fy
+    0.453 GB   gy
+    0.302 GB   ux
+    0.452 GB   vx
+    0.302 GB   uy
+    0.452 GB   vy
+    0.452 GB   uv
+ 
+ TOTAL
+ 3810.597 MB [persistent memory per core]
+ 
+  == Distributed ==
+ 
+ Distribution-like arrays
+ 
+    0.537 GB   rhs
+    0.403 GB   omega_s
+    0.403 GB   omega_ss
+    0.134 GB   omega_cap_h
+    0.134 GB   omega_h
+    0.134 GB   h_x
+    0.134 GB   h0_x
+    0.134 GB   g_x
+    0.134 GB   psi
+    0.134 GB   chi
+    0.134 GB   h0_x
+    0.134 GB   cap_h_c
+    0.134 GB   cap_h_ct
+    0.134 GB   cap_h_v
+    0.134 GB   cap_h_v_prime
+    0.201 GB   jvec_c
+    0.201 GB   jvec_v
+    0.201 GB   jxvec_c
+   67.109 MB   upfac1
+   67.109 MB   upfac2
+ 
+ Nonlinear bracket
+ 
+    0.134 GB   f_nl
+    0.134 GB   g_nl
+    0.134 GB   fpack
+    0.134 GB   gpack
+ 
+ Collision operator
+ 
+    2.097 MB   cmat
+ 
+ TOTAL
+    4.230 GB [per core]
