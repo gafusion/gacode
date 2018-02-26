@@ -30,5 +30,5 @@ else
    setenv IDL_PATH $GACODE_ROOT/gyro/vugyro
 endif
 
-setenv EPEDNN_MODEL_DIR $GACODE_ROOT/shared/neural/eped1nn/models/EPED1_H_superH/
-setenv TGLFNN_MODEL $GACODE_ROOT/shared/neural/tglfnn/models/nn_SAT0_mb_1024_abs_reg_common_stair2x2x6.pb
+setenv EPEDNN_MODEL_DIR $GACODE_ROOT/../neural/eped1nn/models/EPED1_H_superH/
+setenv TGLFNN_MODEL $GACODE_ROOT/../neural/tglfnn/models/nn_SAT0_mb_1024_abs_reg_common_stair2x2x6.pb

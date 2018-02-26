@@ -29,5 +29,5 @@ ARCH = ar cr
 
 ifdef FANN_ROOT
    # neural net libraries
-   NN_LIB=-L$(GACODE_ROOT)/../neural/ -I$(GACODE_ROOT)/../neural/ -lbrainfuse -L$(FANN_ROOT)/lib -lfann
+   NN_LIB=-L$(GACODE_ROOT)/../neural/ -I$(GACODE_ROOT)/../neural/ -lbrainfuse -lbrainfusetf -L$(FANN_ROOT)/lib -lfann
 endif
