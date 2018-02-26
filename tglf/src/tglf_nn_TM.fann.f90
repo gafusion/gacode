@@ -26,15 +26,15 @@
 !
      real :: OUT_ENERGY_FLUX_1_RNG, OUT_ENERGY_FLUX_i_RNG
      real :: OUT_PARTICLE_FLUX_1_RNG, OUT_STRESS_TOR_i_RNG
-     real(4) :: INPUT_PARAMETERS(23)
-     real(4) :: OUTPUT_PARAMETERS(4)
+     real :: INPUT_PARAMETERS(21)
+     real :: OUTPUT_PARAMETERS(6)
 !     real :: start, finish
      integer :: n, i
 
      CHARACTER NUL
      PARAMETER(NUL = CHAR(0))
 
-     include 'brainfuse_lib.inc'
+     include 'brainfusetf_lib.inc'
 
 !     call cpu_time(start)
 !
@@ -59,6 +59,7 @@
 !
 !fill in input parameters array
 !
+
     INPUT_PARAMETERS( 1)=tglf_as_in(2)         ! AS_2
     INPUT_PARAMETERS( 2)=tglf_as_in(3)         ! AS_3
     INPUT_PARAMETERS( 3)=tglf_betae_in         ! BETAE
@@ -78,10 +79,8 @@
     INPUT_PARAMETERS(17)=tglf_s_kappa_loc_in   ! S_KAPPA_LOC
     INPUT_PARAMETERS(18)=tglf_taus_in(2)       ! TAUS_2
     INPUT_PARAMETERS(19)=tglf_vexb_shear_in    ! VEXB_SHEAR
-    INPUT_PARAMETERS(20)=tglf_vpar_in(1)       ! VPAR_1
-    INPUT_PARAMETERS(21)=tglf_vpar_shear_in(1) ! VPAR_SHEAR_1
-    INPUT_PARAMETERS(22)=tglf_xnue_in          ! XNUE
-    INPUT_PARAMETERS(23)=tglf_zeff_in          ! ZEFF
+    INPUT_PARAMETERS(20)=tglf_xnue_in          ! XNUE
+    INPUT_PARAMETERS(21)=tglf_zeff_in          ! ZEFF
 
 !    WRITE(*,*)INPUT_PARAMETERS
 
@@ -113,14 +112,10 @@
 !
 !run NN
 !
-    call get_environment_variable('TGLFNN_MODEL_DIR',tglfnn_model)
-    ierr=load_anns(0, TRIM(tglfnn_model)//NUL,'brainfuse'//NUL)
-    ierr=load_anns_inputs(INPUT_PARAMETERS)
-    ierr=run_anns()
+    call get_environment_variable('TGLFNN_MODEL',tglfnn_model)
+    ierr=btf_run(TRIM(tglfnn_model)//NUL,INPUT_PARAMETERS, 21, OUTPUT_PARAMETERS, 6)
 
     if (iProcTglf==-1) then !only write if not MPI
-        ierr=get_anns_std_array(OUTPUT_PARAMETERS)
-
         open(unit=1,file='std.tglf.gbflux',status='replace')
         write(1,'(1(1pe11.4,1x))',advance="no") OUTPUT_PARAMETERS(3)
         DO i = 1,tglf_ns_in-1
@@ -143,15 +138,19 @@
         close(1)
     endif
 
-    ierr=get_anns_avg_array(OUTPUT_PARAMETERS)
     energy_flux_out(1,1)   = OUTPUT_PARAMETERS(1)
+    energy_flux_out(2,1)   = OUTPUT_PARAMETERS(2)
     energy_flux_out(3,1)   = OUTPUT_PARAMETERS(2)
     particle_flux_out(1,1) = OUTPUT_PARAMETERS(3)
-    stress_tor_out(3,1)    = OUTPUT_PARAMETERS(4)
+    particle_flux_out(2,1) = OUTPUT_PARAMETERS(4)
+    particle_flux_out(3,1) = OUTPUT_PARAMETERS(5)
+    stress_tor_out(3,1)    = OUTPUT_PARAMETERS(6)
 
 !    write(*,*)    energy_flux_out(1,1),   &
 !                  energy_flux_out(3,1),   &
 !                  particle_flux_out(1,1), &
+!                  particle_flux_out(2,1), &
+!                  particle_flux_out(3,1), &
 !                  stress_tor_out(3,1)
 
 !

@@ -25,5 +25,5 @@ export PYTHONPATH=$GACODE_ROOT/python:${PYTHONPATH}
 export IDL_PATH=$GACODE_ROOT/gyro/vugyro:${IDL_PATH}
 
 export EPEDNN_MODEL_DIR=$GACODE_ROOT/../neural/eped1nn/models/EPED1_H_superH/
-export TGLFNN_MODEL_DIR=$GACODE_ROOT/../neural/tglfnn/models/DIIID_ion_stiffness_60_rotation/
+export TGLFNN_MODEL=$GACODE_ROOT/../neural/tglfnn/models/nn_SAT0_mb_1024_abs_reg_common_stair2x2x6.pb
 

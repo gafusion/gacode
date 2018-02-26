@@ -31,4 +31,4 @@ else
 endif
 
 setenv EPEDNN_MODEL_DIR $GACODE_ROOT/shared/neural/eped1nn/models/EPED1_H_superH/
-setenv TGLFNN_MODEL_DIR $GACODE_ROOT/shared/neural/tglfnn/models/DIIID_ion_stiffness_60_rotation/
+setenv TGLFNN_MODEL $GACODE_ROOT/shared/neural/tglfnn/models/nn_SAT0_mb_1024_abs_reg_common_stair2x2x6.pb

@@ -25,7 +25,7 @@ FFTW_INC=/usr/include
 
 ifdef FANN_ROOT
    # neural net libraries
-   NN_LIB=-L$(GACODE_ROOT)/../neural/ -I$(GACODE_ROOT)/../neural/ -lbrainfuse -lfann
+   NN_LIB=-L$(GACODE_ROOT)/../neural/ -I$(GACODE_ROOT)/../neural/ -lbrainfuse -lbrainfusetf -lfann
 endif
 
 # OPTIONAL NetCDF:
