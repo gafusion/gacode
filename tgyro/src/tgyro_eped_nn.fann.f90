@@ -70,8 +70,9 @@
 
    character(len=1000) :: epednn_model
 
-   real(4) :: INPUT_PARAMETERS(10)
-   real(4) :: OUTPUT_PARAMETERS(5)
+   integer :: dmag_model, h_meta_superh, p_index, w_index
+   real :: INPUT_PARAMETERS(10)
+   real :: OUTPUT_PARAMETERS(18)
 
    real :: nn_p_ped, nn_t_ped
    real :: nn_t_edg, nn_n_edg
@@ -84,7 +85,7 @@
    CHARACTER NUL
    PARAMETER(NUL = CHAR(0))
 
-   include 'brainfuse_lib.inc'
+   include 'brainfusetf_lib.inc'
 
    INPUT_PARAMETERS( 1) = a_in
    INPUT_PARAMETERS( 2) = betan_in
@@ -97,20 +98,21 @@
    INPUT_PARAMETERS( 9) = r_in
    INPUT_PARAMETERS(10) = zeffped_in
 
-   call get_environment_variable('EPEDNN_MODEL_DIR',epednn_model)
+   call get_environment_variable('EPEDNN_MODEL',epednn_model)
+   ierr=btf_run(TRIM(epednn_model)//NUL,INPUT_PARAMETERS, 10, OUTPUT_PARAMETERS, 18)
 
-   ierr = load_anns(1, TRIM(epednn_model)//NUL,'brainfuse'//NUL)
-   ierr = load_anns_inputs(INPUT_PARAMETERS)
-   ierr = run_anns()
-   ierr = get_anns_avg_array(OUTPUT_PARAMETERS)
+   dmag_model=1      !0-->gamma/0.03    1-->gamma_PB*gamma/0.03   2-->gamma_PB
+   h_meta_superh=0   !0-->h-mode        1-->meta-stable           2-->super-h-mode
+   p_index=0+dmag_model*3+h_meta_superh+1
+   w_index=9+dmag_model*3+h_meta_superh+1
 
-   nn_w_ped = OUTPUT_PARAMETERS(3)*sqrt(tgyro_ped_scale)
+   nn_w_ped = OUTPUT_PARAMETERS(w_index)*sqrt(tgyro_ped_scale)
 
    ! nn_p* -> Pa
    ! nn_t* -> eV
    ! nn_n* -> 10^13/cm^3 
 
-   nn_p_ped = OUTPUT_PARAMETERS(1)*1e6*tgyro_ped_scale
+   nn_p_ped = OUTPUT_PARAMETERS(p_index)*1e6*tgyro_ped_scale
    nn_t_ped = (10*nn_p_ped)/(2*(1e13*nped_in)*k)
 
    nn_n_cor = nped_in*1.5
