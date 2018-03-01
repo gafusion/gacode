@@ -327,9 +327,15 @@ emethod=(${IN// / })
 
 if [ $emethod -eq 2 ]
 then
-   python $GACODE_ROOT/shared/math/gauss_exp_quad.py $emax $ne
+   python $GACODE_ROOT/shared/math/gauss_exp_quad.py $emax $ne 
    echo "INFO: (cgyro) Generated energy mesh data"
 fi
+if [ $emethod -eq 3 ]
+then
+    python $GACODE_ROOT/shared/math/gauss_exp_quad2.py $emax $ne s0 0
+    echo "INFO: (cgyro) Generated energy mesh2 data"
+fi
+	
 #============================================================
 # Now remove test flag if it was added
 if [ $TEST_FLAG -eq 1 ]

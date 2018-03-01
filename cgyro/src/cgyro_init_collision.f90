@@ -16,7 +16,6 @@ subroutine cgyro_init_collision
   real :: mo1,mo2,en1,en2 ! von mir
   integer :: jv
   integer :: is,ir,it,ix,ie,js,je,jx,ks
-  logical, dimension(:), allocatable :: cmat_base_set
   ! parameters for matrix solve
   real, dimension(:,:), allocatable :: amat
   real, dimension(:,:,:,:,:,:), allocatable :: ctest
@@ -95,7 +94,7 @@ subroutine cgyro_init_collision
                       * sqrt(mass(js)/mass(is)) * (temp(is)/temp(js))**1.5
               endif
 
-           case(4,6)
+           case(4)
 
               ! Ad hoc op
               ! (Fix for underflow)
@@ -110,8 +109,8 @@ subroutine cgyro_init_collision
                  klor_fac(is,js) = 1.0
               endif
 
-              ! Only ii, ee Diffusion
-              if(is == js) then
+              ! Only ii, ee Diffusion for non-self-adjoint
+              if(is == js .or. collision_self_adjoint == 1) then
                  nu_par(ie,is,js) = tauinv_ab * (2.0/xa**3) &
                       * (-exp(-xb*xb)/(xb*sqrt(pi)) &
                       + (1.0/(2.0*xb*xb)) * erf(xb))
@@ -152,7 +151,7 @@ subroutine cgyro_init_collision
   !   print *,sum(w_e)
   !endif
 
-  if ( ((collision_model == 4) .or. (collision_model == 6)) .and. collision_kperp == 1 .and. &
+  if ( collision_model == 4 .and. collision_kperp == 1 .and. &
        (collision_mom_restore == 1 .or. collision_ene_restore == 1)) then
      allocate(bessel(n_species,n_xi,n_energy,nc_loc,0:1))
 !$omp parallel do private(ic_loc,it,ie,ix,is,arg)
@@ -207,37 +206,65 @@ subroutine cgyro_init_collision
   enddo
 
   ! Diffusion
-  if (((collision_model == 4) .or. (collision_model == 6)) .and. collision_ene_diffusion == 1) then
-!$omp parallel do collapse(5) private(is,ix,ie,js,je,jx)
-     do is=1,n_species 
-        do ix=1,n_xi
-           do ie=1,n_energy
-              do js=1,n_species
-                 do je=1,n_energy
-                    jx = ix                       
-                    if (ie == je) then
-                       ctest(is,js,ix,jx,ie,je) &
-                            = ctest(is,js,ix,jx,ie,je) &
-                            + (1.0-temp(is)/temp(js)) &
-                            * (-nu_par_deriv(ie,is,js) * energy(ie)**1.5 & 
-                            + nu_par(ie,is,js) & 
-                            * (2.0*energy(ie)**2 - 5.0*energy(ie)))
-                    endif
-                    ctest(is,js,ix,jx,ie,je) &
-                         = ctest(is,js,ix,jx,ie,je) &
-                         + nu_par(ie,is,js) * 0.5 *energy(ie) &
-                         * e_deriv2_mat(ie,je) / e_max
-                    ctest(is,js,ix,jx,ie,je) &
-                         = ctest(is,js,ix,jx,ie,je) &
-                         + e_deriv1_mat(ie,je)/sqrt(1.0*e_max) &
-                         * (nu_par_deriv(ie,is,js) * 0.5*energy(ie) &
-                         + nu_par(ie,is,js) * (2.0*vel(ie) &
-                         + (temp(is)/temp(js)-2.0) * energy(ie)**1.5))
+  if (collision_model == 4 .and. collision_ene_diffusion == 1) then
+     if(collision_self_adjoint == 1) then
+!$omp parallel do collapse(5) private(is,ix,ie,js,je,jx)     
+        do is=1,n_species 
+           do ix=1,n_xi
+              do ie=1,n_energy
+                 do js=1,n_species
+                    do je=1,n_energy
+                       jx = ix
+                       ! From K. Hallatschek
+                       ! self-adjoint part of ctest written self-adjointly
+                       ctest(is,js,ix,jx,ie,je) = ctest(is,js,ix,jx,ie,je) &
+                            -0.5 / w_e(ie) &
+                            *sum(w_e(:)*e_deriv1_mat(:,ie)*energy(:) &
+                            *nu_par(:,is,js) *e_deriv1_mat(:,je))/(1.0*e_max)
+                       ! non-self-adjoint part proportional 1-Ta/Tb written
+                       ! in a way that supports inherent particle number 
+                       ! conservation for small kperp
+                       ctest(is,js,ix,jx,ie,je) = ctest(is,js,ix,jx,ie,je) &
+                            + (1-temp(is)/temp(js)) / sqrt(1.0*e_max)/w_e(ie) &
+                            * w_e(je)*e_deriv1_mat(je,ie) &
+                            * nu_par(je,is,js)*energy(je)**1.5
+                    enddo
                  enddo
               enddo
            enddo
         enddo
-     enddo
+     else
+!$omp parallel do collapse(5) private(is,ix,ie,js,je,jx)     
+        do is=1,n_species 
+           do ix=1,n_xi
+              do ie=1,n_energy
+                 do js=1,n_species
+                    do je=1,n_energy
+                       jx = ix                       
+                       if (ie == je) then
+                          ctest(is,js,ix,jx,ie,je) &
+                               = ctest(is,js,ix,jx,ie,je) &
+                               + (1.0-temp(is)/temp(js)) &
+                               * (-nu_par_deriv(ie,is,js) * energy(ie)**1.5 & 
+                               + nu_par(ie,is,js) & 
+                               * (2.0*energy(ie)**2 - 5.0*energy(ie)))
+                       endif
+                       ctest(is,js,ix,jx,ie,je) &
+                            = ctest(is,js,ix,jx,ie,je) &
+                            + nu_par(ie,is,js) * 0.5 *energy(ie) &
+                            * e_deriv2_mat(ie,je) / e_max
+                       ctest(is,js,ix,jx,ie,je) &
+                            = ctest(is,js,ix,jx,ie,je) &
+                            + e_deriv1_mat(ie,je)/sqrt(1.0*e_max) &
+                            * (nu_par_deriv(ie,is,js) * 0.5*energy(ie) &
+                            + nu_par(ie,is,js) * (2.0*vel(ie) &
+                            + (temp(is)/temp(js)-2.0) * energy(ie)**1.5))
+                    enddo
+                 enddo
+              enddo
+           enddo
+        enddo
+     endif
   endif
 
   ! Collision field particle component
@@ -288,7 +315,7 @@ subroutine cgyro_init_collision
 
      endif
 
-  case(4,6)
+  case(4)
 
      ! Momentum Restoring
 
@@ -589,7 +616,7 @@ subroutine cgyro_init_collision
      !endif
   endif
   
-  if (((collision_model == 4) .or. (collision_model == 6)) .and. collision_kperp == 1 .and. &
+  if (collision_model == 4 .and. collision_kperp == 1 .and. &
        (collision_mom_restore == 1 .or. collision_ene_restore == 1)) then
      deallocate(bessel)
   end if
@@ -688,7 +715,7 @@ subroutine cgyro_init_collision
               endif
 
               ! Finite-kperp test particle corrections 
-              if (((collision_model == 4) .or. (collision_model == 6)) .and. collision_kperp == 1) then
+              if (collision_model == 4 .and. collision_kperp == 1) then
                  if (is == js .and. jx == ix .and. je == ie) then
                     do ks=1,n_species
                        cmat(iv,jv,ic_loc) = cmat(iv,jv,ic_loc) &
@@ -783,39 +810,6 @@ subroutine cgyro_init_collision
   enddo
 
   deallocate(amat)
-
-  if (collision_model == 6) then
-     allocate(cmat_base_set(n_theta))
-     cmat_base_set(:) = .false.
-     do ic=nc1,nc2
-        ic_loc = ic-nc1+1
-        it = it_c(ic)
-        if (cmat_base_set(it) .eqv. .false.) then
-          cmat_base(:,:,it) = cmat(:,:,ic_loc)
-          cmat_base_set(it)=.true.
-        endif
-     enddo
-     deallocate(cmat_base_set)
-
-     ! Note: Ideally we would want to avoid creating the big cmat matrix
-     !       But it would have required too much refactoring of the code
-     !       Something to consider for future memory optimization
-
-!$omp parallel do private(ic, ic_loc,it,iv,jv) shared(it_c,cmat_diff,cmat_base, cmat)
-     do ic=nc1,nc2
-        ic_loc = ic-nc1+1
-        it = it_c(ic)
-
-        do iv=1,nv
-           do jv=1,nv
-              cmat_diff(jv,iv,ic_loc) = cmat(jv,iv,ic_loc)  - cmat_base(jv,iv,it); 
-           enddo
-        enddo
-     enddo
-    
-     deallocate(cmat)
-  endif
-
   deallocate(i_piv)
   deallocate(nu_d)
   deallocate(nu_par)

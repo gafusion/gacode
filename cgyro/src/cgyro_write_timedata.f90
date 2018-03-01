@@ -28,7 +28,7 @@ subroutine cgyro_write_timedata
 
   !---------------------------------------------------------------------------
   if (n_toroidal == 1 .and. h_print_flag == 1) then
-     call write_distribution(trim(path)//runfile_hb)
+     call write_distribution(trim(path)//binfile_hb)
   endif
   !---------------------------------------------------------------------------
 
@@ -554,7 +554,7 @@ subroutine cgyro_write_distributed_real(datafile,n_fn,fn)
         disp = disp*n_proc_2
         disp = disp*fmtstr_len*n_fn
 
-        open(unit=io,file=datafile,status='old',access='STREAM')
+        open(unit=io,file=datafile,status='old',access='stream')
         if (disp > 0) then
            read(io,pos=disp) c
         endif
@@ -997,6 +997,7 @@ subroutine write_distribution(datafile)
   integer :: ir,it
   complex, dimension(:,:), allocatable :: h_x_glob
   complex :: ftemp(n_radial,n_theta)
+  complex(kind=4) :: f8(n_theta,n_radial/box_size)
   !------------------------------------------------------
 
   select case (io_control)
@@ -1018,7 +1019,7 @@ subroutine write_distribution(datafile)
      ! Append
 
      if (i_proc == 0) then
-        open(unit=io,file=datafile,status='old',position='append')
+        open(unit=io,file=datafile,status='old',position='append',access='stream')
      endif
 
      allocate(h_x_glob(nc,nv))
@@ -1042,7 +1043,8 @@ subroutine write_distribution(datafile)
               enddo
            enddo
            call extended_ang(ftemp,f_balloon)
-           write(io,fmtstr) transpose(f_balloon(:,:))
+           f8 = transpose(f_balloon)
+           write(io) f8
         enddo
         close(io)
      endif

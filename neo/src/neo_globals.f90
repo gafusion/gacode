@@ -266,6 +266,6 @@ module neo_globals
   real, dimension(11,2)   :: neo_thHS_out=0.0
 
   ! geometry parameters
-  real, dimension(4) :: neo_geo_out=0.0
+  real, dimension(5) :: neo_geo_out=0.0
   
 end module neo_globals

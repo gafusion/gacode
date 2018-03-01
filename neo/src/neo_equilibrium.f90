@@ -77,7 +77,7 @@ contains
        allocate(theta_nc(n_theta))
        allocate(jacobln_rderiv(n_theta))
        allocate(v_prime_g(n_radial))
-       allocate(geo_param(n_radial,4))
+       allocate(geo_param(n_radial,5))
        
        d_theta = 2*pi/n_theta
        do it=1,n_theta
@@ -344,10 +344,11 @@ contains
     neo_geo_out(2)  = ftrap
     neo_geo_out(3)  = Bmag2_avg
     neo_geo_out(4)  = Bpol_th0
-    
+    neo_geo_out(5)  = (Bmag2inv_avg-1.0/Bmag2_avg)*Bmag2_avg
+
     if(silent_flag == 0 .and. i_proc == 0) then
        open(unit=1,file=trim(path)//'out.neo.diagnostic_geo2',status='replace')
-       do it=1,4
+       do it=1,5
           write(1,'(1pe16.8)') neo_geo_out(it)
        enddo
     endif

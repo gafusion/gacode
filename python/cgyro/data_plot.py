@@ -785,12 +785,12 @@ class cgyrodata_plot(data.cgyrodata):
          for j in range(self.n_radial):
             ave[j] = average(y[j,:],self.t,w)
          ax.set_ylabel(r'$\overline{\delta \phi_\mathrm{total}}$',color='k')
-         ax.plot(kx,np.sqrt(ave[:]),color=color[0],ls='steps')
+         ax.step(kx+dk/2,np.sqrt(ave[:]),color=color[0])
       else:
          y = np.zeros([self.n_radial,self.n_time])
          nvec = str2list(nstr)
          print 'INFO: (plot_kx_phi) n = '+str(nvec)
-         ax.set_ylabel(r'$\overline{\Phi_n}$',color='k')
+         ax.set_ylabel(r'$\overline{\delta \phi_n}$',color='k')
          for n in nvec:
             num = r'$n='+str(n)+'$'
             y[:] = self.phisq[:,0,n,:]

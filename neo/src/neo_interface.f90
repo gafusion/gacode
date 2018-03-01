@@ -125,7 +125,7 @@ module neo_interface
   real, dimension(11) :: neo_vtor_nclass_out     = 0.0
   real                :: neo_jpar_nclass_out     = 0.0
   ! geometry
-  real, dimension(4) :: neo_geoparams_out       = 0.0  
+  real, dimension(5) :: neo_geoparams_out       = 0.0  
   ! error checking
   integer :: neo_error_status_out=0
   character(len=80) :: neo_error_message_out=''

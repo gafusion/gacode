@@ -117,11 +117,20 @@ for k in range(n-1):
 zp  = zp*mp.powm(z,-1)*b
 zpp = zpp*mp.powm(z,-1)*b*b
 
+# Redefine weight and renormalize last element
+
+wg = mp.matrix(n-1,1)
+s = mp.mpf(0)
+for k in range(n-1):
+   wg[k] = wk[k]*4/mp.sqrt(mp.pi)*xk[k]**2
+   s = s+wg[k]
+
+wg[n-2] = wg[n-2]+mp.mpf(1)-s
 
 # Write to datafile
 fout = open('out.cgyro.egrid','w')
 for k in range(n-1):
-    fout.write(mp.nstr(xk[k]**2,17)+' '+mp.nstr(wk[k]*4/mp.sqrt(mp.pi)*xk[k]**2,17)+'\n')
+    fout.write(mp.nstr(xk[k]**2,17)+' '+mp.nstr(wg[k],17)+'\n')
 for k in range(n-1):
     for kp in range(n-1):
         fout.write(mp.nstr(zp[k,kp],17)+' ')

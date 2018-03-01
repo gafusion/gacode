@@ -78,8 +78,8 @@ program pneo
   allocate(ic8(ntot))
   allocate(ic9(ntot))
   
-  allocate(indata_loc(6,ntot))
-  allocate(indata(6,ntot))
+  allocate(indata_loc(7,ntot))
+  allocate(indata(7,ntot))
 
   allocate(outdata_j_loc(6,ntot))
   allocate(outdata_j(6,ntot))
@@ -257,24 +257,32 @@ program pneo
      enddo
 
      ! <jpar B>/Bunit j_s ~ rho (I/psip) sum_s |z_a| n_a C_a 1/L_a
-     
+     outdata_j_loc(:,p) = outdata_j_loc(:,p) &
+           / (neo_rho_star_in * neo_geoparams_out(1))
+          
      ! K_a/n_a ~ Vpol / Bpol
      ! <B^2/Bunit^2> K_a Bunit/(n_a c_s) ~ rho (I/psip) C 1/L
      outdata_u_loc(:,p) = outdata_u_loc(:,p) &
           * neo_geoparams_out(3) / neo_geoparams_out(4) &
           / (neo_rho_star_in * neo_geoparams_out(1))
   
-     ! Gamma_a/(n_e c_s) ~ nu_ee rho_s^2 (I/psip)^2  <Bunit^2/B^2> C 1/L
+     ! Gamma_a/(n_e c_s) ~ nu_ee rho_s^2 (I/psip)^2 / <B^2/Bunit^2> C 1/L
      outdata_g_loc(:,p) = outdata_g_loc(:,p) &
           * neo_geoparams_out(3) &
           / (neo_rho_star_in * neo_geoparams_out(1))**2 / neo_nu_1_in
 
-     ! Q_a/(n_e c_s T_e) ~ nu_ee rho_a^2 (I/psip)^2  <Bunit^2/B^2> C 1/L
+     ! Q_a/(n_e c_s T_e) ~ nu_ee rho_a^2 (I/psip)^2  <B^2/Bunit^2> C 1/L
      outdata_q_loc(:,p) = outdata_q_loc(:,p) &
           * neo_geoparams_out(3) &
           / (neo_rho_star_in * neo_geoparams_out(1))**2 / neo_nu_1_in
 
      do is=1,neo_n_species_in
+        outdata_u_loc(2+6*(is-1),p) = outdata_u_loc(2+6*(is-1),p) &
+             + 1.5*outdata_u_loc(1+6*(is-1),p)
+        outdata_u_loc(4+6*(is-1),p) = outdata_u_loc(4+6*(is-1),p) &
+             + 1.5*outdata_u_loc(3+6*(is-1),p)
+        outdata_u_loc(6+6*(is-1),p) = outdata_u_loc(6+6*(is-1),p) &
+             + 1.5*outdata_u_loc(5+6*(is-1),p)
         outdata_g_loc(2+6*(is-1),p) = outdata_g_loc(2+6*(is-1),p) &
              + 1.5*outdata_g_loc(1+6*(is-1),p)
         outdata_g_loc(4+6*(is-1),p) = outdata_g_loc(4+6*(is-1),p) &
@@ -289,13 +297,14 @@ program pneo
              + 1.5*outdata_q_loc(5+6*(is-1),p)
      enddo
      
-     ! 6 inputs: eps,ft,q,log10(nuee),ni,Ti
+     ! 7 inputs: eps,ft,q,log10(nuee),ni,Ti, <B^2><1/B^2>-1
      indata_loc(1,p) = neo_rmin_over_a_in
      indata_loc(2,p) = neo_geoparams_out(2)
      indata_loc(3,p) = neo_q_in
      indata_loc(4,p) = log10(neo_nu_1_in)
      indata_loc(5,p) = neo_dens_in(2)
      indata_loc(6,p) = neo_temp_in(2)
+     indata_loc(7,p) = neo_geoparams_out(5)
      
   enddo
 

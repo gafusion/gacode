@@ -16,6 +16,7 @@ NUMAS_PER_NODE=1
 
 FC  = mpif90 -std=f2008 -I$(GACODE_ROOT)/modules
 F77 = mpif77 -I$(GACODE_ROOT)/modules
+F2PY = f2py2.7
 
 FOMP   = -fopenmp
 FMATH  = -fdefault-real-8 -fPIC -J $(GACODE_ROOT)/modules

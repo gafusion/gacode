@@ -24,7 +24,7 @@ FOMP	= -fopenmp
 
 # System math libraries
 
-LMATH = -L/${PREFIX}/lib -lfftw3
+LMATH = -L/${PREFIX}/lib -lfftw3 -llapack
 
 NETCDF = -L/${PREFIX}/lib -lnetcdff -lnetcdf 
 NETCDF_INC =${PREFIX}/include

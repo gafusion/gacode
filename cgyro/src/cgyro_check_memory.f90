@@ -122,10 +122,6 @@ subroutine cgyro_check_memory(datafile)
 
      if(collision_model == 5) then
         call cgyro_alloc_add(io,(8.0*n_xi)*n_xi*n_species*n_energy*n_theta,'cmat')
-     elseif(collision_model == 6) then
-        call cgyro_alloc_add(io,(8.0*nv)*nv*n_theta,'cmat_base')
-        call cgyro_alloc_add(io,(4.0*nv)*nv*nc_loc,'cmat_diff')
-        call cgyro_alloc_add(io,(8.0*nv)*nv*nc_loc,'cmat (temp)')
      else
         call cgyro_alloc_add(io,(8.0*nv)*nv*nc_loc,'cmat')
      endif

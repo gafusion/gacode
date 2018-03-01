@@ -80,7 +80,9 @@ subroutine cgyro_init_manager
   endif
   ! Correct weights for infinite domain
   vel(:) = sqrt(energy(:))
-  call domain_renorm(vel,w_e,n_energy)
+  if (e_method < 3) then
+     call domain_renorm(vel,w_e,n_energy)
+  endif
 
   allocate(xi(n_xi))
   allocate(w_xi(n_xi))
@@ -200,10 +202,6 @@ subroutine cgyro_init_manager
 
      if (collision_model == 5) then
         allocate(cmat_simple(n_xi,n_xi,n_energy,n_species,n_theta))
-     else if (collision_model == 6) then
-        allocate(cmat_diff(nv,nv,nc_loc))
-        allocate(cmat_base(nv,nv,n_theta))
-        allocate(cmat(nv,nv,nc_loc)) ! will be dealocated once cmat_diff and cmat_base are populated
      else
         allocate(cmat(nv,nv,nc_loc))
      endif

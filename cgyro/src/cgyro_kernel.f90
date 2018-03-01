@@ -204,12 +204,6 @@ subroutine cgyro_kernel
   if(allocated(cmat))       then
      deallocate(cmat)
   endif
-  if(allocated(cmat_diff))       then
-     deallocate(cmat_diff)
-  endif
-  if(allocated(cmat_base))       then
-     deallocate(cmat_base)
-  endif
 
   !call GEO_alloc(0)
 
