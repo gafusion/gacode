@@ -160,7 +160,7 @@ subroutine cgyro_field_ae(space)
 
   character(len=1), intent(in) :: space
   integer :: ir,i,j
-  real, dimension(n_theta) :: pvec_inr, pvec_ini
+  complex, dimension(n_theta) :: pvec_in,pvec_out
 
   call timer_lib_in('field')
 
@@ -170,21 +170,16 @@ subroutine cgyro_field_ae(space)
            field(1,ic_c(ir,:)) = 0.0
         else
            do i=1,n_theta
-              pvec_outr(i) = 0
-              pvec_outi(i) = 0
-           enddo
-           do i=1,n_theta
-              pvec_inr(i) =  real(field(1,ic_c(ir,i)))
-              pvec_ini(i) = aimag(field(1,ic_c(ir,i)))
+              pvec_out(i) = 0.0
+              pvec_in(i)  = field(1,ic_c(ir,i))
            enddo
            do j=1,n_theta
               do i=1,n_theta
-                 pvec_outr(i) = pvec_outr(i)+xzf(ir,i,j)*pvec_inr(j)
-                 pvec_outi(i) = pvec_outi(i)+xzf(ir,i,j)*pvec_ini(j)
+                 pvec_out(i) = pvec_out(i)+xzf(ir,i,j)*pvec_in(j)
               enddo
            enddo
            do i=1,n_theta
-              field(1,ic_c(ir,i)) = cmplx(pvec_outr(i),pvec_outi(i))
+              field(1,ic_c(ir,i)) = pvec_out(i)
            enddo
         endif
      enddo
@@ -194,21 +189,16 @@ subroutine cgyro_field_ae(space)
            field(1,ic_c(ir,:)) = 0.0
         else
            do i=1,n_theta
-              pvec_inr(i) =  real(field(1,ic_c(ir,i)))
-              pvec_ini(i) = aimag(field(1,ic_c(ir,i)))
-           enddo
-           do i=1,n_theta
-              pvec_outr(i) = 0
-              pvec_outi(i) = 0
+              pvec_out(i) = 0.0
+              pvec_in(i)  =  field(1,ic_c(ir,i))
            enddo
            do j=1,n_theta
               do i=1,n_theta
-                 pvec_outr(i) = pvec_outr(i)+hzf(ir,i,j)*pvec_inr(j)
-                 pvec_outi(i) = pvec_outi(i)+hzf(ir,i,j)*pvec_ini(j)
+                 pvec_out(i) = pvec_out(i)+hzf(ir,i,j)*pvec_in(j)
               enddo
            enddo
            do i=1,n_theta
-              field(1,ic_c(ir,i)) = cmplx(pvec_outr(i),pvec_outi(i))
+              field(1,ic_c(ir,i)) = pvec_out(i)
            enddo
         endif
      enddo

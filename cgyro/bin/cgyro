@@ -78,6 +78,9 @@ then
   echo "         -bin"
   echo "         Map old-style ASCII data to binary files."
   echo
+  echo "         -cbin"
+  echo "         Remove old-style ASCII files."
+  echo
   echo "         -globalmap"
   echo "         Create global data mapping file."
   echo "         NOTE: requries setting -rhos <rho/a>"
@@ -104,6 +107,7 @@ REGRESS_FLAG=0
 CLEAN_FLAG=0
 COMPRESS_FLAG=0
 BIN_FLAG=0
+CBIN_FLAG=0
 RESET=0
 NEW_FLAG=0
 INIT_FLAG=0
@@ -155,6 +159,7 @@ while [ $# -gt 0 ] ; do
   -compress) COMPRESS_FLAG=1 ;;
 
   -bin) BIN_FLAG=1 ;;
+  -cbin) CBIN_FLAG=1 ;;
 
   -globalmap) GLOBALMAP_FLAG=1 ;;
 
@@ -208,7 +213,26 @@ then
     $EXEC out.cgyro.lky_flux_n  bin.cgyro.lky_flux_n
     $EXEC out.cgyro.lky_flux_e  bin.cgyro.lky_flux_e
     $EXEC out.cgyro.lky_flux_v  bin.cgyro.lky_flux_v
-    exit 1
+    $EXEC out.cgyro.phib        bin.cgyro.phib
+    $EXEC out.cgyro.aparb       bin.cgyro.aparb
+    $EXEC out.cgyro.bparb       bin.cgyro.bparb
+    exit 0
+fi
+if [ $CBIN_FLAG -eq 1 ]
+then
+    EXEC="$GACODE_ROOT/cgyro/bin/cgyro_trm"
+    $EXEC cgyro.kxky_phi   
+    $EXEC cgyro.kxky_n      
+    $EXEC cgyro.kxky_e     
+    $EXEC cgyro.kxky_flux_e
+    $EXEC cgyro.ky_flux
+    $EXEC cgyro.lky_flux_n  
+    $EXEC cgyro.lky_flux_e  
+    $EXEC cgyro.lky_flux_v 
+    $EXEC cgyro.phib
+    $EXEC cgyro.aparb
+    $EXEC cgyro.bparb 
+    exit 0
 fi
 #============================================================
 
@@ -280,12 +304,17 @@ fi
 #============================================================
 
 #============================================================
-# Clean option
-if [ $CLEAN_FLAG -eq 1 ]
-then
-    rm -f out.* batch.out batch.err *~ *gen
+# Clean/new options
+
+CFILES="out.* bin.* batch.out batch.err *~ *gen"
+
+if [ $CLEAN_FLAG -eq 1 ] ; then
+    rm -f $CFILES
     echo "INFO: (cgyro) Cleaned directory." 
     exit 1
+fi
+if [ $NEW_FLAG -eq 1 ] ; then
+   rm -f $CFILES
 fi
 #============================================================
 
@@ -327,13 +356,19 @@ emethod=(${IN// / })
 
 if [ $emethod -eq 2 ]
 then
-   python $GACODE_ROOT/shared/math/gauss_exp_quad.py $emax $ne 
+   PREC=0
+   python $GACODE_ROOT/shared/math/gauss_exp_quad.py $emax $ne $PREC
    echo "INFO: (cgyro) Generated energy mesh data"
-fi
-if [ $emethod -eq 3 ]
-then
-    python $GACODE_ROOT/shared/math/gauss_exp_quad2.py $emax $ne s0 0
-    echo "INFO: (cgyro) Generated energy mesh2 data"
+else
+   data=$GACODE_ROOT/cgyro/tools/egrid/egrid.$ne.${emax%.*}
+   if [ -f $data ]
+   then
+      cp $data out.cgyro.egrid
+   else
+      echo "ERROR: (cgyro) No energy mesh data exists for this resolution."
+      echo $data
+      exit 1
+   fi
 fi
 	
 #============================================================
@@ -362,11 +397,6 @@ fi
 # NOTE: log all starts and restarts, but NOT test mode
 if [ $TEST_FLAG -eq 0 ]
 then
-   if [ $NEW_FLAG -eq 1 ]
-   then
-      rm -f out.cgyro.*
-   fi
-    
    # If there are no restart files, its safe to overwrite the log file
    PATTERN=(out.cgyro.restar*)
    if [ ! -r ${PATTERN[0]} ]; then

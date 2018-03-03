@@ -2,15 +2,26 @@ include ${GACODE_ROOT}/platform/build/make.inc.${GACODE_PLATFORM}
 
 DESTLIB=${GACODE_ROOT}/python/gapy.so
 
+LMATH:=$(filter-out -lfftw3,$(LMATH))
+LMATH:=$(filter-out -lfftw3f,$(LMATH))
+LMATH:=$(filter-out -lfftw3_threads,$(LMATH))
+LMATH:=$(filter-out -lfftw3f_threads,$(LMATH))
+
 ifndef F2PY
-   F2PY=f2py
+   all:
+else
+   all: objs
 endif
 
-all:
-	${F2PY} -m gapy -h sgn.pyf gapy_math.f90 gapy_fluct.f90
-	${F2PY} -lgomp --f90flags='${FOMP}' -c sgn.pyf gapy_math.f90 gapy_fluct.f90 ${GACODE_ROOT}/shared/math/math_lib.a ${LMATH}
+objs:
+	${F2PY} --quiet -m gapy -h sgn.pyf gapy_math.f90 gapy_fluct.f90
+	${F2PY} --quiet -lgomp --f90flags='${FOMP} ${FOPT}' -c sgn.pyf gapy_math.f90 gapy_fluct.f90 ${GACODE_ROOT}/shared/math/math_lib.a ${LMATH}
+
 	rm -f ${DESTLIB}
 	ln -s ${GACODE_ROOT}/gapy/src/gapy.so ${DESTLIB}
 
 clean:
 	rm -f gapy.so ${DESTLIB} sgn.pyf *~
+
+exit:
+	echo "No f2py"

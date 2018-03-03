@@ -13,7 +13,6 @@ if not os.path.isfile(afile):
     print "INFO: (cgyro_t2b) "+afile+' not found'
     sys.exit()
     
-
 arr = np.fromfile(afile,dtype='float32',sep=' ')
 
 print "INFO: (cgyro_t2b) Read ASCII data in "+afile

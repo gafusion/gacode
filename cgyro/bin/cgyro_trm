@@ -1,0 +1,16 @@
+#!/bin/bash
+#=============================================================
+# cgyro_trm
+#
+# PURPOSE:
+#  Safely remove old ASCII files.
+#=============================================================
+
+if [ -f out.$1 ] ; then
+   if [ -f bin.$1 ] ; then
+      echo "[  REMOVED] Removed out.$1 => bin.$1 exists"
+      rm out.$1
+   else
+      echo "[PRESERVED] Found out.$1 => no matching bin.$1"
+   fi	
+fi

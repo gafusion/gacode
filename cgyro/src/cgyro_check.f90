@@ -7,7 +7,7 @@ subroutine cgyro_check
 
   integer :: is
   logical :: lfe
-  character(len=1), dimension(8) :: ctag
+  character(len=1), dimension(7) :: ctag
 
   !-----------------------------------------------------------------------
   ! Grid parameter checks
@@ -47,7 +47,6 @@ subroutine cgyro_check
   
   if (use_bin == 0) then
      call cgyro_info('PLEASE set USE_BIN=1 for future simulations.')
-     return
   endif
   !------------------------------------------------------------------------
 
@@ -256,17 +255,6 @@ subroutine cgyro_check
         call cgyro_error('Invalid value for collision_kperp')
         return
      end select
-
-     select case (collision_self_adjoint)
-     case(0)
-        ! Collision diffusion self-adjoint form : off
-     case(1)
-        ! Collision diffusion self-adjoint form : on
-        ctag(8) = 'x'
-     case default
-        call cgyro_error('Invalid value for collision_self_adjoint')
-        return
-     end select
      
   endif
 
@@ -283,7 +271,7 @@ subroutine cgyro_check
      end select
   endif
 
-  call cgyro_info('Collision terms: L D Rm Re kp ions field self-adj')
+  call cgyro_info('Collision terms: L D Rm Re kp ions field')
   call cgyro_info('               '// &
        '  '//ctag(1)// &
        ' '//ctag(2)// &
@@ -291,8 +279,7 @@ subroutine cgyro_check
        '  '//ctag(4)// &
        '  '//ctag(5)// &
        '   '//ctag(6)// &
-       '     '//ctag(7)// &
-       '       '//ctag(8))
+       '     '//ctag(7))
 
   if (collision_model == 5 .or. collision_model == 1) then
      select case(z_eff_method)

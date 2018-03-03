@@ -53,7 +53,6 @@ module cgyro_globals
   integer :: collision_mom_restore
   integer :: collision_ene_restore
   integer :: collision_ene_diffusion
-  integer :: collision_self_adjoint
   integer :: collision_kperp
   integer :: collision_field_model
   integer :: collision_ion_model
@@ -210,7 +209,6 @@ module cgyro_globals
   character(len=80) :: path
   character(len=14) :: runfile_info    = 'out.cgyro.info'
   character(len=13) :: runfile_mpi     = 'out.cgyro.mpi'
-  character(len=16) :: runfile_extend  = 'out.cgyro.extend'
   character(len=16) :: runfile_memory  = 'out.cgyro.memory'
   character(len=17) :: runfile_restart = 'out.cgyro.restart'
   character(len=13) :: runfile_restart_tag = 'out.cgyro.tag'
@@ -224,8 +222,8 @@ module cgyro_globals
   character(len=21) :: binfile_kxky_flux = 'bin.cgyro.kxky_flux_e'
   character(len=17) :: runfile_ky_flux = 'out.cgyro.ky_flux'
   character(len=17) :: binfile_ky_flux = 'bin.cgyro.ky_flux'
-  character(len=15), dimension(3)  :: runfile_fieldb = &
-       (/'out.cgyro.phib ','out.cgyro.aparb','out.cgyro.bparb'/)
+  character(len=15), dimension(3)  :: binfile_fieldb = &
+       (/'bin.cgyro.phib ','bin.cgyro.aparb','bin.cgyro.bparb'/)
   character(len=16), dimension(2)  :: runfile_kxky = &
        (/'out.cgyro.kxky_n','out.cgyro.kxky_e'/)
   character(len=18) :: runfile_kxky_phi = 'out.cgyro.kxky_phi'
@@ -255,7 +253,6 @@ module cgyro_globals
   ! Standard precision for IO (there are optionally reset to higher precision later)
   character(len=8)  :: fmtstr    ='(es11.4)'
   integer           :: fmtstr_len = 12
-  character(len=14) :: fmtstr2   ='(2(es11.4,1x))'
   character(len=15) :: fmtstrn   ='(10(es11.4,1x))'
   character(len=9)  :: fmtstr_hi ='(es18.12)'
   !----------------------------------------------------
@@ -294,11 +291,11 @@ module cgyro_globals
   ! Numerical/work arrays and dimensions
   !
   ! Velocity space 
-  integer, dimension(:), allocatable :: indx_xi, px
+  integer, dimension(:), allocatable :: px
   real, dimension(:), allocatable :: energy, vel, w_e
   real, dimension(:), allocatable :: xi, w_xi
   real, dimension(:,:), allocatable :: xi_deriv_mat, xi_lor_mat
-  real, dimension(:,:), allocatable :: e_deriv1_mat, e_deriv2_mat
+  real, dimension(:,:), allocatable :: e_deriv1_mat
   !
   ! Parallel streaming
   real :: d_theta
@@ -388,7 +385,6 @@ module cgyro_globals
 #endif
   !
   ! Work arrays
-  complex, dimension(:,:), allocatable :: f_balloon
   real, dimension(2) :: integration_error
   !
   ! LAPACK work arrays 
@@ -403,11 +399,10 @@ module cgyro_globals
   !
   ! n=0 test variables
   real, dimension(:,:,:), allocatable :: hzf, xzf 
-  real, dimension(:), allocatable :: pvec_outr, pvec_outi
   !
   ! Collision operator
   real, dimension(:,:,:), allocatable :: cmat
-  real, dimension(:,:,:,:,:), allocatable :: cmat_simple ! only used in collision_mode=5
+  real, dimension(:,:,:,:,:), allocatable :: cmat_simple ! only used in collision_model=5
   ! 
   ! Equilibrium/geometry arrays
   integer :: it0

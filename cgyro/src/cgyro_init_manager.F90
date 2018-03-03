@@ -39,7 +39,6 @@ subroutine cgyro_init_manager
   if (hiprec_flag == 1) then
      fmtstr  = '(es16.9)'
      fmtstr_len = 17
-     fmtstr2 = '(2(es16.9,1x))'
      fmtstrn = '(10(es16.9,1x))'
   endif
 
@@ -60,29 +59,16 @@ subroutine cgyro_init_manager
   allocate(vel(n_energy))
   allocate(w_e(n_energy))
   allocate(e_deriv1_mat(n_energy,n_energy))
-  allocate(e_deriv2_mat(n_energy,n_energy))
+
   ! Construct energy nodes and weights
-  if (e_method == 1) then
-     call pseudo_maxwell(n_energy,&
-          nint(e_max),&
-          energy,&
-          w_e,&
-          e_deriv1_mat,&
-          e_deriv2_mat)
-  else
-     call pseudo_maxwell_new(n_energy,&
-          e_max,&
-          energy,&
-          w_e,&
-          e_deriv1_mat,&
-          e_deriv2_mat,&
-          trim(path)//'out.cgyro.egrid')
-  endif
-  ! Correct weights for infinite domain
+  call pseudo_maxwell_new(n_energy,&
+       e_max,&
+       energy,&
+       w_e,&
+       e_deriv1_mat,&
+       trim(path)//'out.cgyro.egrid')
+
   vel(:) = sqrt(energy(:))
-  if (e_method < 3) then
-     call domain_renorm(vel,w_e,n_energy)
-  endif
 
   allocate(xi(n_xi))
   allocate(w_xi(n_xi))
@@ -154,7 +140,6 @@ subroutine cgyro_init_manager
      allocate(fflux_loc(n_species,3,n_field))
      allocate(    gflux(0:n_global,n_species,3))
      allocate(gflux_loc(0:n_global,n_species,3))
-     allocate(f_balloon(n_radial/box_size,n_theta))
      allocate(recv_status(MPI_STATUS_SIZE))
 
      allocate(icd_c(-nup_theta:nup_theta, nc))

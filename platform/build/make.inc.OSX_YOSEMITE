@@ -26,12 +26,13 @@ ifeq ($(GOMPTEST),0)
 endif
 
 FMATH	= -fdefault-real-8 -fPIC
-FOPT	= -O3
+FOPT	= -O3 -framework Accelerate
 FDEBUG  = -Wall -fcheck=all -ffpe-trap=invalid,zero,overflow
+F2PY    = f2py
 
 # System math libraries
 
-LMATH = -framework Accelerate /opt/local/lib/libfftw3.a
+LMATH = /opt/local/lib/libfftw3.a
 FFTW_INC = /opt/local/include 
 
 ifdef FANN_ROOT

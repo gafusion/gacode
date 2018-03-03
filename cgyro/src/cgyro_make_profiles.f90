@@ -373,10 +373,6 @@ subroutine cgyro_make_profiles
   !-------------------------------------------------------------
   ! Fourier index mapping
   !
-  allocate(indx_xi(n_xi))
-  do ix=1,n_xi
-     indx_xi(ix) = ix-1
-  enddo
   allocate(px(n_radial))
   if (zf_test_flag == 1) then
      do ir=1,n_radial

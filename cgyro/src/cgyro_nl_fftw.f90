@@ -11,6 +11,7 @@
 !-----------------------------------------------------------------
 
 subroutine cgyro_nl_fftw_comm1
+
   use timer_lib
   use parallel_lib
   use cgyro_globals
@@ -36,9 +37,11 @@ subroutine cgyro_nl_fftw_comm1
   enddo
 
   call parallel_slib_f_nc(fpack,f_nl)
+
 end subroutine cgyro_nl_fftw_comm1
 
 subroutine cgyro_nl_fftw_comm2
+
   use timer_lib
   use parallel_lib
   use cgyro_globals
@@ -64,9 +67,11 @@ subroutine cgyro_nl_fftw_comm2
   enddo
 
   call parallel_slib_f_nc(gpack,g_nl)
+
 end subroutine cgyro_nl_fftw_comm2
 
 subroutine cgyro_nl_fftw_stepr(j, i_omp)
+
   use timer_lib
   use parallel_lib
   use cgyro_globals
@@ -381,6 +386,7 @@ end subroutine cgyro_nl_fftw
 subroutine cleanx(f,n)
 
   implicit none
+
   integer, intent(in) :: n
   complex, intent(inout) :: f(0:n-1)
 
@@ -397,12 +403,5 @@ subroutine cleanx(f,n)
      f(i)   = 0.5*( f(i)+conjg(f(n-i)) )
      f(n-i) = conjg(f(i)) 
   enddo
-
-  !do i=-n/2,-1
-  !   print *,i,f(i+n)
-  !enddo
-  !do i=0,n/2-1
-  !   print *,i,f(i)
-  !enddo
 
 end subroutine cleanx

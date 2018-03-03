@@ -19,6 +19,7 @@ FOMP   =-fopenmp
 FMATH  =-fdefault-real-8 -fPIC -J $(GACODE_ROOT)/modules
 FOPT   =-Ofast
 FDEBUG =-Wall -W -fcheck=all -g -fbacktrace -ffpe-trap=invalid,zero,overflow
+F2PY   = f2py
 
 # System math libraries
 LMATH = ${ROOT}/OpenBLAS/libopenblas.a $(FFTWDIR)/libfftw3.a $(FFTWDIR)/libfftw3_omp.a

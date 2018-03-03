@@ -173,7 +173,6 @@ subroutine cgyro_kernel
   if(allocated(omega_rot_edrift_r))  deallocate(omega_rot_edrift_r)
   if(allocated(omega_rot_star))      deallocate(omega_rot_star)
 
-  if(allocated(indx_xi))       deallocate(indx_xi)
   if(allocated(px))            deallocate(px)
   if(allocated(energy))        then
 !$acc exit data delete(energy)
@@ -181,7 +180,6 @@ subroutine cgyro_kernel
   endif
   if(allocated(w_e))           deallocate(w_e)
   if(allocated(e_deriv1_mat))  deallocate(e_deriv1_mat)
-  if(allocated(e_deriv2_mat))  deallocate(e_deriv2_mat)
   if(allocated(xi))            then
 !$acc exit data delete(xi)
      deallocate(xi)
@@ -195,17 +193,10 @@ subroutine cgyro_kernel
   if(allocated(field))         deallocate(field)
   if(allocated(field_loc))     deallocate(field_loc)
   if(allocated(field_old))     deallocate(field_old)
-  if(allocated(f_balloon))     deallocate(f_balloon)
   if(allocated(hzf))           deallocate(hzf)
   if(allocated(xzf))           deallocate(xzf)
-  if(allocated(pvec_outr))     deallocate(pvec_outr)
-  if(allocated(pvec_outi))     deallocate(pvec_outi)
 
-  if(allocated(cmat))       then
-     deallocate(cmat)
-  endif
-
-  !call GEO_alloc(0)
+  if (allocated(cmat)) deallocate(cmat)
 
 end subroutine cgyro_kernel
 

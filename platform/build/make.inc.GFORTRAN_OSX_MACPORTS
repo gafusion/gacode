@@ -15,19 +15,18 @@ MF90 = mpif90
 #set up for diff mpif90s
 #
 
-FC	= ${MF90} -std=f2008 -I$(GACODE_ROOT)/modules -J$(GACODE_ROOT)/modules -g -I/opt/local/include
-F77	= ${MF90} -g
-F2PY = f2py-2.7
+FC  = ${MF90} -std=f2008 -I$(GACODE_ROOT)/modules -J$(GACODE_ROOT)/modules -g -I/opt/local/include
+F77 = ${MF90} -g
 
-FMATH	= -fdefault-real-8 -fPIC
-FOPT	= -O3 -m64
-FDEBUG	= -Wall -fcheck=all -fbacktrace -fbounds-check -O0 -Wextra -finit-real=nan -Wunderflow -ffpe-trap=invalid,zero,overflow
-FBOUND	= -Wall -fbounds-check
 FOMP	= -fopenmp
+FMATH	= -fdefault-real-8 -fPIC
+FOPT	= -O3 -m64 -framework Accelerate
+FDEBUG	= -Wall -fcheck=all -fbacktrace -fbounds-check -O0 -Wextra -finit-real=nan -Wunderflow -ffpe-trap=invalid,zero,overflow
+F2PY    = f2py-2.7
 
 # System math libraries
 
-LMATH = -framework Accelerate -L/opt/local/lib -lfftw3
+LMATH = -L/opt/local/lib -lfftw3
 
 NETCDF = -L${NETCDF_PATH}/lib -lnetcdff -lnetcdf 
 NETCDF_INC =${NETCDF_PATH}/include

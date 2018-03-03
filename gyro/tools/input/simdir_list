@@ -21,16 +21,7 @@ reg18: [nl+gki+ ae+ es+pure+ sa+ sym+ncol+nrot+ p+inp]
 reg19: [ l+gki+gke+cem+pure+mod+ sym+ col+nrot+ p+inp]
 reg20: [nl+gki+dke+cem+pure+mod+ sym+ncol+ rot+np+inp]
 
-Pedestal cases:
-ped95iv: [ l+gki+dke+tem+pure+gen+asym+ncol+nrot+ p+exp]
-ped95ev: [ l+gki+gke+tem+pure+gen+asym+ncol+nrot+ p+exp]
-
-HDF5 test cases (HDF5 I/O)
-
-h5reg01: [ l+gki+ ae+ es+pure+ sa+ sym+ncol+nrot+ p+inp]
-h5reg20: [nl+gki+dke+cem+pure+mod+ sym+ncol+ rot+np+inp]
-
-Full nonlinear cases
+Full nonlinear cases:
 
 nl01:  [nl+gki+dke+ es+pure+mod+ sym+ncol+nrot+ p+inp]
        GA standard case, 16 modes.

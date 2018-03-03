@@ -228,10 +228,6 @@ subroutine cgyro_init_arrays
      deallocate(i_piv)
      deallocate(work)
 
-     ! Need to allocate these for future use
-     allocate(pvec_outr(n_theta))
-     allocate(pvec_outi(n_theta))
-
   endif
   !-------------------------------------------------------------------------
 

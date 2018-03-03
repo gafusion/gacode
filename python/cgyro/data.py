@@ -42,19 +42,20 @@ class cgyrodata:
       """Initialize smaller data objects (don't load larger ones)"""
 
       import numpy as np
-      import time
-
+      
       #-----------------------------------------------------------------
       # Read time vector.
       #
-      data = np.loadtxt(self.dir+'out.cgyro.time')
-      self.t    = data[:,0]
-      self.err1 = data[:,1]
+      data = np.fromfile(self.dir+'out.cgyro.time',dtype='float',sep=' ')
+      nt = len(data)/3
+      data = np.reshape(data,(3,nt),'F')
+      self.t    = data[0,:]
+      self.err1 = data[1,:]
       try:
-         self.err2 = data[:,2]
+         self.err2 = data[2,:]
       except:
-         self.err2 = data[:,1]
-      self.n_time = len(self.t)   
+         self.err2 = data[1,:]
+      self.n_time = nt   
       print "INFO: (data.py) Read time vector in out.cgyro.time."
       #-----------------------------------------------------------------
 
@@ -63,7 +64,7 @@ class cgyrodata:
       # 
       # NOTE: Grid data is packed, so unpack into sensible bits
       #
-      data = np.loadtxt(self.dir+'out.cgyro.grids')
+      data = np.fromfile(self.dir+'out.cgyro.grids',dtype='float32',sep=' ')
 
       self.n_n       = int(data[0])
       self.n_species = int(data[1])
@@ -106,14 +107,11 @@ class cgyrodata:
       print "INFO: (data.py) Read grid data in out.cgyro.grids."
       #-----------------------------------------------------------------
 
-      # Convenience definition
-      nt = self.n_time
-
       #-----------------------------------------------------------------
       # Linear frequency
       #
       try:
-         data = np.fromfile(self.dir+'out.cgyro.freq',dtype='float',sep=" ")
+         data = np.fromfile(self.dir+'out.cgyro.freq',dtype='float',sep=' ')
          self.freq = np.reshape(data,(2,self.n_n,nt),'F')
          print "INFO: (data.py) Read data in out.cgyro.freq."
       except:
@@ -124,7 +122,7 @@ class cgyrodata:
       # Equil file
       #
       try:
-         data = np.fromfile(self.dir+'out.cgyro.equilibrium',dtype='float',sep=" ")
+         data = np.fromfile(self.dir+'out.cgyro.equilibrium',dtype='float32',sep=' ')
          self.rmin          = data[0]
          self.rmaj          = data[1]
          self.q             = data[2]
@@ -180,40 +178,30 @@ class cgyrodata:
       #-----------------------------------------------------------------
 
       #-----------------------------------------------------------------
-      # Read ballooning potentials
+      # Ballooning potentials
       #
-      try:
-         data = np.fromfile(self.dir+'out.cgyro.phib',dtype='float',sep=" ")
-         if self.n_radial == 1:
-            self.phib = np.reshape(data,(2,self.n_theta,nt),'F')
-         else:
-            self.phib = np.reshape(data,(2,self.n_theta*self.n_radial/self.m_box,nt),'F')
-         print "INFO: (data.py) Read data in out.cgyro.phib."
-      except:
-            pass
+      f='.cgyro.phib'
+      t,fmt,data = self.extract(f)
+      if fmt != 'null':
+         self.phib = np.reshape(data,(2,self.n_theta*self.n_radial,nt),'F')
+         print 'INFO: (data.py) Read data in '+fmt+f+'  '+t 
 
-      try:
-         data = np.fromfile(self.dir+'out.cgyro.aparb',dtype='float',sep=" ")
-         if self.n_radial == 1:
-            self.aparb = np.reshape(data,(2,self.n_theta,nt),'F')
-         else:
-            self.aparb = np.reshape(data,(2,self.n_theta*self.n_radial/self.m_box,nt),'F')
-         print "INFO: (data.py) Read data in out.cgyro.aparb."
-      except:
-         pass
+      f='.cgyro.aparb'
+      t,fmt,data = self.extract(f)
+      if fmt != 'null':
+         self.aparb = np.reshape(data,(2,self.n_theta*self.n_radial,nt),'F')
+         print 'INFO: (data.py) Read data in '+fmt+f+' '+t 
 
-      try:
-         data = np.fromfile(self.dir+'out.cgyro.bparb',dtype='float',sep=" ")
-         self.bparb = np.reshape(data,(2,self.n_theta*self.n_radial/self.m_box,nt),'F')
-         print "INFO: (data.py) Read data in out.cgyro.bparb."
-      except:
-         pass
+      f='.cgyro.bparb'
+      t,fmt,data = self.extract(f)
+      if fmt != 'null':
+         self.bparb = np.reshape(data,(2,self.n_theta*self.n_radial,nt),'F')
+         print 'INFO: (data.py) Read data in '+fmt+f+' '+t 
       #-----------------------------------------------------------------
 
       #-----------------------------------------------------------------
       # Ballooning distribution
       #
-      nd = 2*self.n_radial*self.n_theta/self.m_box*self.n_species*self.n_xi*self.n_energy*nt
       t,fmt,data = self.extract('.cgyro.hb')
       if fmt != 'null':
          self.hb = np.reshape(data,(2,self.n_radial*self.n_theta/self.m_box,
@@ -227,18 +215,14 @@ class cgyrodata:
       #
       nd = self.n_species*nt
       try:
-         start = time.time()
          data = np.loadtxt(self.dir+'out.cgyro.flux_n',dtype='float')
-         end = time.time()
          self.flux_n = np.transpose(data[:,1:])
          print "INFO: (data.py) Read data in out.cgyro.flux_n."
       except:
          pass
 
       try:
-         start = time.time()
          data = np.loadtxt(self.dir+'out.cgyro.flux_e',dtype='float')
-         end = time.time()
          self.flux_e = np.transpose(data[:,1:])
          print "INFO: (data.py) Read data in out.cgyro.flux_e."
       except:
@@ -248,7 +232,6 @@ class cgyrodata:
    def getflux(self):
 
       import numpy as np
-      import time
 
       # Convenience definition
       nt = self.n_time
@@ -268,7 +251,6 @@ class cgyrodata:
       """Larger flux files (hopefully binary)"""
 
       import numpy as np
-      import time
 
       # Convenience definition
       nt = self.n_time
@@ -288,7 +270,6 @@ class cgyrodata:
       """Global-spectral flux files"""
 
       import numpy as np
-      import time
 
       # Convenience definition
       nt = self.n_time
@@ -320,8 +301,6 @@ class cgyrodata:
       """Larger field files"""
 
       import numpy as np
-      import time
-      import os
 
       # Convenience definition
       nt = self.n_time
@@ -372,7 +351,7 @@ class cgyrodata:
       # Read powers
       #
       try:
-         data = np.fromfile(self.dir+'out.cgyro.geo',dtype='float',sep=" ")
+         data = np.fromfile(self.dir+'out.cgyro.geo',dtype='float32',sep=' ')
          self.geo = np.reshape(data,(self.n_theta,12),'F')
          print "INFO: (data.py) Read data in out.cgyro.geo."
          self.geotag.append('\theta')
