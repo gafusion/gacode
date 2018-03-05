@@ -35,11 +35,6 @@ F2PY    = f2py
 LMATH = /opt/local/lib/libfftw3.a
 FFTW_INC = /opt/local/include 
 
-ifdef FANN_ROOT
-   # neural net libraries
-   NN_LIB=-L$(GACODE_ROOT)/../neural/ -I$(GACODE_ROOT)/../neural/ -lbrainfuse -lbrainfusetf -lfann
-endif
-
 # NetCDF libraries
 
 NETCDF = -L/opt/local/lib -lnetcdff -L/opt/local/lib -Wl,-headerpad_max_install_names -lnetcdf -lnetcdf

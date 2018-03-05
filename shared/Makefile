@@ -8,8 +8,8 @@ all:
 	cd harvest_client ; make
 	cd nclass ; make "OPT=${OPT}"
 	cd UMFPACK ; make "OPT=${OPT}"
-ifdef FANN_ROOT
-	cd ${GACODE_ROOT}/../neural && make
+ifdef NEURAL_ROOT
+	cd ${NEURAL_ROOT} && make
 endif
 
 clean:
@@ -20,8 +20,8 @@ clean:
 	cd harvest_client ; make clean
 	cd nclass ; make clean
 	cd UMFPACK ; make clean
-ifdef FANN_ROOT
-	cd ${GACODE_ROOT}/../neural && make clean
+ifdef NEURAL_ROOT
+	cd ${NEURAL_ROOT} && make clean
 endif
 
 distclean:

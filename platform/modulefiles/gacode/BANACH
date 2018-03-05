@@ -2,9 +2,9 @@
 #
 # Module file for setting the GACODE machine-dependent environmental variables
 #
-module add gacode_base
 
 setenv GACODE_PLATFORM [lrange [file split ${ModulesCurrentModulefile}]	end end]
-setenv FANN_ROOT /home/SOFTWARE/fann
+set GACODE_PLATFORM $::env(GACODE_PLATFORM)
 
-puts stderr "GACODE_PLATFORM=$::env(GACODE_PLATFORM) ; GACODE_ROOT=$::env(GACODE_ROOT)"
+#load device independent variables
+module add gacode_base

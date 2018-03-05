@@ -25,11 +25,6 @@ FDEBUG = -check bounds,uninit -fpe0 -ftrapuv
 LMATH=$(FFTWDIR)/lib/libfftw3.a
 FFTW_INC=$(FFTWDIR)/include
 
-ifdef FANN_ROOT
-   # neural net libraries
-   NN_LIB=-L$(GACODE_ROOT)/../neural/ -I$(GACODE_ROOT)/../neural/ -lbrainfuse -lbrainfusetf -lfann
-endif
-
 # OPTIONAL NetCDF:
 NETCDF=-L$(NCDIR)/lib -lnetcdff -lnetcdf
 NETCDF_INC=$(NCDIR)/include

@@ -32,8 +32,3 @@ NETCDF_INC =${PREFIX}/include
 # Archive
 
 ARCH = ar cr
-
-ifdef FANN_ROOT
-   # neural net libraries
-   NN_LIB=-L$(GACODE_ROOT)/../neural/ -I$(GACODE_ROOT)/../neural/ -lbrainfuse -lbrainfusetf -lfann
-endif

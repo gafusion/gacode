@@ -25,11 +25,6 @@ F2PY   = f2py
 LMATH = ${ROOT}/OpenBLAS/libopenblas.a $(FFTWDIR)/libfftw3.a $(FFTWDIR)/libfftw3_omp.a
 FFTW_INC=/usr/include
 
-ifdef FANN_ROOT
-   # neural net libraries
-   NN_LIB=-L$(GACODE_ROOT)/../neural/ -I$(GACODE_ROOT)/../neural/ -lbrainfuse -lbrainfusetf -lfann
-endif
-
 # OPTIONAL NetCDF:
 NETCDF=-L/usr/lib -lnetcdff -lnetcdf
 NETCDF_INC=/usr/include

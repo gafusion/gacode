@@ -10,7 +10,7 @@ endif
 
 EXEC = neo
 
-ifdef FANN_ROOT
+ifdef NEURAL_ROOT
    # neural net libraries
    NN=neo_neural.fann
 else

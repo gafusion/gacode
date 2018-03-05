@@ -26,3 +26,6 @@ setenv CRAY_CUDA_MPS 1
 setenv CRAY_CUDA_PROXY 1
 setenv OMP_STACKSIZE 100M
 setenv OMP_DYNAMIC FALSE
+
+#load device independent variables
+module add gacode_base

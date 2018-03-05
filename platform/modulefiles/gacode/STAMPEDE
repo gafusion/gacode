@@ -5,8 +5,10 @@
 
 setenv GACODE_PLATFORM [lrange [file split ${ModulesCurrentModulefile}]	end end]
 set GACODE_PLATFORM $::env(GACODE_PLATFORM)
-puts stderr "Use GACODE_PLATFORM: ${GACODE_PLATFORM}"
 
 module reset
 module load fftw3
 module load netcdf
+
+#load device independent variables
+module add gacode_base

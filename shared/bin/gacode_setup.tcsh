@@ -30,6 +30,17 @@ else
    setenv IDL_PATH $GACODE_ROOT/gyro/vugyro
 endif
 
-setenv EPEDNN_MODEL $GACODE_ROOT/../neural/eped1nn/models/EPED_mb_128_pow_norm_common_30x10.pb
-setenv TGLFNN_MODEL $GACODE_ROOT/../neural/tglfnn/models/nn_SAT0_mb_1024_abs_reg_common_stair2x2x6.pb
-setenv NEONN_MODEL $GACODE_ROOT/../neural/neonn/models/NEO_mb_64_common_30.pb
+if ( $?NEURAL_ROOT ) then
+    :
+else if ( -d $GACODE_ROOT/../neural ) then
+    setenv NEURAL_ROOT $GACODE_ROOT/../neural
+else
+    setenv NEURAL_ROOT
+endif
+
+if ( $?NEURAL_ROOT ) then
+    setenv NN_LIB '-L$(NEURAL_ROOT) -I$(NEURAL_ROOT) -lbrainfusetf'
+    setenv EPEDNN_MODEL $NEURAL_ROOT/eped1nn/models/EPED_mb_128_pow_norm_common_30x10.pb
+    setenv TGLFNN_MODEL $NEURAL_ROOT/tglfnn/models/nn_SAT0_mb_1024_abs_reg_common_stair2x2x6.pb
+    setenv NEONN_MODEL $NEURAL_ROOT/neonn/models/NEO_mb_64_common_30.pb
+endif

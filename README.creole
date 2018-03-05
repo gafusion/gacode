@@ -51,20 +51,15 @@ See [[https://fusion.gat.com/theory/Gyro|TGYRO Wiki]] for more details.
 
 === Building NN-enabled code ===
 
-Get FANN from https://github.com/libfann/fann and build
+Get NEURAL from https://github.com/gafusion/neural and build
 
 In .bashrc, set 
 
 {{{
-export FANN_ROOT=/home/SOFTWARE/fann
+export NEURAL_ROOT=/home/SOFTWARE/neural
 }}}
 
-Execute these git commands:
-
-{{{
-git submodule init
-git submodule update
-}}}
+then make
 
 === Automagic version logging ===
 

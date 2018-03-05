@@ -10,7 +10,7 @@ FC += ${FOMP}
 
 EXEC = tgyro_main
 
-ifdef FANN_ROOT
+ifdef NEURAL_ROOT
    NN=tgyro_eped_nn.fann
 else
    NN=tgyro_eped_nn

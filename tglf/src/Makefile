@@ -11,7 +11,7 @@ EXEC2=tglf_mpi
 
 LLIB=tglf_lib
 
-ifdef FANN_ROOT
+ifdef NEURAL_ROOT
    # neural-net file
    NN=tglf_nn_TM.fann
 else
