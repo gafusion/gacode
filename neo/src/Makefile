@@ -12,7 +12,7 @@ EXEC = neo
 
 ifdef NEURAL_ROOT
    # neural net libraries
-   NN=neo_neural.fann
+   NN=neo_neural.ann
 else
    #stub file
    NN=neo_neural

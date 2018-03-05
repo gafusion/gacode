@@ -11,7 +11,7 @@ FC += ${FOMP}
 EXEC = tgyro_main
 
 ifdef NEURAL_ROOT
-   NN=tgyro_eped_nn.fann
+   NN=tgyro_eped_nn.ann
 else
    NN=tgyro_eped_nn
 endif

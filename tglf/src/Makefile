@@ -13,7 +13,7 @@ LLIB=tglf_lib
 
 ifdef NEURAL_ROOT
    # neural-net file
-   NN=tglf_nn_TM.fann
+   NN=tglf_nn_TM.ann
 else
    # stub file
    NN=tglf_nn_TM
