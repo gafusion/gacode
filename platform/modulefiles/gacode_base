@@ -37,5 +37,6 @@ prepend-path PYTHONPATH ${GACODE_ROOT}/cgyro/bin
 
 append-path IDL_PATH ${GACODE_ROOT}/gyro/vugyro
 
-setenv EPEDNN_MODEL $GACODE_ROOT/../neural/eped1nn/models/EPED_mb_128_pow_norm_common_30x10
+setenv EPEDNN_MODEL $GACODE_ROOT/../neural/eped1nn/models/EPED_mb_128_pow_norm_common_30x10.pb
 setenv TGLFNN_MODEL $GACODE_ROOT/../neural/tglfnn/models/nn_SAT0_mb_1024_abs_reg_common_stair2x2x6.pb
+setenv NEONN_MODEL $GACODE_ROOT/../neural/neonn/models/NEO_mb_64_common_30.pb

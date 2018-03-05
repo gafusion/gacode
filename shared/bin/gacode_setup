@@ -24,6 +24,6 @@ export PYTHONPATH=$GACODE_ROOT/python:${PYTHONPATH}
 
 export IDL_PATH=$GACODE_ROOT/gyro/vugyro:${IDL_PATH}
 
-export EPEDNN_MODEL=$GACODE_ROOT/../neural/eped1nn/models/EPED_mb_128_pow_norm_common_30x10
+export EPEDNN_MODEL=$GACODE_ROOT/../neural/eped1nn/models/EPED_mb_128_pow_norm_common_30x10.pb
 export TGLFNN_MODEL=$GACODE_ROOT/../neural/tglfnn/models/nn_SAT0_mb_1024_abs_reg_common_stair2x2x6.pb
-
+export NEONN_MODEL=$GACODE_ROOT/../neural/neonn/models/NEO_mb_64_common_30.pb

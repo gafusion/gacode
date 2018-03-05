@@ -66,17 +66,19 @@ contains
     integer :: is, k, ierr
     integer :: is_i1, is_i2
     real    :: d_max
-    real(4), dimension(18) :: nn_out
+    real(4), dimension(54) :: nn_out
     real(4), dimension(6)  :: nn_in
     real, dimension(6) :: xmin = (/ 0.05,0.323,1.0,-2.0,0.6,1.0 /)
     real, dimension(6) :: xmax = (/ 0.35,0.766,10.0,1.0,0.99,3.0 /)
     real, dimension(6) :: C_ln, C_ke, C_ki1, C_ki2
     real :: ke, ki1, ki2
-    character(len=218) :: root
-    character(len=255) :: data
-    
-    include 'brainfuse_lib.inc'
-    
+    character(len=218) :: neonn_model
+
+    character NUL
+    include 'brainfusetf_lib.inc'
+
+    NUL = CHAR(0)
+
     ! The nn assumes 2 ion species + electrons
     if(n_species /= 3) then
        call neo_error('ERROR: (NEO) NN requires 2 ion species + electrons')
@@ -155,9 +157,7 @@ contains
        endif
     enddo
     
-    call get_environment_variable('GACODE_ROOT',root)
-
-    ! Get coefficients computed by the NN 
+    ! Get coefficients computed by the NN
     ! (1) Cne, (2) Cni1, (3) Cni2, (4) Cte, (5) Cti1, (6) Cti2
     C_ln(1) = dlnndr(is_ele,ir)-1.5*dlntdr(is_ele,ir)
     C_ln(2) = dlnndr(is_i1,ir)-1.5*dlntdr(is_i1,ir)
@@ -165,25 +165,15 @@ contains
     C_ln(4) = dlntdr(is_ele,ir)
     C_ln(5) = dlntdr(is_i1,ir)
     C_ln(6) = dlntdr(is_i2,ir)
-    
+
+    call get_environment_variable('NEONN_MODEL',neonn_model)
+    ierr=btf_run(TRIM(neonn_model)//NUL, nn_in, 6, nn_out, 54)
+
     ! flow K
-    data = trim(root)//'/../neural/neonn/flow_nn/'
-    ierr=load_anns(2, trim(data)//char(0),'brainfuse'//char(0))
-    if(ierr == 0) then
-       call neo_error('ERROR: (NEO) Neural network loading failed.')
-       return
-    endif
-    ierr=load_anns_inputs(nn_in)
-    ierr=run_anns()
-    ierr=get_anns_avg_array(nn_out)
-    if(ierr > 0) then
-       call neo_error('ERROR: (NEO) Flow neural network failed.')
-       return
-    endif
     do k=1,6
-       C_ke(k)   = nn_out(k)
-       C_ki1(k)  = nn_out(k+6)
-       C_ki2(k)  = nn_out(k+12)
+       C_ke(k)   = nn_out(18*1+k)
+       C_ki1(k)  = nn_out(18*1+k+6)
+       C_ki2(k)  = nn_out(18*1+k+12)
     enddo
     ! Reconstruct the flow coefficients from NEO NN: K_a B_unit/(v_norm n_norm)
     ! The NN output is <B^2/Bunit^2> K_a B_unit/(c_s n_a)
@@ -221,23 +211,10 @@ contains
     jtor_nn_neo = jtor_nn_neo/(Btor_th0*bigR_th0*bigRinv_avg)
     
     ! Particle Flux
-    data = trim(root)//'/../neural/neonn/pflux_nn/'
-    ierr=load_anns(3, trim(data)//char(0),'brainfuse'//char(0))
-    if(ierr == 0) then
-       call neo_error('ERROR: (NEO) Neural network loading failed.')
-       return
-    endif
-    ierr=load_anns_inputs(nn_in)
-    ierr=run_anns()
-    ierr=get_anns_avg_array(nn_out)
-    if(ierr > 0) then
-       call neo_error('ERROR: (NEO) Particle flux neural network failed.')
-       return
-    endif
     do k=1,6
-       C_ke(k)   = nn_out(k)
-       C_ki1(k)  = nn_out(k+6)
-       C_ki2(k)  = nn_out(k+12)
+       C_ke(k)   = nn_out(18*2+k)
+       C_ki1(k)  = nn_out(18*2+k+6)
+       C_ki2(k)  = nn_out(18*2+k+12)
     enddo
     pflux_nn_neo(:) = 0.0
     do k=1,6
@@ -253,23 +230,10 @@ contains
     enddo
 
     ! Energy Flux
-    data = trim(root)//'/../neural/neonn/eflux_nn/'
-    ierr=load_anns(4, trim(data)//char(0),'brainfuse'//char(0))
-    if(ierr == 0) then
-       call neo_error('ERROR: (NEO) Neural network loading failed.')
-       return
-    endif
-    ierr=load_anns_inputs(nn_in)
-    ierr=run_anns()
-    ierr=get_anns_avg_array(nn_out)
-    if(ierr > 0) then
-       call neo_error('ERROR: (NEO) Energy flux neural network failed.')
-       return
-    endif
     do k=1,6
-       C_ke(k)   = nn_out(k)
-       C_ki1(k)  = nn_out(k+6)
-       C_ki2(k)  = nn_out(k+12)
+       C_ke(k)   = nn_out(18*0+k)
+       C_ki1(k)  = nn_out(18*0+k+6)
+       C_ki2(k)  = nn_out(18*0+k+12)
     enddo
     eflux_nn_neo(:) = 0.0
     do k=1,6
