@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# SCRIPT:
+#  btf_server
+#
+# FUNCTION:
+#  start brainfuse tensorflow server
+#--------------------------------
+
+python $NEURAL_ROOT/brainfusetf.py $@
