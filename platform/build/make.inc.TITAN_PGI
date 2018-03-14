@@ -19,14 +19,14 @@ FC = ftn -module ${GACODE_ROOT}/modules -Mpreprocess -DUSE_INLINE
 F77 = ${FC}
 
 # Compiler options/flags
-FACC   =-acc -Minfo=accel -Mcuda=kepler,nollvm,keepgpu
+FACC   =-acc -Minfo=accel -ta=tesla:cc35 -Mcudalib=cufft
 FOMP   =-mp -Mstack_arrays ${FACC}
 FMATH  =-r8
 FOPT   =-fast -fastsse -Mvect -Minfo=all
 FDEBUG =-g -Kieee -Ktrap=fp,divz -Mbounds -Mchkptr -Mchkstk -traceback -Minform=inform
 
 # System math libraries
-LMATH=-lfftw3_threads -lfftw3f_threads -lfftw3f -lfftw3 -lcufft
+LMATH=-lfftw3_threads -lfftw3f_threads -lfftw3f -lfftw3
 
 # NetCDF
 NETCDF =-L${NETCDF_DIR}/lib -lnetcdff -lnetcdf -L${NETCDF_DIR}/lib -L${NETCDF_DIR}/lib -lz -lm
