@@ -1,0 +1,37 @@
+#---------------------------------------------------
+# Cray XK7 (titan.ccs.ornl.gov) [CRAY]
+#
+# JAGUAR SYSTEM INFO:
+# - Cray XK7
+#---------------------------------------------------
+
+# FIXED Hardware parameters
+IDENTITY="Piz Daint Cray XC50"
+CORES_PER_NODE=12
+NUMAS_PER_NODE=1
+
+# Compilers and flags
+
+# Fortran 90/95 compiler
+FC = ftn -module ${GACODE_ROOT}/modules -Mpreprocess -DUSE_INLINE
+# -craype-verbose
+# Fortran 77 compiler
+F77 = ${FC}
+
+# Compiler options/flags
+FACC   =-acc -Minfo=accel -Mcudalib=cufft 
+#-Mcuda=cc60,nollvm,keepgpu 
+FOMP   =-mp -Mstack_arrays ${FACC}
+FMATH  =-r8
+FOPT   =-fast
+FDEBUG =-g -Kieee -Ktrap=fp,divz -Mbounds -Mchkptr -Mchkstk -traceback -Minform=inform
+
+# System math libraries
+LMATH=-lfftw3_threads -lfftw3f_threads -lfftw3f -lfftw3 -llapack -lblas
+
+# NetCDF
+NETCDF =-L${NETCDF_DIR}/lib -lnetcdff -lnetcdf -L${NETCDF_DIR}/lib -L${NETCDF_DIR}/lib -lz -lm
+NETCDF_INC =${NETCDF_DIR}/include
+
+# Archive
+ARCH = ar cr

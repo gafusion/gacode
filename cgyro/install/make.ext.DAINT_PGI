@@ -1,0 +1,5 @@
+cgyro_nl_fftw.o : cgyro_nl_fftw.gpu.f90
+	$(FC) $(FMATH) $(FFLAGS) -o cgyro_nl_fftw.o -c cgyro_nl_fftw.gpu.f90
+cgyro_rhs.o : cgyro_rhs.gpu.f90
+	$(FC) $(FMATH) $(FFLAGS) -o cgyro_rhs.o -c cgyro_rhs.gpu.f90
+

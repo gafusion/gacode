@@ -1,0 +1,36 @@
+#! /usr/bin/env bash
+#
+# SCRIPT:
+#  gyro.TITAN_PGI
+#
+# FUNCTION:
+#  Parallel execution script
+#---------------------------------------------------
+
+simdir=${1}
+nmpi=${2}
+exec=${3}
+nomp=${4}
+numa=${5}
+mpinuma=${6}
+nidle=${7}
+
+# nmpi = MPI tasks
+# nomp = OpenMP threads per MPI task
+# numa = NUMAs active per node
+# mpinuma = MPI tasks per active NUMA 
+
+. $GACODE_ROOT/shared/bin/gacode_mpi_tool
+
+cd $simdir
+
+export OMP_STACKSIZE=100M
+export MPICH_MAX_THREAD_SAFETY=funneled
+
+echo "> export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK"
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+export CRAY_CUDA_MPS=1
+module load daint-gpu
+
+echo "> srun  $exec"
+srun $exec
