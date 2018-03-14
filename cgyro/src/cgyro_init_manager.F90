@@ -20,8 +20,7 @@ subroutine cgyro_init_manager
 
 #ifdef _OPENACC
   use cgyro_io
-  use precision_m, only : singlePrecision
-  use cufft_m, only : cufftPlanMany, &
+  use cufft, only : cufftPlanMany, &
        CUFFT_C2R,CUFFT_Z2D,CUFFT_R2C,CUFFT_D2Z
 #endif
 
@@ -34,6 +33,7 @@ subroutine cgyro_init_manager
   integer, parameter :: irank = 2
   integer, dimension(irank) :: ndim,inembed,onembed
   integer :: idist,odist,istride,ostride
+  integer, parameter :: singlePrecision = selected_real_kind(6,30)
 #endif
 
   if (hiprec_flag == 1) then
