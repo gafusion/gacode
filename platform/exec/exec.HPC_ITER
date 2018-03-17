@@ -1,10 +1,5 @@
 #!/bin/sh
-#
-# SCRIPT:
-#  gyro.HPC-LOGIN4
-#
-# FUNCTION:
-#  Parallel execution script
+# GACODE Parallel execution script (HPC_ITER)
 
 simdir=${1}
 nmpi=${2}

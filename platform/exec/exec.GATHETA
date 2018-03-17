@@ -1,15 +1,9 @@
 #!/bin/sh
-#
-# SCRIPT:
-#  exec.GATHETA
-#
-# FUNCTION:
-#  Parallel execution script
+# GACODE Parallel execution script (GATHETA)
 #
 # Note:
 #  The script expects the following env variable to be set
 #    MPIHOSTS
-#
 
 simdir=${1}
 nmpi=${2}
@@ -17,6 +11,7 @@ exec=${3}
 nomp=${4}
 numa=${5}
 mpinuma=${6}
+
 cd $simdir
 
 if [ "$nomp" -eq 1 ]; then
@@ -29,5 +24,4 @@ else
 fi
 export OMP_NUM_THREADS=$nomp 
 
-#mpiexec -np $nmpi $exec
 mpirun_rsh -hostfile "${MPIHOSTS}" -export-all -np $nmpi $exec

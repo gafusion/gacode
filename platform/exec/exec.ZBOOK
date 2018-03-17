@@ -1,5 +1,10 @@
 #!/bin/sh
-# GACODE Parallel execution script (JAC)
+#
+# SCRIPT:
+#  gyro.NEWT
+#
+# FUNCTION:
+#  Parallel execution script
 
 simdir=${1}
 nmpi=${2}

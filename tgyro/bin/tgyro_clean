@@ -5,7 +5,7 @@ n=$#
 if [ $n -eq 0 ]
 then
    echo "Usage: tgyro_clean -l  (remove large GYRO/TGYRO runtime files)"
-   echo "Usage: tgyro_clean -a  (remove all GYRO/TGYRO runtime files)"
+   echo "Usage: tgyro_clean -a  (remove all GYRO/CGYRO/TGYRO runtime files)"
    exit 1
 fi
 
@@ -16,7 +16,7 @@ fi
 
 if [ "$1" == "-a" ]
 then
-   rm -f *.log *.gen halt out.* *.out *.dat batch.out batch.err *.eps
+   rm -f *.log *.gen halt out.* bin.* *.out *.dat batch.out batch.err *.eps
    rm -f */*.out */RES* */halt */*.gen */out* */*~
    rm -f */*ps */*.err */*.src */*.log */gyrotest_flag gyrotest_flag
    rm -f *.dump* input.profiles.gen */input.profiles.gen

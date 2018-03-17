@@ -1,10 +1,5 @@
 #!/bin/sh
-#
-# SCRIPT:
-#  gyro.LINDGREN
-#
-# FUNCTION:
-#  Parallel execution script
+# GACODE Parallel execution script (LINDGREN)
 
 simdir=${1}
 nmpi=${2}
@@ -12,6 +7,6 @@ exec=${3}
 nomp=${4}
 numa=${5}
 mpinuma=${6}
-  
+
 cd $simdir
 aprun -n $nmpi $exec

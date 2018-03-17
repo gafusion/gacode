@@ -1,0 +1,44 @@
+#---------------------------------------------------
+# Linux Mint 
+#---------------------------------------------------
+
+IDENTITY="Linux Mint gfortran+mpich+OpenBLAS (/usr)"
+CORES_PER_NODE=4
+NUMAS_PER_NODE=1
+#SOLVER_OPT=slumt
+
+FFTWDIR=/usr/local/lib
+
+ROOT=${HOME}/local_software
+
+# Compilers
+
+FC     = mpif90 -std=f2008 -I $(GACODE_ROOT)/modules
+F77    = mpif77
+FOMP   =-fopenmp
+FMATH  =-fdefault-real-8 -fPIC -J $(GACODE_ROOT)/modules
+FOPT   =-Ofast
+FDEBUG =-Wall -W -fcheck=all -g -fbacktrace -ffpe-trap=invalid,zero,overflow
+F2PY   = f2py
+
+# System math libraries
+# LMATH = ${ROOT}/OpenBLAS/libopenblas.a $(FFTWDIR)/libfftw3f.so.3 $(FFTWDIR)/libfftw3f_omp.so.3
+# FFTW_INC=/usr/include
+FFTW_INC=/usr/local/include
+LMATH = ${ROOT}/OpenBLAS/libopenblas.a $(FFTWDIR)/libfftw3.a $(FFTWDIR)/libfftw3_omp.a
+# FFTW_INC=/home/pusztai/local_software/fftw-3.3.7/api
+
+ifdef FANN_ROOT
+   # neural net libraries
+   NN_LIB=-L$(GACODE_ROOT)/../neural/ -I$(GACODE_ROOT)/../neural/ -lbrainfuse -lfann
+endif
+
+# OPTIONAL NetCDF:
+NETCDF=-L/usr/lib -lnetcdff -lnetcdf
+NETCDF_INC=/usr/include
+#NETCDF=${ROOT}/netcdf/liblib/.libs/libnetcdf.so
+#NETCDF_INC=${ROOT}/netcdf/include
+
+# Archive 
+
+ARCH = ar cr

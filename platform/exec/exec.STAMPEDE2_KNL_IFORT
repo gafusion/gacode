@@ -1,11 +1,5 @@
 #! /usr/bin/env bash 
-#
-# SCRIPT:
-#  gyro.CORI_KNL
-#
-# FUNCTION:
-#  Parallel execution script
-#---------------------------------------------------
+# GACODE Parallel execution script (STAMPEDE2_KNL_IFORT)
 
 simdir=${1}
 nmpi=${2}
@@ -13,7 +7,6 @@ exec=${3}
 nomp=${4}
 numa=${5}
 mpinuma=${6}
-nidle=${7}
 
 # nmpi = MPI tasks
 # nomp = OpenMP threads per MPI task

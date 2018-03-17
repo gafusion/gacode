@@ -5,13 +5,9 @@
 # nomp = OpenMP threads per MPI task
 # numa = NUMAs active per node
 # mpinuma = MPI tasks per active NUMA
-# nidle = Idle threads
 
 # Extract CORES_PER_NODE and NUMAS_PER_NODE
 export `grep PER_NODE $GACODE_ROOT/platform/build/make.inc.$GACODE_PLATFORM`
-
-# Total omp threads (used plus idle)
-nomptot=$(($nomp+$nidle))
 
 # Default to densely-packed pure-MPI.
 if [ $numa -eq 0 ]
@@ -21,7 +17,7 @@ fi
 if [ $mpinuma -eq 0 ]
 then
    mpinuma=$(($CORES_PER_NODE/$NUMAS_PER_NODE))
-   mpinuma=$(($mpinuma/$nomptot))
+   mpinuma=$(($mpinuma/$nomp))
 fi
 
 # See if we are asking for too many NUMAs
@@ -32,7 +28,7 @@ then
 fi
 
 # See if we are asking for too many OpenMP tasks
-i1=$(($nomptot*$mpinuma))
+i1=$(($nomp*$mpinuma))
 i2=$(($CORES_PER_NODE/$NUMAS_PER_NODE)) 
 if [ $i1 -gt $i2 ] 
 then
@@ -65,5 +61,5 @@ fi
 
 # Final core counts
 cores_requested=$(($nodes*$CORES_PER_NODE))
-cores_used=$(($nomptot*$nmpi))
+cores_used=$(($nomp*$nmpi))
 nodes_requested=$nodes

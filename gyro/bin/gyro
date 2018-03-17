@@ -113,7 +113,6 @@ NPROC=1
 NOMP=1
 NUMA=0
 MPINUMA=0
-NIDLE=0
 # Execute/test mode flags
 EXEC_FLAG=0
 TEST_FLAG=0
@@ -372,7 +371,7 @@ then
       echo "INFO: (gyro) Not parsing input.profiles on continue."
    else
       # We are not continuing; parse input.profiles
-      python $GACODE_ROOT/shared/bin/profile_parse.py input.profiles >> $RUNBASE
+      python $GACODE_ROOT/profiles_gen/bin/profile_parse.py input.profiles >> $RUNBASE
       if [ $? -eq 1 ]
       then
          cat $RUNBASE
@@ -385,14 +384,14 @@ fi
 #===========================================================
 # RUN GYRO
 #
-if [ $INIT_FLAG -ne 1 ] 
+if [ $INIT_FLAG -ne 1 ]
 then
   $GACODE_ROOT/platform/exec/exec.$GACODE_PLATFORM \
-    $SIMDIR $NPROC $GYRO_DIR/src/gyro $NOMP $NUMA $MPINUMA $NIDLE
+    $SIMDIR $NPROC $GYRO_DIR/src/gyro $NOMP $NUMA $MPINUMA
 fi
 
 if [ $TEST_FLAG -eq 1 ] ; then
-   cat $RUNBASE 
+   python $GACODE_ROOT/shared/bin/osxlist.py $RUNBASE
    cat out.expro.run
 fi
 #===========================================================

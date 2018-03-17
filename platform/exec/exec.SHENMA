@@ -1,10 +1,5 @@
 #!/bin/sh
-#
-# SCRIPT:
-#  gyro.SHENMA
-#
-# FUNCTION:
-#  Parallel execution script
+# GACODE Parallel execution script (SHENMA)
 
 simdir=${1}
 nmpi=${2}
@@ -12,7 +7,6 @@ exec=${3}
 nomp=${4}
 numa=${5}
 mpinuma=${6}
-nidle=${7}
 
 cd $simdir
 

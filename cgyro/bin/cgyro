@@ -99,7 +99,6 @@ NPROC=1
 NOMP=1
 NUMA=0
 MPINUMA=0
-NIDLE=0
 # Execute/test mode flags
 TEST_FLAG=0
 GENERATE_FLAG=0
@@ -209,6 +208,7 @@ then
     $EXEC out.cgyro.kxky_n      bin.cgyro.kxky_n
     $EXEC out.cgyro.kxky_e      bin.cgyro.kxky_e
     $EXEC out.cgyro.kxky_flux_e bin.cgyro.kxky_flux_e
+    $EXEC out.cgyro.kxky_flux_n bin.cgyro.kxky_flux_n
     $EXEC out.cgyro.ky_flux     bin.cgyro.ky_flux
     $EXEC out.cgyro.lky_flux_n  bin.cgyro.lky_flux_n
     $EXEC out.cgyro.lky_flux_e  bin.cgyro.lky_flux_e
@@ -216,6 +216,8 @@ then
     $EXEC out.cgyro.phib        bin.cgyro.phib
     $EXEC out.cgyro.aparb       bin.cgyro.aparb
     $EXEC out.cgyro.bparb       bin.cgyro.bparb
+    $EXEC out.cgyro.freq        bin.cgyro.freq
+    $EXEC out.cgyro.geo         bin.cgyro.geo
     exit 0
 fi
 if [ $CBIN_FLAG -eq 1 ]
@@ -225,6 +227,7 @@ then
     $EXEC cgyro.kxky_n      
     $EXEC cgyro.kxky_e     
     $EXEC cgyro.kxky_flux_e
+    $EXEC cgyro.kxky_flux_n
     $EXEC cgyro.ky_flux
     $EXEC cgyro.lky_flux_n  
     $EXEC cgyro.lky_flux_e  
@@ -232,6 +235,8 @@ then
     $EXEC cgyro.phib
     $EXEC cgyro.aparb
     $EXEC cgyro.bparb 
+    $EXEC cgyro.freq
+    $EXEC cgyro.geo
     exit 0
 fi
 #============================================================
@@ -318,26 +323,6 @@ if [ $NEW_FLAG -eq 1 ] ; then
 fi
 #============================================================
 
-#============================================================
-# Init mode
-if [ $INIT_FLAG -eq 1 ]
-then
-   python $CGYRO_DIR/bin/cgyro_parse.py
-   exit 0
-fi
-#============================================================
-
-#============================================================
-# Test mode
-if [ $TEST_FLAG -eq 1 ]
-then
-   NPROC=1
-   NUMA=1
-   MPINUMA=1 
-   echo "TEST_FLAG=1" >> input.cgyro
-fi
-#============================================================
-
 #==========================================================
 # echo number of tasks, then parse input.cgyro
 #
@@ -347,6 +332,9 @@ then
     exit 1 
 fi
 #==========================================================
+
+#==========================================================
+# Energy mesh points
 IN=`grep E_MAX input.cgyro.gen`
 emax=(${IN// / })
 IN=`grep N_ENERGY input.cgyro.gen`
@@ -370,23 +358,22 @@ else
       exit 1
    fi
 fi
-	
+#==========================================================
+
 #============================================================
-# Now remove test flag if it was added
-if [ $TEST_FLAG -eq 1 ]
+# Init mode
+if [ $INIT_FLAG -eq 1 ]
 then
-   # Nondestructive sed required for MacOS
-   sed -i.0 '$d' input.cgyro 
-   rm input.cgyro.0
+   exit 0
 fi
 #============================================================
-
+	
 #==========================================================
 # See if we are using experimental profiles
 
 if [ -f input.profiles ]
 then 
-   python $GACODE_ROOT/shared/bin/profile_parse.py input.profiles
+   python $GACODE_ROOT/profiles_gen/bin/profile_parse.py input.profiles
 fi
 #==========================================================
 
@@ -414,18 +401,21 @@ then
       simtime=0.0
    fi
    echo "$date_tag [$version_tag][$GACODE_PLATFORM][$simtime]" >> out.cgyro.version
+else
+   NUMA=1
+   MPINUMA=1 
 fi
 
 gacode_printversion CGYRO
 
 $GACODE_ROOT/platform/exec/exec.$GACODE_PLATFORM \
-  $SIMDIR $NPROC $CGYRO_DIR/src/cgyro $NOMP $NUMA $MPINUMA $NIDLE
+    $SIMDIR $NPROC "$CGYRO_DIR/src/cgyro $TEST_FLAG" $NOMP $NUMA $MPINUMA
 #===========================================================
 
 #============================================================
 # Print runfile if test case
 if [ $TEST_FLAG -eq 1 ]
 then
-   more -100 out.cgyro.info
+    python $GACODE_ROOT/shared/bin/osxlist.py out.cgyro.info
 fi
 #============================================================

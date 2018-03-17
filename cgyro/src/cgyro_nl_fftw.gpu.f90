@@ -71,8 +71,7 @@ end subroutine cgyro_nl_fftw_comm2
 
 subroutine cgyro_nl_fftw(ij)
 
-  use precision_m
-  use cufft_m
+  use cufft
   use timer_lib
   use parallel_lib
 
@@ -84,7 +83,7 @@ subroutine cgyro_nl_fftw(ij)
   integer :: it,ir,in,ix,iy
   integer :: i1,i2
   integer :: ierr
-
+  integer :: rc
   complex :: f0,g0
 
   real :: inv_nxny
@@ -150,8 +149,8 @@ subroutine cgyro_nl_fftw(ij)
 !$acc& use_device(fxmany,fymany) &
 !$acc& use_device(uxmany,uymany)
 
-  call cufftExecZ2D(cu_plan_c2r_many,fxmany,uxmany)
-  call cufftExecZ2D(cu_plan_c2r_many,fymany,uymany)
+  rc = cufftExecZ2D(cu_plan_c2r_many,fxmany,uxmany)
+  rc = cufftExecZ2D(cu_plan_c2r_many,fymany,uymany)
 
 !$acc wait
 !$acc end host_data
@@ -194,8 +193,8 @@ subroutine cgyro_nl_fftw(ij)
 !$acc& use_device(gxmany,gymany) &
 !$acc& use_device(vxmany,vymany)
 
-  call cufftExecZ2D(cu_plan_c2r_many,gxmany,vxmany)
-  call cufftExecZ2D(cu_plan_c2r_many,gymany,vymany)
+  rc = cufftExecZ2D(cu_plan_c2r_many,gxmany,vxmany)
+  rc = cufftExecZ2D(cu_plan_c2r_many,gymany,vymany)
 
 !$acc wait
 !$acc end host_data
@@ -227,7 +226,7 @@ subroutine cgyro_nl_fftw(ij)
 
 !$acc wait
 !$acc host_data use_device(uvmany,fxmany)
-  call cufftExecD2Z(cu_plan_r2c_many,uvmany,fxmany)
+  rc = cufftExecD2Z(cu_plan_r2c_many,uvmany,fxmany)
 !$acc wait
 !$acc end host_data
 !$acc wait

@@ -5,47 +5,17 @@ import numpy as np
 from gacodefuncs import *
 from cgyro.data import cgyrodata
 
-w = float(sys.argv[1])
-ext = sys.argv[2]
-
-sim = cgyrodata('./')
-sim.getflux()
-
-nt = sim.n_time
-
-# Determine imin
-imin=iwindow(sim.t,w)
-
-if imin == nt-1:
-    print "Averaging Window too small." 
-    sys.exit()
-
-print 'INFO: Average Window:',str(sim.t[imin])+' < (c_s/a) t < '+str(sim.t[-1])
-
-if ext == 'dump':
-
-   # Datafile output
-
-   b = np.zeros([sim.n_n])
-
-   tag = ['fluxn','fluxe','fluxv']
-
-   for i in range(3):
-      f=open('out.cgyroplot.'+tag[i],'w')
-      for ispec in range(sim.n_species):
-         f.write(str(ispec)+' ')
-         for i_n in range(sim.n_n):
-            y0 = np.sum(sim.ky_flux,axis=2)
-            y  = y0[:,i,:,:]
-            b[i_n] = average(y[ispec,i_n,:],sim.t,w)
-            f.write("{:.3e}".format(b[i_n])+' ')
-            f.write('\n')
-      print 'Wrote output to out.cgyroplot.'+tag[i]
-else:
-    # Screen output
-
+def print_freq():
     # Set print precision
-    np.set_printoptions(precision=3,suppress=False,threshold=100000)
+    np.set_printoptions(precision=5,suppress=True)
+
+    print '   omega    gamma'
+    for i in range(nt):
+        print sim.freq[:,0,i]
+    
+def print_flux():
+    # Set print precision
+    np.set_printoptions(precision=4,suppress=True)
 
     b = np.zeros([sim.n_species])
  
@@ -54,13 +24,44 @@ else:
        'Q     [GB]',
        'PI    [GB]']
 
-    for i in range(3):
-       try:
-          for ispec in range(sim.n_species):
-             y = np.sum(sim.ky_flux,axis=(2,3))
-             b[ispec] = average(y[ispec,i,:],sim.t,w)
-             print tag[i],b
-       except:
-             pass
+    sim.getflux()
 
-    
+    # Determine imin
+    imin=iwindow(sim.t,w)
+
+    if imin == nt-1:
+        print "Averaging Window too small." 
+        sys.exit()
+
+    print 'INFO: (text.py) Average Window:',str(sim.t[imin])+' < (c_s/a) t < '+str(sim.t[-1])
+
+    title = '        '
+    for ispec in range(sim.n_species):
+        title = title+'       '+specmap(sim.mass[ispec],sim.z[ispec])
+
+    print title
+    for i in range(3):
+        try:
+            for ispec in range(sim.n_species):
+                y = np.sum(sim.ky_flux,axis=(2,3))
+                b[ispec] = average(y[ispec,i,:],sim.t,w)
+            print tag[i],b
+        except:
+            pass
+
+#-------------------------------------------------------------------
+        
+w = float(sys.argv[1])
+ext = sys.argv[2]
+
+sim = cgyrodata('./')
+
+nt = sim.n_time
+
+if sim.n_n > 1:
+    # Print flux (assuming nonlinear case)
+    print_flux()
+else:
+    # Pring frequency (assuming linear)
+    print_freq()
+        

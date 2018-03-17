@@ -1,10 +1,5 @@
 #!/bin/sh
-#
-# SCRIPT:
-#  gyro.LOKI
-#
-# FUNCTION:
-#  Parallel execute script.
+# GACODE Parallel execution script (LOKI)
 
 simdir=${1}
 nmpi=${2}
@@ -14,7 +9,6 @@ numa=${5}
 mpinuma=${6}
 
 cd $simdir
-export OMP_NUM_THREADS=$nomp 
-mpiexec -n $nmpi $exec
+mpiexec -env OMP_NUM_THREADS $nomp -n $nmpi $exec
 
 

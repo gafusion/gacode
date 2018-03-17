@@ -295,7 +295,14 @@ subroutine cgyro_make_profiles
   !-------------------------------------------------------------
   ! Manage simulation type (n=0,linear,nonlinear)
   !
-  if (zf_test_flag == 1) then
+  if (zf_test_mode > 0) then
+
+     if (zf_test_mode > 2) then
+        ! The Apar and Bpar initial conditions could later be
+        ! ZF_TEST_MODE = 3 and 4.  Currently these are not available.
+        call cgyro_error('ZF_TEST_MODE > 2 is not available')
+        return
+     endif
 
      ! Zonal flow (n=0) test
 
@@ -374,10 +381,10 @@ subroutine cgyro_make_profiles
   ! Fourier index mapping
   !
   allocate(px(n_radial))
-  if (zf_test_flag == 1) then
+  if (zf_test_mode > 0) then
+     ! Need positive k_r Fourier coefficients only
      do ir=1,n_radial
         px(ir) = ir
-        ! only need positive k_r Fourier coefficients.
      enddo
   else
      do ir=1,n_radial

@@ -1,14 +1,26 @@
 program cgyro
 
   use mpi
-  use cgyro_globals, only : path, CGYRO_COMM_WORLD, i_proc, n_proc, i_err, n_omp
+  use cgyro_globals, only : path, CGYRO_COMM_WORLD, i_proc, n_proc, i_err, n_omp, test_flag
   use cgyro_io
   use timer_lib
 
   implicit none
   integer :: supported
+  integer :: narg
   integer, external :: omp_get_max_threads
+  character(len=32) :: arg
 
+  !----------------------------------------------------------------
+  ! Find value of test flag
+  call get_command_argument(1,arg)
+  if (trim(arg) == '0') then
+     test_flag = 0
+  else
+     test_flag = 1
+  endif
+  !----------------------------------------------------------------
+  
   !----------------------------------------------------------------
   ! Query OpenMP for threads
   !

@@ -10,9 +10,10 @@ export PATH=$GACODE_ROOT/neo/bin:${PATH}
 export PATH=$GACODE_ROOT/vgen/bin:${PATH}
 export PATH=$GACODE_ROOT/tglf/bin:${PATH}
 export PATH=$GACODE_ROOT/le3/bin:${PATH}
-export PATH=$GACODE_ROOT/glf23/bin:${PATH}
-export PATH=$GACODE_ROOT/quick/bin:${PATH}
+export PATH=$GACODE_ROOT/profiles_gen/bin:${PATH}
 export PATH=$GACODE_ROOT/shared/bin:${PATH}
+#export PATH=$GACODE_ROOT/glf23/bin:${PATH}
+#export PATH=$GACODE_ROOT/quick/bin:${PATH}
 
 if [ -d $GACODE_ADD_ROOT ] 
 then

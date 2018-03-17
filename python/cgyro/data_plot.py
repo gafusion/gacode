@@ -7,6 +7,10 @@ from cgyro.data import cgyrodata
 
 class cgyrodata_plot(data.cgyrodata):
 
+   TEXPHI  = r'{\delta\phi}'
+   TEXAPAR = r'\delta {A_\parallel}'
+   TEXBPAR = r'\delta {B_\parallel}'
+
    def plot_freq(self,w=0.5,fig=None):
       '''
       Plot gamma and omega vs time
@@ -104,16 +108,25 @@ class cgyrodata_plot(data.cgyrodata):
 
       self.getbigfield()
 
+      # Create p2[n,t] by setting theta=0, sum over kx
+      if field == 0:
+         p2 = np.sum(self.kxky_phi_abs[:,0,:,:],axis=0)/self.rho
+         ft = self.TEXPHI
+      elif field == 1:
+         p2 = np.sum(self.kxky_phi_abs[:,0,:,:],axis=0)/self.rho
+         ft = self.TEXAPAR
+      else:
+         p2 = np.sum(self.kxky_phi_abs[:,0,:,:],axis=0)/self.rho
+         ft = self.TEXBPAR
+
       ax = fig.add_subplot(111)
       ax.grid(which="majorminor",ls=":")
       ax.grid(which="major",ls=":")
       ax.set_xlabel(TIME)
-      ax.set_ylabel(r'$\left| \delta\phi_n \right|$')
+      ax.set_ylabel(r'$\left| '+ft+'_n \\right|$')
       ax.set_yscale('log')
       ax.set_title(r'$\mathrm{Fluctuation~intensity} \quad k_\theta = nq/r$')
-
-      p2 = np.sum(self.phisq[:,0,:,:],axis=0)/self.rho**2
-
+        
       if nstr == 'null':
          nvec = range(self.n_n)
       else:
@@ -139,6 +152,7 @@ class cgyrodata_plot(data.cgyrodata):
 
       fig.tight_layout(pad=0.3)
 
+      
    def plot_rcorr_phi(self,w=0.5,fig=None):
       '''
       Plot radial correlation 
@@ -178,7 +192,7 @@ class cgyrodata_plot(data.cgyrodata):
 
       itheta=0
 
-      y = np.sum(self.phisq[:,itheta,1:,:],axis=1)
+      y = np.sum(self.kxky_phi_abs[:,itheta,1:,:],axis=1)
       for j in range(self.n_radial):
          ave[j] = average(y[j,:],self.t,w)
 
@@ -228,7 +242,7 @@ class cgyrodata_plot(data.cgyrodata):
       ax.set_title(r'$\mathrm{Fluctuation~intensity} \quad k_\theta = nq/r$')
       #======================================
 
-      p2 = np.sum(self.phisq,axis=0)/self.rho**2
+      p2 = np.sum(self.kxky_phi_abs,axis=0)/self.rho
       itheta=0
 
       # n=0 intensity
@@ -260,23 +274,28 @@ class cgyrodata_plot(data.cgyrodata):
       if self.n_n > 1:
          print "ERROR: (plot_zf.py) This plot option valid for ZF test only."
          sys.exit()
-      elif field > 0:
-         print "ERROR: (plot_zf.py) Only Phi can be plotted."
+
+      t  = self.t
+      k0 = self.kx[0]
+
+      print "INFO: (plot_zf.py) Using index theta index n_theta/3+1"
+      if field == 0:
+         f = self.phib[0,self.n_theta/3,:]
+      elif field == 1:
+         f = self.aparb[0,self.n_theta/3,:]
       else:
-         self.getbigfield()
+         f = self.bparb[0,self.n_theta/3,:]
 
-      t    = self.t
-      phic = self.kxky_phi[0,0,0,0,:]
-      kx   = self.kx
-      y    = phic[:]*1e6*(1-np.i0(kx[0]**2)*np.exp(-kx[0]**2))/(np.i0(kx[0]**2)*np.exp(-kx[0]**2))
+
+      # Initialization in CGYRO is with 1e-6*besselj0 # phic[0]
+      gfactor = 1e6*(1-np.i0(k0**2)*np.exp(-k0**2))/(np.i0(k0**2)*np.exp(-k0**2))
+
+      y = f*gfactor
       
-      #initialization in code is with 1e-6*besselj0 # phic[0]
-
       #----------------------------------------------------
       # Average calculations
-      imin=iwindow(t,w)
-
-      ave = average(y[:],t,w)
+      imin = iwindow(t,w)
+      ave  = average(y[:],t,w)
       print 'INFO: (plot_zf) Integral time-average = %.6f' % ave
 
       ave_vec = ave*np.ones(len(t))
@@ -286,26 +305,22 @@ class cgyrodata_plot(data.cgyrodata):
       ax.grid(which="majorminor",ls=":")
       ax.grid(which="major",ls=":")
       ax.set_xlabel(TIME)
-      ax.set_ylabel(r'$\mathrm{Re}\left( \Phi/\Phi_0 \right)$')
+      ax.set_ylabel(r'$\mathrm{Re}\left( \delta\phi/\delta\phi_0 \right)$')
 
-      gfactor = 1e6*(1-np.i0(kx[:]**2)*np.exp(-kx[:]**2))/(np.i0(kx[:]**2)*np.exp(-kx[:]**2))
-      
-      for i in range(self.n_radial):
-         ax.plot(t,self.kxky_phi[0,i,0,0,:]*gfactor[i],
-                 label=r'$k_x=%.3g$' % self.kx[i])
+      ax.plot(t,y,label=r'$k_x=%.3g$' % k0)
     
-         ax.plot(t[imin:],ave_vec[imin:],color='b',
-                 label=r'$\mathrm{Average}$',linewidth=1)
+      ax.plot(t[imin:],ave_vec[imin:],color='b',
+              label=r'$\mathrm{Average}$',linewidth=1)
 
-         theory = 1.0/(1.0+1.6*self.q**2/np.sqrt(self.rmin/self.rmaj))
-         ax.plot([0,max(t)],[theory,theory],color='grey',
-                 label=r'$\mathrm{RH \; theory}$',alpha=0.3,linewidth=4)
+      theory = 1.0/(1.0+1.6*self.q**2/np.sqrt(self.rmin/self.rmaj))
+      ax.plot([0,max(t)],[theory,theory],color='grey',
+              label=r'$\mathrm{RH \; theory}$',alpha=0.3,linewidth=4)
 
-         theory2 = 1./(1.0+2.*self.q**2)
-         ax.plot([0,max(t)],[theory2,theory2],color='m',
-                 label=r'$\mathrm{fluid \; theory}$',alpha=0.3,linewidth=4)
+      theory2 = 1./(1.0+2.*self.q**2)
+      ax.plot([0,max(t)],[theory2,theory2],color='m',
+              label=r'$\mathrm{fluid \; theory}$',alpha=0.3,linewidth=4)
 
-      ax.legend(loc=1,prop={'size':10})
+      ax.legend(loc=1,prop={'size':14})
 
       fig.tight_layout(pad=0.3)
 
@@ -363,19 +378,19 @@ class cgyrodata_plot(data.cgyrodata):
       # Construct complex eigenfunction at selected time
       if field == 0:
          f = self.phib[0,:,itime]+1j*self.phib[1,:,itime]
-         ytag = r'$\delta\phi$'
+         ytag = self.TEXPHI
       elif field == 1:
          f = self.aparb[0,:,itime]+1j*self.aparb[1,:,itime]
-         ytag = r'$\delta A_\parallel$'
+         ytag = self.TEXAPAR
       elif field == 2:
          f = self.bparb[0,:,itime]+1j*self.bparb[1,:,itime]
-         ytag = r'$\delta B_\parallel$'
+         ytag = self.TEXBPAR
 
       ax = fig.add_subplot(111)
       ax.grid(which="majorminor",ls=":")
       ax.grid(which="major",ls=":")
       ax.set_xlabel(r'$\theta_*/\pi$')
-      ax.set_ylabel(ytag)
+      ax.set_ylabel(r'$'+ytag+'$')
 
       if self.n_radial == 1:
          # Manage n=0 (ZF) case
@@ -731,7 +746,7 @@ class cgyrodata_plot(data.cgyrodata):
 
       imin = int((1.0-w)*n)
       for i in np.arange(imin,n):
-         f = f+self.phisq[1:,itheta,:,i]
+         f = f+self.kxky_phi_abs[1:,itheta,:,i]
 
       # Fix (0,0)
       i0 = nx/2-1
@@ -781,7 +796,7 @@ class cgyrodata_plot(data.cgyrodata):
       ax.set_xlabel(xlabel)
 
       if nstr == 'null':
-         y = np.sum(self.phisq[:,0,:,:],axis=1)
+         y = np.sum(self.kxky_phi_abs[:,0,:,:],axis=1)
          for j in range(self.n_radial):
             ave[j] = average(y[j,:],self.t,w)
          ax.set_ylabel(r'$\overline{\delta \phi_\mathrm{total}}$',color='k')
@@ -793,9 +808,9 @@ class cgyrodata_plot(data.cgyrodata):
          ax.set_ylabel(r'$\overline{\delta \phi_n}$',color='k')
          for n in nvec:
             num = r'$n='+str(n)+'$'
-            y[:] = self.phisq[:,0,n,:]
+            y[:] = self.kxky_phi_abs[:,0,n,:]
             for j in range(self.n_radial):
-               ave[j] = average(self.phisq[j,0,n,:],self.t,w)
+               ave[j] = average(self.kxky_phi_abs[j,0,n,:],self.t,w)
             ax.plot(kx+dk/2,np.sqrt(ave[:]),ls='steps',label=num)
             if self.n_n > 16:
                ax.legend(loc=4, ncol=5, prop={'size':12})
@@ -831,7 +846,19 @@ class cgyrodata_plot(data.cgyrodata):
       i0 = int(round((1.0+float(theta))*self.n_theta/2.0))
       if i0 > self.n_theta-1:
          i0 = self.n_theta-1
-      n0 = (self.n_radial/2)*self.n_theta+i0
+
+      if self.n_radial > 1:
+         n0 = (self.n_radial/2)*self.n_theta+i0
+         x = self.thetab/np.pi
+      else:
+         n0 = self.n_theta/3
+         x = self.theta/np.pi
+        
+      if tmax < 0.0:
+         if self.n_radial == 1:
+            tmax = 1.0
+         else:
+            tmax = self.n_radial-1
 
       p = 0
       for row in range(3):
@@ -861,11 +888,8 @@ class cgyrodata_plot(data.cgyrodata):
 
          levels = np.arange(hmin-dh,hmax+dh,dh)
 
-         ax.contourf(self.thetab/np.pi,self.xi,hp,levels,cmap=cm.jet,origin='lower')
-         if tmax < 0.0:
-            ax.set_xlim([1-self.n_radial,-1+self.n_radial])
-         else:
-            ax.set_xlim([-tmax,tmax])
+         ax.contourf(x,self.xi,hp,levels,cmap=cm.jet,origin='lower')
+         ax.set_xlim([-tmax,tmax])
 
          # Plot dots for mesh points
          if row == 1 and mesh == 1:
@@ -889,11 +913,9 @@ class cgyrodata_plot(data.cgyrodata):
 
          levels = np.arange(hmin-dh,hmax+dh,dh)
 
-         ax.contourf(self.thetab/np.pi,self.xi,hp,levels,cmap=cm.jet,origin='lower')
-         if tmax < 0.0:
-            ax.set_xlim([1-self.n_radial,-1+self.n_radial])
-         else:
-            ax.set_xlim([-tmax,tmax])
+         ax.contourf(x,self.xi,hp,levels,cmap=cm.jet,origin='lower')
+         ax.set_xlim([-tmax,tmax])
+         
          #======================================
 
       fig.tight_layout(pad=0.3)
@@ -914,6 +936,17 @@ class cgyrodata_plot(data.cgyrodata):
       i0 = int(round((1.0+float(theta))*self.n_theta/2.0))
       if i0 > self.n_theta-1:
          i0 = self.n_theta-1
+
+      if self.n_radial > 1:
+         x = self.thetab/np.pi
+      else:
+         x = self.theta/np.pi
+
+      if tmax < 0.0:
+         if self.n_radial == 1:
+            tmax = 1.0
+         else:
+            tmax = self.n_radial-1
 
       p = 0
       for row in range(3):
@@ -944,16 +977,9 @@ class cgyrodata_plot(data.cgyrodata):
          else:
             hp = np.array(func[:,:,spec,self.n_xi/2,ie,itime])
             
-         ax.plot(self.thetab/np.pi,hp[0,:],'-o',color='black',markersize=2)
-         ax.plot(self.thetab/np.pi,hp[1,:],'-o',color='blue',markersize=2)
-
-         if self.n_radial > 1:
-            if tmax < 0.0:
-               ax.set_xlim([1-self.n_radial,-1+self.n_radial])
-            else:
-               ax.set_xlim([-tmax,tmax])
-         else:
-            ax.set_xlim([1,3])
+         ax.plot(x,hp[0,:],'-o',color='black',markersize=2)
+         ax.plot(x,hp[1,:],'-o',color='blue',markersize=2)
+         ax.set_xlim([-tmax,tmax])
 
          #========================================================
 

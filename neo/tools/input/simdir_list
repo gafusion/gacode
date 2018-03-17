@@ -1,116 +1,23 @@
-Local neoclassical templates:
-
- ade_c1              GA standard case 
-                     - ions, adiabtic electrons
-                     - s-alpha geometry
-                     - Connor collisions
- 
- ade_c2              GA standard case
-                     - ions, adiabtic electrons
-                     - s-alpha geometry
-                     - HS0 collisions
-
- ade_c3              GA standard case
-                     - ions, adiabtic electrons
-                     - s-alpha geometry
-                     - HS collisions
-
- ade_c4              GA standard case
-                     - ions, adiabtic electrons
-                     - s-alpha geometry
-                     - FP collisions
-
- gke_c1              GA standard case
-                     - ions, electrons
-                     - s-alpha geometry
-                     - Connor collisions
- 
- gke_c2              GA standard case
-                     - ions, electrons
-                     - s-alpha geometry
-                     - HS0 collisions
-
- gke_c3              GA standard case
-                     - ions, electrons
-                     - s-alpha geometry
-                     - HS collisions
-
- gke_c4              GA standard case
-                     - ions, electrons
-                     - s-alpha geometry
-                     - FP collisions
-
- imp_c1              GA standard case
-                     - ions, electrons, carbon
-                     - s-alpha geometry
-                     - Connor collisions
- 
- imp_c2              GA standard case
-                     - ions, electrons, carbon
-                     - s-alpha geometry
-                     - HS0 collisions
-
- imp_c3              GA standard case
-                     - ions, electrons, carbon
-                     - s-alpha geometry
-                     - HS collisions
-
- imp_c4              GA standard case
-                     - ions, electrons, carbon
-                     - s-alpha geometry
-                     - FP collisions
-
- ade_miller          GA standard case
-                     - ions, adiabtic electrons
-                     - Miller shaped geometry
-                     - FP collisions
- 
- rot_ade             GA standard case w/ small r/a
-                     - ions, adiabtic electrons
-                     - s-alpha geometry
-                     - FP collisions
-                     - strong rotation effects w/ zero shear
-     
- rot_ade_shear       GA standard case w/ small r/a
-                     - ions, adiabtic electrons
-                     - s-alpha geometry
-                     - FP collisions
-                     - strong rotation effects w/ non-zero shear
-
- exp_miller_norot    Experimental profiles case
-                     - ions, carbon, electrons
-                     - Miller shaped geometry
-                     - FP collisions
-
- exp_miller_rot      Experimental profiles case
-                     - ions, carbon, electrons
-                     - Miller shaped geometry
-                     - FP collisions
-                     - strong rotation effects
-
- exp_geo_norot       Experimental profiles case
-                     - ions, carbon, electrons
-                     - General shaped geometry
-                     - FP collisions
-
- exp_geo_rot         Experimental profiles case
-                     - ions, carbon, electrons
-                     - General shaped geometry
-                     - FP collisions
-
- exp_geo_rot_multir  Experimental profiles case @ multiple radii
-                     - ions, carbon, electrons
-                     - General shaped geometry
-                     - FP collisions
-
- 3d_gke	             GA standard case with 3D effects
-                     - ions, electrons
-                     - Miller circular geometry with small 3D perturbation
-                     - FP collisions
-
- 3d_gke_er	     GA standard case with 3D effects
-                     - ions, electrons
-                     - Miller circular geometry with small 3D perturbation
-                     - FP collisions
-		     - higher-order ExB drift effects
-
+Local NEO templates:
+reg01:	  connor+i  +loc +sa +nrot +2d
+reg02:	  hs0   +i  +loc +sa +nrot +2d
+reg03:	  hs	+i  +loc +sa +nrot +2d
+reg04:	  fp	+i  +loc +sa +nrot +2d
+reg05:	  connor+i  +loc +sa +nrot +2d
+reg06:	  hs0   +ie +loc +sa +nrot +2d
+reg07:	  hs	+ie +loc +sa +nrot +2d
+reg08:	  fp	+ie +loc +sa +nrot +2d
+reg09:	  connor+iec+loc +sa +nrot +2d
+reg10:	  hs0   +iec+loc +sa +nrot +2d
+reg11:	  hs	+iec+loc +sa +nrot +2d
+reg12:	  fp	+iec+loc +sa +nrot +2d
+reg13:	  fp	+i  +loc +mil+nrot +2d
+reg14:	  fp	+i  +loc +sa + rot +2d
+reg15:	  fp	+i  +loc +sa + rots+2d
+reg16:	  fp	+iec+pro1+mil+nrot +2d
+reg17:	  fp	+iec+pro1+mil+ rots+2d
+reg18:	  fp	+iec+pro1+gen+nrot +2d
+reg19:	  fp	+iec+pro1+gen+ rots+2d
+reg20:	  fp	+iec+pro2+gen+ rots+2d
+reg21:	  fp	+ie +loc +mil+nrot +3d
+reg22:	  fp	+ie +loc +mil+nrot +3d+er

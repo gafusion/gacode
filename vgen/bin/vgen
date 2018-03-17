@@ -178,7 +178,7 @@ else
 fi
 
 python $NEO_DIR/bin/neo_parse.py
-python $GACODE_ROOT/shared/bin/profile_parse.py input.profiles 
+python $GACODE_ROOT/profiles_gen/bin/profile_parse.py input.profiles 
 
 # Construct vgen.dat
 cp ../input.vgen.gen vgen.dat

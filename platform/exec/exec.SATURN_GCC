@@ -1,10 +1,5 @@
 #!/bin/sh
-#
-# SCRIPT:
-#  gyro.SATURN
-#
-# FUNCTION:
-#  Parallel execution script
+# GACODE Parallel execution script (SATURN_GCC)
 
 simdir=${1}
 nmpi=${2}
@@ -12,6 +7,7 @@ exec=${3}
 nomp=${4}
 numa=${5}
 mpinuma=${6}
+
 cd $simdir
 export OMP_NUM_THREADS=$nomp ; /act/mpich/gcc-4.7.2//bin/mpirun -np $nmpi $exec
 

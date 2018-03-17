@@ -1,14 +1,5 @@
 #!/bin/sh
-#
-# SCRIPT:
-#  gyro.PPPL
-#
-# FUNCTION:
-#  Run on PPPL Linux clusters
-#
-# NOTES:
-#  For PPPL kite and kruskal Linux clusters with Infiniband connection
-#  Or for PPPL kestrel with gigabit
+# GACODE Parallel execution script (PPPL)
  
 simdir=${1}
 nmpi=${2}

@@ -6,9 +6,9 @@
 # PURPOSE:
 #  Parse and copy input.profiles.
 #--------------------------------------------------------------
-        
+
 # $1 = input.profiles.<num>
 # $2 = GYRO subdirectory
-        
-python $GACODE_ROOT/shared/bin/profile_parse.py $1
+
+python $GACODE_ROOT/profiles_gen/bin/profile_parse.py $1
 cp $1.gen $2/input.profiles.gen

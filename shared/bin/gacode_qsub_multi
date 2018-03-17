@@ -49,9 +49,6 @@ then
   echo "         -queue"
   echo "         Queue name"
   echo
-  echo "         -qos"
-  echo "         Quality of service (Cori Haswell only)"
-  echo
   echo "         -w"
   echo "         Wallclock limit (default 0:59:00)"
   echo
@@ -113,8 +110,6 @@ while [ $# -gt 0 ] ; do
 
   -queue) shift ; QUEUE=$1 ;;
 
-  -qos) shift ; QOS=$1 ;;
-
   -w) shift ; WALLTIME=$1 ;;
 
   -repo) shift ; REPO=$1 ; APPEND_STR="$APPEND_STR -repo ${REPO}" ;;
@@ -158,7 +153,7 @@ do
     fi
 
     echo "[$SUBDIR] gacode_qsub -n $nmpi"
-    cd "${SIMDIR}/${SUBDIR}" && $GACODE_ROOT/shared/bin/gacode_qsub -n $nmpi -nomp $nomp -numa $numa -mpinuma $mpinuma -w $WALLTIME -qos $QOS -queue $QUEUE -code $CODE $APPEND_STR
+    cd "${SIMDIR}/${SUBDIR}" && $GACODE_ROOT/shared/bin/gacode_qsub -n $nmpi -nomp $nomp -numa $numa -mpinuma $mpinuma -w $WALLTIME -queue $QUEUE -code $CODE $APPEND_STR
     cd "$STARTDIR"
   done
 

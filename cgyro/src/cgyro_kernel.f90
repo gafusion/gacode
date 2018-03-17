@@ -20,6 +20,8 @@ subroutine cgyro_kernel
 
   implicit none
 
+  character(len=30) :: final_msg
+
   i_time = 0
 
   ! Need to initialize the info runfile very early
@@ -130,13 +132,33 @@ subroutine cgyro_kernel
      ! Don't wrap timer output in a timer
      if (mod(i_time,print_step) == 0) call write_timers(trim(path)//runfile_timers)
 
-     if (abs(signal) == 1 .or. error_status > 0) exit
+     ! Trap error or convergence
+     if (error_status > 0 .or. signal == 1) exit
 
   enddo
   !---------------------------------------------------------------------------
 
 100 continue
 
+  ! Manage exit message
+
+  if (error_status == 0) then
+     if (nonlinear_flag == 1) then
+        final_msg = 'Normal'
+     else
+        if (signal == 1) then
+           final_msg = 'Linear converged'
+        else
+           final_msg = 'Linear terminated at max time'
+        endif
+     endif
+     if (silent_flag == 0 .and. i_proc == 0) then
+        open(unit=io,file=trim(path)//runfile_info,status='old',position='append')
+        write(io,'(a)') 'EXIT: (CGYRO) '//trim(final_msg)
+        close(io)
+     endif
+  endif
+ 
   if(allocated(theta))          deallocate(theta)
   if(allocated(thetab))         deallocate(thetab)
   if(allocated(w_theta))        deallocate(w_theta)

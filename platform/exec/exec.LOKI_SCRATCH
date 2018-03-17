@@ -1,10 +1,5 @@
 #!/bin/sh
-#
-# SCRIPT:
-#  gyro.LOKI_SCRATCH
-#
-# FUNCTION:
-#  Parallel execute script.
+# GACODE Parallel execution script (LOKI_SCRATCH)
 #
 # This version: D. R. Ernst <dernst@psfc.mit.edu>
 #

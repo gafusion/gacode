@@ -84,7 +84,7 @@ subroutine cgyro_equilibrium
   !--------------------------------------------------------
   ! Manage subset of theta-values for plotting output
   !
-  if (zf_test_flag == 0) then
+  if (zf_test_mode == 0) then
      ! Location of theta=0
      it0 = n_theta/2+1
   else

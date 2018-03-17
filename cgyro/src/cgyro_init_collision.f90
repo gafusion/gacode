@@ -154,8 +154,8 @@ subroutine cgyro_init_collision
                  arg = k_perp(ic)*rho*vth(is)*mass(is)&
                       /(z(is)*bmag(it)) *sqrt(2.0*energy(ie)) &
                       *sqrt(1.0-xi(ix)**2)
-                 bessel(is,ix,ie,ic_loc,0) = bessel_j0(abs(arg))
-                 bessel(is,ix,ie,ic_loc,1) = bessel_j1(abs(arg))
+                 bessel(is,ix,ie,ic_loc,0) = bessel_j0(arg)
+                 bessel(is,ix,ie,ic_loc,1) = bessel_j1(arg)
               enddo
            enddo
         enddo

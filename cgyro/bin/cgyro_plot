@@ -63,6 +63,7 @@ then
   echo "                  = xflux    (radial profile of fluxes for all species)"
   echo "                  = fluct    (fluctuations)"
   echo "                  = vid      (create video from png files)"
+  echo "                  = template (create simple template file to read data)"
   echo "                  = fix      (fix old simulation directory)"
   echo
   echo "          -mesh"
@@ -320,6 +321,9 @@ case "$PLOT_TYPE" in
 
    fix)
    	python $PYROOT/fix.py ;;
+
+   template)
+   	cp $PYROOT/template.py . ;;
 
    vid)
 	FRAMERATE=20

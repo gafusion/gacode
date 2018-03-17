@@ -1,10 +1,5 @@
 #!/bin/sh
-#
-# SCRIPT:
-#  gyro.GFORTRAN_OSX_BELLI
-#
-# FUNCTION:
-#  Parallel execution script.
+# GACODE Parallel execution script (OSX_YOSEMITE)
 
 simdir=${1}
 nmpi=${2}
@@ -14,6 +9,5 @@ numa=${5}
 mpinuma=${6}
 
 cd $simdir
-export OMP_NUM_THREADS=$nomp 
-mpiexec-mpich-gcc5 -np $nmpi $exec
+mpiexec-mpich-gcc5 -env OMP_NUM_THREADS $nomp -np $nmpi $exec
 

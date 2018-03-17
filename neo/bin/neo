@@ -77,7 +77,6 @@ NPROC=1
 NOMP=1
 NUMA=0
 MPINUMA=0
-NIDLE=0
 # Execute/test mode flags
 EXEC_FLAG=0
 GENERATE_FLAG=0
@@ -225,7 +224,7 @@ python $NEO_DIR/bin/neo_parse.py
 
 if [ -f input.profiles ]
 then 
-   python $GACODE_ROOT/shared/bin/profile_parse.py input.profiles
+   python $GACODE_ROOT/profiles_gen/bin/profile_parse.py input.profiles
 fi
 #==========================================================
 
@@ -250,7 +249,7 @@ then
   #==========================================================
 
   $GACODE_ROOT/platform/exec/exec.$GACODE_PLATFORM \
-    $SIMDIR $NPROC $NEO_DIR/src/neo $NOMP $NUMA $MPINUMA $NIDLE
+    $SIMDIR $NPROC $NEO_DIR/src/neo $NOMP $NUMA $MPINUMA
 
 fi
 #===========================================================

@@ -1,10 +1,5 @@
 #!/bin/sh
-#
-# SCRIPT:
-#  gyro.PPPL
-#
-# FUNCTION:
-#  Run on PPPL Linux clusters
+# GACODE Parallel execution script (PPPL_atom)
 #
 # NOTES:
 #  The following was for the PPPL platform

@@ -14,6 +14,7 @@ subroutine cgyro_write_initdata
 
   integer :: p,in,is
   real :: kymax
+  real(kind=4) :: f4vec(n_theta) 
   real, external :: spectraldiss
 
   !----------------------------------------------------------------------------
@@ -35,8 +36,8 @@ subroutine cgyro_write_initdata
         write(io,'(t3,i4,t12,i4,t21,i4,t29,i4,t36,i4)') nc_loc,nv_loc,nsplit,n_proc,n_omp
      endif
 
-     if (zf_test_flag == 0) then
-        
+     if (zf_test_mode == 0) then
+
         ! Compute kymax
         if (n_toroidal == 1) then
            kymax = q/rmin*rho
@@ -65,9 +66,10 @@ subroutine cgyro_write_initdata
      else
 
         ! ZONAL FLOW TEST ONLY
-        
+
         if (n_radial==1) then
-           write(io,*) ' kx*rho:',2*pi*rho/length
+           write(io,*)
+           write(io,'(t2,a,1pe10.3)') ' kx*rho: ',2*pi*rho/length
         else
            write(io,*) '          n          Delta            Max           L/rho'
            write(io,'(a,i4,2x,2(g0.8,2x),2x,g0.8)') ' kx*rho:',&
@@ -174,19 +176,31 @@ subroutine cgyro_write_initdata
   !
   if (silent_flag == 0 .and. i_proc == 0) then
 
-     open(unit=io,file=trim(path)//'out.cgyro.geo',status='replace')
-     write(io,fmtstr) theta(:)
-     write(io,fmtstr) w_theta(:)
-     write(io,fmtstr) bmag(:)
-     write(io,fmtstr) omega_stream(:,1)
-     write(io,fmtstr) omega_trap(:,1)
-     write(io,fmtstr) omega_rdrift(:,1)
-     write(io,fmtstr) omega_adrift(:,1)
-     write(io,fmtstr) omega_aprdrift(:,1)
-     write(io,fmtstr) omega_cdrift(:,1)
-     write(io,fmtstr) omega_cdrift_r(:,1)
-     write(io,fmtstr) omega_gammap(:)
-     write(io,fmtstr) k_perp(ic_c(n_radial/2+1,:))
+     open(unit=io,file=trim(path)//'bin.cgyro.geo',status='replace',access='stream')
+     f4vec = theta
+     write(io) f4vec
+     f4vec = w_theta
+     write(io) f4vec
+     f4vec = bmag
+     write(io) f4vec
+     f4vec = omega_stream(:,1)
+     write(io) f4vec
+     f4vec = omega_trap(:,1)
+     write(io) f4vec
+     f4vec = omega_rdrift(:,1)
+     write(io) f4vec
+     f4vec = omega_adrift(:,1) 
+     write(io) f4vec
+     f4vec = omega_aprdrift(:,1)
+     write(io) f4vec
+     f4vec = omega_cdrift(:,1)
+     write(io) f4vec
+     f4vec = omega_cdrift_r(:,1)
+     write(io) f4vec
+     f4vec = omega_gammap(:)
+     write(io) f4vec
+     f4vec = k_perp(ic_c(n_radial/2+1,:))
+     write(io) f4vec
      close(io)
 
   endif

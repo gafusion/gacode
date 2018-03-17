@@ -106,7 +106,6 @@ NPROC=1
 NOMP=1
 NUMA=1
 MPINUMA=1
-NIDLE=0
 # Execute/test mode flags
 EXEC_FLAG=0
 TEST_FLAG=0
@@ -310,7 +309,7 @@ TPROC=${z[0]} ; EPROC=${z[1]} ; rm proc
 
 if [ -f input.profiles ]
 then
-   python $GACODE_ROOT/shared/bin/profile_parse.py input.profiles >> $LOG_FILE
+   python $GACODE_ROOT/profiles_gen/bin/profile_parse.py input.profiles >> $LOG_FILE
 else
    # Halt if we are using TRANSPORT_METHOD<3
    line=`grep TGYRO_MODE input.tgyro.gen`
@@ -358,7 +357,7 @@ then
       # Call platform-specific exec file:
       echo " INFO: (tgyro script) Passing control to TGYRO executable" >> $RUNBASE
       $GACODE_ROOT/platform/exec/exec.$GACODE_PLATFORM \
-       $SIMDIR $NPROC $TGYRO_DIR/src/tgyro_main $NOMP $NUMA $MPINUMA $NIDLE
+       $SIMDIR $NPROC $TGYRO_DIR/src/tgyro_main $NOMP $NUMA $MPINUMA 
       exit 0
    fi
 fi
@@ -375,7 +374,7 @@ then
       echo "1" > "$SIMDIR/gyrotest_flag"
       echo " Passing control to TGYRO executable (test mode) ..." >> $RUNBASE
       $GACODE_ROOT/platform/exec/exec.$GACODE_PLATFORM \
-       $SIMDIR $NPROC $TGYRO_DIR/src/tgyro_main $NOMP $NUMA $MPINUMA $NIDLE
+       $SIMDIR $NPROC $TGYRO_DIR/src/tgyro_main $NOMP $NUMA $MPINUMA
       exit 0
    fi
 fi

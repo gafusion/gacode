@@ -1,10 +1,5 @@
 #!/bin/sh
-#
-# SCRIPT:
-#  gyro.GFORTRAN_OSX_MACPORTS
-#
-# FUNCTION:
-#  Parallel execution script.
+# GACODE Parallel execution script (GFORTRAN_OSX_MACPORTS)
 #
 # NOTES:
 # Used mpich2-1.0.3, so use mpirun rather than mpiexec
@@ -18,7 +13,6 @@ mpinuma=${6}
 
 echo $simdir
 
-cd $simdir
-export OMP_NUM_THREADS=$nomp 
-mpirun -np $nmpi $exec
+cd $simdir 
+mpirun -env OMP_NUM_THREADS $nomp -np $nmpi $exec
 

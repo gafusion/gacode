@@ -12,12 +12,14 @@ subroutine cgyro_write_timedata
 
   implicit none
 
-  complex :: a_norm
   integer :: i_field,i_moment
   integer :: ir,it
-  real :: vfreq(2)
+  integer :: p_field
+  real :: vec(3)
+  complex :: a_norm
   complex :: ftemp(n_theta,n_radial)
   complex :: field_plot(n_radial,theta_plot)
+  logical :: has_zf, has_balloon
 
   ! Print this data on print steps only; otherwise exit now
   if (mod(i_time,print_step) /= 0) return
@@ -34,93 +36,65 @@ subroutine cgyro_write_timedata
   call cgyro_flux
 
   ! ky flux for all species with field breakdown
-  if (use_bin == 1) then
-     call cgyro_write_distributed_breal(&
-          trim(path)//binfile_ky_flux,&
-          size(fflux(:,:,:)),&
-          fflux(:,:,:))
-  else
-     call cgyro_write_distributed_real(&
-          trim(path)//runfile_ky_flux,&
-          size(fflux(:,:,:)),&
-          fflux(:,:,:))
-  endif
+  call cgyro_write_distributed_breal(&
+       trim(path)//binfile_ky_flux,&
+       size(fflux(:,:,:)),&
+       fflux(:,:,:))
 
   if (nonlinear_flag == 1 .and. kxkyflux_print_flag == 1) then
      ! kxky energy flux for all species
-     if (use_bin == 1) then
-        call cgyro_write_distributed_breal(&
-             trim(path)//binfile_kxky_flux,&
-             size(flux(:,:)),&
-             flux(:,:))
-
-     else
-        call cgyro_write_distributed_real(&
-             trim(path)//runfile_kxky_flux,&
-             size(flux(:,:)),&
-             flux(:,:))
-     endif
+     call cgyro_write_distributed_breal(&
+          trim(path)//binfile_kxky_flux,&
+          size(flux(:,:)),&
+          flux(:,:))
   endif
 
   if (n_global > 0) then
      ! Global (n,e,v) fluxes for all species
      do i_moment=1,3
-        if (use_bin == 1) then
-           call cgyro_write_distributed_bcomplex(&
-                trim(path)//binfile_lky_flux(i_moment),&
-                size(gflux(:,:,i_moment)),&
-                gflux(:,:,i_moment))
-        else
-           call cgyro_write_distributed_complex(&
-                trim(path)//runfile_lky_flux(i_moment),&
-                size(gflux(:,:,i_moment)),&
-                gflux(:,:,i_moment))
-        endif
+        call cgyro_write_distributed_bcomplex(&
+             trim(path)//binfile_lky_flux(i_moment),&
+             size(gflux(:,:,i_moment)),&
+             gflux(:,:,i_moment))
      enddo
   endif
 
   if (nonlinear_flag == 1 .and. moment_print_flag == 1) then
      ! (n,e) moment for all species at selected thetas.
      do i_moment=1,2
-        if (use_bin == 1) then
-           call cgyro_write_distributed_bcomplex(&
-                trim(path)//binfile_kxky(i_moment),&
-                size(moment(:,:,:,i_moment)),&
-                moment(:,:,:,i_moment))
-        else
-           call cgyro_write_distributed_complex(&
-                trim(path)//runfile_kxky(i_moment),&
-                size(moment(:,:,:,i_moment)),&
-                moment(:,:,:,i_moment))
-        endif
+        call cgyro_write_distributed_bcomplex(&
+             trim(path)//binfile_kxky(i_moment),&
+             size(moment(:,:,:,i_moment)),&
+             moment(:,:,:,i_moment))
      enddo
   endif
 
-  ! Sort out subset of theta values for plotting
-  do ic=1,nc
-     ir = ir_c(ic)
-     it = it_c(ic)
-     if (itp(it) > 0) then
-        field_plot(ir,itp(it)) = field(1,ic)
-     endif
-  enddo
-
-  ! Complex potential at selected thetas
-  if (use_bin == 1) then
-     call cgyro_write_distributed_bcomplex(&
-          trim(path)//binfile_kxky_phi,&
-          size(field_plot),&
-          field_plot)
+  if (field_print_flag == 1) then
+     p_field = n_field
   else
-     call cgyro_write_distributed_complex(&
-          trim(path)//runfile_kxky_phi,&
+     p_field = 1
+  endif
+
+  do i_field=1,p_field
+     ! Sort out subset of theta values for plotting
+     do ic=1,nc
+        ir = ir_c(ic)
+        it = it_c(ic)
+        if (itp(it) > 0) then
+           field_plot(ir,itp(it)) = field(i_field,ic)
+        endif
+     enddo
+
+     ! Complex potentials at selected thetas
+     call cgyro_write_distributed_bcomplex(&
+          trim(path)//binfile_kxky_field(i_field),&
           size(field_plot),&
           field_plot)
-  endif
+  enddo
 
   ! Checksum for regression testing
   ! Note that checksum is a distributed real scalar
-  if (zf_test_flag == 0) then
+  if (zf_test_mode == 0) then
      call write_precision(trim(path)//runfile_prec,sum(abs(fflux)))
   else
      call write_precision(trim(path)//runfile_prec,sum(abs(field)))
@@ -130,7 +104,10 @@ subroutine cgyro_write_timedata
   ! Ballooning mode (or ZF) output for linear runs with a single mode
   ! (can both be plotted with cgyro_plot -plot ball)
   !
-  if (n_toroidal == 1 .and. box_size == 1) then
+  has_balloon = (n_toroidal == 1) .and. ((n > 0)  .and. (box_size == 1))
+  has_zf      = zf_test_mode > 0
+  if (has_zf .or. has_balloon) then
+
      do i_field=1,n_field
 
         do ir=1,n_radial
@@ -139,28 +116,34 @@ subroutine cgyro_write_timedata
            enddo
         enddo
 
-        if (i_field == 1) a_norm = ftemp(n_theta/2+1,n_radial/2+1) 
-
-        if (n > 0) call extended_ang(ftemp)
+        if (has_balloon) then
+           if (i_field == 1) a_norm = ftemp(n_theta/2+1,n_radial/2+1) 
+           call extended_ang(ftemp)    
+        else
+           a_norm = 1.0
+        endif
 
         call write_binary(trim(path)//binfile_fieldb(i_field),&
              ftemp(:,:)/a_norm,size(ftemp))
-
      enddo
   endif
   !---------------------------------------------------------------
 
   ! Linear frequency diagnostics for every value of n
   call cgyro_freq
-  vfreq(1) = real(freq) 
-  vfreq(2) = aimag(freq)
-  call cgyro_write_distributed_real(trim(path)//runfile_freq,size(vfreq),vfreq)
+  vec(1) = real(freq) ; vec(2) = aimag(freq)
+  if (n_toroidal > 1) then
+     call cgyro_write_distributed_breal(trim(path)//binfile_freq,2,vec(1:2))
+  else 
+     call write_ascii(trim(path)//runfile_freq,2,vec(1:2))
+  endif
 
   ! Output to screen
   call print_scrdata()
 
   ! Output to files
-  call write_time(trim(path)//runfile_time)
+  vec(1) = t_current ; vec(2:3) = integration_error(:)
+  call write_ascii(trim(path)//runfile_time,3,vec(1:3))
 
   call MPI_BCAST(signal,1,MPI_INTEGER,0,CGYRO_COMM_WORLD,i_err)
 
@@ -171,135 +154,11 @@ end subroutine cgyro_write_timedata
 !===============================================================================
 
 !------------------------------------------------------
-! cgyro_write_distributed_complex.f90
+! cgyro_write_distributed_bcomplex.f90
 !
 ! PURPOSE:
 !  Control merged output of complex distributed array.
 !------------------------------------------------------
-
-subroutine cgyro_write_distributed_complex(datafile,n_fn,fn)
-
-  use mpi
-  use cgyro_globals
-
-  !------------------------------------------------------
-  implicit none
-  !
-  character (len=*), intent(in) :: datafile
-  integer, intent(in) :: n_fn
-  complex, intent(in) :: fn(n_fn)
-  !
-  integer :: in
-  !
-  ! Required for MPI-IO:
-  !
-  integer :: filemode
-  integer :: finfo
-  integer :: fh
-  integer :: fstatus(MPI_STATUS_SIZE)
-  integer(kind=MPI_OFFSET_KIND) :: disp
-  integer(kind=MPI_OFFSET_KIND) :: offset1
-  !
-  character(len=fmtstr_len*n_fn*2) :: fnstr
-  character(len=fmtstr_len) :: tmpstr
-  character :: c
-  !------------------------------------------------------
-
-  if (i_proc_1 /= 0) return
-
-  
-  select case (io_control)
-
-  case (0)
-
-     return
-
-  case (1)
-
-     ! Open
-
-     if (i_proc == 0) then
-        open(unit=io,file=datafile,status='replace')
-        close(io)
-     endif
-
-  case (2)
-
-     ! Append
-
-     ! Create human readable string ready to be written
-     ! Do it in one shot, to minimize IO
-     do in=1,n_fn
-        write(tmpstr, fmtstr) real(fn(in))
-        fnstr((in-1)*fmtstr_len*2+1:(in-1)*fmtstr_len*2+fmtstr_len-1) = tmpstr(1:11)
-        fnstr((in-1)*fmtstr_len*2+fmtstr_len:(in-1)*fmtstr_len*2+fmtstr_len) = NEW_LINE('A')
-        write(tmpstr, fmtstr) aimag(fn(in))
-        fnstr((in-1)*fmtstr_len*2+fmtstr_len+1:in*fmtstr_len*2-1) = tmpstr(1:11)
-        fnstr(in*fmtstr_len*2:in*fmtstr_len*2) = NEW_LINE('A')
-     enddo
-
-     ! now write in parallel to the common file
-     filemode = MPI_MODE_WRONLY
-     disp = i_current-1
-     disp = disp*n_proc_2
-     disp = disp*fmtstr_len*2*n_fn
-
-     offset1 = i_proc_2
-     offset1 = offset1*fmtstr_len*2*n_fn
-
-     call MPI_INFO_CREATE(finfo,i_err)
-
-     call MPI_INFO_SET(finfo,"striping_factor",mpiio_small_stripe_str,i_err)
-
-     call MPI_FILE_OPEN(NEW_COMM_2,&
-          datafile,&
-          filemode,&
-          finfo,&
-          fh,&
-          i_err)
-
-     call MPI_FILE_SET_VIEW(fh,&
-          disp,&
-          MPI_CHAR,&
-          MPI_CHAR,&
-          'native',&
-          finfo,&
-          i_err)
-
-     call MPI_FILE_WRITE_AT(fh,&
-          offset1,&
-          fnstr,&
-          n_fn*fmtstr_len*2,&
-          MPI_CHAR,&
-          fstatus,&
-          i_err)
-
-     call MPI_FILE_SYNC(fh,i_err)
-     call MPI_FILE_CLOSE(fh,i_err)
-     call MPI_INFO_FREE(finfo,i_err)
-
-  case (3)
-
-     ! Rewind
-
-     if (i_proc == 0) then
-
-        disp = i_current
-        disp = disp*n_proc_2
-        disp = disp*fmtstr_len*2*n_fn
-
-        open(unit=io,file=datafile,status='old',access='stream')
-        if (disp > 0) then
-           read(io,pos=disp) c
-        endif
-        endfile(io)
-        close(io)
-
-     endif
-
-  end select
-
-end subroutine cgyro_write_distributed_complex
 
 subroutine cgyro_write_distributed_bcomplex(datafile,n_fn,fn)
 
@@ -425,133 +284,12 @@ subroutine cgyro_write_distributed_bcomplex(datafile,n_fn,fn)
 
 end subroutine cgyro_write_distributed_bcomplex
 
-
 !------------------------------------------------------
-! cgyro_write_distributed_real.f90
+! cgyro_write_distributed_breal.f90
 !
 ! PURPOSE:
 !  Control merged output of real distributed array.
 !------------------------------------------------------
-
-subroutine cgyro_write_distributed_real(datafile,n_fn,fn)
-
-  use mpi
-  use cgyro_globals
-
-  !------------------------------------------------------
-  implicit none
-  !
-  character (len=*), intent(in) :: datafile
-  integer, intent(in) :: n_fn
-  real, intent(in) :: fn(n_fn)
-  !
-  integer :: in
-  !
-  ! Required for MPI-IO:
-  !
-  integer :: filemode
-  integer :: finfo
-  integer :: fh
-  integer :: fstatus(MPI_STATUS_SIZE)
-  integer(kind=MPI_OFFSET_KIND) :: disp
-  integer(kind=MPI_OFFSET_KIND) :: offset1
-  !
-  character(len=fmtstr_len*n_fn) :: fnstr
-  character(len=fmtstr_len) :: tmpstr
-  character :: c
-  !------------------------------------------------------
-
-  if (i_proc_1 /= 0) return
-
-  select case (io_control)
-
-  case (0)
-
-     return
-
-  case (1)
-
-     ! Open
-
-     if (i_proc == 0) then
-        open(unit=io,file=datafile,status='replace')
-        close(io)
-     endif
-
-  case (2)
-
-     ! Append
-
-     ! Create human readable string ready to be written
-     ! Do it in one shot, to minimize IO
-     do in=1,n_fn
-        write(tmpstr, fmtstr) fn(in)
-        fnstr((in-1)*fmtstr_len+1:in*fmtstr_len-1) = tmpstr(1:11)
-        fnstr(in*fmtstr_len:in*fmtstr_len) = NEW_LINE('A')
-     enddo
-
-     ! now write in parallel to the common file
-     filemode = MPI_MODE_WRONLY
-     disp = i_current-1
-     disp = disp*n_proc_2
-     disp = disp*fmtstr_len*n_fn
-
-     offset1 = i_proc_2
-     offset1 = offset1*fmtstr_len*n_fn
-
-     call MPI_INFO_CREATE(finfo,i_err)
-
-     call MPI_INFO_SET(finfo,"striping_factor", mpiio_small_stripe_str,i_err)
-
-     call MPI_FILE_OPEN(NEW_COMM_2,&
-          datafile,&
-          filemode,&
-          finfo,&
-          fh,&
-          i_err)
-
-     call MPI_FILE_SET_VIEW(fh,&
-          disp,&
-          MPI_CHAR,&
-          MPI_CHAR,&
-          'native',&
-          finfo,&
-          i_err)
-
-     call MPI_FILE_WRITE_AT(fh,&
-          offset1,&
-          fnstr,&
-          n_fn*fmtstr_len,&
-          MPI_CHAR,&
-          fstatus,&
-          i_err)
-
-     call MPI_FILE_SYNC(fh,i_err)
-     call MPI_FILE_CLOSE(fh,i_err)
-     call MPI_INFO_FREE(finfo,i_err)
-
-  case(3)
-
-     ! Rewind
-
-     if (i_proc == 0) then
-
-        disp = i_current
-        disp = disp*n_proc_2
-        disp = disp*fmtstr_len*n_fn
-
-        open(unit=io,file=datafile,status='old',access='stream')
-        if (disp > 0) then
-           read(io,pos=disp) c
-        endif
-        endfile(io)
-        close(io)
-
-     endif
-
-  end select
-
-end subroutine cgyro_write_distributed_real
 
 subroutine cgyro_write_distributed_breal(datafile,n_fn,fn)
 
@@ -696,7 +434,7 @@ subroutine write_precision(datafile,fn)
   character (len=*), intent(in) :: datafile
   real, intent(in) :: fn
   real :: fn_sum
-  integer :: i_dummy
+  integer :: i
   !------------------------------------------------------
 
   call MPI_ALLREDUCE(fn, &
@@ -735,7 +473,7 @@ subroutine write_precision(datafile,fn)
      ! Rewind
 
      open(unit=io,file=datafile,status='old')
-     do i_dummy=1,i_current
+     do i=1,i_current
         read(io,fmtstr_hi) fn_sum
      enddo
      endfile(io)
@@ -746,13 +484,13 @@ subroutine write_precision(datafile,fn)
 end subroutine write_precision
 
 !----------------------------------------------------------------
-! write_time.f90
+! write_ascii.f90
 !
 ! PURPOSE:
-!  Simple but fundamental time-data: TIME, ERROR1, ERROR2   
+!  ASCII output of vector of reals 
 !----------------------------------------------------------------
 
-subroutine write_time(datafile)
+subroutine write_ascii(datafile,n_fn,fn)
 
   use cgyro_globals
 
@@ -760,8 +498,9 @@ subroutine write_time(datafile)
   implicit none
   !
   character (len=*), intent(in) :: datafile
-  integer :: i_dummy
-  real :: dummy
+  integer, intent(in) :: n_fn
+  real, intent(inout), dimension(n_fn) :: fn
+  integer :: i
   !------------------------------------------------------
 
   if (i_proc > 0) return
@@ -783,8 +522,8 @@ subroutine write_time(datafile)
 
      ! Append
 
-     open(unit=io,file=datafile,status='old',position='append')
-     write(io,fmtstrn) t_current,integration_error(:)
+     open(unit=io,file=datafile,position='append')
+     write(io,fmtstrn) fn(:)  
      close(io)
 
   case(3)
@@ -792,16 +531,15 @@ subroutine write_time(datafile)
      ! Rewind
 
      open(unit=io,file=datafile,status='old')
-     do i_dummy=1,i_current
-        read(io,fmtstr) dummy
+     do i=1,i_current
+        read(io,fmtstr) fn(1)
      enddo
      endfile(io)
      close(io)
 
   end select
 
-end subroutine write_time
-
+end subroutine write_ascii
 
 subroutine write_distribution(datafile)
 
@@ -815,7 +553,7 @@ subroutine write_distribution(datafile)
   integer :: ir,it
   complex, dimension(:,:), allocatable :: h_x_glob
   complex :: ftemp(n_theta,n_radial)
-  complex(kind=4) :: f8(n_theta,n_radial/box_size)
+  complex(kind=4) :: f8(n_theta,n_radial)
   !------------------------------------------------------
 
   select case (io_control)
@@ -860,7 +598,7 @@ subroutine write_distribution(datafile)
                  ftemp(it,ir) = h_x_glob(ic_c(ir,it),iv)
               enddo
            enddo
-           call extended_ang(ftemp)
+           if (zf_test_mode == 0) call extended_ang(ftemp)
            f8 = ftemp
            write(io) f8
         enddo

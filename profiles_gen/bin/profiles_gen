@@ -40,8 +40,8 @@ OMFIT=${OMFIT_ROOT}/src/omfit.py
 LOCPARGEN=${GACODE_ROOT}/profiles_gen/locpargen/locpargen
 # - exprodump executable
 EXPRODUMP=${GACODE_ROOT}/profiles_gen/exprotools/exprodump
-# - create executable
-CREATE=${GACODE_ROOT}/profiles_gen/exprotools/create
+# - profiles_gen bin directory
+PRGEN_BIN=${GACODE_ROOT}/profiles_gen/bin
 #=============================================================
 
 #=============================================================
@@ -291,17 +291,6 @@ then
    echo
    echo "      NOTE: control ion charges with Z1,Z2,Z3,Z4,Z5 as in LOCAL PARAMETER MODE."
    echo
-   echo "PROFILE CREATE MODE"
-   echo 
-   echo "             -create"
-   echo "              Make input.profiles using parameters in input.create"
-   echo 
-   echo "             -createhelp"
-   echo "              Print detailed help information"
-   echo
-   echo "             -i <input.profiles file>"
-   echo "              Specify a file to modify.  If unspecified, generate from scratch."
-   echo
    echo
    echo "EXAMPLES:"
    echo " "
@@ -329,7 +318,7 @@ fi
 #=============================================================
 # Define DEFAULT variables for flag capture
 #
-# working root 
+# working root
 SIMROOT=$PWD
 
 CONFIG=.config
@@ -396,10 +385,6 @@ DUMP_VAR=null
 X=rho
 DUMP_DENS_METHOD=1
 
-# CREATE MODE variables
-CREATE_FLAG=0
-CREATEHELP_FLAG=0
-
 # Plotting in locpargen
 PLOT_FLAG=0
 
@@ -410,7 +395,7 @@ IONS=d,c
 # Parse command line options
 #
 while [ $# -gt 0 ] ; do
-  case "$1" in 
+  case "$1" in
 
   -p) shift ; SIMROOT=$1 ;;
 
@@ -420,9 +405,9 @@ while [ $# -gt 0 ] ; do
 
   -describe) shift ; DESCRIBE_FLAG=1 ;;
 
-  -cer) shift ; 
+  -cer) shift ;
         echo "INFO: (profiles_gen) Will merge data from $CER_FILE" ; CER_FILE="$1" ;;
-   
+
   -ipccw) shift ; IPCCW="$1" ;;
   -btccw) shift ; BTCCW="$1" ;;
 
@@ -464,19 +449,16 @@ while [ $# -gt 0 ] ; do
   -nth) shift ; VGEN_NTH=$1 ;;
 
   -t) shift ; UFILETIME="$1" ;;
-  
-  -create) CREATE_FLAG=1 ;;
-  -createhelp) CREATEHELP_FLAG=1 ;;
-   
-  -Z1) shift ; Z1=$1 ;;  
-  
-  -Z2) shift ; Z2=$1 ;;  
-  
-  -Z3) shift ; Z3=$1 ;;  
-  
-  -Z4) shift ; Z4=$1 ;;  
-  
-  -Z5) shift ; Z5=$1 ;; 
+
+  -Z1) shift ; Z1=$1 ;;
+
+  -Z2) shift ; Z2=$1 ;;
+
+  -Z3) shift ; Z3=$1 ;;
+
+  -Z4) shift ; Z4=$1 ;;
+
+  -Z5) shift ; Z5=$1 ;;
 
   -loc_rad) shift ; LOC_RAD=$1 ;;
   -loc_rho) shift ; LOC_RHO=$1 ;;
@@ -484,14 +466,14 @@ while [ $# -gt 0 ] ; do
 
   -dump) shift ; DUMP_FLAG=1 ; DUMP_VAR=$1 ;;
   -x) shift ; X=$1 ;;
-  -dens) shift ; DUMP_DENS_METHOD=$1 ;; 
+  -dens) shift ; DUMP_DENS_METHOD=$1 ;;
 
-  -gmerge) GMERGE_FLAG=1 ;;  
+  -gmerge) GMERGE_FLAG=1 ;;
 
   -ions) shift ; IONS=$1 ;;
 
-  -plot) PLOT_FLAG=1 ;;  
-  
+  -plot) PLOT_FLAG=1 ;;
+
   esac
   shift
 done
@@ -515,46 +497,6 @@ then
     python $GACODE_ROOT/python/profiles_gen/profileplot_describe.py
     exit 0
 fi
-
-#=============================================================
-# Manage CREATE MODE
-#
-# -> move original inputfile to inputfile.save
-# -> save result in $FILE
-#
-if [ $CREATEHELP_FLAG -eq 1 ]
-then
-   cat $GACODE_ROOT/shared/profiles_gen/exprotools/README.HELP
-   exit 0
-fi
-
-if [ $CREATE_FLAG -eq 1 ]
-then
-   if [ $FILE_FLAG -eq 1 ]
-   then
-      mv $FILE $FILE.save
-      cp $FILE.save input.profiles
-      echo "INFO: (profiles_gen) Keeping backup of $FILE in $FILE.save"
-      python $GACODE_ROOT/shared/bin/profile_parse.py $FILE
-      echo "INFO: (profiles_gen) Modifying $FILE."
-   else
-      rm -f input.profiles input.profiles.gen
-      FILE=input.profiles
-      echo "INFO: (profiles_gen) Creating $FILE."
-   fi
-   # Run create
-   touch input.create
-   python $GACODE_ROOT/shared/bin/create_parse.py input.create
-   $CREATE
-   # Map output files
-   mv input.profiles.create $FILE 
-   if [ $VERBOSE_FLAG -eq 0 ]
-   then
-      rm -f *.gen out.expro.run
-   fi
-   exit 0 
-fi
-#=============================================================
 
 #=============================================================
 # Filetype detection and management
@@ -605,11 +547,11 @@ if [ "$itype" == "UFILE" ] ; then
    #-----------------------------------------------
 
    echo "INFO: (profiles_gen) Extracting UFILE 0d data."
-   python ${GACODE_ROOT}/shared/bin/gacode_ufile_tool.py *0d.dat $UFILETIME >> out.ufile.log
+   python $PRGEN_BIN/gacode_ufile_tool.py *0d.dat $UFILETIME >> out.ufile.log
    echo "INFO: (profiles_gen) Extracting and averaging UFILE 1d data."
-   python ${GACODE_ROOT}/shared/bin/gacode_ufile_tool.py *1d.dat $UFILETIME >> out.ufile.log
+   python $PRGEN_BIN/gacode_ufile_tool.py *1d.dat $UFILETIME >> out.ufile.log
    echo "INFO: (profiles_gen) Extracting and averaging UFILE 2d data."
-   python ${GACODE_ROOT}/shared/bin/gacode_ufile_tool.py *2d.dat $UFILETIME >> out.ufile.log
+   python $PRGEN_BIN/gacode_ufile_tool.py *2d.dat $UFILETIME >> out.ufile.log
    if [ "$UFILETIME" == "null" ]
    then
       cat out.ufile.log
@@ -631,7 +573,7 @@ fi
 # If file is GACODE, parse it.
 if [ "$itype" == "GACODE" ] ; then
   cp -f input.profiles input.profiles.save
-  python $GACODE_ROOT/shared/bin/profile_parse.py $FILE
+  python $PRGEN_BIN/profile_parse.py $FILE
 fi
 #=============================================================
 
@@ -642,7 +584,7 @@ fi
 if [ "$itype" == "PFILE" ] ; then
    # Now, strip pfile into parts.  Rename $FILE so pfile detected in prgen.
    rm -f pfile.*
-   python $GACODE_ROOT/shared/bin/gacode_pfile_tool.py $FILE
+   python $PRGEN_BIN/gacode_pfile_tool.py $FILE
 fi
 #=============================================================
 
@@ -655,7 +597,7 @@ then
      echo "ERROR: (profiles_gen) You need to build the exprodump executable."
      exit 1
   fi
-  python $GACODE_ROOT/shared/bin/profile_parse.py $FILE
+  python $PRGEN_BIN/profile_parse.py $FILE
   if [ "$DUMP_VAR" == "" ]
   then
      DUMP_VAR=list
@@ -685,7 +627,7 @@ then
      echo "ERROR: (profiles_gen) You need to build the locpargen executable."
      exit 1
   fi
-  python $GACODE_ROOT/shared/bin/profile_parse.py $FILE
+  python $PRGEN_BIN/profile_parse.py $FILE
   cp $FILE.gen temp
   mv temp input.profiles.gen
   echo $LOC_RAD > input.locpargen
@@ -700,7 +642,7 @@ then
   rm input.locpargen
   if [ $PLOT_FLAG -eq 1 ]
   then
-     python $GACODE_ROOT/shared/bin/locpargen_plot.py
+     python $PRGEN_BIN/locpargen_plot.py
   fi 
   exit 0
 fi   
@@ -719,7 +661,7 @@ then
 	    exit
 	fi
     fi
-     
+
    NEO_DIR=$GACODE_ROOT/neo
 
    # Create/recreate vgen work directory
@@ -754,8 +696,8 @@ then
    fi
 
    python $NEO_DIR/bin/neo_parse.py
-   python $GACODE_ROOT/shared/bin/profile_parse.py input.profiles 
-  
+   python $PRGEN_BIN/profile_parse.py input.profiles 
+
    # Construct vgen.dat
    echo "$VGEN_ER"  > vgen.dat
    echo "$VGEN_VEL" >> vgen.dat
@@ -772,7 +714,7 @@ then
       echo $i >> vgen.dat
    fi
    echo "$VGEN_NN_FLAG" >> vgen.dat
-   
+
    # Launch parallel vgen executable
    $GACODE_ROOT/platform/exec/exec.$GACODE_PLATFORM \
     $SIMDIR/vgen $NPROC $VGEN_EXE/vgen $NOMP $NUMA $MPINUMA
@@ -783,7 +725,6 @@ then
        > input.profiles
        DATESTAMP=`date`
        # Manage generated input.profiles and print diagnistics
-       
        echo "# VGEN: The file modified by VGEN on $DATESTAMP" >> input.profiles
        if [ "$VGEN_ER" == "1" ] ; then 
           echo "# VGEN: omega0 computed by force balance (-er 1)" >> input.profiles 
@@ -818,7 +759,7 @@ fi
 if [ $GMERGE_FLAG -eq 1 ] 
 then
    rm -f input.profiles.gen
-   python $GACODE_ROOT/shared/bin/profile_parse.py $FILE
+   python $PRGEN_BIN/profile_parse.py $FILE
    if [ "$FILE" != "input.profiles" ] ; then
       mv $FILE.gen input.profiles.gen
    fi

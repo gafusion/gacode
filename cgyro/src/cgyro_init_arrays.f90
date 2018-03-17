@@ -43,30 +43,34 @@ subroutine cgyro_init_arrays
 
         ! Need this for (Phi, A_parallel) terms in GK and field equations
 
-        jloc_c(1,ic) = bessel_j0(abs(arg))
+        jloc_c(1,ic) = bessel_j0(arg)
 
         ! Needed for B_parallel in GK and field equations
 
-        jloc_c(2,ic) = 0.5*(jloc_c(1,ic) + bessel_jn(2,abs(arg)))/bmag(it)
-
+        jloc_c(2,ic) = 0.5*(jloc_c(1,ic) + bessel_jn(2,arg))/bmag(it)
+        
      enddo
 
-     ! psi factors
+     ! Psi factors: 
+
+     ! J0 phi
      efac = 1.0
      jvec_c(1,:,iv_loc) = efac*jloc_c(1,:)
      
      if (n_field > 1) then
+        ! J0 vpar Apar
         efac = -xi(ix)*sqrt(2.0*energy(ie))*vth(is)
         jvec_c(2,:,iv_loc) = efac*jloc_c(1,:)
         
         if (n_field > 2) then
+           ! J2 bpar
            efac = 2.0*energy(ie)*(1-xi(ix)**2)*temp(is)/z(is)
            jvec_c(3,:,iv_loc) = efac*jloc_c(2,:)
         endif
 
      endif
      
-     ! chi factors
+     ! Chi factors (for momentum flux, not GK equation) 
      do ic=1,nc
         it = it_c(ic)
         fac = rho * temp(is)/(z(is) * bmag(it)) * bpol(it)/bmag(it) &

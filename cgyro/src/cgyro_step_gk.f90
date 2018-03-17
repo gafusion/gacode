@@ -56,7 +56,7 @@ subroutine cgyro_filter
 
   integer :: ir
   
-  if (n == 0 .and. zf_test_flag == 0) then
+  if (zf_test_mode == 0 .and. n == 0) then
      do ic=1,nc
         ir = ir_c(ic) 
         if (ir == 1 .or. px(ir) == 0) then

@@ -48,7 +48,7 @@ subroutine cgyro_init_h
 
      h_x(:,:) = (0.0,0.0)
 
-     if (zf_test_flag == 1) then
+     if (zf_test_mode == 1) then
 
         ! 1. ZONAL-FLOW TEST
 
@@ -79,9 +79,15 @@ subroutine cgyro_init_h
            enddo
         enddo
 
+     else if (zf_test_mode >= 2) then
+
+        ! 2. ELECTROMAGNETIC ZONAL-FLOW TEST
+
+        call cgyro_zftest_em
+
      else if (n_toroidal == 1 .and. n > 0) then
 
-        ! 2. LINEAR n>0 SIMULATION
+        ! 3. LINEAR n>0 SIMULATION
 
         do iv=nv1,nv2
 
@@ -101,7 +107,7 @@ subroutine cgyro_init_h
 
      else
 
-        ! 3. GENERAL CASE
+        ! 4. GENERAL CASE
 
         do ic=1,nc
 

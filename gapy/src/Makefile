@@ -6,6 +6,8 @@ LMATH:=$(filter-out -lfftw3,$(LMATH))
 LMATH:=$(filter-out -lfftw3f,$(LMATH))
 LMATH:=$(filter-out -lfftw3_threads,$(LMATH))
 LMATH:=$(filter-out -lfftw3f_threads,$(LMATH))
+LMATH:=$(filter-out -lcufft,$(LMATH))
+F2PYM:=$(filter-out --fcompiler=pg,$(F2PY))
 
 ifndef F2PY
    all:
@@ -14,7 +16,7 @@ else
 endif
 
 objs:
-	${F2PY} --quiet -m gapy -h sgn.pyf gapy_math.f90 gapy_fluct.f90
+	${F2PYM} --quiet -m gapy -h sgn.pyf gapy_math.f90 gapy_fluct.f90
 	${F2PY} --quiet -lgomp --f90flags='${FOMP} ${FOPT}' -c sgn.pyf gapy_math.f90 gapy_fluct.f90 ${GACODE_ROOT}/shared/math/math_lib.a ${LMATH}
 
 	rm -f ${DESTLIB}
