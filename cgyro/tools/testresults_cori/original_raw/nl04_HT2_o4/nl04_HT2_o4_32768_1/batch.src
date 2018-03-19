@@ -1,0 +1,10 @@
+#!/bin/bash -l
+#SBATCH -J nl04_HT2_o4_32768_1
+#SBATCH -A atom
+#SBATCH -C knl,quad,cache
+#SBATCH -o /global/cscratch1/sd/sfiligoi/v1710/tests/nl04_HT2_o4/nl04_HT2_o4_32768_1/batch.out
+#SBATCH -e /global/cscratch1/sd/sfiligoi/v1710/tests/nl04_HT2_o4/nl04_HT2_o4_32768_1/batch.err
+#SBATCH -q regular
+#SBATCH -t 00:30:00
+#SBATCH -N 1024
+cgyro -e nl04_HT2_o4_32768_1 -n 32768 -nomp 4 -numa 1 -mpinuma 32 -p /global/cscratch1/sd/sfiligoi/v1710/tests/nl04_HT2_o4
