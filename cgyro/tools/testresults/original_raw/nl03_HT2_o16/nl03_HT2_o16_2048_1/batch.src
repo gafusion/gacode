@@ -1,0 +1,10 @@
+#!/bin/bash -l
+#SBATCH -J nl03_HT2_o16_2048_1
+#SBATCH -A atom
+#SBATCH -C knl,quad,cache
+#SBATCH -o /global/cscratch1/sd/sfiligoi/v1710/tests/nl03_HT2_o16/nl03_HT2_o16_2048_1/batch.out
+#SBATCH -e /global/cscratch1/sd/sfiligoi/v1710/tests/nl03_HT2_o16/nl03_HT2_o16_2048_1/batch.err
+#SBATCH -q regular
+#SBATCH -t 00:20:00
+#SBATCH -N 256
+cgyro -e nl03_HT2_o16_2048_1 -n 2048 -nomp 16 -numa 1 -mpinuma 8 -p /global/cscratch1/sd/sfiligoi/v1710/tests/nl03_HT2_o16
