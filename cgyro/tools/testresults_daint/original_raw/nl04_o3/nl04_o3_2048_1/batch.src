@@ -1,0 +1,12 @@
+#!/bin/bash -l
+#SBATCH -J nl04_o3_2048_1
+#SBATCH -o /scratch/snx3000/sfiligoi/v1711/tests/nl04_o3/nl04_o3_2048_1/batch.out
+#SBATCH -e /scratch/snx3000/sfiligoi/v1711/tests/nl04_o3/nl04_o3_2048_1/batch.err
+#SBATCH --partition=normal
+#SBATCH --constraint=gpu
+#SBATCH --time=00:20:00
+#SBATCH --nodes=512
+#SBATCH --ntasks-per-core=1
+#SBATCH --ntasks-per-node=4
+#SBATCH --cpus-per-task=3
+cgyro -e nl04_o3_2048_1 -n 2048 -nomp 3 -numa 1 -mpinuma 4 -p /scratch/snx3000/sfiligoi/v1711/tests/nl04_o3
