@@ -1,0 +1,9 @@
+#!/bin/bash -l
+#SBATCH -J nl04_HT2_o12_1024_1
+#SBATCH -o /scratch/05222/sfilig/tests/v1710_skx/tests/nl04_HT2_o12/nl04_HT2_o12_1024_1/batch.out
+#SBATCH -e /scratch/05222/sfilig/tests/v1710_skx/tests/nl04_HT2_o12/nl04_HT2_o12_1024_1/batch.err
+#SBATCH -p skx-normal
+#SBATCH -t 00:20:00
+#SBATCH -N 128
+#SBATCH -n 1024
+cgyro -e nl04_HT2_o12_1024_1 -n 1024 -nomp 12 -numa 1 -mpinuma 8 -p /scratch/05222/sfilig/tests/v1710_skx/tests/nl04_HT2_o12
