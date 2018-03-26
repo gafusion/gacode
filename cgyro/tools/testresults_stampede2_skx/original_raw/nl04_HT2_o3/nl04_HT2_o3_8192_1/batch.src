@@ -1,9 +1,0 @@
-#!/bin/bash -l
-#SBATCH -J nl04_HT2_o3_8192_1
-#SBATCH -o /scratch/05222/sfilig/tests/v1710_skx/tests/nl04_HT2_o3/nl04_HT2_o3_8192_1/batch.out
-#SBATCH -e /scratch/05222/sfilig/tests/v1710_skx/tests/nl04_HT2_o3/nl04_HT2_o3_8192_1/batch.err
-#SBATCH -p skx-large
-#SBATCH -t 00:20:00
-#SBATCH -N 256
-#SBATCH -n 8192
-cgyro -e nl04_HT2_o3_8192_1 -n 8192 -nomp 3 -numa 1 -mpinuma 32 -p /scratch/05222/sfilig/tests/v1710_skx/tests/nl04_HT2_o3

@@ -1,9 +1,0 @@
-#!/bin/bash -l
-#SBATCH -J weak4_HT2_o12_1536_1
-#SBATCH -o /scratch/05222/sfilig/tests/v1710_skx/tests/weak4_HT2_o12/weak4_HT2_o12_1536_1/batch.out
-#SBATCH -e /scratch/05222/sfilig/tests/v1710_skx/tests/weak4_HT2_o12/weak4_HT2_o12_1536_1/batch.err
-#SBATCH -p skx-large
-#SBATCH -t 00:20:00
-#SBATCH -N 192
-#SBATCH -n 1536
-cgyro -e weak4_HT2_o12_1536_1 -n 1536 -nomp 12 -numa 1 -mpinuma 8 -p /scratch/05222/sfilig/tests/v1710_skx/tests/weak4_HT2_o12

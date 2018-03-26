@@ -1,9 +1,0 @@
-#!/bin/bash -l
-#SBATCH -J nl01_HT2_o6_64_1
-#SBATCH -o /scratch/05222/sfilig/tests/v1710_skx/tests/nl01_HT2_o6/nl01_HT2_o6_64_1/batch.out
-#SBATCH -e /scratch/05222/sfilig/tests/v1710_skx/tests/nl01_HT2_o6/nl01_HT2_o6_64_1/batch.err
-#SBATCH -p skx-dev
-#SBATCH -t 00:20:00
-#SBATCH -N 4
-#SBATCH -n 64
-cgyro -e nl01_HT2_o6_64_1 -n 64 -nomp 6 -numa 1 -mpinuma 16 -p /scratch/05222/sfilig/tests/v1710_skx/tests/nl01_HT2_o6

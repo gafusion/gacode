@@ -1,9 +1,0 @@
-#!/bin/bash -l
-#SBATCH -J nl01_HT2_o12_256_1
-#SBATCH -o /scratch/05222/sfilig/tests/v1710_skx/tests/nl01_HT2_o12/nl01_HT2_o12_256_1/batch.out
-#SBATCH -e /scratch/05222/sfilig/tests/v1710_skx/tests/nl01_HT2_o12/nl01_HT2_o12_256_1/batch.err
-#SBATCH -p skx-normal
-#SBATCH -t 00:20:00
-#SBATCH -N 8
-#SBATCH -n 256
-cgyro -e nl01_HT2_o12_256_1 -n 256 -nomp 3 -numa 1 -mpinuma 32 -p /scratch/05222/sfilig/tests/v1710_skx/tests/nl01_HT2_o12

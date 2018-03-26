@@ -1,9 +1,0 @@
-#!/bin/bash -l
-#SBATCH -J strong_HT2_o4_16384_1
-#SBATCH -o /scratch/05222/sfilig/tests/v1710/tests/strong_HT2_o4/strong_HT2_o4_16384_1/batch.out
-#SBATCH -e /scratch/05222/sfilig/tests/v1710/tests/strong_HT2_o4/strong_HT2_o4_16384_1/batch.err
-#SBATCH -p large
-#SBATCH -t 00:30:00
-#SBATCH -N 512
-#SBATCH -n 16384
-cgyro -e strong_HT2_o4_16384_1 -n 16384 -nomp 4 -numa 1 -mpinuma 32 -p /scratch/05222/sfilig/tests/v1710/tests/strong_HT2_o4

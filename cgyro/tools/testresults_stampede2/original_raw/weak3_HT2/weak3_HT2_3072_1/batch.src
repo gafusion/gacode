@@ -1,9 +1,0 @@
-#!/bin/bash -l
-#SBATCH -J weak3_HT2_3072_1
-#SBATCH -o /scratch/05222/sfilig/tests/v1710/tests/weak3_HT2/weak3_HT2_3072_1/batch.out
-#SBATCH -e /scratch/05222/sfilig/tests/v1710/tests/weak3_HT2/weak3_HT2_3072_1/batch.err
-#SBATCH -p normal
-#SBATCH -t 00:45:00
-#SBATCH -N 48
-#SBATCH -n 3072
-cgyro -e weak3_HT2_3072_1 -n 3072 -nomp 2 -numa 1 -mpinuma 64 -p /scratch/05222/sfilig/tests/v1710/tests/weak3_HT2

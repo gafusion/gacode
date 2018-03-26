@@ -1,9 +1,0 @@
-#!/bin/bash -l
-#SBATCH -J strong_HT2_o12_2048_1
-#SBATCH -o /scratch/05222/sfilig/tests/v1710_skx/tests/strong_HT2_o12/strong_HT2_o12_2048_1/batch.out
-#SBATCH -e /scratch/05222/sfilig/tests/v1710_skx/tests/strong_HT2_o12/strong_HT2_o12_2048_1/batch.err
-#SBATCH -p skx-large
-#SBATCH -t 00:50:00
-#SBATCH -N 256
-#SBATCH -n 2048
-cgyro -e strong_HT2_o12_2048_1 -n 2048 -nomp 12 -numa 1 -mpinuma 8 -p /scratch/05222/sfilig/tests/v1710_skx/tests/strong_HT2_o12
