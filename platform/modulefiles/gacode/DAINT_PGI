@@ -1,0 +1,24 @@
+#%Module
+#
+# Module file for setting the GACODE machine-dependent environmental variables
+#
+
+setenv GACODE_PLATFORM [lrange [file split ${ModulesCurrentModulefile}]	end end]
+set GACODE_PLATFORM $::env(GACODE_PLATFORM)
+puts stderr "Use GACODE_PLATFORM: ${GACODE_PLATFORM}"
+
+module switch PrgEnv-cray PrgEnv-pgi
+
+module load daint-gpu
+
+
+module load fftw
+module load cray-netcdf
+
+# needed for cufft
+export CRAYPE_LINK_TYPE=dynamic
+
+# Note:
+# DO NOT load craype-accel-nvidia60 or cudatoolkit as they will
+# conflict with the PGI-provided cufft wrappers
+

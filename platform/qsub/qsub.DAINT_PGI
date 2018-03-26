@@ -1,0 +1,25 @@
+#!/bin/bash
+
+echo "-queue: debug, normal"
+
+# Default queue
+if [ "$QUEUE" == "null_queue" ] ; then
+   QUEUE=debug
+fi
+
+let mpn=$nmpi/$nodes
+
+bfile=$SIMDIR/batch.src
+echo "#!/bin/bash -l" > $bfile
+echo "#SBATCH -J $LOCDIR" >> $bfile
+echo "#SBATCH -o $SIMDIR/batch.out" >> $bfile
+echo "#SBATCH -e $SIMDIR/batch.err" >> $bfile
+echo "#SBATCH --partition=$QUEUE" >> $bfile
+echo "#SBATCH --constraint=gpu" >> $bfile
+echo "#SBATCH --time=$WALLTIME" >> $bfile
+echo "#SBATCH --nodes=$nodes" >> $bfile
+echo "#SBATCH --ntasks-per-core=1" >> $bfile
+echo "#SBATCH --ntasks-per-node=$mpn" >> $bfile
+echo "#SBATCH --cpus-per-task=$nomp" >> $bfile
+
+echo "$CODE -e $LOCDIR -n $nmpi -nomp $nomp -numa $numa -mpinuma $mpinuma -p $SIMROOT" >> $bfile
