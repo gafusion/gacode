@@ -34,6 +34,7 @@ subroutine neo_read_input
   read(1,*) rotation_model
   read(1,*) omega_rot_in
   read(1,*) omega_rot_deriv_in
+  read(1,*) rbf_dir
 
   read(1,*) spitzer_model
   read(1,*) epar0_spitzer

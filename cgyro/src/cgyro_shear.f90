@@ -13,11 +13,11 @@ subroutine cgyro_shear
   implicit none
 
   ! Spectral ExB shear
-  call timer_lib_in('shear')
   if (shear_method == 1) then
      ! Discrete shift (Hammett) 
+     call timer_lib_in('shear')
      call cgyro_shear_hammett
+     call timer_lib_out('shear')
   endif
-  call timer_lib_out('shear')
 
 end subroutine cgyro_shear

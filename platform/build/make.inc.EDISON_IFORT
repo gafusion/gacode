@@ -1,0 +1,24 @@
+# FIXED Hardware parameters
+IDENTITY="NERSC Edison (ifort)"
+CORES_PER_NODE=24
+NUMAS_PER_NODE=2
+
+# Compilers and flags
+FC     = ftn -gen-interfaces -module ${GACODE_ROOT}/modules
+F77    = ${FC}
+
+FOMP   = -qopenmp
+FMATH  = -real-size 64
+FOPT   = -Ofast
+FDEBUG = -eD -Ktrap=fp -m 1
+
+# System math libraries
+LMATH = -lfftw3_threads -lfftw3f_threads -lfftw3 -lfftw3f
+
+# NetCDF
+NETCDF=-L${NETCDF_DIR}/lib -lnetcdff -L/opt/cray/hdf5-parallel/1.10.0.3/GNU/4.9/lib -lnetcdf
+NETCDF_INC=${NETCDF_DIR}/include
+ 
+# Archive 
+ARCH = ar cr
+

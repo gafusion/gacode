@@ -11,7 +11,6 @@ EXEC = neo
 OBJECTS = neo_globals.o \
           neo_energy_grid.o \
           neo_interface.o \
-          neo_profile_exp.o \
           neo_allocate_profile.o \
           neo_sparse_solve.o \
           neo_equilibrium.o \
@@ -23,13 +22,13 @@ OBJECTS = neo_globals.o \
           neo_3d_driver.o \
           neo_check.o \
           neo_compute_fcoll.o \
+	  neo_rbf.o \
+	  neo_neural.o \
           neo_do.o \
           neo_error.o \
-          neo_experimental_profiles.o \
           neo_init.o \
           neo_init_serial.o \
           neo_make_profiles.o \
-          neo_map_experimental_profiles.o \
           neo_read_input.o \
           neo_run.o \
           neo_spitzer.o 

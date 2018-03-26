@@ -12,6 +12,7 @@ subroutine cgyro_error_estimate
   use mpi
   use cgyro_globals
   use cgyro_io
+  use timer_lib
 
   implicit none
 
@@ -32,6 +33,8 @@ subroutine cgyro_error_estimate
 
   pair_loc(1) = sum(abs(h_x))
   pair_loc(2) = sum(abs(rhs(:,:,1)))
+
+  call timer_lib_in('str_comm')
 
   ! sum over velocity space
   call MPI_ALLREDUCE(pair_loc,&
@@ -62,6 +65,8 @@ subroutine cgyro_error_estimate
        MPI_SUM, &
        NEW_COMM_2, &
        i_err)
+
+  call timer_lib_out('str_comm')
 
   integration_error = integration_error/norm
 

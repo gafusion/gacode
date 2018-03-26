@@ -19,10 +19,9 @@ subroutine cgyro_advect_wavenumber(ij)
   complex, dimension(nv_loc) :: dh
   real :: scale
 
-  call timer_lib_in('shear')
-
   ! Wavenumber advection ExB shear
   if (shear_method == 2) then
+     call timer_lib_in('shear')
      allocate(h0(nv_loc,1-2*n_wave:n_radial+2*n_wave))
      ! Zero wavenumber (probably causes boundary reflection)
 !$omp parallel do private(j,ir,h0,dh,l,ll,ic)
@@ -70,12 +69,14 @@ subroutine cgyro_advect_wavenumber(ij)
      endif
 
      deallocate(h0)
+     call timer_lib_out('shear')
   endif
 
   !-------------------------------------------------------------------------
 
   ! Wavenumber advection profile shear
   if (profile_shear_flag == 1) then
+     call timer_lib_in('shear')
      allocate(h0(nv_loc,1-2*n_wave:n_radial+2*n_wave))
      ! Zero wavenumber (probably causes boundary reflection)
 !$omp parallel do private(j,ir,iv_loc,h0,dh,l,ll,ic)
@@ -97,8 +98,7 @@ subroutine cgyro_advect_wavenumber(ij)
         enddo
      enddo
      deallocate(h0)
+     call timer_lib_out('shear')
   endif
-
-  call timer_lib_out('shear')
 
 end subroutine cgyro_advect_wavenumber

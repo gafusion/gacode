@@ -1,0 +1,166 @@
+#!/bin/bash
+#------------------------------------------------------
+# gacode_qsub_multi
+#
+# PURPOSE:
+#  High-level management of batch submission 
+#    of multiple mpi ranks
+#  Meant for scaling testing
+#--------------------------------------------------------
+
+#=============================================================
+# Syntax validity check and help message 
+#
+n=$#
+
+if [ $n -eq 0 ]
+then
+   echo
+  echo "Usage:   gacode_qsub [options]"
+  echo
+  echo "         -s"
+  echo "         Submit generated batch script.  Otherwise just print diagnostics."
+  echo
+  echo "         -p <path>"
+  echo "         Set optional path to simulation directory."
+  echo "         [The default path is the current directory]"
+  echo
+  echo "         -e <simdir>" 
+  echo "         Run <code> using input.<code> in <simdir>."
+  echo
+  echo "         -code <code>"
+  echo "         <code>=tgyro,gyro,neo"
+  echo
+  echo "         -I <iterations>"
+  echo "         Number of iterations"
+  echo
+  echo "         -N \"<MPI tasks> <MPI tasks> ... <MPI tasks>\"" 
+  echo "         List of MPI tasks."
+  echo
+  echo "         -nomp <threads>" 
+  echo "         Number of OpenMP threads per MPI task."
+  echo
+  echo "         -numa <n>" 
+  echo "         NUMAs active per node."
+  echo
+  echo "         -mpinuma <n>" 
+  echo "         MPI tasks per active NUMA."
+  echo
+  echo "         -queue"
+  echo "         Queue name"
+  echo
+  echo "         -qos"
+  echo "         Quality of service (Cori Haswell only)"
+  echo
+  echo "         -w"
+  echo "         Wallclock limit (default 0:59:00)"
+  echo
+  echo "         -repo"
+  echo "         Repository name"
+  echo
+
+  exit 1
+fi
+#=============================================================
+
+#=============================================================
+# Define variables for flag capture with defaults
+#
+user=`whoami`
+CODE=cgyro
+SUB_FLAG=0
+QUEUE=null_queue
+QOS=normal
+WALLTIME=0:59:00
+REPO=null_repo
+
+# Default simulation root and gyro directory
+LOCDIR=.
+SIMROOT=$PWD
+
+# Default number of cores
+mpilist="1"
+nomp=1
+numa=0
+mpinuma=0
+niter=1
+
+APPEND_STR=""
+
+#=============================================================
+# Parse command line options
+#
+while [ $# -gt 0 ] ; do
+  case "$1" in
+
+  -s) APPEND_STR="$APPEND_STR -s"; SUB_FLAG=1 ;;
+
+  -p) shift ; SIMROOT=$1 ;;
+
+  -code) shift ; CODE=$1 ;;
+
+  -e) APPEND_STR="$APPEND_STR -e ."; shift ; LOCDIR=$1 ; EXEC_FLAG=1 ;;
+
+  -N) shift ; mpilist=$1 ;;
+
+  -nomp) shift ; nomp=$1 ;;
+
+  -numa) shift ; numa=$1 ;;
+
+  -mpinuma) shift ; mpinuma=$1 ;;
+
+  -niter) shift ; niter=$1 ;;
+
+  -queue) shift ; QUEUE=$1 ;;
+
+  -qos) shift ; QOS=$1 ;;
+
+  -w) shift ; WALLTIME=$1 ;;
+
+  -repo) shift ; REPO=$1 ; APPEND_STR="$APPEND_STR -repo ${REPO}" ;;
+
+   *) echo "ERROR (gacode_qsub_multi): Incorrect syntax." ; exit 1 ;;
+ 
+  esac
+  shift
+done
+#==============================================================
+
+#==============================================================
+# Manage paths
+#
+if [ "$LOCDIR" == "." ]
+then
+   LOCDIR=`basename $PWD`
+   cd .. ; SIMROOT=$PWD
+fi
+SIMDIR=$SIMROOT/$LOCDIR
+
+STARTDIR=`pwd`
+
+for ((iter=1; $iter<=$niter; iter++))
+do
+  for nmpi in ${mpilist}
+  do
+    SUBDIR=${LOCDIR}_${nmpi}_${iter}
+    mkdir "${SIMDIR}/${SUBDIR}"
+    if [ $? -ne 0 ]; then
+      echo "ERROR, failed to create ${SIMDIR}/${SUBDIR}"; exit 1;
+    fi
+
+    if [ "$CODE" == "cgyro" ]; then
+      cp "${SIMDIR}/input.cgyro" "${SIMDIR}/${SUBDIR}/input.cgyro"
+      if [ $? -ne 0 ]; then
+        echo "ERROR, failed to copy ${SIMDIR}/input.cgyro into ${SIMDIR}/${SUBDIR}"; exit 1;
+      fi
+    else
+      echo "ERROR, not supported for code $CODE found"; exit 1
+    fi
+
+    echo "[$SUBDIR] gacode_qsub -n $nmpi"
+    cd "${SIMDIR}/${SUBDIR}" && $GACODE_ROOT/shared/bin/gacode_qsub -n $nmpi -nomp $nomp -numa $numa -mpinuma $mpinuma -w $WALLTIME -qos $QOS -queue $QUEUE -code $CODE $APPEND_STR
+    cd "$STARTDIR"
+  done
+
+done
+

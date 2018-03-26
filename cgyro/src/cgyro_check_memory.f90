@@ -54,15 +54,15 @@ subroutine cgyro_check_memory(datafile)
            ny0 = 2*n_toroidal-1
            nx = (3*nx0)/2
            ny = (3*ny0)/2
-           call cgyro_alloc_add(io,(ny/2+1)*nx*16.0,'fx')
-           call cgyro_alloc_add(io,(ny/2+1)*nx*16.0,'gx')
-           call cgyro_alloc_add(io,(ny/2+1)*nx*16.0,'fy')
-           call cgyro_alloc_add(io,(ny/2+1)*nx*16.0,'gy')
-           call cgyro_alloc_add(io,ny*nx*8.0,'ux')
-           call cgyro_alloc_add(io,ny*nx*8.0,'vx')
-           call cgyro_alloc_add(io,ny*nx*8.0,'uy')
-           call cgyro_alloc_add(io,ny*nx*8.0,'vy')
-           call cgyro_alloc_add(io,ny*nx*8.0,'uv')
+           call cgyro_alloc_add(io,(ny/2+1)*nx*16.0*n_omp,'fx')
+           call cgyro_alloc_add(io,(ny/2+1)*nx*16.0*n_omp,'gx')
+           call cgyro_alloc_add(io,(ny/2+1)*nx*16.0*n_omp,'fy')
+           call cgyro_alloc_add(io,(ny/2+1)*nx*16.0*n_omp,'gy')
+           call cgyro_alloc_add(io,ny*nx*8.0*nsplit,'ux')
+           call cgyro_alloc_add(io,ny*nx*8.0*n_omp,'vx')
+           call cgyro_alloc_add(io,ny*nx*8.0*nsplit,'uy')
+           call cgyro_alloc_add(io,ny*nx*8.0*n_omp,'vy')
+           call cgyro_alloc_add(io,ny*nx*8.0*n_omp,'uv')
         endif
      endif
 
@@ -106,9 +106,13 @@ subroutine cgyro_check_memory(datafile)
         if (nonlinear_method == 1) then
            call cgyro_alloc_add(io,nc*nsplit*n_toroidal*16.0,'f_nl')
            call cgyro_alloc_add(io,nc*nsplit*n_toroidal*16.0,'g_nl')
+           call cgyro_alloc_add(io,nc*nsplit*n_toroidal*16.0,'fpack')
+           call cgyro_alloc_add(io,nc*nsplit*n_toroidal*16.0,'gpack')
         else
            call cgyro_alloc_add(io,n_radial*nsplit*n_toroidal*16.0,'f_nl')
            call cgyro_alloc_add(io,n_radial*nsplit*n_toroidal*16.0,'g_nl')
+           call cgyro_alloc_add(io,n_radial*nsplit*n_toroidal*16.0,'fpack')
+           call cgyro_alloc_add(io,n_radial*nsplit*n_toroidal*16.0,'gpack')
         endif
      endif
 
@@ -118,6 +122,10 @@ subroutine cgyro_check_memory(datafile)
 
      if(collision_model == 5) then
         call cgyro_alloc_add(io,(8.0*n_xi)*n_xi*n_species*n_energy*n_theta,'cmat')
+     elseif(collision_model == 6) then
+        call cgyro_alloc_add(io,(8.0*nv)*nv*n_theta,'cmat_base')
+        call cgyro_alloc_add(io,(4.0*nv)*nv*nc_loc,'cmat_diff')
+        call cgyro_alloc_add(io,(8.0*nv)*nv*nc_loc,'cmat (temp)')
      else
         call cgyro_alloc_add(io,(8.0*nv)*nv*nc_loc,'cmat')
      endif

@@ -1,0 +1,30 @@
+#----------------------------------------------------------
+# STAMPEDE2 (TACC) [KNL nodes]
+#
+# - 64 cores * 4 hyperthreads (assign hypethreads to numas)
+#----------------------------------------------------------
+
+IDENTITY="TACC STAMPEDE2 KNL (ifort)"
+CORES_PER_NODE=128
+NUMAS_PER_NODE=1
+
+# Compilers and flags
+FC     = mpiifort -gen-interfaces -mod ${GACODE_ROOT}/modules -I${GACODE_ROOT}/module -I${TACC_MKL_INC}/fftw
+F77    = ${FC}
+
+FOMP   = -qopenmp
+FMATH  = -real-size 64
+FOPT   = -xMIC-AVX512 -Ofast
+FDEBUG = -eD -Ktrap=fp -m 1
+
+# System math libraries
+LMATH = -mkl
+
+# NetCDF
+NETCDF_DIR=$TACC_NETCDF_DIR
+NETCDF=-L${NETCDF_DIR}/lib -lnetcdff -lnetcdf
+NETCDF_INC = ${NETCDF_DIR}/include
+
+# Archive 
+ARCH = ar cr
+

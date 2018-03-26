@@ -63,6 +63,9 @@ contains
     use neo_equilibrium
     implicit none
     integer, intent (in) :: ir
+    real, parameter :: temp_norm_fac = 1602.2
+    real, parameter :: charge_norm_fac = 1.6022
+    real, parameter :: mass_deuterium = 3.3452
     real, parameter :: potato_flag=0
     real, parameter :: squeeze_flag=0
     real, parameter :: z_protonmass=1.6726
@@ -117,8 +120,6 @@ contains
        ! Set T_norm = 1kEV and a_meters=1m
        ! Then determine B_unit from input rho_star
        ! Dens in units and norm will be determined from input collision freqs
-       temp_norm_fac   = 1.6022*1000
-       charge_norm_fac = 1.6022
        a_meters        = 1.0
        temp_norm(ir)   = 1.0
        vth_norm(ir)    = sqrt(temp_norm(ir) * temp_norm_fac &

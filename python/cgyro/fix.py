@@ -2,7 +2,6 @@
 
 import sys
 import numpy as np
-from gacodeplotdefs import *
 from gacodefuncs import *
 from cgyro.data import cgyrodata
 

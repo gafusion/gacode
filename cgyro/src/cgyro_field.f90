@@ -21,7 +21,7 @@ subroutine cgyro_field_v
   implicit none
 
   
-  call timer_lib_in('field_H')
+  call timer_lib_in('field')
 
   field_loc(:,:) = (0.0,0.0)
 
@@ -35,6 +35,10 @@ subroutine cgyro_field_v
      enddo
   enddo
 
+  call timer_lib_out('field')
+
+  call timer_lib_in('field_com')
+
   call MPI_ALLREDUCE(field_loc(:,:),&
        field(:,:),&
        size(field(:,:)),&
@@ -43,6 +47,10 @@ subroutine cgyro_field_v
        NEW_COMM_1,&
        i_err)
 
+   call timer_lib_out('field_com')
+  
+  call timer_lib_in('field')
+
   ! Poisson LHS factors
   if (n == 0 .and. ae_flag == 1) then
      call cgyro_field_ae('v')
@@ -50,7 +58,7 @@ subroutine cgyro_field_v
      field(:,:) = fcoef(:,:)*field(:,:)
   endif
 
-  call timer_lib_out('field_H')
+  call timer_lib_out('field')
 
 end subroutine cgyro_field_v
 
@@ -70,7 +78,7 @@ subroutine cgyro_field_c
   
   complex, dimension(nc) :: tmp
   
-  call timer_lib_in('field_h')
+  call timer_lib_in('field')
 
   field_loc(:,:) = (0.0,0.0)
 
@@ -87,6 +95,10 @@ subroutine cgyro_field_c
 !$omp end do
 !$omp end parallel
 
+  call timer_lib_out('field')
+
+  call timer_lib_in('field_com')
+
   call MPI_ALLREDUCE(field_loc(:,:),&
        field(:,:),&
        size(field(:,:)),&
@@ -95,12 +107,16 @@ subroutine cgyro_field_c
        NEW_COMM_1,&
        i_err)
 
+  call timer_lib_out('field_com')
+
   if (n_field > 2) then
      field(3,:) = field(3,:)*fcoef(3,:)
   endif
 
+  call timer_lib_in('field')
+
   ! Poisson LHS factors
- if (n == 0 .and. ae_flag == 1) then
+  if (n == 0 .and. ae_flag == 1) then
     call cgyro_field_ae('c')
   else
      if (n_field > 2) then
@@ -128,10 +144,9 @@ subroutine cgyro_field_c
      enddo
   enddo
 
-  call timer_lib_out('field_h')
+  call timer_lib_out('field')
 
 end subroutine cgyro_field_c
-
 
 !-----------------------------------------------------------------
 ! Adiabatic electron field solves for n=0
@@ -139,12 +154,15 @@ end subroutine cgyro_field_c
 subroutine cgyro_field_ae(space)
 
   use cgyro_globals
-  
+  use timer_lib  
+
   implicit none
 
   character(len=1), intent(in) :: space
   integer :: ir,i,j
   real, dimension(n_theta) :: pvec_inr, pvec_ini
+
+  call timer_lib_in('field')
 
   if (space == 'c') then
      do ir=1,n_radial
@@ -195,5 +213,7 @@ subroutine cgyro_field_ae(space)
         endif
      enddo
   endif
+
+  call timer_lib_out('field')
 
 end subroutine cgyro_field_ae

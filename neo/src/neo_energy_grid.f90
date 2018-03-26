@@ -298,7 +298,6 @@ contains
     integer :: fmarg
     integer :: is, js, ie, je, ix, jx, ke, me
     real :: zarg0, zarg1, zarg2
-    integer :: is_ele
 
     emat_coll_test(:,:,:,:,:)  = 0.0
     emat_coll_field(:,:,:,:,:) = 0.0
@@ -763,14 +762,7 @@ contains
     endif
 
     if(coll_uncoupledei_model == 1 .or. coll_uncoupledei_model == 2) then
-       is_ele = -1
-       do is=1, n_species
-          if(Z(is) < 0.0) then
-             is_ele = is
-             exit
-          endif
-       enddo
-       if(is_ele == -1) then
+       if(adiabatic_ele_model == 1) then
           call neo_error('ERROR: (NEO) Must have electron species for uncoupled e-i problem')
           return
        endif

@@ -59,6 +59,8 @@ subroutine cgyro_kernel
   call timer_lib_in('io_init')
   call cgyro_write_timedata
   call timer_lib_out('io_init')
+  call write_timers(trim(path)//runfile_timers)
+
   io_control = 2*(1-silent_flag)
 
   do i_time=1,n_time
@@ -93,17 +95,17 @@ subroutine cgyro_kernel
      !------------------------------------------------------------
 
      !------------------------------------------------------------
+     ! Spectral ExB shear
+     call cgyro_shear
+     !------------------------------------------------------------
+
+     !------------------------------------------------------------
      ! Diagnostics
      !
      ! NOTE: Fluxes are calculated in cgyro_write_timedata
 
      ! Error estimate
      call cgyro_error_estimate
-     !------------------------------------------------------------
-
-     !------------------------------------------------------------
-     ! Spectral ExB shear
-     call cgyro_shear
      !------------------------------------------------------------
 
      !---------------------------------------
@@ -121,6 +123,9 @@ subroutine cgyro_kernel
      !---------------------------------------
 
      call timer_lib_out('TOTAL')
+
+     ! Don't wrap timer output in a timer
+     if (mod(i_time,print_step) == 0) call write_timers(trim(path)//runfile_timers)
 
      if (abs(signal) == 1 .or. error_status > 0) exit
 
@@ -195,6 +200,12 @@ subroutine cgyro_kernel
 
   if(allocated(cmat))       then
      deallocate(cmat)
+  endif
+  if(allocated(cmat_diff))       then
+     deallocate(cmat_diff)
+  endif
+  if(allocated(cmat_base))       then
+     deallocate(cmat_base)
   endif
 
   !call GEO_alloc(0)

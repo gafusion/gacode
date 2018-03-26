@@ -1,0 +1,37 @@
+#! /usr/bin/env bash 
+#
+# SCRIPT:
+#  gyro.CORI_KNL
+#
+# FUNCTION:
+#  Parallel execution script
+#---------------------------------------------------
+
+simdir=${1}
+nmpi=${2}
+exec=${3}
+nomp=${4}
+numa=${5}
+mpinuma=${6}
+nidle=${7}
+
+# nmpi = MPI tasks
+# nomp = OpenMP threads per MPI task
+# numa = NUMAs active per node
+# mpinuma = MPI tasks per active NUMA 
+
+. $GACODE_ROOT/shared/bin/gacode_mpi_tool
+
+cd $simdir
+
+if [ "$nomp" -lt 2 ]; then
+  echo "WARNING: This mode should only be used with nomp>=2, detected nomp=$nomp"
+fi
+
+export OMP_NUM_THREADS=$nomp
+export KMP_AFFINITY=compact
+export KMP_HW_SUBSET=2t
+export OMP_STACKSIZE=32M
+echo "> srun --cpu_bind=cores -n $nmpi -c $(($CORES_PER_NODE/$mpinode*2)) $exec"
+srun --cpu_bind=cores -n $nmpi -c $(($CORES_PER_NODE/$mpinode*2)) $exec
+

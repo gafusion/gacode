@@ -66,6 +66,9 @@ then
   echo "         -h"
   echo "         Version and platform information."
   echo
+  echo "         -help <input.cgyro parameter>"
+  echo "         Parameter help information."
+  echo
   echo "         -clean"
   echo "         Clean simulation directory."
   echo
@@ -101,6 +104,7 @@ RESET=0
 NEW_FLAG=0
 INIT_FLAG=0
 GLOBALMAP_FLAG=0
+HELP_TAG=null
 RHOS=0.002
 #=============================================================
 
@@ -137,6 +141,8 @@ while [ $# -gt 0 ] ; do
   -reset) RESET=1 ;;
 
   -h) gacode_printversion CGYRO ; exit 0 ;;
+
+  -help) shift ; HELP_TAG=$1 ;;
 
   -clean) CLEAN_FLAG=1 ;;
 
@@ -179,6 +185,18 @@ fi
 if [ $COMPRESS_FLAG -eq 1 ]
 then
     cgyro_compress $SIMDIR $LOCDIR
+    exit 1
+fi
+#============================================================
+
+#============================================================
+# Help option
+HFILE=$CGYRO_DIR/tools/help.json
+
+if [ "$HELP_TAG" != "null" ]
+then
+    v=\""$HELP_TAG\""
+    jq -r ".[] | select(.tag==$v) | .text" $HFILE
     exit 1
 fi
 #============================================================
@@ -321,10 +339,11 @@ then
    fi
     
    # If there are no restart files, its safe to overwrite the log file
-   if [ ! -f out.cgyro.restar* ]
-   then
+   PATTERN=(out.cgyro.restar*)
+   if [ ! -r ${PATTERN[0]} ]; then
       > out.cgyro.version
    fi
+
    # Date with custom formatting
    date_tag=`date +"%y-%b-%d %T"`
    version_tag=`gacode_getversion`

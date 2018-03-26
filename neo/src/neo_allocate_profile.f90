@@ -2,10 +2,9 @@ module neo_allocate_profile
 
   implicit none
 
-  public :: PROFILE_SIM_alloc, PROFILE_EXP_alloc
+  public :: PROFILE_SIM_alloc
 
   logical, private :: initialized_sim = .false.
-  logical, private :: initialized_exp = .false.
 
 contains
 
@@ -61,7 +60,8 @@ contains
        allocate(omega_rot(n_radial))
        allocate(omega_rot_deriv(n_radial))
        allocate(psiN_polflux(n_radial))
-
+       allocate(rhoN_torflux(n_radial))
+       
        geo_numeq_flag = 0
        geo_ny = 0
        allocate(geo_yin(8,0:geo_ny,n_radial))
@@ -115,7 +115,8 @@ contains
        deallocate(omega_rot)
        deallocate(omega_rot_deriv)
        deallocate(psiN_polflux)
-
+       deallocate(rhoN_torflux)
+       
        deallocate(geo_yin)
 
        initialized_sim = .false.
@@ -123,98 +124,5 @@ contains
     endif
 
   end subroutine PROFILE_SIM_alloc
-
-  !  Allocate/Deallocate experimental-grid profile functions 
-  !  (all _exp and _p) variables.
-  subroutine PROFILE_EXP_alloc(flag)
-
-    use neo_profile_exp
-    use neo_globals, only: n_radial, geo_ny
-    implicit none
-    integer, intent (in) :: flag  ! flag=1: allocate; else deallocate
-
-    if(flag == 1) then
-       if(initialized_exp) return
-
-       allocate(rhoN_torflux_exp(n_grid_exp))
-       allocate(rhoN_torflux(n_radial))
-       allocate(psiN_polflux_exp(n_grid_exp))
-       allocate(rmin_exp(n_grid_exp))
-       allocate(rmaj_exp(n_grid_exp))
-       allocate(q_exp(n_grid_exp))
-       allocate(kappa_exp(n_grid_exp))
-       allocate(delta_exp(n_grid_exp))
-       allocate(zeta_exp(n_grid_exp))
-       allocate(zmag_exp(n_grid_exp))
-       allocate(te_ade_exp(n_grid_exp))
-       allocate(ne_ade_exp(n_grid_exp))
-       allocate(dlntdre_ade_exp(n_grid_exp))
-       allocate(dlnndre_ade_exp(n_grid_exp))
-       allocate(tem_exp(n_species_exp,n_grid_exp))
-       allocate(den_exp(n_species_exp,n_grid_exp))
-       allocate(dphi0dr_p(n_grid_exp))  
-       allocate(omega_rot_p(n_grid_exp))  
-       allocate(omega_rot_deriv_p(n_grid_exp))
-       allocate(r_p(n_grid_exp))
-       allocate(rmaj_p(n_grid_exp))
-       allocate(zmag_p(n_grid_exp))
-       allocate(b_unit_p(n_grid_exp))
-       allocate(shift_p(n_grid_exp))
-       allocate(s_kappa_p(n_grid_exp))
-       allocate(s_delta_p(n_grid_exp))
-       allocate(s_zeta_p(n_grid_exp))
-       allocate(s_zmag_p(n_grid_exp))
-       allocate(shear_p(n_grid_exp))
-       allocate(dlnndr_p(n_species_exp,n_grid_exp))
-       allocate(dlntdr_p(n_species_exp,n_grid_exp))     
-       
-       allocate(geo_yin_exp(8,0:geo_ny,n_grid_exp))
-       geo_yin_exp(:,:,:)=0.0
-
-       initialized_exp = .true.
-
-    else
-       if(.NOT. initialized_exp) return
-
-       deallocate(rhoN_torflux_exp)
-       deallocate(rhoN_torflux)
-       deallocate(psiN_polflux_exp)
-       deallocate(rmin_exp)
-       deallocate(rmaj_exp)
-       deallocate(q_exp)
-       deallocate(kappa_exp)
-       deallocate(delta_exp)
-       deallocate(zeta_exp)
-       deallocate(zmag_exp)
-       deallocate(te_ade_exp)
-       deallocate(ne_ade_exp)
-       deallocate(dlntdre_ade_exp)
-       deallocate(dlnndre_ade_exp)
-       deallocate(tem_exp)
-       deallocate(den_exp)
-       deallocate(dphi0dr_p)
-       deallocate(omega_rot_p)  
-       deallocate(omega_rot_deriv_p)
-       deallocate(r_p)
-       deallocate(rmaj_p)
-       deallocate(zmag_p)
-       deallocate(b_unit_p)
-       deallocate(shift_p)
-       deallocate(s_kappa_p)
-       deallocate(s_delta_p)
-       deallocate(s_zeta_p)
-       deallocate(s_zmag_p)
-       deallocate(shear_p)
-       deallocate(dlnndr_p)
-       deallocate(dlntdr_p)   
- 
-       deallocate(geo_yin_exp)
-
-       initialized_exp = .false.
-
-    endif
-
-  end subroutine PROFILE_EXP_alloc
-
 
 end module neo_allocate_profile

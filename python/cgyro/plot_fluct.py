@@ -1,8 +1,6 @@
 import sys
 import numpy as np
 import os.path
-
-from gacodeplotdefs import *
 from gacodefuncs import *
 from cgyro.data import cgyrodata
 

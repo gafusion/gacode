@@ -260,13 +260,7 @@
 ! check for inward ballooning modes
 !         write(*,*)"modB_test = ",modB_test
            if(inboard_detrapped_in.ne.0.and.ft_test.gt.modB_test)then
-             ft2 = 1.0-ft_test*(1.0-ft*ft)
-             if(ft2.lt.0.0)then
-               ft = 0.0
-             else
-!             ft = SQRT(ft2)
-               ft =  0.0
-             endif
+             ft =  0.0
 !           write(*,*)"changed ft",ft
              new_geometry = .FALSE.
              new_width = .FALSE.

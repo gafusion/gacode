@@ -18,7 +18,7 @@ subroutine cgyro_mpi_grid
 
   integer :: ie,ix,is,ir,it
   integer :: d
-  integer :: splitkey
+  integer :: splitkey, mpiio_procs
   integer, external :: parallel_dim
 
   integer, external :: omp_get_max_threads, omp_get_thread_num
@@ -182,7 +182,6 @@ subroutine cgyro_mpi_grid
   !
   call MPI_COMM_RANK(NEW_COMM_1,i_proc_1,i_err)
   call MPI_COMM_RANK(NEW_COMM_2,i_proc_2,i_err)
-  !
   !-----------------------------------------------------------
 
   ! Linear parallelization dimensions
@@ -205,21 +204,54 @@ subroutine cgyro_mpi_grid
      call parallel_slib_init(n_toroidal,nv_loc*n_theta,n_radial,nsplit,NEW_COMM_2)
   endif
 
+  ! Stagger COMM2 communication based on i_proc_1
+  ! Get the first half together, and second half together
+  ! This makes it more likely to have both types on all nodes
+  is_staggered_comm_2 = (modulo((i_proc_1*2)/n_proc_1,2) == 0)
+
   ! OMP code
   n_omp = omp_get_max_threads()
 
   !----------------------------------------------------------------------------
-  ! Restart file chunking logic 
-  ! MPI-IO limit seems to be 24GB, so set max_filesize to 16.0 GB
-  max_filesize = 16.0e9
-  n_chunk = 1+int(16.0*n_toroidal*nc*nv/max_filesize)
-  
-  ! Obscure definition of number tags 
-  do ix=1,100
-     write (rtag(ix),fmt) ix-1
-  enddo
+  ! Restart communication setup
 
-  if (n_chunk == 1) rtag(1) = ''
+  ! No communicator splitting needed if a single file
+  if (mpiio_num_files > 1) then 
+
+     ! Strings for mpiio restart filenames (out.cgyro.restartXX)
+
+     do ix=1,100
+        write (rtag(ix),fmt) ix-1
+     enddo
+
+     mpiio_procs = n_proc/mpiio_num_files
+
+     if (modulo(n_proc,mpiio_num_files) /= 0) then
+       ! Round up
+       mpiio_procs = mpiio_procs + 1 
+     endif
+
+     i_group_restart_io = i_proc/mpiio_procs + 1
+     call MPI_COMM_SPLIT(CGYRO_COMM_WORLD,&
+       i_group_restart_io,&
+       i_proc,&
+       NEW_COMM_RESTART_IO, &
+       i_err)
+
+     if (i_err /= 0) then
+        call cgyro_error('ERROR: (CGYRO) NEW_COMM_RESTART_IO not created')
+        return
+     endif
+
+     call MPI_COMM_RANK(NEW_COMM_RESTART_IO,i_proc_restart_io,i_err)
+     call MPI_COMM_SIZE(NEW_COMM_RESTART_IO,n_proc_restart_io,i_err)
+  endif
+
+  write (mpiio_stripe_str,"(I3.3)") mpiio_stripe_factor
+  write (mpiio_small_stripe_str,"(I2.2)") mpiio_small_stripe_factor
+
+  ! save hostname configuration
+  call cgyro_write_hosts
   !----------------------------------------------------------------------------
 
 end subroutine cgyro_mpi_grid

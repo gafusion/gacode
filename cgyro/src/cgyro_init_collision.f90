@@ -11,17 +11,18 @@ subroutine cgyro_init_collision
   real, dimension(:,:,:,:), allocatable :: rsvec, rsvect0, rsvect1
   real, dimension(:,:), allocatable :: klor_fac, kdiff_fac
 
-  real :: arg, scale
+  real :: arg
   real :: xa, xb, tauinv_ab
   real :: mo1,mo2,en1,en2 ! von mir
   integer :: jv
   integer :: is,ir,it,ix,ie,js,je,jx,ks
+  logical, dimension(:), allocatable :: cmat_base_set
   ! parameters for matrix solve
   real, dimension(:,:), allocatable :: amat
   real, dimension(:,:,:,:,:,:), allocatable :: ctest
   real, dimension(:,:,:,:,:), allocatable :: bessel
   integer :: test_coll_flag = 0
-
+  
   if (collision_model == 5) then
      call cgyro_init_collision_simple
      return
@@ -94,7 +95,7 @@ subroutine cgyro_init_collision
                       * sqrt(mass(js)/mass(is)) * (temp(is)/temp(js))**1.5
               endif
 
-           case(4)
+           case(4,6)
 
               ! Ad hoc op
               ! (Fix for underflow)
@@ -151,7 +152,7 @@ subroutine cgyro_init_collision
   !   print *,sum(w_e)
   !endif
 
-  if (collision_model == 4 .and. collision_kperp == 1 .and. &
+  if ( ((collision_model == 4) .or. (collision_model == 6)) .and. collision_kperp == 1 .and. &
        (collision_mom_restore == 1 .or. collision_ene_restore == 1)) then
      allocate(bessel(n_species,n_xi,n_energy,nc_loc,0:1))
 !$omp parallel do private(ic_loc,it,ie,ix,is,arg)
@@ -206,7 +207,7 @@ subroutine cgyro_init_collision
   enddo
 
   ! Diffusion
-  if (collision_model == 4 .and. collision_ene_diffusion == 1) then
+  if (((collision_model == 4) .or. (collision_model == 6)) .and. collision_ene_diffusion == 1) then
 !$omp parallel do collapse(5) private(is,ix,ie,js,je,jx)
      do is=1,n_species 
         do ix=1,n_xi
@@ -287,7 +288,7 @@ subroutine cgyro_init_collision
 
      endif
 
-  case(4)
+  case(4,6)
 
      ! Momentum Restoring
 
@@ -588,7 +589,7 @@ subroutine cgyro_init_collision
      !endif
   endif
   
-  if (collision_model == 4 .and. collision_kperp == 1 .and. &
+  if (((collision_model == 4) .or. (collision_model == 6)) .and. collision_kperp == 1 .and. &
        (collision_mom_restore == 1 .or. collision_ene_restore == 1)) then
      deallocate(bessel)
   end if
@@ -600,7 +601,8 @@ subroutine cgyro_init_collision
 
 !$omp  parallel do  default(none) &
 !$omp& shared(nc1,nc2,nv,n,delta_t,n_species,rho,is_ele,n_field) &
-!$omp& shared(collision_model,collision_kperp,collision_field_model) &
+!$omp& shared(collision_kperp,collision_field_model) &
+!$omp& firstprivate(collision_model) &
 !$omp& shared(ae_flag,lambda_debye,dens_ele,temp_ele,dens_rot) &
 !$omp& shared(betae_unit,sum_den_h) &
 !$omp& shared(it_c,ir_c,px,is_v,ix_v,ie_v,ctest,xi_deriv_mat) &
@@ -686,7 +688,7 @@ subroutine cgyro_init_collision
               endif
 
               ! Finite-kperp test particle corrections 
-              if (collision_model == 4 .and. collision_kperp == 1) then
+              if (((collision_model == 4) .or. (collision_model == 6)) .and. collision_kperp == 1) then
                  if (is == js .and. jx == ix .and. je == ie) then
                     do ks=1,n_species
                        cmat(iv,jv,ic_loc) = cmat(iv,jv,ic_loc) &
@@ -781,6 +783,39 @@ subroutine cgyro_init_collision
   enddo
 
   deallocate(amat)
+
+  if (collision_model == 6) then
+     allocate(cmat_base_set(n_theta))
+     cmat_base_set(:) = .false.
+     do ic=nc1,nc2
+        ic_loc = ic-nc1+1
+        it = it_c(ic)
+        if (cmat_base_set(it) .eqv. .false.) then
+          cmat_base(:,:,it) = cmat(:,:,ic_loc)
+          cmat_base_set(it)=.true.
+        endif
+     enddo
+     deallocate(cmat_base_set)
+
+     ! Note: Ideally we would want to avoid creating the big cmat matrix
+     !       But it would have required too much refactoring of the code
+     !       Something to consider for future memory optimization
+
+!$omp parallel do private(ic, ic_loc,it,iv,jv) shared(it_c,cmat_diff,cmat_base, cmat)
+     do ic=nc1,nc2
+        ic_loc = ic-nc1+1
+        it = it_c(ic)
+
+        do iv=1,nv
+           do jv=1,nv
+              cmat_diff(jv,iv,ic_loc) = cmat(jv,iv,ic_loc)  - cmat_base(jv,iv,it); 
+           enddo
+        enddo
+     enddo
+    
+     deallocate(cmat)
+  endif
+
   deallocate(i_piv)
   deallocate(nu_d)
   deallocate(nu_par)

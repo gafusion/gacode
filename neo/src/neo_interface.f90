@@ -40,6 +40,7 @@ module neo_interface
   integer :: neo_rotation_model_in = 1
   real    :: neo_omega_rot_in = 0.0
   real    :: neo_omega_rot_deriv_in = 0.0
+  character(len=16) :: neo_rbf_dir_in = 'd3d_4'
   integer :: neo_spitzer_model_in = 0
   real    :: neo_epar0_spitzer_in = 1.0
   integer :: neo_coll_uncoupledei_model_in = 0
@@ -123,6 +124,8 @@ module neo_interface
   real, dimension(11) :: neo_vpol_nclass_out     = 0.0
   real, dimension(11) :: neo_vtor_nclass_out     = 0.0
   real                :: neo_jpar_nclass_out     = 0.0
+  ! geometry
+  real, dimension(12) :: neo_geoparams_out       = 0.0  
   ! error checking
   integer :: neo_error_status_out=0
   character(len=80) :: neo_error_message_out=''
@@ -160,6 +163,7 @@ contains
     neo_rotation_model_in = rotation_model
     neo_omega_rot_in = omega_rot_in
     neo_omega_rot_deriv_in = omega_rot_deriv_in
+    neo_rbf_dir_in = rbf_dir
     neo_spitzer_model_in = spitzer_model
     neo_epar0_spitzer_in = epar0_spitzer
     neo_coll_uncoupledei_model_in = coll_uncoupledei_model
@@ -241,6 +245,7 @@ contains
     rotation_model = neo_rotation_model_in
     omega_rot_in = neo_omega_rot_in
     omega_rot_deriv_in = neo_omega_rot_deriv_in
+    rbf_dir = neo_rbf_dir_in
     spitzer_model = neo_spitzer_model_in
     epar0_spitzer = neo_epar0_spitzer_in
     coll_uncoupledei_model = neo_coll_uncoupledei_model_in
@@ -332,6 +337,7 @@ contains
     write(1,20) 'ROTATION_MODEL=',neo_rotation_model_in
     write(1,30) 'OMEGA_ROT=',neo_omega_rot_in
     write(1,30) 'OMEGA_ROT_DERIV=',neo_omega_rot_deriv_in
+    write(1,50) 'RBF_DIR_IN=',neo_rbf_dir_in
     write(1,20) 'SPITZER_MODEL=',neo_spitzer_model_in
     write(1,30) 'EPAR0_SPITZER=',neo_epar0_spitzer_in
     write(1,20) 'COLL_UNCOUPLEDEI_MODEL=',neo_coll_uncoupledei_model_in
@@ -535,6 +541,7 @@ contains
 40  format(1pe12.5)
 20  format(t2,a,i3)
 30  format(t2,a,1pe12.5)
+50  format(t2,a,a)    
 
   end subroutine interfacelocaldump
   

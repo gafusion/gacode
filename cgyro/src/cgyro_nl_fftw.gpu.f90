@@ -10,10 +10,68 @@
 ! NOTE: Need to be careful with (p=-nr/2,n=0) component.
 !-----------------------------------------------------------------
 
+! NOTE: call cgyro_nl_fftw_comm1 before cgyro_nl_fftw
+subroutine cgyro_nl_fftw_comm1
+  use timer_lib
+  use parallel_lib
+  use cgyro_globals
+
+  implicit none
+
+  integer :: ir,it,iv_loc_m,ic_loc_m
+  integer :: iexch
+
+!$omp parallel do private(it,ir,iexch,ic_loc_m,iv_loc_m)
+  do iv_loc_m=1,nv_loc
+     do it=1,n_theta
+        iexch = it + (iv_loc_m-1)*n_theta
+        do ir=1,n_radial
+           ic_loc_m = it + (ir-1)*n_theta
+           fpack(ir,iexch) = h_x(ic_loc_m,iv_loc_m)
+        enddo
+     enddo
+  enddo
+
+  do iexch=nv_loc*n_theta+1,nsplit*n_toroidal
+     fpack(:,iexch) = (0.0,0.0)
+  enddo
+
+  call parallel_slib_f_nc(fpack,f_nl)
+end subroutine cgyro_nl_fftw_comm1
+
+subroutine cgyro_nl_fftw_comm2
+  use timer_lib
+  use parallel_lib
+  use cgyro_globals
+
+  implicit none
+
+  integer :: ir,it,iv_loc_m,ic_loc_m
+  integer :: iexch
+
+!$omp parallel do private(it,ir,iexch,ic_loc_m,iv_loc_m)
+  do iv_loc_m=1,nv_loc
+     do it=1,n_theta
+        iexch = it + (iv_loc_m-1)*n_theta
+        do ir=1,n_radial
+           ic_loc_m = it + (ir-1)*n_theta
+           gpack(ir,iexch) = psi(ic_loc_m,iv_loc_m)
+        enddo
+     enddo
+  enddo
+
+  do iexch=nv_loc*n_theta+1,nsplit*n_toroidal
+     gpack(:,iexch) = (0.0,0.0)
+  enddo
+
+  call parallel_slib_f_nc(gpack,g_nl)
+
+end subroutine cgyro_nl_fftw_comm2
+
+
 subroutine cgyro_nl_fftw(ij)
 
-  use precision_m
-  use cufft_m
+  use cufft
   use timer_lib
   use parallel_lib
 
@@ -25,39 +83,22 @@ subroutine cgyro_nl_fftw(ij)
   integer :: it,ir,in,ix,iy
   integer :: i1,i2
   integer :: ierr
-
+  integer :: rc
   complex :: f0,g0
-  complex, dimension(:,:), allocatable :: fpack
-  complex, dimension(:,:), allocatable :: gpack
 
   real :: inv_nxny
 
   include 'fftw3.f03'
 
-  call timer_lib_in('nl_comm')
 
-  allocate(fpack(n_radial,nv_loc*n_theta))
-  allocate(gpack(n_radial,nv_loc*n_theta))
-
-!$omp parallel do private(it,ir,iexch,ic_loc)
-  do iv_loc=1,nv_loc
-     do it=1,n_theta
-        iexch = it + (iv_loc-1)*n_theta
-        do ir=1,n_radial
-           ic_loc = it + (ir-1)*n_theta
-           fpack(ir,iexch) = h_x(ic_loc,iv_loc)
-           gpack(ir,iexch) = psi(ic_loc,iv_loc)
-        enddo
-     enddo
-  enddo
-
-  call parallel_slib_f(fpack,f_nl)
-  call parallel_slib_f(gpack,g_nl)
-  call timer_lib_out('nl_comm')
+  if (is_staggered_comm_2) then ! stagger comm2, to load ballance network traffic
+     call timer_lib_in('nl_comm')
+     call cgyro_nl_fftw_comm2
+     call timer_lib_out('nl_comm')
+  endif
 
   call timer_lib_in('nl')
-
-!$acc  data pcopyin(f_nl) pcopy(g_nl)   &
+!$acc  data pcopyin(f_nl)   &
 !$acc& pcreate(fxmany,fymany,gxmany,gymany) &
 !$acc& pcreate(uxmany,uymany,vxmany,vymany) &
 !$acc& pcreate(uvmany)
@@ -93,11 +134,8 @@ subroutine cgyro_nl_fftw(ij)
         do in=1,n_toroidal
            iy = in-1
            f0 = i_c*f_nl(ir,j,in)
-           g0 = i_c*g_nl(ir,j,in)
            fxmany(iy,ix,j) = p*f0
-           gxmany(iy,ix,j) = p*g0
            fymany(iy,ix,j) = iy*f0
-           gymany(iy,ix,j) = iy*g0
         enddo
      enddo
   enddo
@@ -108,16 +146,59 @@ subroutine cgyro_nl_fftw(ij)
      ! --------------------------------------
 !$acc wait
 !$acc  host_data &
-!$acc& use_device(fxmany,fymany,gxmany,gymany) &
-!$acc& use_device(uxmany,uymany,vxmany,vymany)
+!$acc& use_device(fxmany,fymany) &
+!$acc& use_device(uxmany,uymany)
 
-  call cufftExecZ2D(cu_plan_c2r_many,fxmany,uxmany)
-  call cufftExecZ2D(cu_plan_c2r_many,fymany,uymany)
-  call cufftExecZ2D(cu_plan_c2r_many,gxmany,vxmany)
-  call cufftExecZ2D(cu_plan_c2r_many,gymany,vymany)
+  rc = cufftExecZ2D(cu_plan_c2r_many,fxmany,uxmany)
+  rc = cufftExecZ2D(cu_plan_c2r_many,fymany,uymany)
 
 !$acc wait
 !$acc end host_data
+  if (.not. is_staggered_comm_2) then ! stagger comm2, to load ballance network traffic
+     call timer_lib_out('nl')
+     call timer_lib_in('nl_comm')
+     call cgyro_nl_fftw_comm2
+     call timer_lib_out('nl_comm')
+     call timer_lib_in('nl')
+  endif
+
+!$acc data copyin(g_nl)  
+
+!$acc parallel 
+!$acc loop gang
+  do j=1,nsplit
+
+   ! Array mapping
+!$acc loop worker private(p,ix)
+     do ir=1,n_radial
+
+        p  = ir-1-nx0/2
+        ix = p
+        if (ix < 0) ix = ix+nx
+!$acc   loop vector private(iy,f0,g0)
+        do in=1,n_toroidal
+           iy = in-1
+           g0 = i_c*g_nl(ir,j,in)
+           gxmany(iy,ix,j) = p*g0
+           gymany(iy,ix,j) = iy*g0
+        enddo
+     enddo
+  enddo
+!$acc end parallel
+
+!$acc end data
+
+!$acc wait
+!$acc  host_data &
+!$acc& use_device(gxmany,gymany) &
+!$acc& use_device(vxmany,vymany)
+
+  rc = cufftExecZ2D(cu_plan_c2r_many,gxmany,vxmany)
+  rc = cufftExecZ2D(cu_plan_c2r_many,gymany,vymany)
+
+!$acc wait
+!$acc end host_data
+
 !$acc wait
 
   ! Poisson bracket in real space
@@ -145,7 +226,7 @@ subroutine cgyro_nl_fftw(ij)
 
 !$acc wait
 !$acc host_data use_device(uvmany,fxmany)
-  call cufftExecD2Z(cu_plan_r2c_many,uvmany,fxmany)
+  rc = cufftExecD2Z(cu_plan_r2c_many,uvmany,fxmany)
 !$acc wait
 !$acc end host_data
 !$acc wait
@@ -176,7 +257,7 @@ subroutine cgyro_nl_fftw(ij)
   call timer_lib_out('nl')
 
   call timer_lib_in('nl_comm')
-  call parallel_slib_r(g_nl,gpack)
+  call parallel_slib_r_nc(g_nl,gpack)
 
 !$omp parallel do private(it,ir,iexch,ic_loc)
   do iv_loc=1,nv_loc
@@ -189,8 +270,6 @@ subroutine cgyro_nl_fftw(ij)
      enddo
   enddo
 
-  deallocate(fpack)
-  deallocate(gpack)
   call timer_lib_out('nl_comm')
 
   ! RHS -> -[f,g] = [f,g]_{r,-alpha}

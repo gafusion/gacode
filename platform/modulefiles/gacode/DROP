@@ -1,0 +1,12 @@
+#%Module
+#
+# Module file for setting the GACODE machine-dependent environmental variables
+#
+
+setenv GACODE_PLATFORM [lrange [file split ${ModulesCurrentModulefile}]	end end]
+set GACODE_PLATFORM $::env(GACODE_PLATFORM)
+puts stderr "Use GACODE_PLATFORM: ${GACODE_PLATFORM}"
+
+module load mvapich2-1.8/intel
+prepend-path PATH /opt/netcdf-4.1.3-intel/bin
+setenv FANN_ROOT /home/candy/SOFTWARE/fann

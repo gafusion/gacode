@@ -31,7 +31,7 @@ module neo_equilibrium
   real                            :: Bmag_th0_rderiv  ! (dB/dr) (a/Bunit) th=0
   real                            :: ftrap       ! frac of trapped particles
   real, dimension(:), allocatable :: theta_nc    ! NCLASS theta grid
-
+  
   ! radial deriv of the volume enclosed by a flux surface
   real, dimension(:), allocatable :: v_prime_g  ! (nr)
   
@@ -42,6 +42,7 @@ module neo_equilibrium
   real :: Btor2_avg     ! <(Btor/Bunit)^2>
   real :: bigRinv_avg   ! <a/R> 
   real :: gradpar_Bmag2_avg ! <(bhat dot grad/aBmag/Bunit)^2>
+  real, dimension(:,:), allocatable :: geo_param
   
   logical, private :: initialized = .false.
   
@@ -76,7 +77,8 @@ contains
        allocate(theta_nc(n_theta))
        allocate(jacobln_rderiv(n_theta))
        allocate(v_prime_g(n_radial))
-
+       allocate(geo_param(n_radial,12))
+       
        d_theta = 2*pi/n_theta
        do it=1,n_theta
           theta(it) = -pi+(it-1)*d_theta
@@ -113,7 +115,8 @@ contains
        deallocate(theta_nc)
        deallocate(jacobln_rderiv)
        deallocate(v_prime_g)
-
+       deallocate(geo_param)
+       
        if (equilibrium_model == 2 .or. equilibrium_model == 3) then
           call GEO_alloc(0)
        endif
@@ -336,7 +339,57 @@ contains
        write(1,'(1pe16.8)') bigR_th0_rderiv
        close(1)
     endif
+    
+    neo_geo_out(1)  = I_div_psip
+    neo_geo_out(2)  = ftrap
+    neo_geo_out(3)  = Bmag2_avg             ! <B^2>
+    neo_geo_out(4)  = Bmag2inv_avg          ! <1/B^2>
+    neo_geo_out(5)  = gradpar_Bmag2_avg     ! <(bhat dot grad B)^2>
+    sum = 0.0
+    do it=1,n_theta
+       sum = sum + w_theta(it)*gradpar_Bmag(it)**2/Bmag(it)**2
+    enddo
+    neo_geo_out(6)  = sum                   ! <(bhat dot grad B)^2/B^2>
+    sum = 0.0
+    do it=1,n_theta
+       sum = sum + w_theta(it)*(k_par(it) * q(ir) * rmaj(ir))**2
+    enddo
+    neo_geo_out(7)  = sum                   ! <(qR/Jpsi B)^2>
+    sum = 0.0
+    do it=1,n_theta
+       sum = sum + w_theta(it)*Btor(it)**2
+    enddo
+    neo_geo_out(8)  = sum                   ! <Btor^2>
+    sum = 0.0
+    do it=1,n_theta
+       sum = sum + w_theta(it)*Bpol(it)**2
+    enddo
+    neo_geo_out(9)  = sum                    ! <Bpol^2>
+    sum = 0.0
+    do it=1,n_theta
+       sum = sum + w_theta(it)*gradr(it)**2
+    enddo
+    neo_geo_out(10) = sum                    ! <|grad r|^2>
+    sum = 0.0
+    do it=1,n_theta
+       sum = sum + w_theta(it)*gradr(it)**2/Bmag(it)**2
+    enddo
+    neo_geo_out(11) = sum                    ! <|grad r|^2/B^2>
+    sum = 0.0
+    do it=1,n_theta
+       sum = sum + w_theta(it)*v_drift_x(it)*rmaj(ir)/rho(ir)
+    enddo
+    neo_geo_out(12) = sum                     ! <-grad_r * gsin/B>
 
+    if(silent_flag == 0 .and. i_proc == 0) then
+       open(unit=1,file=trim(path)//'out.neo.diagnostic_geo2',status='replace')
+       do it=1,12
+          write(1,'(1pe16.8)') neo_geo_out(it)
+       enddo
+    endif
+
+    geo_param(ir,:) = neo_geo_out(:)
+    
   end subroutine EQUIL_DO
   
 

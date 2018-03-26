@@ -33,14 +33,14 @@ then
   echo "          -field <value>"
   echo "           Specify field to be plotted: [0,n_field-1]."
   echo
+  echo "          -fc"
+  echo "           Toggle plotting of field breakdown of fluxes."
+  echo
   echo "          -moment <value>"
   echo "           Specify moment to be plotted [n,e,m,s]."
   echo
   echo "          -w <float>"
   echo "           Width of time-average window (1.0 is entire time history)."
-  echo
-  echo "          -fc"
-  echo "           Toggle plotting of field breakdown of fluxes."
   echo
   echo "          -plot <type>"
   echo "           Function to plot."
@@ -226,65 +226,60 @@ cd $SIMDIR
 PYROOT=$GACODE_ROOT/python/cgyro
 
 #==============================================================================
+PLT=$PYROOT/data_plot_single.py
 
 case "$PLOT_TYPE" in
 
    ball)
-	python $PYROOT/plot_ball.py $FTYPE $TIME $FIELD $TMAX ;;
+	python $PLT $PLOT_TYPE $TIME $FIELD $TMAX $FTYPE ;;
 
    hb)
-	python $PYROOT/plot_hb.py $FTYPE $TIME $SPECIES $TMAX $MESH ;;
+	python $PLT $PLOT_TYPE $TIME $SPECIES $TMAX $MESH $FTYPE ;;
 
    hbcut)
-	python $PYROOT/plot_hbcut.py $FTYPE $TIME $SPECIES $TMAX $THETA ;;
+	python $PLT $PLOT_TYPE $TIME $SPECIES $TMAX $THETA $FTYPE ;;
 
    freq)
-	python $PYROOT/plot_freq.py $FTYPE ;;
+	python $PLT $PLOT_TYPE $W $FTYPE ;;
 
    ky_freq)
-	python $PYROOT/plot_ky_freq.py $FTYPE ;;
+	python $PLT $PLOT_TYPE $W $FTYPE ;;
 
    error)
-	python $PYROOT/plot_error.py $FTYPE ;;
-
-   ky_flux)
-	python $PYROOT/plot_ky_flux.py $FTYPE $W $MOMENT $YMIN $YMAX $FIELD $FC ;;
+	python $PLT $PLOT_TYPE $FTYPE ;;
 
    xflux)
-	python $PYROOT/plot_xflux.py $FTYPE $W $MOMENT $YMIN $YMAX ;;
-
-   fluct)
-	python $PYROOT/plot_fluct.py $FTYPE $MOMENT $SPECIES $YMIN $YMAX $NX $NY $TIME $FMIN $FMAX $CMAP ;;
+	python $PLT $PLOT_TYPE $W $MOMENT $YMIN $YMAX $FTYPE ;;
 
    flux)
-	if [ "$FTYPE" == "dump" ]
-        then
-	   python $PYROOT/dump_flux.py 
-        else
-	   python $PYROOT/plot_flux.py $FTYPE $W $MOMENT $YMIN $YMAX $FIELD $FC
-        fi
-        ;;
+        python $PLT $PLOT_TYPE $W $FIELD $MOMENT $YMIN $YMAX $FC $FTYPE ;;
+
+   ky_flux)
+	python $PLT $PLOT_TYPE $W $FIELD $MOMENT $YMIN $YMAX $FC $FTYPE ;;
 
    phi)
-	python $PYROOT/plot_phi.py $FTYPE $FIELD ;;
+	python $PLT $PLOT_TYPE $FIELD $FTYPE ;;
 
    ky_phi)
-	python $PYROOT/plot_ky_phi.py $FTYPE $FIELD $YMIN $YMAX $N ;;
+	python $PLT $PLOT_TYPE $FIELD $YMIN $YMAX $N $FTYPE ;;
 
    kx_phi)
-	python $PYROOT/plot_kx_phi.py $FTYPE $W $YMIN $YMAX $N ;;
+	python $PLT $PLOT_TYPE $W $YMIN $YMAX $N $FTYPE ;;
 
    kxky_phi)
-	python $PYROOT/plot_kxky_phi.py $FTYPE $W $FIELD ;;
+	python $PLT $PLOT_TYPE $W $FTYPE ;;
 
    rcorr_phi)
-           python $PYROOT/plot_rcorr_phi.py $FTYPE $W $YMIN $YMAX ;;
+        python $PLT $PLOT_TYPE $W $FTYPE ;;
 
    zf)
-	python $PYROOT/plot_zf.py $FTYPE $W $FIELD ;;
+	python $PLT $PLOT_TYPE $W $FIELD $FTYPE ;;
 
    geo)
-	python $PYROOT/plot_geo.py $FTYPE ;;
+       python $PLT $PLOT_TYPE $FTYPE ;;
+
+   fluct)
+       python $PYROOT/plot_fluct.py $FTYPE $MOMENT $SPECIES $YMIN $YMAX $NX $NY $TIME $FMIN $FMAX $CMAP ;;
 
    text)
    	python $PYROOT/text.py $W $FTYPE ;;

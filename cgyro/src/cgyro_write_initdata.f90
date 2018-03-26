@@ -9,7 +9,6 @@ subroutine cgyro_write_initdata
 
   use mpi
   use cgyro_globals
-  use cgyro_experimental_globals
 
   implicit none
 
@@ -135,6 +134,11 @@ subroutine cgyro_write_initdata
      write (io,fmtstr) dens_norm
      write (io,fmtstr) temp_norm
      write (io,fmtstr) vth_norm
+     write (io,fmtstr) mass_norm
+     write (io,fmtstr) rho_star_norm
+     write (io,fmtstr) gamma_gb_norm
+     write (io,fmtstr) q_gb_norm
+     write (io,fmtstr) pi_gb_norm
      do is=1,n_species
         write (io,fmtstr) z(is)
         write (io,fmtstr) mass(is)

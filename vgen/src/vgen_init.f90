@@ -94,6 +94,14 @@
 
   call EXPRO_pread
 
+  if(EXPRO_error == 1) then
+     if (i_proc == 0) then
+        print '(a)', 'ERROR: (VGEN) Negative ion density'
+     endif
+     call MPI_finalize(i_err)
+     stop
+  endif
+
   ! Write the derived quantities to input.profiles.extra
 
   if (i_proc == 0) call EXPRO_write_derived(1,'input.profiles.extra')

@@ -1,0 +1,30 @@
+#! /usr/bin/env bash
+#
+# SCRIPT:
+#  gyro.EDISON_CRAY
+#
+# FUNCTION:
+#  Parallel execution script
+#---------------------------------------------------
+
+simdir=${1}
+nmpi=${2}
+exec=${3}
+nomp=${4}
+numa=${5}
+mpinuma=${6}
+nidle=${7}
+
+# nmpi = MPI tasks
+# nomp = OpenMP threads per MPI task
+# numa = NUMAs active per node
+# mpinuma = MPI tasks per active NUMA 
+
+. $GACODE_ROOT/shared/bin/gacode_mpi_tool
+
+cd $simdir
+
+export OMP_NUM_THREADS=$nomp
+export KMP_AFFINITY=compact
+echo "> srun -n $nmpi -c $nomp $exec"
+srun -n $nmpi -c $nomp $exec

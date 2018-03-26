@@ -341,7 +341,11 @@ subroutine EXPRO_compute_derived
 
   deallocate(dummy)
 
-  if (minval(EXPRO_ni(:,:)) <= 0.0) EXPRO_error=1
-
+  do is=1,EXPRO_ctrl_n_ion
+     if (minval(EXPRO_ni(is,:)) <= 0.0) then
+        EXPRO_error=1
+     endif
+  enddo
+ 
 end subroutine EXPRO_compute_derived
  

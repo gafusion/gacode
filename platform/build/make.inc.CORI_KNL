@@ -1,13 +1,11 @@
 #----------------------------------------------------------
-# Cray XC40 (cori.nersc.gov) 
+# Cray XC40 (cori.nersc.gov) [KNL nodes]
 #
-# Cori SYSTEM INFO:
-# - Intel KNL
-# - 64 cores * 4 hyperthreads (assign hypethreads to numas)
+# - 64 cores * 1 hyperthread (no hyperthread benefit)
 #----------------------------------------------------------
 
-IDENTITY="NERSC Cori KNL"
-CORES_PER_NODE=256
+IDENTITY="NERSC Cori KNL (Cray)"
+CORES_PER_NODE=64
 NUMAS_PER_NODE=4
 
 # Compilers and flags

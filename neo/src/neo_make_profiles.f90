@@ -1,16 +1,14 @@
 subroutine neo_make_profiles
 
   use neo_globals
-  use neo_profile_exp, only : &
-       rmaj_p,&
-       b_unit_p,& 
-       q_exp,&
-       n_grid_exp
   use neo_allocate_profile
+  use EXPRO_locsim_interface
   
   implicit none
   
-  integer :: ir, is, ip, num_ele, j
+  integer :: ir, is, num_ele, j
+  integer :: udsymmetry_flag, quasineutral_flag
+  real    :: btccw_exp, ipccw_exp
   integer, parameter :: io=20
   
   real :: cc
@@ -30,11 +28,13 @@ subroutine neo_make_profiles
   num_ele = 0
   do is=1, n_species
      if(z_in(is) < 0.0) then
+        is_ele = is
         num_ele = num_ele + 1
      endif
   enddo
   if(num_ele == 0) then
      adiabatic_ele_model = 1
+     is_ele = n_species+1
   else if(num_ele == 1) then
      adiabatic_ele_model = 0
   else
@@ -137,40 +137,125 @@ subroutine neo_make_profiles
      enddo
 
      ! These normalizations are arbitrary for local profiles
-     temp_norm_fac = 1.0
-     charge_norm_fac = 1.0
-     dens_norm(:) = 1.0
-     vth_norm(:) = 1.0
-     b_unit(:) = 1.0
+     dens_norm(:)    = 1.0
+     vth_norm(:)     = 1.0
+     b_unit(:)       = 1.0
      a_meters        = 1.0
      temp_norm(:)    = 1.0
+     rhoN_torflux(:) = 0.0
      psiN_polflux(:) = 0.0
      psiN_polflux_a  = 0.0
-
 
   case (2)
      
      ! Standard simulation with experimental profiles
      
-     ! EAB: Epar is not in INPUT_profiles -- use INPUT val and assume
+     ! EAB: Epar is not in INPUT_profiles -- use input.neo val and assume
      ! radially constant
-     do ir=1, n_radial
-        epar0(ir) = epar0_in
-     enddo
+     epar0(:) = epar0_in
+
+     ! EAB: beta_star is presently only used for anisotropic species, which
+     ! currently only works in local profile mode
+     beta_star(:) = 0.0
      
      do is=1,n_species
         z(is)    = z_in(is)
         mass(is) = mass_in(is)
         aniso_model(is) = aniso_model_in(is)
      enddo
+
+     if (adiabatic_ele_model == 0 .and. Z(n_species) > 0.0) then
+        call neo_error('ERROR: (NEO) For exp. profiles, electron species must be n_species')
+        return
+     endif
+
+     udsymmetry_flag   = 0  ! do not enforce up-down symmetry
+     quasineutral_flag = 1  ! do enforce quasineutrality
+     if (profile_equilibrium_model == 2) then
+        geo_numeq_flag = 1
+     else
+        geo_numeq_flag = 0
+     endif
+
+     do ir=1, n_radial
+        call EXPRO_locsim_profiles(path,&
+             NEO_COMM_WORLD,&
+             geo_numeq_flag,&
+             udsymmetry_flag,&
+             quasineutral_flag,&
+             n_species+adiabatic_ele_model,&
+             z(1:n_species),&
+             r(ir),&
+             btccw_exp,&
+             ipccw_exp,&
+             a_meters)
      
-     call neo_experimental_profiles
-     if(error_status > 0) return
-     call neo_map_experimental_profiles
-           
-     ! ** Normalizing quantities **
-     temp_norm_fac   = 1.6022*1000
-     charge_norm_fac = 1.6022
+        if(btccw_exp > 0.0) then
+           sign_bunit = -1.0
+        else
+           sign_bunit =  1.0
+        endif
+     
+        if(ipccw_exp > 0.0) then
+           sign_q = -sign_bunit
+        else
+           sign_q =  sign_bunit
+        endif
+
+        rmaj(ir)    = rmaj_loc
+        q(ir)       = q_loc
+        shear(ir)   = s_loc
+        shift(ir)   = shift_loc
+        kappa(ir)   = kappa_loc
+        s_kappa(ir) = s_kappa_loc
+        delta(ir)   = delta_loc    * profile_delta_scale
+        s_delta(ir) = s_delta_loc  * profile_delta_scale
+        zeta(ir)    = zeta_loc     * profile_zeta_scale
+        s_zeta(ir)  = s_zeta_loc   * profile_zeta_scale
+        zmag(ir)    = zmag_loc     * profile_zmag_scale
+        s_zmag(ir)  = dzmag_loc    * profile_zmag_scale
+        b_unit(ir)  = b_unit_loc
+
+        dens(1:n_species,ir)   = dens_loc(1:n_species)     
+        temp(1:n_species,ir)   = temp_loc(1:n_species)     
+        dlnndr(1:n_species,ir) = dlnndr_loc(1:n_species) * profile_dlnndr_scale(is)      
+        dlntdr(1:n_species,ir) = dlntdr_loc(1:n_species) * profile_dlntdr_scale(is) 
+
+        ! Sanity check for densities
+        do is=1,n_species
+           if (dens(is,ir) <= 0.0) then
+              call neo_error('ERROR: (NEO) Nonpositive in exp. density profile')
+              return
+           endif
+        enddo
+        
+        ne_ade(ir)      = dens_loc(is_ele)
+        te_ade(ir)      = temp_loc(is_ele)
+        dlnndre_ade(ir) = dlnndr_loc(is_ele)
+        dlntdre_ade(ir) = dlntdr_loc(is_ele)
+        
+        omega_rot(ir)       = mach_loc/(rmaj(ir)*a_meters)
+        omega_rot_deriv(ir) = -gamma_p_loc/(rmaj(ir)*a_meters)
+        dphi0dr(ir)         = -omega_rot(ir)* b_unit(ir)*(r(ir)*a_meters)/q(ir)
+        
+        rhoN_torflux(ir)  = rho_norm_loc
+        psiN_polflux(ir)  = psi_norm_loc
+        psiN_polflux_a    = psi_a_loc
+     
+        if (geo_numeq_flag == 1) then
+           geo_ny = geo_ny_loc
+           if(ir==1) then
+              deallocate(geo_yin)
+              allocate(geo_yin(8,0:geo_ny,n_radial))
+           endif
+           geo_yin(:,:,ir) = geo_yin_loc
+        endif
+        
+        if(error_status > 0) return
+
+     enddo
+
+     ! Normalizing quantities
      dens_norm(:) = dens(1,:)
      temp_norm(:) = temp(1,:)
      
@@ -185,38 +270,11 @@ subroutine neo_make_profiles
      
      ! Determine the equilibrium parameters
      select case (profile_equilibrium_model) 
-     case (0)
-        ! input equilibrium not used -- re-set for s-alpha geometry
-        ! use the input profile-averaged rmaj, q, and b_unit
-        equilibrium_model = 0
-        do ir=1, n_radial
-           rmaj(ir)   = 0.0
-           q(ir)      = 0.0
-           b_unit(ir) = 0.0
-           do ip=1,n_grid_exp
-              rmaj(ir)   = rmaj(ir)   + rmaj_p(ip)
-              q(ir)      = q(ir)      + q_exp(ir)
-              b_unit(ir) = b_unit(ir) + b_unit_p(ip)
-           enddo
-           rmaj(ir)   = rmaj(ir)   / (1.0 * n_grid_exp)
-           q(ir)      = q(ir)      / (1.0 * n_grid_exp)
-           b_unit(ir) = b_unit(ir) / (1.0 * n_grid_exp)
-        enddo
-        
      case(1)
-        ! use the input equilibrium parameters (miller)
-        equilibrium_model = 2
-        
+        equilibrium_model = 2 ! miller
      case(2)
-        ! use the input equilibrium parameters (general)
-        equilibrium_model = 3
-        
+        equilibrium_model = 3 ! general
      end select
-
-     ! EAB: note about beta_star
-     ! This is presently only used for anisotropic species, which currently
-     ! only works in local profile mode
-     beta_star(:) = 0.0
      
      ! Compute the rotation parameters
      select case (rotation_model)     
@@ -298,8 +356,6 @@ subroutine neo_make_profiles
      dlntdr_perp(:,:) = dlntdr(:,:)
      dlntdr_para(:,:) = dlntdr(:,:)
      vth_para(:,:)    = vth(:,:)
-
-     call PROFILE_EXP_alloc(0)
      
   end select
   
@@ -334,6 +390,7 @@ subroutine neo_make_profiles
      close(io)
      
      if(profile_model >= 2) then
+        
         open(unit=io,file=trim(path)//'out.neo.expnorm',status='replace')
         do ir=1,n_radial
            write (io,'(e16.8)',advance='no') r(ir)
@@ -346,6 +403,16 @@ subroutine neo_make_profiles
            write (io,*)
         enddo
         close(io)
+
+        open(unit=io,file=trim(path)//'out.neo.exprhon',status='replace')
+        do ir=1,n_radial
+           write (io,'(e16.8)',advance='no') r(ir)
+           write (io,'(e16.8)',advance='no') rhoN_torflux(ir)
+           write (io,'(e16.8)',advance='no') psiN_polflux(ir)
+           write (io,*)
+        enddo
+        close(io)
+        
      end if
 
   endif

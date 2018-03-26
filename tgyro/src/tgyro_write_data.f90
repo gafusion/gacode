@@ -509,7 +509,7 @@ subroutine tgyro_write_data(i_print)
   case(4)
      write(1,55) 'E(pflux_i2)','R6','E(pflux_i3)','R7','E(pflux_i4)','R8'
   case(5)
-     write(1,55) 'E(pflux_i2)','R6','E(pflux_i3)','R7','E(pflux_i4)','R8','E(pflux_i4)','R9'
+     write(1,55) 'E(pflux_i2)','R6','E(pflux_i3)','R7','E(pflux_i4)','R8','E(pflux_i5)','R9'
   end select
 
   if (tgyro_relax_iterations == 0) then
@@ -600,8 +600,8 @@ subroutine tgyro_write_data(i_print)
   ! Residual header
 30 format(t2,a,i3,1pe12.5,2x,'[',i6,']')
   ! Residuals
-40 format(t2,f8.6,8(1x,2(1pe10.3,1x)))
+40 format(t2,f8.6,9(1x,2(1pe10.3,1x)))
 50 format(t2,a,t12,a,t26,a,t35,a,t49,a,t58,a,t72,a,t81,a,t95,a,t104,a,t118,a)
-55 format(3(7x,a,3x,a))
+55 format(4(7x,a,3x,a))
 
 end subroutine tgyro_write_data

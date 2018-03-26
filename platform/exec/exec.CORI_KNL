@@ -1,4 +1,4 @@
-#! /usr/bin/env bash
+#! /usr/bin/env bash 
 #
 # SCRIPT:
 #  gyro.CORI_KNL
@@ -25,6 +25,8 @@ nidle=${7}
 cd $simdir
 
 export OMP_NUM_THREADS=$nomp
-export OMP_PLACES=threads
-echo "> srun --cpu_bind=cores -n $nmpi -c $(($CORES_PER_NODE/$mpinode)) $exec"
-srun --cpu_bind=cores -n $nmpi -c $(($CORES_PER_NODE/$mpinode)) $exec
+export OMP_PLACES=cores
+export OMP_STACKSIZE=32M
+echo "> srun --cpu_bind=cores -n $nmpi -c $(($CORES_PER_NODE/$mpinode*4)) $exec"
+srun --cpu_bind=cores -n $nmpi -c $(($CORES_PER_NODE/$mpinode*4)) $exec
+

@@ -11,7 +11,6 @@ subroutine cgyro_freq
 
   implicit none
 
-  integer :: mc
   real :: total_weight,dfr,dfi
   real, dimension(nc) :: mode_weight
   complex, dimension(nc) :: freq_loc
@@ -23,38 +22,12 @@ subroutine cgyro_freq
 
   else
 
-     if (px0 < 0) then
+     !--------------------------------------------------
+     ! Standard method: sum all wavenumbers at a given n
+     !--------------------------------------------------
 
-        !--------------------------------------------------
-        ! Standard method: sum all wavenumbers at a given n
-        !--------------------------------------------------
-
-        ! Use potential to compute frequency
-        mode_weight(:) = abs(field_old(1,:))
-
-     else
-
-        !--------------------------------------------------
-        ! Alternate method: use fixed wavenumber
-        !--------------------------------------------------
-
-        mode_weight = 0.0        
-
-        do ic=1,nc
-           do mc=-n_radial/box_size,n_radial/box_size
-
-              if (px(ir_c(ic)) == n*(px0+mc*box_size)) then
-                 mode_weight(ic) = abs(field_old(1,ic))
-              endif
-
-              !  NOTE:   theta_0 = 0   modes with  n >  (n_r/2)/box_size are poorly resolved
-              !   …..the any mode tails outside  -pi < theta < pi  are not includes.   
-              !   This is OK for high s_hat which gave week tails but a problem for s_hat < 1
-
-           enddo ! mc
-        enddo ! ic
-
-     endif
+     ! Use potential to compute frequency
+     mode_weight(:) = abs(field_old(1,:))
 
      ! Define local frequencies
      do ic=1,nc

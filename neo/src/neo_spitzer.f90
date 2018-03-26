@@ -10,20 +10,13 @@ subroutine neo_spitzer
   use neo_sparse_solve
   implicit none
   integer :: io_sp=60
-  integer :: is_ele, is_ion
+  integer :: is_ion
   integer :: ie, is, ir, ix, je, i, j, k, n_elem, ierr
   real :: L0, L11, L12, L21, L22
   real :: nu_ei
   real, dimension(3) :: sp_pflux, sp_eflux, src1, src2
 
-  is_ele = -1
-  do is=1, n_species
-     if(Z(is) < 0.0) then
-        is_ele = is
-        exit
-     endif
-  enddo
-  if(is_ele == -1) then
+  if(adiabatic_ele_model == 1) then
      call neo_error('ERROR: (NEO) Must have electron species for Spitzer problem')
      return
   endif
@@ -34,7 +27,7 @@ subroutine neo_spitzer
         exit
      endif
   enddo
-  if(is_ele == -1) then
+  if(is_ion == -1) then
      call neo_error('ERROR: (NEO) Must have ion species for Spitzer problem')
      return
   endif

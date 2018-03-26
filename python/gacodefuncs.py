@@ -5,6 +5,9 @@
 #  Functions used for computing averages, manipulating strings, etc.
 #----------------------------------------------------------------------
 
+# Useful labels
+TIME=r'$(c_s/a)\,t$'
+
 #---------------------------------------------------------------
 def average(f,t,window):
  

@@ -15,6 +15,7 @@ subroutine cgyro_run(test_flag_in)
 
   use mpi
   use cgyro_globals
+  use timer_lib
 
   implicit none
 

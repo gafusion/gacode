@@ -22,17 +22,14 @@ then
   echo
   echo "          -e <simdir>"
   echo "          Use data in <simdir>."
-  echo 
-  echo "          -img <image.ext>"
-  echo "          Output plot image to image.ext, where the type is set by .ext."
-  echo "           <ext>=emf, eps, pdf, png, ps, raw, rgba, svg, svgz"
+  echo
+  echo "          -ext <filetype>"
+  echo "           Output file type."
+  echo "           <filetype>=eps, pdf, png, svg, dump"
   echo 
   echo "          -dat <datafile>"
   echo "          Toggle data dump to <datafile>."
   echo 
-  echo "          -diff"
-  echo "          List gyroBohm diffusivity rather than flux coefficients."
-  echo
   echo "          -field <value>"
   echo "          Specify field to be plotted: [0,n_field-1]."
   echo "          Alternatively, specifying 's' returns a sum of all fields (default=s)."
@@ -65,7 +62,9 @@ then
   echo "                                   -moment 1 (v, all species) "
   echo "                                   -moment 2 (e, all species) "
   echo "                                   -moment 3 (all fields)],"
-  echo "                    moment_zero"
+  echo "                    moment_zero,"
+  echo "                    text          [ASCII GB flux],"
+  echo "                    textdiff      [ASCII GB diff]"
   echo
   echo "          -ymin <float>"
   echo "          Minimum value of vertical axis (where applicable)."
@@ -88,9 +87,6 @@ then
   echo "          -x2 <val>"
   echo "          Max x to shade"
   echo
-  echo "          -i"
-  echo "          Use python in interactive mode.  Useful if matplotlibrc has interactive:True"
-  echo
   echo "Example:"
   echo
   echo "   gyro_plot -e ."
@@ -106,9 +102,7 @@ fi
 # Default simulation directory
 LOCDIR=.
 SIMROOT=$PWD
-PLOT_FLAG=0
 PLOT_TYPE=gbflux
-DIFF_FLAG=0
 I_KINETIC=0
 I_FIELD="s"
 I_MOMENT=0
@@ -118,8 +112,6 @@ DATAFILE=none
 TMAX=-1.0
 LX=12
 LY=6
-INTERACTIVE=
-#TITLE=`basename $PWD`
 TITLE=null
 YMIN=0.0
 YMAX=auto
@@ -133,10 +125,8 @@ X2=-1.0
 while [ $# -gt 0 ] ; do
   case "$1" in
 
-  -plot) shift ; PLOT_FLAG=1 ; PLOT_TYPE=$1 ;;
-
-  -diff) DIFF_FLAG=1 ;;
-  
+  -plot) shift ; PLOT_TYPE=$1 ;;
+ 
   -e) shift ; LOCDIR=$1 ;;
 
   -p) shift ; SIMROOT=$1 ;;
@@ -151,12 +141,10 @@ while [ $# -gt 0 ] ; do
 
   -tmax) shift ; TMAX=$1 ;;
 
-  -img) shift ; FTYPE=$1 ;;
+  -ext) shift ; FTYPE=$1 ;;
  
   -dat) shift ; DATAFILE=$1 ;;
   
-  -i) INTERACTIVE=-i ;;
-
   -lx) shift ; LX=$1 ;;
   -ly) shift ; LY=$1 ;;
 
@@ -186,56 +174,50 @@ cd $SIMDIR
 PYROOT=$GACODE_ROOT/python/gyro
 
 #==============================================================================
-# Display diff if -ldiff set, then exit.
-#
-if [ $PLOT_FLAG -eq 0 ]
-then
-
-   if [ $DIFF_FLAG -eq 1 ]
-   then
-      python $PYROOT/ldiff.py $SIMDIR $I_FIELD $I_MOMENT $WINDOW
-   else
-      python $PYROOT/lflux.py $SIMDIR $I_FIELD $I_MOMENT $WINDOW
-   fi
-   exit 0
-
-fi
+PLT=$PYROOT/data_plot_single.py
 
 case "$PLOT_TYPE" in
 
+   text)
+        python $PYROOT/text_flux.py $SIMDIR $I_FIELD $I_MOMENT $WINDOW ;;
+
+   textdiff)
+        python $PYROOT/text_diff.py $SIMDIR $I_FIELD $I_MOMENT $WINDOW ;;
+
    moment_zero)
-	python $INTERACTIVE  $PYROOT/moment_zero.py $SIMDIR $I_MOMENT $WINDOW $FTYPE $DATAFILE ;;
+	python $PLT $PLOT_TYPE $SIMDIR $I_MOMENT $WINDOW $FTYPE $DATAFILE ;;
 
    fluctuation2d)
-	python $INTERACTIVE  $PYROOT/fluctuation2d.py $SIMDIR $I_MOMENT $FTYPE $DATAFILE ;;
+	python $PYROOT/fluctuation2d.py $SIMDIR $I_MOMENT $FTYPE $DATAFILE ;;
 
    freq)
-	python $INTERACTIVE  $PYROOT/freq.py $SIMDIR $WINDOW $FTYPE $DATAFILE ;;
+	python $PLT $PLOT_TYPE $WINDOW $FTYPE ;;
 
    zf)
-	python $INTERACTIVE  $PYROOT/zf.py $SIMDIR $WINDOW $FTYPE $DATAFILE ;;
+	python $PLT $PLOT_TYPE $SIMDIR $WINDOW $FTYPE ;;
 
    phi_n0)
-	python $INTERACTIVE  $PYROOT/phi_n0.py $SIMDIR $FTYPE $DATAFILE $LX $LY $TITLE $YMAX $X1 $X2 ;;
+	python $PLT  $PLOT_TYPE $SIMDIR $LX $LY $YMAX $X1 $X2 $FTYPE ;;
 
    gbflux)
-       python $INTERACTIVE  $PYROOT/gbflux.py $SIMDIR $I_FIELD $I_MOMENT $WINDOW $FTYPE \
-	      $DATAFILE $LX $LY $TITLE $YMIN $YMAX $X1 $X2;;
-
-   gbflux_n)
-        python $INTERACTIVE  $PYROOT/gbflux_n.py $SIMDIR $I_FIELD $I_MOMENT $WINDOW $FTYPE $DATAFILE ;;
+       python $PLT $PLOT_TYPE $SIMDIR $I_FIELD $I_MOMENT $WINDOW \
+	      $LX $LY $TITLE $YMIN $YMAX $X1 $X2 $FTYPE;;
 
    gbflux_i)
-        python $INTERACTIVE  $PYROOT/gbflux_i.py $SIMDIR $I_FIELD $I_MOMENT $WINDOW $FTYPE $YMIN $YMAX ;;
+        python $PLT $PLOT_TYPE $SIMDIR $I_FIELD $I_MOMENT $WINDOW \
+              $YMIN $YMAX $FTYPE ;;
+
+   gbflux_n)
+        python $PLT $PLOT_TYPE $SIMDIR $I_FIELD $I_MOMENT $WINDOW $DATAFILE $FTYPE ;;
 
    gbflux_rt)
-        python $INTERACTIVE  $PYROOT/gbflux_rt.py $SIMDIR $I_FIELD $I_MOMENT $WINDOW $FTYPE $DATAFILE ;;
+        python $PLT $PLOT_TYPE $SIMDIR $I_FIELD $I_MOMENT $WINDOW $FTYPE ;;
 
    gbflux_exc)
-        python $PYROOT/gbflux_exc.py $SIMDIR $WINDOW $FTYPE $DATAFILE ;;
+        python $PLT $PLOT_TYPE $SIMDIR $WINDOW $FTYPE ;;
 
    balloon)
-        python $INTERACTIVE  $PYROOT/balloon.py $SIMDIR $I_MOMENT $FTYPE $DATAFILE $TMAX ;;
+        python $PLT $PLOT_TYPE $SIMDIR $I_MOMENT $FTYPE $TMAX ;;
 
    *)
         echo 'ERROR: (gyro_plot) Unrecognized argument to -plot.' ;;

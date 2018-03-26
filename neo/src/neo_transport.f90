@@ -560,9 +560,10 @@ contains
   subroutine TRANSP_write(ir)
     use neo_globals
     use neo_rotation
+    use EXPRO_locsim_interface
     implicit none
     integer, intent (in) :: ir
-    integer :: is, jt, is_ele
+    integer :: is, jt
     real :: pgb, egb, mgb, dens_ele, temp_ele
 
     if(silent_flag > 0 .or. i_proc > 0) return
@@ -681,12 +682,6 @@ contains
 
     ! fluxes in GB units
     if(adiabatic_ele_model == 0) then
-       do is=1, n_species
-          if(Z(is) < 0.0) then
-             is_ele = is
-             exit
-          endif
-       enddo
        dens_ele = dens(is_ele,ir)
        temp_ele = temp(is_ele,ir)
     else

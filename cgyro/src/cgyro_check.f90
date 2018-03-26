@@ -179,7 +179,7 @@ subroutine cgyro_check
      call cgyro_info('Collision model: Lorentz ee+ei')
   case (2) 
      call cgyro_info('Collision model: Connor')
-  case (4) 
+  case (4,6) 
      call cgyro_info('Collision model: Sugama')
      ctag(2) = 'x'
   case(5)
@@ -217,7 +217,7 @@ subroutine cgyro_check
      end select
   endif
 
-  if (collision_model == 4) then
+  if ((collision_model == 4) .or. (collision_model == 6)) then
 
      select case (collision_ene_diffusion)
      case(0)

@@ -1,0 +1,13 @@
+#%Module
+#
+# Module file for setting the GACODE machine-dependent environmental variables
+#
+
+setenv GACODE_PLATFORM [lrange [file split ${ModulesCurrentModulefile}]	end end]
+set GACODE_PLATFORM $::env(GACODE_PLATFORM)
+puts stderr "Use GACODE_PLATFORM: ${GACODE_PLATFORM}"
+
+setenv FFTW_DIR /nfs-projects/opt/fftw/install
+setenv LLIBS -L/nfs-projects/opt/openblas/install/lib/
+
+setenv MPIHOSTS ${GACODE_ROOT}/cgyro/bin/mpi_hosts

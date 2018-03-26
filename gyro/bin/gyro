@@ -318,29 +318,6 @@ then
 fi
 #==========================================================
 
-#==========================================================
-# See if we are using experimental profiles
-
-if [ -f input.profiles ]
-then 
-   # See if this is a restart
-   LINE=`cat restart.dat`
-   if [ ${LINE:0:1} = "1" ] && [ -f input.profiles.gen ]
-   then
-      # We are restarting; do not parse
-      echo "NOTE: not parsing input.profiles on restart."
-   else
-      # We are not restarting; parse input.profiles
-      python $GACODE_ROOT/shared/bin/profile_parse.py input.profiles >> $RUNBASE
-      if [ $? -eq 1 ]
-      then
-         cat $RUNBASE
-         exit 1
-      fi
-   fi
-fi
-#==========================================================
-
 #===========================================================
 # Set flags for execute or test:
 
@@ -381,6 +358,29 @@ case "$START" in
   *) echo "ERROR: bad argument to -start." ; exit 1 ;;
 esac
 #===========================================================
+
+#==========================================================
+# See if we are using experimental profiles
+
+if [ -f input.profiles ]
+then 
+   # NOTE: restart.dat created in previous block
+   LINE=`cat restart.dat`
+   if [ ${LINE:0:1} = "1" ] && [ -f input.profiles.gen ]
+   then
+      # We are continuing (see above) so do not parsing input.profiles
+      echo "INFO: (gyro) Not parsing input.profiles on continue."
+   else
+      # We are not continuing; parse input.profiles
+      python $GACODE_ROOT/shared/bin/profile_parse.py input.profiles >> $RUNBASE
+      if [ $? -eq 1 ]
+      then
+         cat $RUNBASE
+         exit 1
+      fi
+   fi
+fi
+#==========================================================
 
 #===========================================================
 # RUN GYRO

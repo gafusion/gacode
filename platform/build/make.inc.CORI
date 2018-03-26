@@ -1,12 +1,10 @@
 #---------------------------------------------------
-# Cray XC40 (cori.nersc.gov) 
+# Cray XC40 (cori.nersc.gov) [Haswell nodes]
 #
-# Cori SYSTEM INFO:
-# - Intel Haswell
 # - 2 CPUs per node, 16 cores/CPU.
 #---------------------------------------------------
 
-IDENTITY="NERSC Cori Phase 2"
+IDENTITY="NERSC Cori Haswell (Cray)"
 CORES_PER_NODE=64
 NUMAS_PER_NODE=2
 

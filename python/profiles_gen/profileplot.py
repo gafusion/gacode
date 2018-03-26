@@ -3,8 +3,12 @@
 import sys
 import string
 import numpy as np
-from gacodeplotdefs import *
+import matplotlib.pyplot as plt
+from matplotlib import rc
 from profiles_gen.data import profiles_genData
+
+rc('text',usetex=True)
+rc('font',size=18)
 
 rvar    = sys.argv[1]
 infiles = sys.argv[2]
@@ -25,7 +29,7 @@ for j in range(n):
         tlabel = r'$\;\mathrm{'+t.split(',')[j]+'}$'
     else:
         tlabel = ''
-    
+
     if filevec[j] == '.':
         filevec[j] = filevec[j-1]
 
@@ -35,7 +39,7 @@ for j in range(n):
     prof = profiles_genData(filevec[j])
     tag  = plotvec[j]
     keys  = sorted(prof.data.keys())
-   
+
     success = 0
     for i in range(len(keys)):
         if tag == keys[i].split()[0]:
@@ -54,11 +58,11 @@ for j in range(n):
             ax.set_title(r'$'+title+'$',size=18)
 
         if rvar == "r":
-            ax.set_xlabel(r"$r \, \mathrm{(m)}$",fontsize=GFONTSIZE)
+            ax.set_xlabel(r"$r \, \mathrm{(m)}$")
         if rvar == "r/a":
-            ax.set_xlabel(r"$r/a$",fontsize=GFONTSIZE)
+            ax.set_xlabel(r"$r/a$")
         if rvar == "rho":
-            ax.set_xlabel(r"$\rho$",fontsize=GFONTSIZE)
+            ax.set_xlabel(r"$\rho$")
 
         ax.grid(which="majorminor",ls=":")
         ax.grid(which="major",ls=":")

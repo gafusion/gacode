@@ -107,6 +107,44 @@ contains
 
   end subroutine parallel_lib_f
 
+  ! inline version, set one row
+  subroutine parallel_lib_f_i_set(i_loc,bv)
+
+    implicit none
+
+    integer, intent(in) :: i_loc
+    complex, intent(in), dimension(nj) :: bv
+    integer :: j,k
+
+    do k=1,nproc
+          do j=1,nj_loc
+             fsendf(j,i_loc,k) = bv(j+(k-1)*nj_loc)
+          enddo
+    enddo
+
+  end subroutine parallel_lib_f_i_set
+
+  ! inline vesion, just execute
+  subroutine parallel_lib_f_i_do(ft)
+
+    use mpi
+
+    implicit none
+
+    complex, intent(inout), dimension(nj_loc,ni) :: ft
+    integer :: ierr
+
+    call MPI_ALLTOALL(fsendf, &
+         nsend, &
+         MPI_DOUBLE_COMPLEX, &
+         ft, &
+         nsend, &
+         MPI_DOUBLE_COMPLEX, &
+         lib_comm, &
+         ierr)
+
+  end subroutine parallel_lib_f_i_do
+
   !=========================================================
 
   subroutine parallel_lib_r(ft,f)
@@ -266,6 +304,30 @@ contains
 
 !=========================================================
 
+  subroutine parallel_slib_f_nc(x,xt)
+
+    use mpi
+
+    !-------------------------------------------------------
+    implicit none
+    !
+    complex, intent(in), dimension(nkeep,nsplit*nn) :: x
+    complex, intent(inout), dimension(nkeep,nsplit,nn) :: xt
+    !
+    integer :: ierr
+    !-------------------------------------------------------
+
+    call MPI_ALLTOALL(x, &
+         nkeep*nsplit, &
+         MPI_DOUBLE_COMPLEX, &
+         xt, &
+         nkeep*nsplit, &
+         MPI_DOUBLE_COMPLEX, &
+         slib_comm, &
+         ierr)
+
+  end subroutine parallel_slib_f_nc
+
   subroutine parallel_slib_f(x_in,xt)
 
     use mpi
@@ -278,9 +340,9 @@ contains
     complex, intent(inout), dimension(nkeep,nsplit,nn) :: xt
     !
     integer :: j
-    integer :: ierr
     !-------------------------------------------------------
 
+!$omp parallel do private(j)
     do j=1,nexch
        x(:,j) = x_in(:,j)
     enddo
@@ -289,18 +351,35 @@ contains
        x(:,j) = (0.0,0.0)
     enddo
 
-    call MPI_ALLTOALL(x, &
+    call parallel_slib_f_nc(x,xt)
+
+  end subroutine parallel_slib_f
+
+ !=========================================================
+
+  subroutine parallel_slib_r_nc (xt,x)
+
+    use mpi
+
+    !-------------------------------------------------------
+    implicit none
+    !
+    complex, intent(in), dimension(nkeep,nsplit,nn) :: xt
+    complex, intent(inout), dimension(nkeep,nsplit*nn) :: x
+    !
+    integer :: ierr
+    !-------------------------------------------------------
+
+    call MPI_ALLTOALL(xt, &
          nkeep*nsplit, &
          MPI_DOUBLE_COMPLEX, &
-         xt, &
+         x, &
          nkeep*nsplit, &
          MPI_DOUBLE_COMPLEX, &
          slib_comm, &
          ierr)
 
-  end subroutine parallel_slib_f
-
- !=========================================================
+  end subroutine parallel_slib_r_nc
 
   subroutine parallel_slib_r(xt,x_out)
 
@@ -314,18 +393,11 @@ contains
     complex, dimension(nkeep,nsplit*nn) :: x
     !
     integer :: j
-    integer :: ierr
     !-------------------------------------------------------
 
-    call MPI_ALLTOALL(xt, &
-         nkeep*nsplit, &
-         MPI_DOUBLE_COMPLEX, &
-         x, &
-         nkeep*nsplit, &
-         MPI_DOUBLE_COMPLEX, &
-         slib_comm, &
-         ierr)
+    call parallel_slib_r_nc(xt,x)
 
+!$omp parallel do private(j)
     do j=1,nexch
        x_out(:,j) = x(:,j)
     enddo

@@ -5,14 +5,13 @@
 !  CGYRO global variables.  The idea is to have a primary, large
 !  module containing all essential CGYRO arrays and scalars.
 !-----------------------------------------------------------------
-#ifdef _OPENACC
-#include "precision_m.f90"
-#include "cufft_m.f90"
-#endif
 
 module cgyro_globals
 
   use, intrinsic :: iso_c_binding
+#ifdef _OPENACC
+  use cuFFT
+#endif
 
   !---------------------------------------------------------------
   ! Input parameters:
@@ -86,8 +85,10 @@ module cgyro_globals
   integer :: psym_flag
   integer :: profile_shear_flag
   integer :: theta_plot
-  integer :: px0
-  integer :: mx0
+  integer :: mpiio_small_stripe_factor
+  integer :: mpiio_stripe_factor
+  integer :: mpiio_num_files
+  integer :: restart_format
   !
   ! Geometry input
   !
@@ -141,6 +142,12 @@ module cgyro_globals
   real :: lambda_debye
   real :: rhos
 
+  ! Global conversion variables
+  real :: b_unit
+  real :: a_meters
+  real :: dens_norm, temp_norm, vth_norm, mass_norm, rho_star_norm
+  real :: gamma_gb_norm, q_gb_norm, pi_gb_norm
+
   !---------------------------------------------------------------
 
   !---------------------------------------------------------------
@@ -152,17 +159,22 @@ module cgyro_globals
   integer :: i_proc
   integer :: i_proc_1
   integer :: i_proc_2
+  integer :: i_proc_restart_io
   integer :: n_proc
   integer :: n_proc_1
   integer :: n_proc_2
+  integer :: n_proc_restart_io
   integer :: i_group_1
   integer :: i_group_2
+  integer :: i_group_restart_io
   integer :: CGYRO_COMM_WORLD
   integer :: NEW_COMM_1
   integer :: NEW_COMM_2
+  integer :: NEW_COMM_RESTART_IO
   integer :: nv1,nv2,nc1,nc2
   integer :: nsplit
   integer, dimension(:), allocatable :: recv_status
+  logical :: is_staggered_comm_2
   !
   ! Pointers
   integer :: nv,iv
@@ -213,10 +225,11 @@ module cgyro_globals
        (/'out.cgyro.kxky_n','out.cgyro.kxky_e'/)
   character(len=20), dimension(3)  :: runfile_lky_flux = &
        (/'out.cgyro.lky_flux_n','out.cgyro.lky_flux_e','out.cgyro.lky_flux_v'/)
+  character(len=15) :: runfile_hosts = 'out.cgyro.hosts'
   integer, parameter :: io=1
   ! Restart tags
-  character(len=8) :: fmt='(I2.2)' 
-  character(len=2), dimension(100) :: rtag
+  character(len=8) :: fmt='(I2.2)'
+  character(len=6), dimension(100) :: rtag
   !
   ! error checking
   integer :: error_status = 0
@@ -225,11 +238,12 @@ module cgyro_globals
   integer :: io_control
   integer :: signal
   integer :: restart_flag
-  integer :: n_chunk
-  real :: max_filesize
+  character(len=2) :: mpiio_small_stripe_str
+  character(len=3) :: mpiio_stripe_str
   !
   ! Standard precision for IO (there are optionally reset to higher precision later)
   character(len=8)  :: fmtstr    ='(es11.4)'
+  integer           :: fmtstr_len = 12
   character(len=14) :: fmtstr2   ='(2(es11.4,1x))'
   character(len=15) :: fmtstrn   ='(10(es11.4,1x))'
   character(len=9)  :: fmtstr_hi ='(es18.12)'
@@ -296,6 +310,8 @@ module cgyro_globals
   complex, dimension(:,:), allocatable :: chi
   complex, dimension(:,:,:), allocatable :: f_nl
   complex, dimension(:,:,:), allocatable :: g_nl
+  complex, dimension(:,:), allocatable :: fpack
+  complex, dimension(:,:), allocatable :: gpack
   complex, dimension(:,:), allocatable :: omega_cap_h
   complex, dimension(:,:), allocatable :: omega_h
   complex, dimension(:,:,:), allocatable :: omega_s,omega_ss
@@ -348,15 +364,17 @@ module cgyro_globals
   integer :: nx0,ny0
   !
   ! 2D FFT work arrays
-  real, dimension(:,:), allocatable :: ux
-  real, dimension(:,:), allocatable :: uy
-  real, dimension(:,:), allocatable :: vx
-  real, dimension(:,:), allocatable :: vy
-  real, dimension(:,:), allocatable :: uv
-  complex, dimension(:,:),allocatable :: fx
-  complex, dimension(:,:),allocatable :: fy
-  complex, dimension(:,:),allocatable :: gx
-  complex, dimension(:,:),allocatable :: gy
+#ifndef _OPENACC
+  real, dimension(:,:,:), allocatable :: uxmany
+  real, dimension(:,:,:), allocatable :: uymany
+  real, dimension(:,:,:), allocatable :: vx
+  real, dimension(:,:,:), allocatable :: vy
+  real, dimension(:,:,:), allocatable :: uv
+  complex, dimension(:,:,:),allocatable :: fx
+  complex, dimension(:,:,:),allocatable :: fy
+  complex, dimension(:,:,:),allocatable :: gx
+  complex, dimension(:,:,:),allocatable :: gy
+#endif
   !
   ! Work arrays
   complex, dimension(:,:), allocatable :: f_balloon
@@ -378,7 +396,9 @@ module cgyro_globals
   !
   ! Collision operator
   real, dimension(:,:,:), allocatable :: cmat
-  real, dimension(:,:,:,:,:), allocatable :: cmat_simple
+  real, dimension(:,:,:), allocatable :: cmat_base ! only used in collision_mode=6
+  real(kind=4) , dimension(:,:,:), allocatable :: cmat_diff ! only used in collision_mode=6
+  real, dimension(:,:,:,:,:), allocatable :: cmat_simple ! only used in collision_mode=5
   ! 
   ! Equilibrium/geometry arrays
   integer :: it0

@@ -13,9 +13,13 @@ import re
 import numpy as np
 matplotlib.use('WXAgg')
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-from gacodeplotdefs import *
+import matplotlib.pyplot as plt
+from matplotlib import rc
 from gacodefuncs import *
 from tgyro.data import tgyrodata
+
+rc('text',usetex=True)
+rc('font',size=18)
 
 simdir = sys.argv[1]
 units  = int(sys.argv[2])
@@ -40,7 +44,7 @@ def plot_gen(ax,tag):
 
     ax.grid(which="major",ls="-",alpha=0.4)
     ax.grid(which="minor",ls=":",alpha=0.4)
-    ax.set_xlabel('$r/a$',fontsize=GFONTSIZE)
+    ax.set_xlabel('$r/a$')
  
     tot=r'$\mathbf{total}$'
     tar=r'$\mathbf{target}$'
@@ -49,29 +53,29 @@ def plot_gen(ax,tag):
         if units == 0:
             ax.plot(x,sim.data['eflux_e_tot'][n],label=tot)
             ax.plot(x,sim.data['eflux_e_target'][n],label=tar)
-            ax.set_ylabel('$Q_e/Q_{GB}$',color='k',fontsize=GFONTSIZE)
+            ax.set_ylabel('$Q_e/Q_{GB}$',color='k')
         else:
             ax.plot(x,sim.data['eflux_e_tot'][n]*qgb,label=tot)
             ax.plot(x,sim.data['eflux_e_target'][n]*qgb,label=tar)
-            ax.set_ylabel('$Q_e [MW/m^2]$',color='k',fontsize=GFONTSIZE)
+            ax.set_ylabel('$Q_e [MW/m^2]$',color='k')
     elif tag == 'eflux_i_target':
         if units == 0:
             ax.plot(x,sim.data['eflux_i_tot'][n],label=tot)
             ax.plot(x,sim.data['eflux_i_target'][n],label=tar)
-            ax.set_ylabel('$Q_i/Q_{GB}$',color='k',fontsize=GFONTSIZE)
+            ax.set_ylabel('$Q_i/Q_{GB}$',color='k')
         else:
             ax.plot(x,sim.data['eflux_i_tot'][n]*qgb,label=tot)
             ax.plot(x,sim.data['eflux_i_target'][n]*qgb,label=tar)
-            ax.set_ylabel('$Q_i~[MW/m^2]$',color='k',fontsize=GFONTSIZE)
+            ax.set_ylabel('$Q_i~[MW/m^2]$',color='k')
     elif tag == 'pflux_e_target':
         if units == 0:
             ax.plot(x,sim.data['pflux_e_tot'][n],label=tot)
             ax.plot(x,sim.data['pflux_e_target'][n],label=tar)
-            ax.set_ylabel('$\Gamma_e/\Gamma_{GB}$',color='k',fontsize=GFONTSIZE)
+            ax.set_ylabel('$\Gamma_e/\Gamma_{GB}$',color='k')
         else:
             ax.plot(x,sim.data['pflux_e_tot'][n]*ggb,label=tot)
             ax.plot(x,sim.data['pflux_e_target'][n]*ggb,label=tar)
-            ax.set_ylabel('$\Gamma_e~[10^{19}/m^2/s]$',color='k',fontsize=GFONTSIZE)
+            ax.set_ylabel('$\Gamma_e~[10^{19}/m^2/s]$',color='k')
             
     for i in range(n_ion):
         pstr = 'pflux_i'+str(i+1)
@@ -79,11 +83,11 @@ def plot_gen(ax,tag):
             if units == 0:
                 ax.plot(x,sim.data[pstr+'_tot'][n],label=tot)
                 ax.plot(x,sim.data[pstr+'_target'][n],label=tar)
-                ax.set_ylabel('$\Gamma_{i'+str(i+1)+'}/\Gamma_{GB}$',color='k',fontsize=GFONTSIZE)
+                ax.set_ylabel('$\Gamma_{i'+str(i+1)+'}/\Gamma_{GB}$',color='k')
             else:
                 ax.plot(x,sim.data[pstr+'_tot'][n]*ggb,label=tot)
                 ax.plot(x,sim.data[pstr+'_target'][n]*ggb,label=tar)
-                ax.set_ylabel('$\Gamma_{i'+str(i+1)+'}~[10^{19}/m^2/s]$',color='k',fontsize=GFONTSIZE)
+                ax.set_ylabel('$\Gamma_{i'+str(i+1)+'}~[10^{19}/m^2/s]$',color='k')
             break
 
     # Smooth curves

@@ -78,7 +78,7 @@ module neo_rotation
       implicit none
       integer, intent (in) :: ir
       integer, parameter :: nmax = 200
-      integer :: it, is, jt, id, n, is_ele
+      integer :: it, is, jt, id, n
       real :: x, x0, sum_zn, dsum_zn, fac
       real, dimension(:,:), allocatable :: dlnndr_fac, dens_fac_new, &
            lam_rot_rderiv_aniso
@@ -120,12 +120,6 @@ module neo_rotation
             dsum_zn = dsum_zn - ne_ade(ir) * dlnndre_ade(ir)
             dsum_zn = dsum_zn / ne_ade(ir)
          else
-            do is=1, n_species
-               if(Z(is) < 0.0) then
-                  is_ele = is
-                  exit
-               endif
-            enddo
             sum_zn   = sum_zn / dens(is_ele,ir)
             dsum_zn  = dsum_zn / dens(is_ele,ir)
          endif

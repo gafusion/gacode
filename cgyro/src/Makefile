@@ -38,14 +38,11 @@ OBJECTS = cgyro_globals.o \
           cgyro_step_collision.o \
           cgyro_kernel.o \
           cgyro_mpi_grid.o \
-	  cgyro_experimental_globals.o \
-	  cgyro_experimental_alloc.o \
-	  cgyro_experimental_profiles.o \
-	  cgyro_experimental_map.o \
 	  cgyro_make_profiles.o \
 	  cgyro_nl_direct.o \
 	  cgyro_nl_fftw.o \
           cgyro_read_input.o \
+          cgyro_rhs.o \
           cgyro_run.o \
           cgyro_shear.o \
           cgyro_shear_interface.o \
@@ -54,16 +51,13 @@ OBJECTS = cgyro_globals.o \
           cgyro_write_initdata.o \
           cgyro_read_restart.o \
           cgyro_write_restart.o \
-          cgyro_write_timedata.o 
+          cgyro_write_timedata.o \
+          cgyro_write_hosts.o
 
 .SUFFIXES : .o .f90 .F90
 
 all: cgyro_lib.a $(EXEC).o $(EXTRA_LIBS)
 	$(FC) $(FFLAGS) -o $(EXEC) $(EXEC).o cgyro_lib.a $(EXTRA_LIBS) $(LMATH)
-
-stub:
-	$(FC) $(FFLAGS) -c cgyro_stub.f90
-	$(ARCH) cgyro_lib.a cgyro_stub.o
 
 cgyro_lib.a: $(OBJECTS)
 	$(ARCH) cgyro_lib.a $(OBJECTS)

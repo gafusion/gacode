@@ -1,0 +1,28 @@
+#%Module
+#
+# Module file for setting the GACODE machine-dependent environmental variables
+#
+
+setenv GACODE_PLATFORM [lrange [file split ${ModulesCurrentModulefile}]	end end]
+set GACODE_PLATFORM $::env(GACODE_PLATFORM)
+puts stderr "Use GACODE_PLATFORM: ${GACODE_PLATFORM}"
+
+module unload python
+module unload texlive
+module unload netcdf/cray
+module unload cray-netcdf
+module unload hdf5
+module use ~/my_python_modulefiles
+module load python python_numpy python_matplotlib 
+module load python_scipy python_pygtk python_pygobject python_pycairo
+module load texlive
+module load PrgEnv-pgi
+module load fftw
+module load cudatoolkit
+module load cray-netcdf
+
+setenv PAT_REPORT_IGNORE_CHECKSUM 1
+setenv CRAY_CUDA_MPS 1
+setenv CRAY_CUDA_PROXY 1
+setenv OMP_STACKSIZE 100M
+setenv OMP_DYNAMIC FALSE

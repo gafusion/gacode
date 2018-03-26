@@ -6,7 +6,7 @@ def make_clean():
         print('GACODE failed to make clean')
         sys.exit(125)
 def make():
-    ret = os.system('cd $GACODE_ROOT; make some')
+    ret = os.system('cd $GACODE_ROOT; make')
     if ret:
         print('GACODE failed to make')
         sys.exit(125)

@@ -2,9 +2,14 @@ import os
 import sys
 import string
 import numpy as np
-from gacodeplotdefs import *
+import matplotlib.pyplot as plt
+from matplotlib import rc
+from gacodefuncs import *
 from tgyro.data import tgyrodata
 from profiles_gen.data import profiles_genData
+
+rc('text',usetex=True)
+rc('font',size=18)
 
 simdir = sys.argv[1]
 f    = sys.argv[2]
@@ -43,7 +48,7 @@ sim  = tgyrodata(simdir)
 prof = profiles_genData('input.profiles')
 
 if rvar == "r":
-    ax.set_xlabel(r"$r~\mathrm{(m)}$",fontsize=GFONTSIZE)
+    ax.set_xlabel(r"$r~\mathrm{(m)}$")
     x = prof.data['rmin']
     if sim.pedflag == 1:
         r_star = sim.data['r_*/a'][0]*max(x)
@@ -51,7 +56,7 @@ if rvar == "r":
         ax.axvspan(r_star,r_top,facecolor='purple',alpha=0.1)
 
 if rvar == "r/a":
-    ax.set_xlabel(r"$r/a$",fontsize=GFONTSIZE)
+    ax.set_xlabel(r"$r/a$")
     x = prof.data['rmin']
     x = x/max(x)
     if sim.pedflag == 1:
@@ -60,7 +65,7 @@ if rvar == "r/a":
         ax.axvspan(r_star,r_top,facecolor='purple',alpha=0.1)
 
 if rvar == "rho":
-    ax.set_xlabel(r"$\rho$",fontsize=GFONTSIZE)
+    ax.set_xlabel(r"$\rho$")
     x = prof.data['rho']
 
 ftag = r'$'+prof.fancy[f][0]+'\;[\mathrm{'+prof.fancy[f][1]+'}]$'

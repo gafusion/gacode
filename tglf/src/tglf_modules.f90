@@ -105,7 +105,7 @@
       REAL :: alpha_n_in =0.0
       REAL :: alpha_t_in =0.0
       REAL :: theta_trapped_in=0.7
-      REAL :: inboard_detrapped_in=0.0
+      REAL :: inboard_detrapped_in=1.0
       REAL :: xnu_factor_in=1.0
       REAL :: debye_factor_in=1.0
       REAL :: etg_factor_in=1.25

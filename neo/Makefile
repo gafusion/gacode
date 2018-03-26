@@ -19,8 +19,10 @@ all:
 	cd ${GACODE_ROOT}/shared/UMFPACK ; make
 	cd ${GACODE_ROOT}/shared/nclass ; make
 	cd src ; make
+	cd ${GACODE_ROOT}/neo/tools/pneo ; make
 
 clean:
 	cd src ; make clean
+	cd ${GACODE_ROOT}/neo/tools/pneo ; make clean
 
 .IGNORE:

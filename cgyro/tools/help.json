@@ -1,0 +1,14 @@
+[
+    {
+	"tag": "N_RADIAL",
+	"text": "Number of radial wavenumbers (Fourier modes)"
+    }, 
+    {
+	"tag": "N_THETA",
+	"text": "Number of poloidal meshpoints."
+    },
+    {
+	"tag": "COLLISION_MODEL",
+	"text": "1=Lorentz ee+ei \n2=Connor \n4=Sugama \n5=simple Lorentz"
+    }
+]

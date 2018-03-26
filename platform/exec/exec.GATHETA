@@ -1,0 +1,33 @@
+#!/bin/sh
+#
+# SCRIPT:
+#  exec.GATHETA
+#
+# FUNCTION:
+#  Parallel execution script
+#
+# Note:
+#  The script expects the following env variable to be set
+#    MPIHOSTS
+#
+
+simdir=${1}
+nmpi=${2}
+exec=${3}
+nomp=${4}
+numa=${5}
+mpinuma=${6}
+cd $simdir
+
+if [ "$nomp" -eq 1 ]; then
+  export MV2_ENABLE_AFFINITY=1
+  # mpirun does not seem to understand that openmp=1 is effectively disabling openMP
+  export MV2_USE_THREAD_WARNING=0
+else
+  # mpirun does not support affinitly with openMP
+  export MV2_ENABLE_AFFINITY=0
+fi
+export OMP_NUM_THREADS=$nomp 
+
+#mpiexec -np $nmpi $exec
+mpirun_rsh -hostfile "${MPIHOSTS}" -export-all -np $nmpi $exec

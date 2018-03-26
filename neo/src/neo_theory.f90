@@ -15,7 +15,7 @@ module neo_theory
   real, private :: eps ! r/rmaj
   real, private :: EparB_avg     ! <E_|| B>
   real, private :: nui_HH, nue_HH, nui_star_HH, nue_star_HH
-  integer, private :: is_ele, is_ion
+  integer, private :: is_ion
   real, private :: dens_ele, temp_ele, zeff
   integer, private :: ir_global, is_global, ietype
   integer, parameter, private :: io=40
@@ -29,18 +29,9 @@ contains
     use neo_nclass_dr
     implicit none
     integer, intent (in) :: flag  ! flag=1: allocate; else deallocate
-    integer :: is
 
     if(flag == 1) then
        if(initialized) return
-       if(adiabatic_ele_model == 0) then
-          do is=1, n_species
-             if(Z(is) < 0.0) then
-                is_ele = is
-                exit
-             endif
-          enddo
-       endif
 
        allocate(pflux_multi_HS(n_species))
        allocate(eflux_multi_HS(n_species))
@@ -432,8 +423,8 @@ contains
     real :: X31, L31_S, X32e, F32_ee, X32i, F32_ei, L32_S, alpha_0, alpha_S, &
          X34, L34_S, X33, sigma_S, sigma_spitzer
     real :: nue_S, nue_star_S, nui_star_S
-    integer :: is, it
-    real :: dens_sum, press_sum, fac
+    integer :: is
+    real :: dens_sum, press_sum
 
     ! EAB: 07/11/2013 changed def of Sauter nui_star_S for impurities
     ! from (Zi**2 * Zeff * ne) to (Zi**4)*(n_all_ions) 

@@ -35,11 +35,11 @@ subroutine cgyro_write_timedata
   call cgyro_flux
 
   ! ky flux for all species with field breakdown
-   call cgyro_write_distributed_real(&
+  call cgyro_write_distributed_real(&
        trim(path)//runfile_ky_flux,&
        size(fflux(:,:,:)),&
        fflux(:,:,:))
- 
+
   if (nonlinear_flag == 1 .and. kxkyflux_print_flag == 1) then
      ! kxky energy flux for all species
      call cgyro_write_distributed_real(&
@@ -57,7 +57,7 @@ subroutine cgyro_write_timedata
              gflux(:,:,i_moment))
      enddo
   endif
-  
+
   if (nonlinear_flag == 1 .and. moment_print_flag == 1) then
      ! (n,e) moment for all species at selected thetas.
      do i_moment=1,2
@@ -76,7 +76,7 @@ subroutine cgyro_write_timedata
         field_plot(ir,itp(it)) = field(1,ic)
      endif
   enddo
-        
+
   ! Complex potential at selected thetas
   call cgyro_write_distributed_complex(&
        trim(path)//runfile_kxky_phi,&
@@ -129,7 +129,6 @@ subroutine cgyro_write_timedata
 
   ! Output to files
   call write_time(trim(path)//runfile_time)
-  call write_timers(trim(path)//runfile_timers)
 
   ! Check for manual halt signal
   if (i_proc == 0) then
@@ -168,13 +167,25 @@ subroutine cgyro_write_distributed_complex(datafile,n_fn,fn)
   integer, intent(in) :: n_fn
   complex, intent(in) :: fn(n_fn)
   !
-  integer :: i_group_send
-  integer :: i_send
   integer :: in
-  integer :: i_dummy
   !
-  complex :: fn_recv(n_fn)
+  ! Required for MPI-IO:
+  !
+  integer :: filemode
+  integer :: finfo
+  integer :: fh
+  integer :: fstatus(MPI_STATUS_SIZE)
+  integer(kind=MPI_OFFSET_KIND) :: disp
+  integer(kind=MPI_OFFSET_KIND) :: offset1
+  !
+  character(len=fmtstr_len*n_fn*2) :: fnstr
+  character(len=fmtstr_len) :: tmpstr
+  character :: c
   !------------------------------------------------------
+
+  if (i_proc_1 /= 0) then
+    return
+  endif
 
 
   select case (io_control)
@@ -196,60 +207,56 @@ subroutine cgyro_write_distributed_complex(datafile,n_fn,fn)
 
      ! Append
 
-     if (i_proc == 0) &
-          open(unit=io,file=datafile,status='old',position='append')
+     ! Create human readable string ready to be written
+     ! Do it in one shot, to minimize IO
+     do in=1,n_fn
+        write(tmpstr, fmtstr) real(fn(in))
+        fnstr((in-1)*fmtstr_len*2+1:(in-1)*fmtstr_len*2+fmtstr_len-1) = tmpstr(1:11)
+        fnstr((in-1)*fmtstr_len*2+fmtstr_len:(in-1)*fmtstr_len*2+fmtstr_len) = NEW_LINE('A')
+        write(tmpstr, fmtstr) aimag(fn(in))
+        fnstr((in-1)*fmtstr_len*2+fmtstr_len+1:in*fmtstr_len*2-1) = tmpstr(1:11)
+        fnstr(in*fmtstr_len*2:in*fmtstr_len*2) = NEW_LINE('A')
+     enddo
 
-     do in=1,n_toroidal
+     ! now write in parallel to the common file
+     filemode = MPI_MODE_WRONLY
+     disp     = i_current-1
+     disp     = disp * n_proc_2
+     disp = disp * fmtstr_len * 2 * n_fn
 
-        !-----------------------------------------
-        ! Subgroup collector:
-        !
-        i_group_send = in-1
+     offset1 = i_proc_2
+     offset1 = offset1 * fmtstr_len * 2 * n_fn
 
-        if (i_group_send /= 0) then
+     call MPI_INFO_CREATE(finfo,i_err)
 
-           i_send = i_group_send*n_proc_1
+     call MPI_INFO_SET(finfo,"striping_factor", mpiio_small_stripe_str,i_err)
 
-           if (i_proc == 0) then
+     call MPI_FILE_OPEN(NEW_COMM_2,&
+          datafile,&
+          filemode,&
+          finfo,&
+          fh,&
+          i_err)
 
-              call MPI_RECV(fn_recv,&
-                   n_fn,&
-                   MPI_DOUBLE_COMPLEX,&
-                   i_send,&
-                   in,&
-                   CGYRO_COMM_WORLD,&
-                   recv_status,&
-                   i_err)
+     call MPI_FILE_SET_VIEW(fh,&
+          disp,&
+          MPI_CHAR,&
+          MPI_CHAR,&
+          'native',&
+          finfo,&
+          i_err)
 
-           else if (i_proc == i_send) then
+     call MPI_FILE_WRITE_AT(fh,&
+          offset1,&
+          fnstr,&
+          n_fn*fmtstr_len*2,&
+          MPI_CHAR,&
+          fstatus,&
+          i_err)
 
-              call MPI_SEND(fn,&
-                   n_fn,&
-                   MPI_DOUBLE_COMPLEX,&
-                   0,&
-                   in,&
-                   CGYRO_COMM_WORLD,&
-                   i_err)
-
-           endif
-
-        else
-
-           fn_recv(:) = fn(:)
-
-        endif
-        !
-        !-----------------------------------------
-
-        if (i_proc == 0) then
-
-           write(io,fmtstr) fn_recv(:)
-
-        endif
-
-     enddo ! in
-
-     if (i_proc == 0) close(io)
+     call MPI_FILE_SYNC(fh,i_err)
+     call MPI_FILE_CLOSE(fh,i_err)
+     call MPI_INFO_FREE(finfo,i_err)
 
   case(3)
 
@@ -257,15 +264,14 @@ subroutine cgyro_write_distributed_complex(datafile,n_fn,fn)
 
      if (i_proc == 0) then
 
-        open(unit=io,file=datafile,status='old')
-        do i_dummy=1,i_current
+        disp     = i_current
+        disp     = disp * n_proc_2
+        disp = disp * fmtstr_len * 2 * n_fn
 
-           do in=1,n_toroidal
-              read(io,fmtstr) fn_recv(:)
-           enddo
-
-        enddo
-
+        open(unit=io,file=datafile,status='old',access="STREAM")
+        if (disp>0) then
+         read(io,pos=disp) c
+        endif
         endfile(io)
         close(io)
 
@@ -295,13 +301,25 @@ subroutine cgyro_write_distributed_real(datafile,n_fn,fn)
   integer, intent(in) :: n_fn
   real, intent(in) :: fn(n_fn)
   !
-  integer :: i_group_send
-  integer :: i_send
   integer :: in
-  integer :: i_dummy
   !
-  real :: fn_recv(n_fn)
+  ! Required for MPI-IO:
+  !
+  integer :: filemode
+  integer :: finfo
+  integer :: fh
+  integer :: fstatus(MPI_STATUS_SIZE)
+  integer(kind=MPI_OFFSET_KIND) :: disp
+  integer(kind=MPI_OFFSET_KIND) :: offset1
+  !
+  character(len=fmtstr_len*n_fn) :: fnstr
+  character(len=fmtstr_len) :: tmpstr
+  character :: c
   !------------------------------------------------------
+
+  if (i_proc_1 /= 0) then
+    return
+  endif
 
   select case (io_control)
 
@@ -322,60 +340,53 @@ subroutine cgyro_write_distributed_real(datafile,n_fn,fn)
 
      ! Append
 
-     if (i_proc == 0) &
-          open(unit=io,file=datafile,status='old',position='append')
+     ! Create human readable string ready to be written
+     ! Do it in one shot, to minimize IO
+     do in=1,n_fn
+        write(tmpstr, fmtstr) fn(in)
+        fnstr((in-1)*fmtstr_len+1:in*fmtstr_len-1) = tmpstr(1:11)
+        fnstr(in*fmtstr_len:in*fmtstr_len) = NEW_LINE('A')
+     enddo
 
-     do in=1,n_toroidal
+     ! now write in parallel to the common file
+     filemode = MPI_MODE_WRONLY
+     disp     = i_current-1
+     disp     = disp * n_proc_2
+     disp = disp * fmtstr_len * n_fn
 
-        !-----------------------------------------
-        ! Subgroup collector:
-        !
-        i_group_send = in-1
+     offset1 = i_proc_2
+     offset1 = offset1 * fmtstr_len * n_fn
 
-        if (i_group_send /= 0) then
+     call MPI_INFO_CREATE(finfo,i_err)
 
-           i_send = i_group_send*n_proc_1
+     call MPI_INFO_SET(finfo,"striping_factor", mpiio_small_stripe_str,i_err)
 
-           if (i_proc == 0) then
+     call MPI_FILE_OPEN(NEW_COMM_2,&
+          datafile,&
+          filemode,&
+          finfo,&
+          fh,&
+          i_err)
 
-              call MPI_RECV(fn_recv,&
-                   n_fn,&
-                   MPI_DOUBLE_PRECISION,&
-                   i_send,&
-                   in,&
-                   CGYRO_COMM_WORLD,&
-                   recv_status,&
-                   i_err)
+     call MPI_FILE_SET_VIEW(fh,&
+          disp,&
+          MPI_CHAR,&
+          MPI_CHAR,&
+          'native',&
+          finfo,&
+          i_err)
 
-           else if (i_proc == i_send) then
+     call MPI_FILE_WRITE_AT(fh,&
+          offset1,&
+          fnstr,&
+          n_fn*fmtstr_len,&
+          MPI_CHAR,&
+          fstatus,&
+          i_err)
 
-              call MPI_SEND(fn,&
-                   n_fn,&
-                   MPI_DOUBLE_PRECISION,&
-                   0,&
-                   in,&
-                   CGYRO_COMM_WORLD,&
-                   i_err)
-
-           endif
-
-        else
-
-           fn_recv(:) = fn(:)
-
-        endif
-        !
-        !-----------------------------------------
-
-        if (i_proc == 0) then
-
-           write(io,fmtstr) fn_recv(:)
-
-        endif
-
-     enddo ! in
-
-     if (i_proc == 0) close(io)
+     call MPI_FILE_SYNC(fh,i_err)
+     call MPI_FILE_CLOSE(fh,i_err)
+     call MPI_INFO_FREE(finfo,i_err)
 
   case(3)
 
@@ -383,15 +394,14 @@ subroutine cgyro_write_distributed_real(datafile,n_fn,fn)
 
      if (i_proc == 0) then
 
-        open(unit=io,file=datafile,status='old')
-        do i_dummy=1,i_current
+        disp     = i_current
+        disp     = disp * n_proc_2
+        disp = disp * fmtstr_len * n_fn
 
-           do in=1,n_toroidal
-              read(io,fmtstr) fn_recv(:)
-           enddo
-
-        enddo
-
+        open(unit=io,file=datafile,status='old',access="STREAM")
+        if (disp>0) then
+         read(io,pos=disp) c
+        endif
         endfile(io)
         close(io)
 
@@ -793,8 +803,8 @@ subroutine write_timers(datafile)
      call timer_lib_init('str_comm')
      call timer_lib_init('nl')
      call timer_lib_init('nl_comm')
-     call timer_lib_init('field_h')
-     call timer_lib_init('field_H')
+     call timer_lib_init('field')
+     call timer_lib_init('field_com')
      call timer_lib_init('shear')
      call timer_lib_init('coll')
      call timer_lib_init('coll_comm')
@@ -814,11 +824,11 @@ subroutine write_timers(datafile)
      if (i_proc == 0) then
         open(unit=io,file=datafile,status='replace')
         write(io,'(a)') 'Setup time'
-        write(io,'(1x,9(a11,1x))') timer_cpu_tag(1:3)
+        write(io,'(1x,9(a11,1x))') timer_cpu_tag(1:4)
         write(io,'(9(1pe10.3,2x))') &
-             timer_lib_time('str_init'),timer_lib_time('coll_init'),timer_lib_time('io_init')
+             timer_lib_time('input'),timer_lib_time('str_init'),timer_lib_time('coll_init'),timer_lib_time('io_init')
         write(io,'(a)') 'Run time'
-        write(io,'(1x,11(a10,1x))') timer_cpu_tag(4:14)
+        write(io,'(1x,11(a10,1x))') timer_cpu_tag(5:15)
         close(io)
      endif
 
@@ -836,8 +846,8 @@ subroutine write_timers(datafile)
              timer_lib_time('str_comm'),& 
              timer_lib_time('nl'),& 
              timer_lib_time('nl_comm'),&
-             timer_lib_time('field_h'),&
-             timer_lib_time('field_H'),&
+             timer_lib_time('field'),&
+             timer_lib_time('field_com'),&
              timer_lib_time('shear'),&
              timer_lib_time('coll'),&
              timer_lib_time('coll_comm'),&

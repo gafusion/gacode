@@ -1,8 +1,12 @@
 import sys
 import string
 import numpy as np
-from gacodeplotdefs import *
+import matplotlib.pyplot as plt
+from matplotlib import rc
 from profiles_gen.data import profiles_genData
+
+rc('text',usetex=True)
+rc('font',size=18)
 
 # Number of theta-points for plotting
 narc = 256

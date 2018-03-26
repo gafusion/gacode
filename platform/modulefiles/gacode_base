@@ -1,0 +1,41 @@
+#%Module
+#
+# Module file for setting the GACODE environmental variables once the $GACODE_ROOT environmental variable is set
+# NOTE: machine-dependent environmental variables are not set here. Look into the $GACODE_ROOT/platform/modulefiles/gacode directory
+#
+
+conflict gacode
+module-whatis gacode
+
+setenv GACODE_ROOT [file dirname [file dirname  [file dirname ${ModulesCurrentModulefile}]]]
+set GACODE_ROOT $::env(GACODE_ROOT)
+#puts stderr "Use GACODE from: ${GACODE_ROOT}"
+
+proc ModulesHelp { } {
+        puts stderr "This modulefile sets the GACODE environmental variables once the $GACODE_ROOT environmental variable is set "
+        puts stderr ""
+        puts stderr "GACODE is the collection of transport and turbulence codes"
+        puts stderr "maintained by the theory group at General Atomics, "
+        puts stderr "including TGLF, TGYRO, GYRO, NEO, and GLF23."
+        puts stderr ""
+        puts stderr "https://fusion.gat.com/theory/Gyro"
+        puts stderr ""
+}
+
+prepend-path PATH ${GACODE_ROOT}/tgyro/bin
+prepend-path PATH ${GACODE_ROOT}/gyro/bin
+prepend-path PATH ${GACODE_ROOT}/cgyro/bin
+prepend-path PATH ${GACODE_ROOT}/neo/bin
+prepend-path PATH ${GACODE_ROOT}/vgen/bin
+prepend-path PATH ${GACODE_ROOT}/tglf/bin
+prepend-path PATH ${GACODE_ROOT}/glf23/bin
+prepend-path PATH ${GACODE_ROOT}/le3/bin
+prepend-path PATH ${GACODE_ROOT}/shared/bin
+
+prepend-path PYTHONPATH ${GACODE_ROOT}/python
+prepend-path PYTHONPATH ${GACODE_ROOT}/cgyro/bin
+
+append-path IDL_PATH ${GACODE_ROOT}/gyro/vugyro
+
+setenv EPEDNN_MODEL_DIR $GACODE_ROOT/shared/neural/eped1nn/models/EPED1_H_superH/
+setenv TGLFNN_MODEL_DIR $GACODE_ROOT/shared/neural/tglfnn/models/DIIID_ion_stiffness_60_rotation/
