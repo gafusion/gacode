@@ -1,9 +1,0 @@
-#!/bin/bash -l
-#SBATCH -J embed_HT2_o8_8192_1
-#SBATCH -o /scratch/05222/sfilig/tests/v1710/tgyro/embed/embed_HT2_o8_8192_1/batch.out
-#SBATCH -e /scratch/05222/sfilig/tests/v1710/tgyro/embed/embed_HT2_o8_8192_1/batch.err
-#SBATCH -p large
-#SBATCH -t 00:45:00
-#SBATCH -N 512
-#SBATCH -n 8192
-tgyro -e embed_HT2_o8_8192_1 -n 8192 -nomp 8 -numa 1 -mpinuma 16 -p /scratch/05222/sfilig/tests/v1710/tgyro/embed
