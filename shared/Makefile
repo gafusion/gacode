@@ -9,7 +9,7 @@ all:
 	cd nclass ; make "OPT=${OPT}"
 	cd UMFPACK ; make "OPT=${OPT}"
 ifdef NEURAL_ROOT
-	cd ${NEURAL_ROOT} && make
+	cd ${NEURAL_ROOT} && make "OPT=${OPT}"
 endif
 
 clean:
