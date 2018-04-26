@@ -52,10 +52,10 @@ subroutine cgyro_kernel
   ! Time-stepping
   n_time = nint(max_time/delta_t)
 
-  if (restart_flag == 0) then
-     io_control = 1*(1-silent_flag)
-  else
+  if (restart_flag == 1) then
      io_control = 3*(1-silent_flag)
+  else
+     io_control = 1*(1-silent_flag)
   endif
 
   call timer_lib_in('io_init')

@@ -1,7 +1,7 @@
-#! /usr/bin/env bash 
+#! /usr/bin/env bash
 #
 # SCRIPT:
-#  gyro.CORI_KNL
+#  gyro.TITAN_PGI
 #
 # FUNCTION:
 #  Parallel execution script
@@ -24,11 +24,13 @@ nidle=${7}
 
 cd $simdir
 
-if [ "$nomp" -lt 2 ]; then
-  echo "WARNING: This mode should only be used with nomp>=2, detected nomp=$nomp"
-fi
+export OMP_STACKSIZE=100M
+export MPICH_MAX_THREAD_SAFETY=funneled
 
-export OMP_NUM_THREADS=$nomp
-export OMP_STACKSIZE=32M
-echo ibrun $exec
-ibrun $exec
+echo "> export OMP_NUM_THREADS=${nomp}"
+export OMP_NUM_THREADS=${nomp}
+export CRAY_CUDA_MPS=1
+module load daint-gpu
+
+echo "> srun -n ${nmpi} $exec"
+srun -n ${nmpi} $exec

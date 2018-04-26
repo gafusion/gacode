@@ -26,6 +26,8 @@ subroutine cgyro_nl_direct(ij)
   complex, dimension(:,:), allocatable :: fg
 
 
+  call timer_lib_in('nl_mem')
+
   ! To keep code self-contained, just recompute these every time
   ! rather than storing in globals.  Cost is tiny.
   allocate(pcyc(-3*nx:3*nx-1))
@@ -45,7 +47,6 @@ subroutine cgyro_nl_direct(ij)
   allocate( g(-nx:nx,-ny:ny) )
   allocate(fg(-nx:nx,-ny:ny) )
 
-  call timer_lib_in('nl_comm')
   if ((nv_loc*n_theta) /= nsplit*n_toroidal) then
 !$omp parallel do private(iexch)
      do iexch=1,nv_loc*n_theta
@@ -57,15 +58,19 @@ subroutine cgyro_nl_direct(ij)
         fpack(:,iexch) = (0.0,0.0)
         gpack(:,iexch) = (0.0,0.0)
      enddo
+     call timer_lib_out('nl_mem')
 
+     call timer_lib_in('nl_comm')
      call parallel_slib_f_nc(fpack,f_nl)
      call parallel_slib_f_nc(gpack,g_nl)
+     call timer_lib_out('nl_comm')
   else
+     call timer_lib_out('nl_mem')
+     call timer_lib_in('nl_comm')
      call parallel_slib_f_nc(h_x,f_nl)
      call parallel_slib_f_nc(psi,g_nl)
+     call timer_lib_out('nl_comm')
   endif
-
-  call timer_lib_out('nl_comm')
 
   call timer_lib_in('nl')
   do j=1,nsplit
@@ -123,17 +128,22 @@ subroutine cgyro_nl_direct(ij)
   enddo ! j
   call timer_lib_out('nl')
 
-  call timer_lib_in('nl_comm')
   if ((nv_loc*n_theta) /= nsplit*n_toroidal) then
+    call timer_lib_in('nl_comm')
     call parallel_slib_r_nc(g_nl,gpack)
+    call timer_lib_out('nl_comm')
+
+    call timer_lib_in('nl_mem')
 !$omp parallel do private(iexch)
      do iexch=1,nv_loc*n_theta
         psi(:,iexch) = gpack(:,iexch)
      enddo
   else
+    call timer_lib_in('nl_comm')
     call parallel_slib_r_nc(g_nl,psi)
+    call timer_lib_out('nl_comm')
+    call timer_lib_in('nl_mem')
   endif
-  call timer_lib_out('nl_comm')
 
   deallocate( f)
   deallocate( g)
@@ -142,8 +152,11 @@ subroutine cgyro_nl_direct(ij)
   deallocate(pcyc)
   deallocate(ncyc)
 
+  call timer_lib_out('nl_mem')
   ! RHS -> -[f,g] = (n'' p' - n' p'') f'' g' 
 
+  call timer_lib_in('nl')
   rhs(:,:,ij) = rhs(:,:,ij)+(q*rho/rmin)*(2*pi/length)*psi(:,:)
+  call timer_lib_out('nl')
 
 end subroutine cgyro_nl_direct

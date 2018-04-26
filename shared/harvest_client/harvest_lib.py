@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+__all__ = ['ddb_float', 'harvest_send', 'harvest_nc']
+
 def ddb_float(float_in):
     '''
     Convert float to Decimal compatible with DynamoDB format
@@ -43,7 +45,7 @@ def _data_2_message(payload):
     message=[]
     for what in payload.keys():
         data=payload[what]
-        if isinstance(data,bool):
+        if isinstance(data,(bool,numpy.bool_)):
             tp='b'
             data=str(int(data))
         elif isinstance(data,(list,tuple,numpy.ndarray)):
@@ -67,11 +69,11 @@ def _data_2_message(payload):
 
     return '|'.join(message)
 
-def harvest_send(payload, table='test_harvest', host=None, port=None, verbose=None, tag=None, protocol=None):
+def harvest_send(payload, table='test_harvest', host=None, port=None, verbose=None, tag=None, protocol=None, process=None):
     '''
     Function to send data to the harvesting server
 
-    :param payload: dictionary
+    :param payload: dictionary with payload data
 
     :param table: table where to put the data
 
@@ -89,6 +91,8 @@ def harvest_send(payload, table='test_harvest', host=None, port=None, verbose=No
 
     :param protocol: transmission protocol to be ued (`UDP` or `TCP`)
     If None take value from `HARVEST_PROTOCOL` environemental variable, or use default `UDP` if not set.
+
+    :param process: function passed by user that is called on each of the payload element prior submission
 
     :return: tuple with used (host, port, message)
     '''
@@ -122,20 +126,26 @@ def harvest_send(payload, table='test_harvest', host=None, port=None, verbose=No
         else:
             verbose=0
 
-    payload=copy.deepcopy(payload)
-    payload['_user']=os.environ['USER']
-    payload['_hostname']=socket.gethostname()
-    payload['_workdir']=os.getcwd()
+    payload_=payload.__class__()
+    if process is None:
+        payload_.update(payload_)
+    else:
+        for item in payload.keys():
+            payload_[item]=process(payload[item])
 
-    if '_tag' not in payload:
+    payload_['_user']=os.environ['USER']
+    payload_['_hostname']=socket.gethostname()
+    payload_['_workdir']=os.getcwd()
+
+    if '_tag' not in payload_:
         if tag is None:
             if 'HARVEST_TAG' in os.environ:
                 tag=os.environ['HARVEST_TAG']
             else:
                 tag=''
-        payload['_tag']=tag
+        payload_['_tag']=tag
 
-    message = "%d:%s:%s"%(version,table,_data_2_message(payload))
+    message = "%d:%s:%s"%(version,table,_data_2_message(payload_))
 
     #UDP connection with application level fragmentation
     MTU=1450
@@ -203,7 +213,7 @@ def harvest_send(payload, table='test_harvest', host=None, port=None, verbose=No
         finally:
             try:
                 sock.close()
-            except:
+            except Exception:
                 pass
 
     return (host,port,message)

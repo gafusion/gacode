@@ -13,29 +13,32 @@ subroutine cgyro_read_restart
   use cgyro_io
 
   implicit none
-  
+
   !---------------------------------------------------------
   ! Read restart parameters from ASCII file.
   !
-  if (i_proc == 0) then
+  if (restart_flag == 1) then
+     if (i_proc == 0) then
 
-     open(unit=io,&
-          file=trim(path)//runfile_restart_tag,&
-          status='old')
+        open(unit=io,&
+             file=trim(path)//runfile_restart_tag,&
+             status='old')
 
-     read(io,*) i_current
-     read(io,fmtstr) t_current
-     close(io)
+        read(io,*) i_current
+        read(io,fmtstr) t_current
+        close(io)
+
+     endif
+
+     ! Broadcast to all cores.
+
+     call MPI_BCAST(i_current,&
+          1,MPI_INTEGER,0,CGYRO_COMM_WORLD,i_err)
+
+     call MPI_BCAST(t_current,&
+          1,MPI_DOUBLE_PRECISION,0,CGYRO_COMM_WORLD,i_err)
 
   endif
-
-  ! Broadcast to all cores.
-
-  call MPI_BCAST(i_current,&
-       1,MPI_INTEGER,0,CGYRO_COMM_WORLD,i_err)
-
-  call MPI_BCAST(t_current,&
-       1,MPI_DOUBLE_PRECISION,0,CGYRO_COMM_WORLD,i_err)
 
   call cgyro_read_restart_one
 

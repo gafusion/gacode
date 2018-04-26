@@ -238,12 +238,10 @@ class cgyrodata:
 
       import numpy as np
 
-      # Convenience definition
-      nt = self.n_time
-
       #-----------------------------------------------------------------
       # Particle and energy fluxes
       #
+      nt = self.n_time
       nd = self.n_species*3*self.n_field*self.n_n*nt
       t,fmt,data = self.extract('.cgyro.ky_flux')
       if fmt != 'null':  
@@ -257,12 +255,10 @@ class cgyrodata:
 
       import numpy as np
 
-      # Convenience definition
-      nt = self.n_time
-
       #-----------------------------------------------------------------
       # Particle and energy fluxes
       #
+      nt = self.n_time
       nd = self.n_radial*self.n_species*self.n_n*nt
       t,fmt,data = self.extract('.cgyro.kxky_flux_e')
       if fmt != 'null':  
@@ -282,12 +278,10 @@ class cgyrodata:
 
       import numpy as np
 
-      # Convenience definition
-      nt = self.n_time
-
       #-----------------------------------------------------------------
       # Particle and energy fluxes
       #
+      nt = self.n_time
       ng = self.n_global+1
       nd = 2*ng*self.n_species*self.n_n*nt
 
@@ -307,18 +301,75 @@ class cgyrodata:
          print "INFO: (data.py) Read data in "+fmt+".cgyro.lky_flux_v. "+t      
       #-----------------------------------------------------------------
 
+   def xfluxave(self,w,moment,e=0.2,nscale=0):
+
+      """
+      Do complicated spatial averages for xflux
+      RESULT: self.lky_flux_ave
+      """
+
+      import numpy as np
+      from gacodefuncs import *
+
+      ns = self.n_species
+      ng = self.n_global+1
+
+      sc = np.zeros(ns)
+      if nscale == 1:
+         # Find ne
+         for ispec in range(ns):
+            if self.z[ispec] < 0.0:
+               ne = self.dens[ispec]            
+         sc[:] = ne/self.dens[:]
+      else:
+         sc[:] = 1.0
+
+      if moment == 'n':
+         z = np.sum(self.lky_flux_n,axis=3)
+      elif moment == 'e':
+         z = np.sum(self.lky_flux_e,axis=3)
+      elif moment == 'v':
+         z = np.sum(self.lky_flux_v,axis=3)
+      else:
+         print 'ERROR (xfluxave) Invalid moment.'
+         sys.exit()
+
+
+      #--------------------------------------------
+      # Useful arrays required outside this routine
+      self.lky_xr = np.zeros((ns,ng))
+      self.lky_xi = np.zeros((ns,ng))
+      self.lky_flux_ave = np.zeros((ns,2))
+      #--------------------------------------------
+
+      for ispec in range(ns):
+         for l in range(ng):
+            self.lky_xr[ispec,l] = average(z[0,l,ispec,:],self.t,w)*sc[ispec]
+            self.lky_xi[ispec,l] = average(z[1,l,ispec,:],self.t,w)*sc[ispec]
+
+         # Flux partial average over [-e,e]
+         g0 = self.lky_xr[ispec,0]
+         g1 = g0
+         for l in range(1,ng):
+            u = 2*np.pi*l*e
+            g0 = g0+2*np.sin(u)*self.lky_xr[ispec,l]/u
+            g1 = g1+2*np.sin(u)*self.lky_xr[ispec,l]/u*(-1)**l
+
+         self.lky_flux_ave[ispec,0] = g0
+         self.lky_flux_ave[ispec,1] = g1
+      
    def getbigfield(self):
 
       """Larger field files"""
 
       import numpy as np
 
-      # Convenience definition
-      nt = self.n_time
-
       #-----------------------------------------------------------------
       # Read complex fields
       #
+
+      nt = self.n_time
+
       # 1a. kxky_phi
       nd = 2*self.n_radial*self.theta_plot*self.n_n*nt
       t,fmt,data = self.extract('.cgyro.kxky_phi')

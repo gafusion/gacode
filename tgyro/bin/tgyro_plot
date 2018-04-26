@@ -70,6 +70,7 @@ DOTS=0
 F=ne
 RVAR=r/a
 LOC=1
+N=-1
 #==============================================================================
 
 #==============================================================================
@@ -93,6 +94,8 @@ while [ $# -gt 0 ] ; do
   -loc) shift ; LOC=$1 ;;
 
   -u) shift ; UNITS=$1 ;;
+
+  -n) shift ; N=$1 ;;
 
   -dots) DOTS=1 ;;
   
@@ -119,7 +122,7 @@ PYROOT=$GACODE_ROOT/python/tgyro
 case "$PLOT_TYPE" in
 
    note)  
-	python $PYROOT/plot_notebook.py $SIMDIR $UNITS $EXT ;;
+	python $PYROOT/plot_notebook.py $SIMDIR $UNITS $EXT $N ;;
 
    glob)  
 	python $PYROOT/plot_global.py $SIMDIR $F $EXT $RVAR $LOC $DOTS ;;

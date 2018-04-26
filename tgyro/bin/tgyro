@@ -75,7 +75,7 @@ then
   echo "          Do not collect harvest data."
   echo
   echo "         -s <simdir>" 
-  echo "         Create small portable copy of <simdir>."
+  echo "         Create copy of <simdir> stripped of restart files."
   echo 
   echo "    tgyro_dir: Replicate TGYRO directories."
   echo

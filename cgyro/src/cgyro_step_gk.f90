@@ -1,5 +1,6 @@
 subroutine cgyro_step_gk
 
+  use timer_lib
   use cgyro_globals
 
   implicit none
@@ -18,30 +19,43 @@ subroutine cgyro_step_gk
   ! Apar -> field(2)
   ! Bpar -> field(3)
 
+  call timer_lib_in('str_mem')
   h0_x = h_x
+  call timer_lib_out('str_mem')
+
   
   ! Stage 1
   call cgyro_rhs(1)
+  call timer_lib_in('str')
   h_x = h0_x + 0.5 * delta_t * rhs(:,:,1)
+  call timer_lib_out('str')
   call cgyro_field_c
 
   ! Stage 2
   call cgyro_rhs(2)
+  call timer_lib_in('str')
   h_x = h0_x + 0.5 * delta_t * rhs(:,:,2)
+  call timer_lib_out('str')
   call cgyro_field_c
 
   ! Stage 3
   call cgyro_rhs(3)
+  call timer_lib_in('str')
   h_x = h0_x + delta_t * rhs(:,:,3)
+  call timer_lib_out('str')
   call cgyro_field_c
 
   ! Stage 4
   call cgyro_rhs(4)
+  call timer_lib_in('str')
   h_x = h0_x+delta_t*(rhs(:,:,1)+2*rhs(:,:,2)+2*rhs(:,:,3)+rhs(:,:,4))/6  
+  call timer_lib_out('str')
   call cgyro_field_c
 
   ! rhs(1) = 3rd-order error estimate
+  call timer_lib_in('str')
   rhs(:,:,1) = h0_x+delta_t*(rhs(:,:,2)+2*rhs(:,:,3))/3-h_x
+  call timer_lib_out('str')
   
   ! Filter special spectral components
   call cgyro_filter

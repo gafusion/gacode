@@ -14,17 +14,12 @@ subroutine tgyro_tglf_map
 
   ! Local variables
   integer :: i_ion,i0
-  integer :: harvest_err
   real :: q_abs
   real :: q_prime
   real :: p_prime
   real :: gamma_eb0
   real :: gamma_p0
 
-  include 'harvest_lib.inc'
-
-  CHARACTER NUL
-  PARAMETER(NUL = CHAR(0))
 
   q_abs = abs(q(i_r))
 
@@ -96,7 +91,7 @@ subroutine tgyro_tglf_map
   
   !----------------------------------------------------------------
   !   debye length/rhos   te in ev, rho_s in cm ne in 10^13/cm^3
-  tglf_debye_in = 7.43e2*sqrt(te(i_r)/(ne(i_r)*1e13))/abs(rho_s(i_r))
+  tglf_debye_in = 7.43e2*sqrt(te(i_r)/(ne(i_r)))/abs(rho_s(i_r))
 
   !----------------------------------------------------------------
   ! TGLF-specific quantities
@@ -306,42 +301,5 @@ subroutine tgyro_tglf_map
   ! TGLFNN ACTIVATION THRESHOLD
   !
   tglf_nn_max_error_in = tgyro_tglf_nn_max_error
-
-  !----------------------------------------------------------------
-  ! HARVEST: NEO AND TARGET FLUXES, GYRO-BOHM NORMALIZATIONS, SHOT
-  !
-  if (i_tran == 0 .and. 0==1) then
-     ! Initialization
-     tglf_harvest_extra_in = NUL
-     harvest_err=set_harvest_verbose(0)
-
-     ! Target fluxes
-     harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_eflux_e_target'//NUL,eflux_e_target(i_r))
-     harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_eflux_i_target'//NUL,eflux_i_target(i_r))
-     harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_pflux_e_target'//NUL,pflux_e_target(i_r))
-     harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_mflux_target'//NUL,mflux_target(i_r))
-
-     ! Neoclassical fluxes
-     harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_eflux_e_neo'//NUL,eflux_e_neo(i_r))
-     harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_sum_eflux_i_neo'//NUL,&
-          & sum(eflux_i_neo(therm_vec(:),i_r)))
-     harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_pflux_e_neo'//NUL,pflux_e_neo(i_r))
-     harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_sum_mflux_i_neo'//NUL,&
-          & sum(mflux_i_neo(therm_vec(:),i_r)))
-
-     ! Turbulent fluxes interface
-     CALL tglf_harvest_local
-
-     ! Gyrobohm normalizations
-     harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_q_gb'//NUL,q_gb(i_r))
-     harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_pi_gb'//NUL,pi_gb(i_r))
-     harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_gamma_gb'//NUL,gamma_gb(i_r))
-
-     ! Indication of thermal ions
-     harvest_err=set_harvest_payload_int_array(tglf_harvest_extra_in,'tgyro_therm_vec'//NUL,therm_vec(:),size(therm_vec))
-
-     ! Experimental shot
-     harvest_err=set_harvest_payload_int(tglf_harvest_extra_in,'shot'//NUL,shot)
-  endif
 
 end subroutine tgyro_tglf_map

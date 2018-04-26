@@ -35,7 +35,7 @@
       REAL,EXTERNAL :: get_R2_ave
       REAL,EXTERNAL :: get_B2_ave
       REAL,EXTERNAL :: get_RBt_ave
-      REAL,EXTERNAL :: get_nky_out
+      INTEGER,EXTERNAL :: get_nky_out
       REAL,EXTERNAL :: get_eigenvalue_spectrum_out
       REAL,EXTERNAL :: get_field_spectrum_out
       REAL,EXTERNAL :: get_intensity_spectrum_out

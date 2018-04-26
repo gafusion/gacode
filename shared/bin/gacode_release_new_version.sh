@@ -15,7 +15,7 @@ git checkout stable
 git pull
 git merge $2
 git submodule update
-python shared/bin/gacode_regression.py -clean || git reset --hard origin/stable; exit
+python shared/bin/gacode_regression.py -clean || (git reset --hard origin/stable; exit 1)
 git tag -a $1
 git push
 git push --tags

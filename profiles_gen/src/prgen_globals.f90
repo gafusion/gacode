@@ -36,6 +36,8 @@ module prgen_globals
   integer :: n_ion_sanitize
   character(len=2), dimension(:), allocatable :: ion_sanitize
   integer :: ntop
+
+  integer :: true_aux_flag=0
   !----------------------------------------------------------
 
   ! Internal physics variables

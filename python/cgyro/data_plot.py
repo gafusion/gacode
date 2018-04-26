@@ -11,6 +11,28 @@ class cgyrodata_plot(data.cgyrodata):
    TEXAPAR = r'\delta {A_\parallel}'
    TEXBPAR = r'\delta {B_\parallel}'
 
+   def kxky_select(self,itheta,field,moment,species):
+
+      if moment == 'phi':
+         if field == 0:
+            f = self.kxky_phi_abs[:,itheta,:,:]
+            ft = self.TEXPHI
+         elif field == 1:
+            f = self.kxky_apar_abs[:,itheta,:,:]
+            ft = self.TEXAPAR
+         else:
+            f = self.kxky_bpar_abs[:,itheta,:,:]
+            ft = self.TEXBPAR
+      elif moment == 'n':
+         f = self.kxky_n_abs[:,itheta,species,:,:]
+         ft = ''
+      elif moment == 'e':
+         f = self.kxky_e_abs[:,itheta,species,:,:]
+         ft = ''
+
+      return f,ft
+       
+         
    def plot_freq(self,w=0.5,fig=None):
       '''
       Plot gamma and omega vs time
@@ -108,17 +130,9 @@ class cgyrodata_plot(data.cgyrodata):
 
       self.getbigfield()
 
-      # Create p2[n,t] by setting theta=0, sum over kx
-      if field == 0:
-         p2 = np.sum(self.kxky_phi_abs[:,0,:,:],axis=0)/self.rho
-         ft = self.TEXPHI
-      elif field == 1:
-         p2 = np.sum(self.kxky_phi_abs[:,0,:,:],axis=0)/self.rho
-         ft = self.TEXAPAR
-      else:
-         p2 = np.sum(self.kxky_phi_abs[:,0,:,:],axis=0)/self.rho
-         ft = self.TEXBPAR
-
+      f,ft = self.kxky_select(0,field,'phi',0)
+      p = np.sum(f[:,:,:],axis=0)/self.rho
+      
       ax = fig.add_subplot(111)
       ax.grid(which="majorminor",ls=":")
       ax.grid(which="major",ls=":")
@@ -135,9 +149,9 @@ class cgyrodata_plot(data.cgyrodata):
       for n in nvec:
          num = r'$n='+str(n)+'$'
          if n==0:
-            ax.plot(self.t,np.sqrt(p2[n,:]),linewidth=2,label=num)
+            ax.plot(self.t,p[n,:],linewidth=2,label=num)
          else:
-            ax.plot(self.t,np.sqrt(p2[n,:]),label=num)
+            ax.plot(self.t,p[n,:],label=num)
 
       ax.set_xlim([0,max(self.t)])
 
@@ -153,7 +167,7 @@ class cgyrodata_plot(data.cgyrodata):
       fig.tight_layout(pad=0.3)
 
       
-   def plot_rcorr_phi(self,w=0.5,fig=None):
+   def plot_rcorr_phi(self,field=0,w=0.5,fig=None):
       '''
       Plot radial correlation 
 
@@ -191,8 +205,9 @@ class cgyrodata_plot(data.cgyrodata):
       ax.set_xlabel(xlabel)
 
       itheta=0
-
-      y = np.sum(self.kxky_phi_abs[:,itheta,1:,:],axis=1)
+      f,ft = self.kxky_select(itheta,field,'phi',0)
+      y = np.sum(f[:,1:,:],axis=1)
+      
       for j in range(self.n_radial):
          ave[j] = average(y[j,:],self.t,w)
 
@@ -210,7 +225,7 @@ class cgyrodata_plot(data.cgyrodata):
       # calculate envelope
       corr_hilbert = signal.hilbert(corr)
       corr_env = np.abs(corr_hilbert)
-      ax.set_ylabel(r'$C_{\delta \phi}(\Delta r)$',color='k')
+      ax.set_ylabel(r'$C_{'+ft+'}(\Delta r)$',color='k')
       ax.plot(delta_r, 0*delta_r, color='k', ls='--')
       ax.plot(delta_r, corr, color=color[0])
 
@@ -242,19 +257,18 @@ class cgyrodata_plot(data.cgyrodata):
       ax.set_title(r'$\mathrm{Fluctuation~intensity} \quad k_\theta = nq/r$')
       #======================================
 
-      p2 = np.sum(self.kxky_phi_abs,axis=0)/self.rho
-      itheta=0
+      f,ft = self.kxky_select(0,field,'phi',0)
+      y0 = np.sum(f[:,0,:],axis=0)/self.rho      
 
       # n=0 intensity
-      y0 = p2[itheta,0,:]
-      ax.plot(self.t,np.sqrt(y0),label=r'$n=0$',linewidth=2)
+      ax.plot(self.t,y0,label=r'$n=0$',linewidth=2)
 
       # finite-n intensity
-      yn = p2[itheta,1,:]
+      yn = np.sum(f[:,1,:],axis=0)/self.rho 
       for n in range(2,self.n_n):
-         yn = yn+p2[itheta,n,:]
+         yn = yn+np.sum(f[:,n,:],axis=0)/self.rho 
 
-      ax.plot(self.t,np.sqrt(yn),label=r'$n>0$')
+      ax.plot(self.t,yn,label=r'$n>0$')
         
       ax.set_xlim([0,max(self.t)])
 
@@ -264,7 +278,7 @@ class cgyrodata_plot(data.cgyrodata):
 
       fig.tight_layout(pad=0.3)
 
-      return head,self.t,np.sqrt(y0),np.sqrt(yn)
+      return head,self.t,y0,yn
 
    def plot_zf(self,w=0.5,field=0,fig=None):
 
@@ -285,7 +299,6 @@ class cgyrodata_plot(data.cgyrodata):
          f = self.aparb[0,self.n_theta/3,:]
       else:
          f = self.bparb[0,self.n_theta/3,:]
-
 
       # Initialization in CGYRO is with 1e-6*besselj0 # phic[0]
       gfactor = 1e6*(1-np.i0(k0**2)*np.exp(-k0**2))/(np.i0(k0**2)*np.exp(-k0**2))
@@ -512,7 +525,7 @@ class cgyrodata_plot(data.cgyrodata):
          fig = plt.figure(figsize=(self.lx,self.ly))
 
       self.getxflux()
-
+      
       ns = self.n_species
       nl = self.n_global+1
       t  = self.t
@@ -542,23 +555,16 @@ class cgyrodata_plot(data.cgyrodata):
          print 'ERROR (plot_xflux.py) Invalid moment.'
          sys.exit()
 
-      # Find ne
-      for ispec in range(ns):
-         if self.z[ispec] < 0.0:
-            ne = self.dens[ispec]            
 
-      xr = np.zeros((ns,nl))
-      xi = np.zeros((ns,nl))
-      for ispec in range(ns):
-         for l in range(nl):
-            xr[ispec,l] = average(z[0,l,ispec,:],self.t,w)
-            xi[ispec,l] = average(z[1,l,ispec,:],self.t,w)
+      # Call routine for domain average
+      e = 0.2
+      self.xfluxave(w,moment,e=e,nscale=nscale)
 
       # Rescale with density ratio
       if nscale == 1:
-         for ispec in range(ns):
-            xr[ispec,:] = xr[ispec,:]*ne/self.dens[ispec]
-            xi[ispec,:] = xi[ispec,:]*ne/self.dens[ispec]
+         mnorm = '^\mathrm{norm}'
+      else:
+         mnorm = ''
 
       # Determine tmin
       imin=iwindow(t,w)
@@ -584,32 +590,38 @@ class cgyrodata_plot(data.cgyrodata):
 
          # Flux curve
          g = np.zeros(len(t))
-         g = xr[ispec,0] 
+         g = self.lky_xr[ispec,0] 
          for l in range(1,nl):
-            g = g+2*(np.cos(l*t)*xr[ispec,l]-np.sin(l*t)*xi[ispec,l])
+            g = g+2*(np.cos(l*t)*self.lky_xr[ispec,l]-np.sin(l*t)*self.lky_xi[ispec,l])
          ax.plot(t/(2*np.pi),g,color=color[ispec])
 
+         #---------------------------------
          # Flux partial average over [-e,e]
-         e = 0.2
-         g0 = xr[ispec,0]
-         for l in range(1,nl):
-            z = 2*np.pi*l*e
-            g0 = g0+2*np.sin(z)*xr[ispec,l]/z
-         ax.plot([-e,e],[g0,g0],'o-',color=color[ispec],alpha=0.2,linewidth=3)
-         if moment == 'v':
-            print 'Partial-domain average '+u+' : '+str(g0)
+         g0 = self.lky_flux_ave[ispec,0]
+         label = r'$'+mtag+mnorm+'_'+u+'/'+mtag+'_\mathrm{GB}: '+str(round(g0,3))+'$'
+         ax.plot([-e,e],[g0,g0],'o-',color=color[ispec],alpha=0.2,linewidth=3,label=label)
+         print 'INFO: (plot_xflux) Partial-domain average '+u+' : '+str(g0)
+         #---------------------------------
 
-         label = r'$'+mtag+'_'+u+'/'+mtag+'_\mathrm{GB}: '+str(round(g0,3))+'$'
+         #---------------------------------
+         # Flux partial average over "negative" interval
+         g1 = self.lky_flux_ave[ispec,1]
+         ax.plot([0.5-e,0.5],[g1,g1],'o--',color=color[ispec],alpha=0.2,linewidth=3)
+         ax.plot([-0.5,-0.5+e],[g1,g1],'o--',color=color[ispec],alpha=0.2,linewidth=3)
+         print 'INFO: (plot_xflux) Negative-domain average '+u+' : '+str(g1)
+         #---------------------------------
 
+         #---------------------------------
          # Flux spectral average
-         g0 = xr[ispec,0]+2*np.pi/4*xr[ispec,1]
-         if moment == 'v':
-            print 'Alternative average '+u+' : '+str(g0)
-         #ax.plot([-0.25,0.25],[g0,g0],'o-',color='red')
+         g0 = self.lky_xr[ispec,0]+2*np.pi/4*self.lky_xr[ispec,1]
+         print 'INFO: (plot_xflux)    Alternative average '+u+' : '+str(g0)
+         #---------------------------------
 
+         #---------------------------------
          # Flux domain average
-         g0 = xr[ispec,0]
-         ax.plot([-0.5,0.5],[g0,g0],label=label,color=color[ispec],alpha=0.5)
+         g0 = self.lky_xr[ispec,0]
+         ax.plot([-0.5,0.5],[g0,g0],color=color[ispec],alpha=0.5)
+         #---------------------------------
 
          if ymax != 'auto':
             ax.set_ylim([float(ymin),float(ymax)])
@@ -631,6 +643,10 @@ class cgyrodata_plot(data.cgyrodata):
       ymax : plot range (max y)
       fc   : select components (phi,Ap,Bp) of flux rather than total
       '''
+
+      if self.n_n == 1:
+         print 'ERROR (plot_ky_flux.py) Plot not available with a single mode.'
+         sys.exit()
 
       ns = self.n_species
       t  = self.t
@@ -685,7 +701,7 @@ class cgyrodata_plot(data.cgyrodata):
 
       windowtxt = r'$['+str(t[imin])+' < (c_s/a) t < '+str(t[-1])+']$'
 
-      if ky[1] < 0.0:
+      if ky[-1] < 0.0:
          ky = -ky
          xlabel=r'$-k_\theta \rho_s$'
       else:
@@ -717,7 +733,7 @@ class cgyrodata_plot(data.cgyrodata):
 
       fig.tight_layout(pad=0.3)
 
-   def plot_kxky_phi(self,w=0.5,fig=None):
+   def plot_kxky_phi(self,field=0,w=0.5,fig=None):
 
       from mpl_toolkits.mplot3d import Axes3D
 
@@ -735,7 +751,7 @@ class cgyrodata_plot(data.cgyrodata):
       # Note array structure
       # self.phi = np.reshape(data,(2,self.n_radial,self.n_n,nt),'F')
 
-      t = self.t
+      t =self.t
       nx=self.n_radial
       ny=self.n_n
 
@@ -743,10 +759,12 @@ class cgyrodata_plot(data.cgyrodata):
       n = self.n_time
 
       itheta=0
+      # Field data selector
+      fx,ft = self.kxky_select(itheta,field,'phi',0)
 
       imin = int((1.0-w)*n)
       for i in np.arange(imin,n):
-         f = f+self.kxky_phi_abs[1:,itheta,:,i]
+         f = f+fx[1:,:,i]
 
       # Fix (0,0)
       i0 = nx/2-1
@@ -760,17 +778,18 @@ class cgyrodata_plot(data.cgyrodata):
 
       ax = fig.add_subplot(111)
 
-      windowtxt = r'$['+str(t[imin])+' < (c_s/a) t < '+str(t[-1])+']$'
+      #windowtxt = r'$['+str(t[imin])+' < (c_s/a) t < '+str(t[-1])+']$'
+      windowtxt = ''
 
       ax.set_xlabel(r'$k_x \rho_s/4$')
       ax.set_ylabel(r'$k_y \rho_s$')
-      ax.set_title(r'$\mathrm{Average~fluctuation~intensity} \quad $'+windowtxt)
+      ax.set_title(r'$\mathrm{Time}$-$\mathrm{averaged~'+ft+'~intensity} \quad $'+windowtxt)
 
       ax.imshow(np.transpose(f),extent=[-x0,x0,0,y0],interpolation='none')
 
-      fig.tight_layout(pad=0.3)
+      fig.tight_layout(pad=0.4)
 
-   def plot_kx_phi(self,w=0.5,ymin='auto',ymax='auto',nstr='null',fig=None):
+   def plot_kx_phi(self,field=0,w=0.5,ymin='auto',ymax='auto',nstr='null',fig=None):
 
       if fig is None:
          fig = plt.figure(figsize=(self.lx,self.ly))
@@ -795,22 +814,24 @@ class cgyrodata_plot(data.cgyrodata):
       ax.set_title(r'$\mathrm{Average~fluctuation~intensity} \quad $'+windowtxt)
       ax.set_xlabel(xlabel)
 
+      f,ft = self.kxky_select(0,field,'phi',0)
+  
       if nstr == 'null':
-         y = np.sum(self.kxky_phi_abs[:,0,:,:],axis=1)
+         y = np.sum(f[:,:,:],axis=1)
          for j in range(self.n_radial):
             ave[j] = average(y[j,:],self.t,w)
-         ax.set_ylabel(r'$\overline{\delta \phi_\mathrm{total}}$',color='k')
+         ax.set_ylabel(r'$\overline{'+ft+'_\mathrm{total}}$',color='k')
          ax.step(kx+dk/2,np.sqrt(ave[:]),color=color[0])
       else:
          y = np.zeros([self.n_radial,self.n_time])
          nvec = str2list(nstr)
          print 'INFO: (plot_kx_phi) n = '+str(nvec)
-         ax.set_ylabel(r'$\overline{\delta \phi_n}$',color='k')
+         ax.set_ylabel(r'$\overline{'+ft+'_n}$',color='k')
          for n in nvec:
             num = r'$n='+str(n)+'$'
             y[:] = self.kxky_phi_abs[:,0,n,:]
             for j in range(self.n_radial):
-               ave[j] = average(self.kxky_phi_abs[j,0,n,:],self.t,w)
+               ave[j] = average(f[j,n,:],self.t,w)
             ax.plot(kx+dk/2,np.sqrt(ave[:]),ls='steps',label=num)
             if self.n_n > 16:
                ax.legend(loc=4, ncol=5, prop={'size':12})

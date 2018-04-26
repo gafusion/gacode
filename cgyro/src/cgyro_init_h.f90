@@ -14,29 +14,52 @@ subroutine cgyro_init_h
   !
   if (i_proc == 0) then
 
+     ! First, assume not a restart
+     restart_flag = 0
+
+     ! Check for tag file
      open(unit=io,&
           file=trim(path)//runfile_restart_tag,&
           status='old',iostat=i_err)
      close(io)
 
      if (i_err == 0) then
+        ! Tag file exists: do restart
         restart_flag = 1
      else
-        restart_flag = 0
+        ! Check for restart file with no tagfile
+        open(unit=io,&
+             file=trim(path)//runfile_restart,&
+             status='old',iostat=i_err)
+        close(io)
+        if (i_err == 0) then
+           ! Use restart data as initial h
+           restart_flag = 2
+        endif
      endif
 
   endif
 
-  call MPI_BCAST(restart_flag,1,MPI_DOUBLE_PRECISION,0,CGYRO_COMM_WORLD,i_err)
+  call MPI_BCAST(restart_flag,1,MPI_INTEGER,0,CGYRO_COMM_WORLD,i_err)
   !---------------------------------------------------------------------------
 
-  if (restart_flag == 1) then
+  select case (restart_flag)
+
+  case (1)
 
      call cgyro_info('Restart data found.')
      call cgyro_read_restart
      gtime = 0.0
 
-  else
+  case (2)
+
+     call cgyro_info('Initializing with restart data.')
+     call cgyro_read_restart
+     i_current = 0
+     t_current = 0.0
+     gtime = 0.0
+         
+  case (0)
 
      i_current = 0
      t_current = 0.0
@@ -136,7 +159,7 @@ subroutine cgyro_init_h
         enddo
 
      endif
-  endif
+  end select
 
   call cgyro_filter
   call cgyro_field_c

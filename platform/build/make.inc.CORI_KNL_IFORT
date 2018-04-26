@@ -16,6 +16,7 @@ FOMP   = -qopenmp
 FMATH  = -real-size 64
 FOPT   = -Ofast
 FDEBUG = -eD -Ktrap=fp -m 1
+F2PY   = f2py
 
 # System math libraries
 LMATH = -lfftw3_threads -lfftw3f_threads -lfftw3 -lfftw3f 
