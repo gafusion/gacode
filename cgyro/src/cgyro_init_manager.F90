@@ -26,7 +26,9 @@ subroutine cgyro_init_manager
 
   implicit none
 
+#ifndef _OPENACC
   include 'fftw3.f03'
+#endif
 
 #ifdef _OPENACC
   integer :: howmany,istatus

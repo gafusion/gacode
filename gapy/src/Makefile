@@ -1,6 +1,7 @@
 include ${GACODE_ROOT}/platform/build/make.inc.${GACODE_PLATFORM}
 
 DESTLIB=${GACODE_ROOT}/python/gapy.so
+SRC=gapy_math.f90 gapy_fluct.f90 gapy_geo.f90
 
 LMATH:=$(filter-out -lfftw3,$(LMATH))
 LMATH:=$(filter-out -lfftw3f,$(LMATH))
@@ -16,8 +17,8 @@ else
 endif
 
 objs:
-	${F2PYM} --quiet -m gapy -h sgn.pyf gapy_math.f90 gapy_fluct.f90
-	${F2PY} --quiet -lgomp --f90flags='${FOMP} ${FOPT}' -c sgn.pyf gapy_math.f90 gapy_fluct.f90 ${GACODE_ROOT}/shared/math/math_lib.a ${LMATH}
+	${F2PYM} --quiet -m gapy -h sgn.pyf ${SRC}
+	${F2PY} --quiet -lgomp --f90flags='${FOMP} ${FOPT}' -c sgn.pyf ${SRC} ${GACODE_ROOT}/shared/math/math_lib.a ${LMATH}
 
 	rm -f ${DESTLIB}
 	ln -s ${GACODE_ROOT}/gapy/src/gapy.so ${DESTLIB}

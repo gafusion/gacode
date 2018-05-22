@@ -147,15 +147,34 @@ contains
 
   !=========================================================
 
-  subroutine parallel_lib_r(ft,f)
+  subroutine parallel_lib_r_do(f)
+
+    use mpi
+
+    implicit none
+
+    complex, intent(inout), dimension(ni_loc,nj) :: f
+    integer :: ierr
+
+    call MPI_ALLTOALL(fsendr, &
+         nsend, &
+         MPI_DOUBLE_COMPLEX, &
+         f, &
+         nsend, &
+         MPI_DOUBLE_COMPLEX, &
+         lib_comm, &
+         ierr)
+
+  end subroutine parallel_lib_r_do
+
+  subroutine parallel_lib_r_pack(ft)
 
     use mpi
 
     implicit none
 
     complex, intent(in), dimension(nj_loc,ni) :: ft
-    complex, intent(inout), dimension(ni_loc,nj) :: f
-    integer :: ierr,j_loc,i,j,k,j1,j2
+    integer :: j_loc,i,j,k,j1,j2
 
     j1 = 1+iproc*nj_loc
     j2 = (1+iproc)*nj_loc
@@ -173,28 +192,31 @@ contains
        enddo
     enddo
 
-    call MPI_ALLTOALL(fsendr, &
-         nsend, &
-         MPI_DOUBLE_COMPLEX, &
-         f, &
-         nsend, &
-         MPI_DOUBLE_COMPLEX, &
-         lib_comm, &
-         ierr)
+  end subroutine parallel_lib_r_pack
 
+  subroutine parallel_lib_r(ft,f)
+
+    use mpi
+
+    implicit none
+
+    complex, intent(in), dimension(nj_loc,ni) :: ft
+    complex, intent(inout), dimension(ni_loc,nj) :: f
+
+    call parallel_lib_r_pack(ft)
+    call parallel_lib_r_do(f)
   end subroutine parallel_lib_r
 
-  subroutine parallel_lib_rtrans(fin,f)
+  subroutine parallel_lib_rtrans_pack(fin)
 ! -----------------------------------------
-! transpose version of parallel_lib_r(fin,f)
+! transpose version of parallel_lib_r_pack(fin)
 ! -----------------------------------------
     use mpi
 
     implicit none
 
     complex, intent(in), dimension(:,:) :: fin
-    complex, intent(inout), dimension(ni_loc,nj) :: f
-    integer :: ierr,j_loc,i,j,k,j1,j2
+    integer :: j_loc,i,j,k,j1,j2
 
     j1 = 1+iproc*nj_loc
     j2 = (1+iproc)*nj_loc
@@ -212,14 +234,21 @@ contains
        enddo
     enddo
 
-    call MPI_ALLTOALL(fsendr, &
-         nsend, &
-         MPI_DOUBLE_COMPLEX, &
-         f, &
-         nsend, &
-         MPI_DOUBLE_COMPLEX, &
-         lib_comm, &
-         ierr)
+  end subroutine parallel_lib_rtrans_pack
+
+  subroutine parallel_lib_rtrans(fin,f)
+! -----------------------------------------
+! transpose version of parallel_lib_r(fin,f)
+! -----------------------------------------
+    use mpi
+
+    implicit none
+
+    complex, intent(in), dimension(:,:) :: fin
+    complex, intent(inout), dimension(ni_loc,nj) :: f
+
+    call parallel_lib_rtrans_pack(fin)
+    call parallel_lib_r_do(f)
 
   end subroutine parallel_lib_rtrans
 

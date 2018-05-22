@@ -18,13 +18,14 @@ reg15: sug+em +lin+ie +loc+mil+frot
 
 Performance testing and scaling templates:
 
-nl01:   16x96   24(16,8,2) nl timing       (Sugama)
-nl02:   32x256  24(16,8,2) nl timing       (Sugama)
-nl03:   64x512  32(24,8,3) nl timing       (Simple)
-nl04:  128x1024 32(32,8,2) nl timing       (Simple)
-weak1: 384x1200 24(16,8,1) weak scaling    (Simple) 
-weak2: 384x1200 24(16,8,2) weak scaling    (Simple) 
-weak3: 384x1200 24(16,8,3) weak scaling    (Simple) 
-weak4: 384x1200 24(16,8,4) weak scaling    (Simple) 
-strong:512x2048 32(16,8,4)  strong scaling (Simple) 
+nl01:   16x96   24(16,8,2) nl timing  (Sugama)
+nl02:   32x192  24(16,8,2) nl timing  (Sugama)
+nl03:   64x512  32(24,8,3) nl timing  (Simple)
+nl04:  128x512  48(24,8,4) nl timing  (Simple)
+sh01:   16x144  16(16,8,2) nl timing  (Simple,shear)
+sh02:   32x288  32(16,8,2) nl timing  (Simple,shear)
+weak1: 384x1200 24(16,8,1) weak scale (Simple) 
+weak2: 384x1200 24(16,8,2) weak scale (Simple) 
+weak3: 384x1200 24(16,8,3) weak scale (Simple) 
+weak4: 384x1200 24(16,8,4) weak scale (Simple) 
 

@@ -24,27 +24,17 @@ cp -p $1/out.cgyro.equilibrium $SDIR
 cp -p $1/out.cgyro.time $SDIR
 cp -p $1/out.cgyro.timing $SDIR
 cp -p $1/out.cgyro.info $SDIR
-cp -p $1/out.cgyro.geo $SDIR
+cp -p $1/*.cgyro.geo $SDIR
 
 # Linear data
 if ! grep -q NONLINEAR_FLAG=1 $SDIR/input.cgyro
 then
-    cp -p $1/out.cgyro.freq $SDIR
-    cp -p $1/out.cgyro.phib $SDIR
+    cp -p $1/*.cgyro.freq $SDIR
+    cp -p $1/*.cgyro.phib $SDIR
 fi
 
-# Compress old energy flux file into new all-flux format
-if [ -f $1/out.cgyro.kxky_flux_e ]
-then
-    cd $1
-    cgyro_plot -plot fix
-fi
-
-cp -p $1/out.cgyro.ky_flux $SDIR
-if [ -f $1/out.cgyro.lky_flux_n ]
-then
-    cp -p $1/out.cgyro.lky_flux* $SDIR
-fi
+# Large files (but no restart)
+cp -p $1/bin.cgyro.* $SDIR
 
 # We will have a version if NOT run through TGYRO
 if [ -f $1/out.cgyro.version ]

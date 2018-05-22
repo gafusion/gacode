@@ -442,6 +442,19 @@ int set_harvest_table__(char *table){
   return 0;
 }
 
+int get_harvest_table(char *table, int len){
+  sprintf(table,"%s",harvest_table);
+  return 0;
+}
+
+int get_harvest_table_(char *table, int *len){
+  return get_harvest_table(table, *len);
+}
+
+int get_harvest_table__(char *table, int *len){
+  return get_harvest_table(table, *len);
+}
+
 //init
 int init_harvest(char *table, char *harvest_sendline, int n){
   harvest_tic=clock();
@@ -475,7 +488,10 @@ int init_harvest(char *table, char *harvest_sendline, int n){
   else
     set_harvest_tag("");
 
-  set_harvest_table(table);
+  if (getenv("HARVEST_TABLE")!=NULL && table[0]=='\0')
+    set_harvest_table(getenv("HARVEST_TABLE"));
+  else if (table[0]!='\0')
+    set_harvest_table(table);
 
   harvest_sendline_n=n;
   memset(harvest_sendline, 0, harvest_sendline_n);
@@ -529,6 +545,12 @@ int harvest_send(char* harvest_sendline){
   memset(message, 0, harvest_sendline_n);
   sprintf(message,"%d:%s:%s",version,harvest_table,harvest_sendline+1);
   memset(harvest_sendline, 0, harvest_sendline_n);
+
+  if (harvest_table[0]=='\0'){
+    if (harvest_verbose)
+        printf("DATA_NOT_SENT ---[%d]---> %s\n",n,message);
+    return 1;
+  }
 
   //UDP
   if (strcmp(harvest_protocol,"UDP")==0){

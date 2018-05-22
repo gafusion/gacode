@@ -350,7 +350,7 @@ subroutine cgyro_init_arrays
 
      enddo
   enddo
-!$acc enter data copyin(omega_cap_h,omega_h,omega_s)
+!$acc enter data copyin(omega_cap_h,omega_h,omega_s,omega_ss,c_wave)
   !-------------------------------------------------------------------------
 
 end subroutine cgyro_init_arrays

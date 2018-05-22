@@ -50,10 +50,11 @@ elif plot_type == 'ky_phi':
 
 elif plot_type == 'rcorr_phi':
    
-   w     = float(sys.argv[2])
-   ftype = sys.argv[3]
+   field = int(sys.argv[2])
+   w     = float(sys.argv[3])
+   ftype = sys.argv[4]
 
-   data_in.plot_rcorr_phi(w=w)
+   data_in.plot_rcorr_phi(field=field,w=w)
 
    outfile = 'out.cgyro.rcorr_phi.'+ftype
 
@@ -156,22 +157,24 @@ elif plot_type == 'xflux':
 
 elif plot_type == 'kxky_phi':
 
-   w     = float(sys.argv[2])
-   ftype = sys.argv[3]
+   field = int(sys.argv[2])
+   w     = float(sys.argv[3])
+   ftype = sys.argv[4]
 
-   data_in.plot_kxky_phi(w=w)
+   data_in.plot_kxky_phi(field=field,w=w)
    
    outfile = 'out.cgyro.kxky_phi.'+ftype
 
 elif plot_type == 'kx_phi':
 
-   w     = float(sys.argv[2])
-   ymin  = sys.argv[3]
-   ymax  = sys.argv[4]
-   nstr  = sys.argv[5]
-   ftype = sys.argv[6]
+   field = int(sys.argv[2])
+   w     = float(sys.argv[3])
+   ymin  = sys.argv[4]
+   ymax  = sys.argv[5]
+   nstr  = sys.argv[6]
+   ftype = sys.argv[7]
 
-   data_in.plot_kx_phi(w=w,ymin=ymin,ymax=ymax,nstr=nstr)
+   data_in.plot_kx_phi(field=field,w=w,ymin=ymin,ymax=ymax,nstr=nstr)
    
    outfile = 'out.cgyro.kx_phi.'+ftype
 

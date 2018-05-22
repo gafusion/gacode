@@ -11,12 +11,17 @@ subroutine cgyro_rhs(ij)
   real :: rval,rval2
   complex :: rhs_stream
 
-  call timer_lib_in('str')
+  call timer_lib_in('str_mem')
 
   ! Prepare suitable distribution (g, not h) for conservative upwind method
   g_x(:,:) = h_x(:,:)
 
+  call timer_lib_out('str_mem')
+
+
   if (n_field > 1) then
+     call timer_lib_in('str')
+
 !$omp parallel do private(iv_loc,is,ic) schedule(dynamic, 1)
      do iv=nv1,nv2
         iv_loc = iv-nv1+1
@@ -26,20 +31,17 @@ subroutine cgyro_rhs(ij)
                 (z(is)/temp(is))*jvec_c(2,ic,iv_loc)*field(2,ic)
         enddo
      enddo
+     call timer_lib_out('str')
   endif
-
-  call timer_lib_out('str')
 
   call cgyro_upwind
 
   if ( (nonlinear_flag == 1) .and. (nonlinear_method /= 1) .and. is_staggered_comm_2) then 
      ! stagger comm1, to load ballance network traffic
-     call timer_lib_in('nl_comm')
      call cgyro_nl_fftw_comm1
-     call timer_lib_out('nl_comm')
   endif
 
-  call timer_lib_in('str')
+  call timer_lib_in('str_mem')
 
 !$acc data  &
 !$acc& pcopyout(rhs(:,:,ij)) &
@@ -48,6 +50,9 @@ subroutine cgyro_rhs(ij)
 !$acc& present(omega_cap_h,omega_h,omega_s) &
 !$acc& present(omega_stream,xi,vel) &
 !$acc& present(dtheta,dtheta_up,icd_c)
+
+  call timer_lib_out('str_mem')
+  call timer_lib_in('str')
 
 !$acc  parallel loop gang vector collapse(2) & 
 !$acc& private(iv,ic,iv_loc,is,rval,rval2,rhs_stream,id,jc)
@@ -77,18 +82,20 @@ subroutine cgyro_rhs(ij)
      enddo
   enddo
 
-!$acc end data	  
-
   call timer_lib_out('str')
 
   ! Wavenumber advection shear terms
   call cgyro_advect_wavenumber(ij)
 
+  call timer_lib_in('str_mem')
+
+!$acc end data    
+
+  call timer_lib_out('str_mem')
+
   if ( (nonlinear_flag == 1) .and. (nonlinear_method /= 1) .and. (.not. is_staggered_comm_2)) then 
      ! stagger comm1, to load ballance network traffic
-     call timer_lib_in('nl_comm')
      call cgyro_nl_fftw_comm1
-     call timer_lib_out('nl_comm')
   endif
 
   ! Nonlinear evaluation [f,g]

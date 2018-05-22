@@ -241,6 +241,11 @@ subroutine tgyro_flux
         expwd_i_tur(i_ion,i_r) = tglf_ion_expwd_out(i0)
      enddo
 
+     ! Harvest various fluxes
+     if (0==1) then
+        call tgyro_harvest
+     endif
+
   case (3)  ! Map TGYRO parameters to GLF23
 
      call tgyro_glf23_map
@@ -314,5 +319,5 @@ subroutine tgyro_flux
   mflux_tot(i_r) = mflux_e_neo(i_r)+mflux_e_tur(i_r)+&
        sum(mflux_i_neo(therm_vec(:),i_r)+mflux_i_tur(therm_vec(:),i_r))
   !-------------------------------------------------------------------
-
+  
 end subroutine tgyro_flux

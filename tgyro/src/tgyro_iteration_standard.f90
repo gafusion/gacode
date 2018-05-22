@@ -139,7 +139,7 @@ subroutine tgyro_iteration_standard
      enddo
 
      ! Update gradient using Newton step
-     x_vec(:) = x_vec0(:)+b(:)*weight(:)
+     x_vec(:) = x_vec0(:)+b(:)
 
      !-----------------------------------------------------
      ! Correction step:
@@ -181,8 +181,20 @@ subroutine tgyro_iteration_standard
         call tgyro_target_vector(x_vec,g_vec)
         call tgyro_flux_vector(x_vec,f_vec,0.0,0)
 
+        ti(1,n_r) = ti(1,n_r)*0.95
+        call tgyro_target_vector(x_vec,g_vec0)
+     
         ! Recompute residual
+        call tgyro_residual(f_vec,g_vec0,res0,p_max,loc_residual_method)
         call tgyro_residual(f_vec,g_vec,res,p_max,loc_residual_method)
+
+        if (sum(abs(res0)) < sum(abs(res))) then
+           res   = res0
+           g_vec = g_vec0
+        else
+           ti(1,n_r) = ti(1,n_r)/0.95
+        endif
+        
         call tgyro_write_intermediate(1,res)
 
         correct_flag = 0

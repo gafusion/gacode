@@ -25,10 +25,13 @@ subroutine cgyro_step_collision_simple
 
   !----------------------------------------------------------------
   ! Perform data tranpose from _c to _v data layouts:
+  call timer_lib_in('coll_mem')
+  call parallel_lib_rtrans_pack(cap_h_c)
+  call timer_lib_out('coll_mem')
   call timer_lib_in('coll_comm')
-  call parallel_lib_rtrans(cap_h_c,cap_h_v)
+  call parallel_lib_r_do(cap_h_v)
   call timer_lib_out('coll_comm')
-  !----------------------------------------------------------------
+   !----------------------------------------------------------------
 
   call timer_lib_in('coll')
 
@@ -96,6 +99,7 @@ subroutine cgyro_step_collision_simple
      do ic=1,nc
         psi(ic,iv_loc) = sum(jvec_c(:,ic,iv_loc)*field(:,ic))
      enddo
+     ! this should be coll_mem timer , but not easy with OMP
      do ic=1,nc
         cap_h_c(ic,iv_loc) = cap_h_ct(iv_loc,ic)
      enddo

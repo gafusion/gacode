@@ -557,16 +557,21 @@ subroutine math_zfind(n,p,r,z)
   implicit none
 
   integer, intent(in) :: n
-  real, intent(in) :: p(n)
+  real, intent(inout) :: p(n)
   real, intent(in) :: r(n)
   real, intent(inout) :: z(n)
   
   real, dimension(n) :: rat
 
   integer :: i
-  
-  rat = log(p/p(n))
+
+  ! Assume zero gradient at r=0
   z(1) = 0.0
+
+  ! Modify axis temperature for smooth profile
+  p(1) = p(2)*exp(0.5*z(2)*(r(2)-r(1)))
+
+  rat = log(p/p(n))
   do i=2,n
      z(i) = 2*(rat(i)-rat(i-1))/(r(i)-r(i-1))-z(i-1)
   enddo

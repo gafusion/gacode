@@ -109,11 +109,11 @@ subroutine cgyro_field_c
 
   call timer_lib_out('field_com')
 
+  call timer_lib_in('field')
+
   if (n_field > 2) then
      field(3,:) = field(3,:)*fcoef(3,:)
   endif
-
-  call timer_lib_in('field')
 
   ! Poisson LHS factors
   if (n == 0 .and. ae_flag == 1) then
@@ -162,8 +162,6 @@ subroutine cgyro_field_ae(space)
   integer :: ir,i,j
   complex, dimension(n_theta) :: pvec_in,pvec_out
 
-  call timer_lib_in('field')
-
   if (space == 'c') then
      do ir=1,n_radial
         if ((px(ir) == 0 .or. ir == 1) .and. zf_test_mode == 0) then
@@ -203,7 +201,5 @@ subroutine cgyro_field_ae(space)
         endif
      enddo
   endif
-
-  call timer_lib_out('field')
 
 end subroutine cgyro_field_ae

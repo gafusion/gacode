@@ -90,6 +90,7 @@ subroutine neo_read_input
   read(1,*) laguerre_method
   read(1,*) write_cmoments_flag
   read(1,*) threed_hyperxi
+  read(1,*) use_petsc
   read(1,*) use_slu
 
   close(1)

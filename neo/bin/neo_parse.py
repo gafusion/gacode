@@ -209,6 +209,7 @@ x.add('LAGUERRE_METHOD','1')
 x.add('WRITE_CMOMENTS_FLAG','0')
 x.add('THREED_HYPERXI','0')
        	
+x.add('USE_PETSC','0')
 x.add('USE_SLU','0')
 
 # Deprecated parameters

@@ -13,16 +13,20 @@ module neo_umfpack
   
 contains
 
-  subroutine SOLVE_umfpack(n_elem, n_size, a, a_iindx, a_jindx)
+  subroutine SOLVE_umfpack(m_size, m_iindx, m_jindx, m, m_asize, m_rows, rhs, sol)
     use neo_globals
     implicit none
-    integer, intent (in) :: n_elem, n_size
-    real, dimension(:), intent (in) :: a
-    integer, dimension(:), intent (in) :: a_iindx
-    integer, dimension(:), intent (in) :: a_jindx
+    integer, intent (in) :: m_size
+    integer, dimension(:), intent (in) :: m_iindx
+    integer, dimension(:), intent (in) :: m_jindx
+    real, dimension(:), intent (in) :: m
+    integer, intent (in) :: m_asize
+    integer, intent (in) :: m_rows
+    real, dimension(:), intent (in) :: rhs
+    real, dimension(:), intent (inout) :: sol
     integer :: k, ierr, ifac, matfac_err, max_ifac=5
 
-     n_max = n_elem*matsz_scalefac
+     n_max = m_size*matsz_scalefac
      matfac_err = 0
 
      do ifac = 1, max_ifac
@@ -30,7 +34,7 @@ contains
         if(silent_flag == 0 .and. i_proc == 0) then
            open(unit=io_neoout,file=trim(path)//runfile_neoout,&
                 status='old',position='append')
-           write(io_neoout,'(t2,a,e12.5)') 'Estimated memory (GB) = ', 2*8.0*(n_size+n_max)/1.0e9
+           write(io_neoout,'(t2,a,e12.5)') 'Estimated memory (GB) = ', 2*8.0*(m_asize+n_max)/1.0e9
            close(io_neoout)
         endif
         if(allocated(amat))       deallocate(amat)
@@ -50,10 +54,10 @@ contains
 
         amat(:) = 0.0
         amat_indx(:) = 0
-        do k=1,n_elem
-           amat(k) = a(k)
-           amat_indx(k) = a_iindx(k)
-           amat_indx(n_elem+k) = a_jindx(k)
+        do k=1,m_size
+           amat(k) = m(k)
+           amat_indx(k) = m_iindx(k)
+           amat_indx(m_size+k) = m_jindx(k)
         enddo
 
         if(silent_flag == 0 .and. i_proc == 0) then
@@ -66,7 +70,7 @@ contains
            endif
            close(io_neoout)
         endif
-        call SOLVE_factor(n_elem)
+        call SOLVE_factor(m_size)
         if(error_status > 0) then
            error_status = 0
            n_max = n_max * 2

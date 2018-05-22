@@ -18,8 +18,6 @@ PREC='f' ; BIT=4
 # Use first 3 args to define plot and font size 
 rc('text',usetex=True)
 rc('font',size=int(sys.argv[12]))
-#data_in.lx = int(sys.argv[2])
-#data_in.ly = int(sys.argv[3])
 
 ftype = sys.argv[1]
 moment = sys.argv[2]
@@ -95,16 +93,27 @@ if istr == '-1':
 else:
     ivec = str2list(istr)
 
+u=specmap(sim.mass[species],sim.z[species])
+
 # Set filename root and title
+isfield = True
 if (moment == 'n'):
     fdata = '.cgyro.kxky_n'
-    title = r'$\delta \mathrm{n}$'
+    title = r'${\delta \mathrm{n}}_'+u+'$'
+    isfield = False
 elif (moment == 'e'):
     fdata = '.cgyro.kxky_e'
-    title = r'$\delta \mathrm{E}$'
+    title = r'${\delta \mathrm{E}}_'+u+'$'
+    isfield = False
 elif (moment == 'phi'):
     fdata = '.cgyro.kxky_phi'
     title = r'$\delta\phi$'
+elif (moment == 'apar'):
+    fdata = '.cgyro.kxky_apar'
+    title = r'$\delta A_\parallel$'
+elif (moment == 'bpar'):
+    fdata = '.cgyro.kxky_bpar'
+    title = r'$\delta B_\parallel$'
 
 # ERROR CHECKS
 
@@ -122,7 +131,7 @@ else:
     sys.exit()
 
 # **WARNING** Assumes theta_plot=1 
-if (moment == 'phi'):
+if isfield:
     n_chunk = 2*nr*nn
 else:
     n_chunk = 2*nr*ns*nn
@@ -131,7 +140,7 @@ else:
 def frame():
 
    if i in ivec:
-      if (moment == 'phi'):
+      if isfield:
          a = np.reshape(aa,(2,nr,nn),order='F')
          c = a[0,:,:]+1j*a[1,:,:]
       else:
@@ -155,7 +164,7 @@ def frame():
       yp = y/sim.ky[1]
       aspect = max(yp)/max(xp)
 
-      fig = plt.figure(figsize=(10,10*aspect))
+      fig = plt.figure(figsize=(8,8*aspect))
       ax = fig.add_subplot(111)
       ax.set_title(title)
       ax.set_xlabel(r'$x/\rho_s$')
@@ -166,13 +175,14 @@ def frame():
       ax.contourf(xp,yp,np.transpose(f),levels,cmap=plt.get_cmap(colormap))
       print 'INFO: (plot_fluct) min,max = ',f0,f1
 
-      fig.tight_layout(pad=0.5)
+      fig.tight_layout(pad=0.3)
+      plt.subplots_adjust(top=0.94)
       if ftype == 'screen':
          plt.show()
       else:
          fname = fdata+str(i)
          # Filename uses frame number 
-         plt.savefig(str(i)+'.png')
+         plt.savefig(str(i)+'.'+ftype)
          # Close each time to prevent memory accumulation
          plt.close()
             

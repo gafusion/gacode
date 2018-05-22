@@ -476,7 +476,7 @@ subroutine neo_do
      call set_RHS_source
 
      ! Factor and Solve the Matrix 
-     call SOLVE_sparse(k, asize, a, a_iindx, a_jindx)
+     call SOLVE_sparse(k, a_iindx, a_jindx, a, asize, n_row, g, g)
      if(error_status > 0) goto 100
 
      ! Compute the neo transport coefficients

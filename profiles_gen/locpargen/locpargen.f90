@@ -21,6 +21,7 @@ program locpargen
   real, dimension(1) :: x
   real, dimension(1) :: y
   real, dimension(5) :: z
+  integer :: hasgeo
   real, dimension(:), allocatable :: x_vec
   real, dimension(:,:,:), allocatable :: geo_p
   real :: ar, sf, shear
@@ -34,17 +35,17 @@ program locpargen
   read(1,*) z(3)
   read(1,*) z(4)
   read(1,*) z(5)
+  read(1,*) hasgeo
   close(1)
 
   EXPRO_ctrl_n_ion = 5
   EXPRO_ctrl_quasineutral_flag = 0
   EXPRO_ctrl_z(1:5) = z(1:5)
   ! We don't need the numerical eq. flag set for this routine.
-  EXPRO_ctrl_numeq_flag = 1
+  EXPRO_ctrl_numeq_flag = hasgeo
 
   call EXPRO_alloc('./',1) 
   call EXPRO_read
-
 
   print '(a)','INFO: (locpargen) Local input parameters:'
   print *
@@ -213,6 +214,14 @@ program locpargen
   call cub_spline(x_vec,EXPRO_gamma_e*a/EXPRO_cs,EXPRO_n_exp,x,y,1)
   print 10,'GAMMA_E=',y(1)
 
+  ! GAMMA_P
+  call cub_spline(x_vec,EXPRO_gamma_p*a/EXPRO_cs,EXPRO_n_exp,x,y,1)
+  print 10,'GAMMA_P=',y(1)
+
+  ! GAMMA_E
+  call cub_spline(x_vec,EXPRO_mach,EXPRO_n_exp,x,y,1)
+  print 10,'MACH=',y(1)
+
   ! RHO_STAR
   call cub_spline(x_vec,EXPRO_rhos/a,EXPRO_n_exp,x,y,1)
   print 10,'RHO_STAR=',y(1)
@@ -263,7 +272,7 @@ program locpargen
   !------------------------------------------------------------
   ! Create input.geo with local parameters for general geometry
   !
-  if (EXPRO_nfourier > 0) then  
+  if (hasgeo == 1) then  
 
      allocate(geo_p(8,0:EXPRO_nfourier,EXPRO_n_exp))
 

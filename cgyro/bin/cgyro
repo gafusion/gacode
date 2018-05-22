@@ -72,6 +72,9 @@ then
   echo "         -clean"
   echo "         Clean simulation directory."
   echo
+  echo "         -iclean"
+  echo "         Clean simulation directory except for out.cgyro.restart"
+  echo
   echo "         -compress"
   echo "         Compress simulation directory."
   echo

@@ -25,7 +25,6 @@ module tgyro_iteration_variables
   real, dimension(:), allocatable :: f_vec0
   real, dimension(:), allocatable :: g_vec0
   real, dimension(:), allocatable :: b
-  real, dimension(:), allocatable :: weight
   !------------------------------------------------------
 
   !------------------------------------------------------

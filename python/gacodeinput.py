@@ -12,7 +12,7 @@
 
 import string
 import os
-
+ 
 #--------------------------------------------------------------------
 # PARSER FOR input.cgyro, etc.
 #--------------------------------------------------------------------
@@ -112,6 +112,8 @@ class ProfileInput:
         self.extension = text
 
     def read_input(self,inputfile):
+        # NOTE: this routine called by read_profile
+
         # 1. read user input file
         for line in open(inputfile,'r').readlines():
 

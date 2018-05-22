@@ -51,12 +51,9 @@ program prgen
   read(1,*) n_lump
   allocate(lump_vec(n_lump))
   read(1,*) lump_vec(:)
-  read(1,*) n_ion_sanitize
-  allocate(ion_sanitize(n_ion_sanitize))
-  read(1,*) ion_sanitize(:)
-  close(1)
+ close(1)
   !--------------------------------------------------
-  
+
   !------------------------------------------------------------------
   ! Read the iterdb file and define standard variables.
   !
@@ -64,7 +61,7 @@ program prgen
   !
   if (trim(raw_data_type) == 'GACODE') then
 
-     ! Note (we may or may not have gmerge_flag == 1
+     ! Note (we may or may not have gmerge_flag == 1)
      print '(a)','INFO: (prgen) Assuming input.profiles (GACODE) format.'
 
      call prgen_read_inputprofiles
@@ -107,7 +104,7 @@ program prgen
      format_type = 3
 
      call prgen_read_peqdsk
-     
+
   else if (trim(raw_data_type) == 'CORSICA') then
 
      ! corsica format
@@ -144,8 +141,8 @@ program prgen
 
   endif
   !------------------------------------------------------------------
-  
-  
+
+
   !---------------------------------------------------
   ! Read the GATO file for "better" geometry.  At this
   ! point, GATO has already run and we are just reading 
@@ -185,10 +182,7 @@ program prgen
   case (6)
      call prgen_map_ufile
   case (7)
-     if (gmerge_flag == 1) then
-        call prgen_map_inputprofiles
-     endif
-
+     call prgen_map_inputprofiles
   end select
 
   ! Handle special case of generating input.profiles.extra

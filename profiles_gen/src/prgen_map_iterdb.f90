@@ -259,11 +259,9 @@ subroutine prgen_map_iterdb
      call onetwo_ion_zmass(onetwo_ion_name(i),onetwo_z(i),onetwo_m(i))
      print '(t6,i2,1x,a)',i,trim(onetwo_ion_name(i))
   enddo
-
   !
   ! Reordering
   !
-
   print '(a)','INFO: (prgen) Created these species'
   do i=1,n_ion_max
 

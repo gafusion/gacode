@@ -12,6 +12,7 @@ setenv PATH $GACODE_ROOT/tglf/bin:${PATH}
 setenv PATH $GACODE_ROOT/glf23/bin:${PATH}
 setenv PATH $GACODE_ROOT/le3/bin:${PATH}
 setenv PATH $GACODE_ROOT/shared/bin:${PATH}
+setenv PATH $GACODE_ROOT/profiles_gen/bin:${PATH}
 
 if ( $?GACODE_ADD_ROOT ) then
    setenv PATH $GACODE_ADD_ROOT/freya/bin:${PATH}

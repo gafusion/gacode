@@ -199,13 +199,13 @@ then
    echo
    echo "OMFIT mapper control options"
    echo 
-   echo "             -omfit <parameter=val,parameter=val,...>"
+   echo "             -omfit"
    echo "             Toggle OMFIT mapper instead of default GATO mapper."
    echo
    echo "             -omfitres <resolution>"
    echo "              <resolution>=low,medium,high (default medium)."
    echo
-   echo "input.profiles SANITIZE, or GFILE MERGE MODE"
+   echo "input.profiles with possible GFILE MERGE MODE"
    echo
    echo "             -i <data>"
    echo "             Data in input.profiles format."
@@ -218,9 +218,6 @@ then
    echo
    echo "             -gmerge"
    echo "             Toggle gmerge mode."
-   echo
-   echo "             -ions"
-   echo "             Ion string (in iterdb format): for example, -ions d,c"
    echo
    echo "VELOCITY GENERATION (VGEN) MODE"
    echo
@@ -378,6 +375,7 @@ Z2=6.0
 Z3=2.0
 Z4=1.0
 Z5=1.0
+HASGEO=0
 
 # DUMP MODE variables
 DUMP_FLAG=0
@@ -387,8 +385,6 @@ DUMP_DENS_METHOD=1
 
 # Plotting in locpargen
 PLOT_FLAG=0
-
-IONS=d,c
 #=============================================================
 
 #=============================================================
@@ -469,8 +465,6 @@ while [ $# -gt 0 ] ; do
   -dens) shift ; DUMP_DENS_METHOD=$1 ;;
 
   -gmerge) GMERGE_FLAG=1 ;;
-
-  -ions) shift ; IONS=$1 ;;
 
   -plot) PLOT_FLAG=1 ;;
 
@@ -572,8 +566,9 @@ fi
 #=============================================================
 # If file is GACODE, parse it.
 if [ "$itype" == "GACODE" ] ; then
-  cp -f input.profiles input.profiles.save
+  cp -f $FILE $FILE.save
   python $PRGEN_BIN/profile_parse.py $FILE
+  python $PRGEN_BIN/profile_header_dump.py $FILE
 fi
 #=============================================================
 
@@ -627,6 +622,10 @@ then
      echo "ERROR: (profiles_gen) You need to build the locpargen executable."
      exit 1
   fi
+  if [ -f input.profiles.geo ]
+  then
+      HASGEO=1
+  fi
   python $PRGEN_BIN/profile_parse.py $FILE
   cp $FILE.gen temp
   mv temp input.profiles.gen
@@ -638,6 +637,7 @@ then
   echo $Z3 >> input.locpargen
   echo $Z4 >> input.locpargen
   echo $Z5 >> input.locpargen
+  echo $HASGEO >> input.locpargen
   $LOCPARGEN
   rm input.locpargen
   if [ $PLOT_FLAG -eq 1 ]
@@ -985,25 +985,20 @@ then
 fi
 
 # Use OMFIT:
-if [ $EFIT_METHOD -eq 3 ]
-then
-    # OMFIT mapper options
-    # uniform -> points around separatrix
-    # levels -> flux surfaces
-    # resolution -> in mm
+if [ $EFIT_METHOD -eq 3 ] ; then
+   # OMFIT mapper options
+   # uniform -> points around separatrix
+   # levels -> flux surfaces
+   # resolution -> in mm
    cp $GFILE gfile
    case "$OMFIT_RES" in
       low)    RES="resolution=0.003 uniform=500 levels=128" ;;
       medium) RES="resolution=0.002 uniform=750 levels=256" ;;
       high)   RES="resolution=0.001 uniform=1000 levels=512" ;;
    esac
-   echo "INFO: (omfit) Running with parameters $RES"
-   OMFIT_OPT="rhoVSpsi='rho'
-              averages=0
-              namelist=0
-              fluxsurfaces=1
-              maxPSI=0.9999
-              gfiles='$GFILE'"
+   OMFIT_OPT="rhoVSpsi='rho' averages=0 namelist=0 fluxsurfaces=1 maxPSI=0.9999 gfiles='$GFILE'"
+   echo "INFO: (omfit) Running with parameters: $RES"
+   echo "INFO: (omfit) Fixed mapper parameters: $OMFIT_OPT"
    python $OMFIT fluxSurfaceTracer $RES $OMFIT_OPT >& out.omfit.info
    if ls flux_* 1> /dev/null 2>&1
    then
@@ -1064,19 +1059,6 @@ fi
 #==============================================================
 
 #==============================================================
-# More ion parameters for sanitize mode
-#
-p=0
-for i in $(echo $IONS | tr "," "\n")
-do
-    p=$(($p+1))
-    ions="$ions $i"
-done
-echo $p >> $CONFIG
-echo $ions >> $CONFIG 
-#==============================================================
-
-#==============================================================
 # MAIN: Run prgen here
 #
 $EXEC
@@ -1092,9 +1074,9 @@ fi
 # Final cleanup:
 #
 #  Remove configuration files, output files, etc.
-rm -f egta eqgta nova.*
+rm -f egta eqgta nova.* 
 #  Remove stale files
-rm -f input.gato.* dummy.peq
+rm -f input.gato.* dummy.peq profile_header
 
 if [ $VERBOSE_FLAG -eq 0 ]
 then

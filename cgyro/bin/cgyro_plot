@@ -138,15 +138,16 @@ then
   echo "  $ cgyro_plot -e . -plot zf             [zf phi versus time]"
   echo
   echo
-  echo " NONLINEAR EXAMPLES:"
+  echo " NONLINEAR EXAMPLES (fields):"
+  echo "  $ cgyro_plot -e . -plot phi               [phi(t) for n=0 and n>0]"
+  echo "  $ cgyro_plot -e . -plot ky_phi -n 0,2,4-8 [phi harmonics versus time]"
+  echo "  $ cgyro_plot -e . -plot ky_phi -field 2   [bpar harmonics versus time]"
+  echo " NONLINEAR EXAMPLES (fluxes):"
   echo "  $ cgyro_plot -e . -plot flux              [energy flux versus time]"
   echo "  $ cgyro_plot -e . -plot flux -ext png     [... above to PNG file]"
-  echo "  $ cgyro_plot -e . -plot flux -ext dump    [... above to datafile]"
   echo "  $ cgyro_plot -e . -plot flux -moment n    [particle flux versus time]"
   echo "  $ cgyro_plot -e . -plot flux -fc -field 1 [A_par energy flux versus time]"
   echo "  $ cgyro_plot -e . -plot ky_flux           [energy flux versus ky]"
-  echo "  $ cgyro_plot -e . -plot phi               [phi(t) for n=0 and n>0]"
-  echo "  $ cgyro_plot -e . -plot ky_phi -n 0,2,4-8 [phi harmonics versus time]"
 
 
   exit 1
@@ -299,13 +300,13 @@ case "$PLOT_TYPE" in
 	python $PLT $PLOT_TYPE $FIELD $YMIN $YMAX $N $FTYPE ;;
 
    kx_phi)
-	python $PLT $PLOT_TYPE $W $YMIN $YMAX $N $FTYPE ;;
+	python $PLT $PLOT_TYPE $FIELD $W $YMIN $YMAX $N $FTYPE ;;
 
    kxky_phi)
-	python $PLT $PLOT_TYPE $W $FTYPE ;;
+	python $PLT $PLOT_TYPE $FIELD $W $FTYPE ;;
 
    rcorr_phi)
-        python $PLT $PLOT_TYPE $W $FTYPE ;;
+        python $PLT $PLOT_TYPE $FIELD $W $FTYPE ;;
 
    zf)
 	python $PLT $PLOT_TYPE $W $FIELD $FTYPE ;;

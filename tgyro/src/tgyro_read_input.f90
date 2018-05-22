@@ -40,7 +40,6 @@ subroutine tgyro_read_input
   call tgyro_readbc_int(tgyro_relax_iterations)
   call tgyro_readbc_real(loc_nu_scale) 
   call tgyro_readbc_real(loc_dx)  
-  call tgyro_readbc_real(tgyro_search_weight) 
   call tgyro_readbc_real(loc_dx_max) 
   call tgyro_readbc_real(loc_relax) 
   call tgyro_readbc_int(loc_lock_profile_flag) 

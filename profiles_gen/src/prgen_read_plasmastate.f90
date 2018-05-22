@@ -18,7 +18,7 @@ subroutine prgen_read_plasmastate
   integer :: varid
   integer :: err
   real :: dummy
-  real, parameter :: idiag=1
+  real, parameter :: idiag=0
 
   ! Open the file (NF90_NOWRITE means read-only)
   err = nf90_open(raw_data_file,NF90_NOWRITE,ncid)
