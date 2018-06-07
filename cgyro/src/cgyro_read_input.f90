@@ -82,6 +82,7 @@ subroutine cgyro_read_input
   call cgyro_readbc_int(theta_plot)
   call cgyro_readbc_int(mpiio_small_stripe_factor)
   call cgyro_readbc_int(mpiio_stripe_factor)
+  call cgyro_readbc_int(gpu_bigmem_flag)
 
   call cgyro_readbc_real(rmin)
   call cgyro_readbc_real(rmaj)
@@ -159,6 +160,8 @@ subroutine cgyro_read_input
      call MPI_BCAST(geo_ny_in,1,MPI_INTEGER,0,CGYRO_COMM_WORLD,i_err)
      call MPI_BCAST(geo_yin_in,size(geo_yin_in),MPI_DOUBLE_PRECISION,0,CGYRO_COMM_WORLD,i_err)
   endif
+
+!$acc update device(z,temp)
 
 end subroutine cgyro_read_input
 

@@ -91,6 +91,7 @@ module cgyro_globals
   integer :: theta_plot
   integer :: mpiio_small_stripe_factor
   integer :: mpiio_stripe_factor
+  integer :: gpu_bigmem_flag
   !
   ! Geometry input
   !
@@ -121,6 +122,8 @@ module cgyro_globals
   real, dimension(6) :: dlntdr
   real, dimension(6) :: sdlnndr
   real, dimension(6) :: sdlntdr
+
+!$acc declare create(z,temp)
 
   integer :: subroutine_flag  ! only used for cgyro_read_input
 

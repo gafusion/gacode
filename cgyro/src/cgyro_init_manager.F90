@@ -148,6 +148,8 @@ subroutine cgyro_init_manager
      allocate(dtheta(-nup_theta:nup_theta, nc))
      allocate(dtheta_up(-nup_theta:nup_theta, nc))
 
+!$acc enter data create(fcoef,gcoef,field,field_loc)
+
      ! Velocity-distributed arrays
      allocate(rhs(nc,nv_loc,4))
      allocate(h_x(nc,nv_loc))
@@ -172,6 +174,8 @@ subroutine cgyro_init_manager
      allocate(cap_h_v(nc_loc,nv))
      allocate(cap_h_v_prime(nc_loc,nv))
 
+!$acc enter data create(rhs,h_x,g_x,psi,chi,h0_x,cap_h_c,cap_h_ct,cap_h_v,dvjvec_c,dvjvec_v,jxvec_c)
+
      ! Nonlinear arrays
      if (nonlinear_flag == 1) then
         if (nonlinear_method == 1) then
@@ -185,6 +189,8 @@ subroutine cgyro_init_manager
            allocate(fpack(n_radial,nsplit*n_toroidal))
            allocate(gpack(n_radial,nsplit*n_toroidal))
         endif
+
+!$acc enter data create(fpack,gpack,f_nl,g_nl)
      endif
 
      if (collision_model == 5) then
@@ -201,6 +207,10 @@ subroutine cgyro_init_manager
   GEO_nfourier_in = geo_ny
   call GEO_alloc(1)
   call cgyro_equilibrium
+
+#ifndef _OPENACC
+  gpu_bigmem_flag = 0
+#endif
 
   if (test_flag == 0) then
 
@@ -278,6 +288,9 @@ subroutine cgyro_init_manager
      allocate( vxmany(0:ny-1,0:nx-1,nsplit) )
      allocate( vymany(0:ny-1,0:nx-1,nsplit) )
      allocate( uvmany(0:ny-1,0:nx-1,nsplit) )
+
+!$acc enter data create(fxmany,fymany,gxmany,gymany) &
+!$acc&           create(uxmany,uymany,vxmany,vymany,uvmany)
 
      !-------------------------------------------------------------------
      ! 2D
