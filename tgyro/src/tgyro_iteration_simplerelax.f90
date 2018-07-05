@@ -69,7 +69,7 @@ subroutine tgyro_iteration_simplerelax
      if(i_tran_loop==1)then 
         relax(:)=loc_relax
         do p=1,p_max
-           relax(p)=loc_relax/abs(g_vec(p))
+           relax(p)=loc_relax
         enddo
      endif
      p=0
@@ -77,7 +77,7 @@ subroutine tgyro_iteration_simplerelax
         
         if (loc_ti_feedback_flag == 1) then
            p = p+1
-           simpledz = relax(p)*(f_vec(p) - g_vec(p))            
+           simpledz = relax(p)*(f_vec(p)-g_vec(p))/sqrt(f_vec(p)**2+g_vec(p)**2)            
            if (abs(simpledz) > loc_dx_max) then
               simpledz = loc_dx_max*(simpledz/abs(simpledz))
            endif
@@ -87,7 +87,7 @@ subroutine tgyro_iteration_simplerelax
 
         if (loc_te_feedback_flag == 1) then
            p = p+1
-           simpledz = relax(p)*(f_vec(p) - g_vec(p))
+           simpledz = relax(p)*(f_vec(p) - g_vec(p))/sqrt(f_vec(p)**2+g_vec(p)**2)
            if (abs(simpledz) > loc_dx_max) then
               simpledz = loc_dx_max*(simpledz/abs(simpledz))
            endif
@@ -97,7 +97,7 @@ subroutine tgyro_iteration_simplerelax
 
         if (loc_er_feedback_flag == 1) then
            p = p+1
-           simpledz = -relax(p)*(f_vec(p) - g_vec(p))           
+           simpledz = -relax(p)*(f_vec(p) - g_vec(p))/sqrt(f_vec(p)**2+g_vec(p)**2)           
            if (abs(simpledz) > loc_dx_max) then
               simpledz = loc_dx_max*(simpledz/abs(simpledz))
            endif
@@ -107,7 +107,7 @@ subroutine tgyro_iteration_simplerelax
 
         if (evo_e(0) == 1) then
            p = p+1
-           simpledz = relax(p)*(f_vec(p) - g_vec(p))             
+           simpledz = relax(p)*(f_vec(p) - g_vec(p))/sqrt(f_vec(p)**2+g_vec(p)**2)             
            if (abs(simpledz) > loc_dx_max) then
               simpledz = loc_dx_max*(simpledz/abs(simpledz))
            endif
@@ -118,7 +118,7 @@ subroutine tgyro_iteration_simplerelax
         do i_ion=1,loc_n_ion
            if (evo_e(i_ion) == 1) then
               p = p+1 
-              simpledz = relax(p)*(f_vec(p) - g_vec(p))
+              simpledz = relax(p)*(f_vec(p) - g_vec(p))/sqrt(f_vec(p)**2+g_vec(p)**2)
               if (abs(simpledz) > loc_dx_max) then
                   simpledz = loc_dx_max*(simpledz/abs(simpledz))
               endif

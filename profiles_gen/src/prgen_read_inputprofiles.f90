@@ -21,7 +21,7 @@ subroutine prgen_read_inputprofiles
   
   call EXPRO_alloc('./',1) 
   call EXPRO_read
-
+  
   nx    = EXPRO_n_exp
   n_ion = EXPRO_n_ion
 
@@ -30,6 +30,9 @@ subroutine prgen_read_inputprofiles
   ! Needed for disagnostic printing
   rmin(:) = EXPRO_rmin(:)
   rmaj(:) = EXPRO_rmaj(:)
+
+  ! Need to close then reopen as usual in map
+  call EXPRO_alloc('./',0) 
 
   open(unit=1,file='profile_header',status='old')
   do i=1,n_ion

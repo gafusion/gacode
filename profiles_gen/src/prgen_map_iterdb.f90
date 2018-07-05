@@ -154,8 +154,8 @@ subroutine prgen_map_iterdb
      ! Only accept beams if density is everywhere positive
      if (minval(onetwo_enbeam(:,i)) > epsilon(0.0)) then
 
-        print '(a)',"INFO: (prgen) Found fast ion beam species"
-        print '(a)',"INFO: (prgen) Modifying fast ion beam temperature to satisfy beam pressure"
+        print '(a)',"INFO: (prgen_map_iterdb) Found fast ion beam species"
+        print '(a)',"INFO: (prgen_map_iterdb) Modifying fast ion beam temperature to satisfy beam pressure"
 
         n0 = n0+1
 
@@ -172,8 +172,8 @@ subroutine prgen_map_iterdb
   ! Fast alphas
   if (minval(onetwo_enalp(:)) > epsilon(0.0)) then
 
-     print '(a)',"INFO: (prgen) Found fast alpha species"
-     print '(a)',"INFO: (prgen) Modifying fast alpha temperature to satisfy total pressure"
+     print '(a)',"INFO: (prgen_map_iterdb) Found fast alpha species"
+     print '(a)',"INFO: (prgen_map_iterdb) Modifying fast alpha temperature to satisfy total pressure"
 
      n0 = n0+1
 
@@ -190,7 +190,7 @@ subroutine prgen_map_iterdb
 
   onetwo_nion_tot = n0
   if (n0 > 10) then
-     print '(a)',"ERROR: (prgen) Too many ions; report to GACODE developers."
+     print '(a)',"ERROR: (prgen_map_iterdb) Too many ions; report to GACODE developers."
      stop
   endif
 
@@ -254,7 +254,7 @@ subroutine prgen_map_iterdb
   !---------------------------------------------------------
   ! Ion name association
   !
-  print '(a)','INFO: (prgen) Found these ion species:'
+  print '(a)','INFO: (prgen_map_iterdb) Found these ion species:'
   do i=1,onetwo_nion_tot
      call onetwo_ion_zmass(onetwo_ion_name(i),onetwo_z(i),onetwo_m(i))
      print '(t6,i2,1x,a)',i,trim(onetwo_ion_name(i))
@@ -262,7 +262,7 @@ subroutine prgen_map_iterdb
   !
   ! Reordering
   !
-  print '(a)','INFO: (prgen) Created these species'
+  print '(a)','INFO: (prgen_map_iterdb) Created these species'
   do i=1,n_ion_max
 
      ip = reorder_vec(i)

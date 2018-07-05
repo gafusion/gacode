@@ -2,7 +2,7 @@ subroutine vgen_getgeo
 
   use vgen_globals
   use EXPRO_interface
-  use GEO_interface
+  use geo
 
   implicit none
 
@@ -13,7 +13,6 @@ subroutine vgen_getgeo
 
   GEO_nfourier_in = EXPRO_nfourier
   GEO_signb_in    = EXPRO_signb
-  call GEO_alloc(1)
 
   open(unit=1,file='out.vgen.geo',status='replace')
   r_min = EXPRO_rmin(EXPRO_n_exp)
@@ -42,29 +41,27 @@ subroutine vgen_getgeo
      if (EXPRO_ctrl_numeq_flag == 0) then
         ! Call GEO with model shape
         GEO_model_in = 0
-        call GEO_do()
      else
         ! Call GEO with general (numerical) shape
         GEO_model_in = 1
         GEO_fourier_in(1:4,:) = EXPRO_geo(:,:,i)/r_min
         GEO_fourier_in(5:8,:) = EXPRO_dgeo(:,:,i)
-        call GEO_do()
      endif
-    
+
+     call geo_interp(n_theta,theta,.true.)
+     
      write(1,'(e16.8)',advance='no') EXPRO_rho(i)
-     do j=1, n_theta
-        call GEO_interp(theta(j))
+     do j=1,n_theta
         write(1,'(e16.8)',advance='no') theta(j)
-        write(1,'(e16.8)',advance='no') GEO_b  * EXPRO_bunit(i)
-        write(1,'(e16.8)',advance='no') GEO_bp * EXPRO_bunit(i)
-        write(1,'(e16.8)',advance='no') GEO_bt * EXPRO_bunit(i)
-        write(1,'(e16.8)',advance='no') GEO_bigr * r_min
+        write(1,'(e16.8)',advance='no') GEO_b(j)  * EXPRO_bunit(i)
+        write(1,'(e16.8)',advance='no') GEO_bp(j) * EXPRO_bunit(i)
+        write(1,'(e16.8)',advance='no') GEO_bt(j) * EXPRO_bunit(i)
+        write(1,'(e16.8)',advance='no') GEO_bigr(j) * r_min
      enddo
      write(1,*)
   enddo
 
   ! Clean up
   close(1)
-  call GEO_alloc(0)
 
 end subroutine vgen_getgeo

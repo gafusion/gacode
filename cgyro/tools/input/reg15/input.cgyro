@@ -24,6 +24,7 @@ Q=2.0
 S=1.0
 
 # Collisions
+GPU_BIGMEM_FLAG=1
 COLLISION_MODEL=4
 NU_EE=0.1
 

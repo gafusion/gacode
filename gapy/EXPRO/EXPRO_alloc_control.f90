@@ -30,12 +30,12 @@ subroutine EXPRO_alloc_control(i_proc,flag)
            read(io,*) EXPRO_n_exp
            close(io)
            open(unit=io,file=trim(path)//trim(runfile),status='replace')
-           print('(a)'),'INFO: (EXPRO) input.profiles.gen found'
+           print('(a)'),'INFO: (EXPRO_alloc_control) input.profiles.gen found'
            close(io)
         else
            close(io)
            open(unit=io,file=trim(path)//trim(runfile),status='replace')
-           print('(a)'),'ERROR: (EXPRO) input.profiles.gen does not exist'
+           print('(a)'),'ERROR: (EXPRO_alloc_control) input.profiles.gen does not exist'
            close(io)
            stop
         endif
@@ -61,10 +61,9 @@ subroutine EXPRO_alloc_control(i_proc,flag)
            read(io,*) EXPRO_nfourier
            close(io)
            open(unit=io,file=trim(path)//trim(runfile),status='replace')
-           write(io,'(a)') 'INFO: (EXPRO) input.profiles.geo found'
+           write(io,'(a)') 'INFO: (EXPRO_alloc_control) input.profiles.geo found'
            close(io)
         endif
-
         !--------------------------------------------------------------
 
      endif

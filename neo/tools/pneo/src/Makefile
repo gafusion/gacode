@@ -7,6 +7,10 @@ else
 endif
 
 NEO_FLAGS = -cpp
+ifdef CUDA_DIR
+   NEO_FLAGS += -DNEO_HAVE_CUDA $(CUDA_INC)
+   NEO_LIBS  += $(CUDA_LIB)
+endif
 ifdef PETSC_DIR
    NEO_FLAGS += -DNEO_HAVE_PETSC $(PETSC_INC)
    NEO_LIBS  += $(PETSC_LIB)

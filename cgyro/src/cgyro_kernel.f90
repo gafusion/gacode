@@ -74,6 +74,11 @@ subroutine cgyro_kernel
      !
      t_current = t_current+delta_t
 
+     ! GPU versions of step_gk and coll work on the following in the GPU memory
+     call timer_lib_in('str_mem')
+!$acc update device(field,psi,cap_h_c,chi,h_x)
+     call timer_lib_out('str_mem')
+
      ! Collisionless step: returns new h_x, cap_h_x, fields 
      if (integration_error(2) > adapt_tol .and. nonlinear_flag == 1) then
         ! Trigger adaptive step
@@ -88,12 +93,20 @@ subroutine cgyro_kernel
         call cgyro_step_gk
      endif
 
+     call timer_lib_in('str_mem')
+!$acc update host(rhs(:,:,1))
+     call timer_lib_out('str_mem')
+
      ! Collision step: returns new h_x, cap_h_x, fields
      if (collision_model == 5) then
         call cgyro_step_collision_simple
      else
         call cgyro_step_collision
      endif
+
+     call timer_lib_in('coll_mem')
+!$acc update host(field,psi,cap_h_c,chi,h_x)
+     call timer_lib_out('coll_mem')
 
      ! Hammett method for ExB shear
      if (shear_method == 1) then
@@ -111,6 +124,8 @@ subroutine cgyro_kernel
 
      ! Error estimate
      call cgyro_error_estimate
+     ! Exit if error too large
+     if (error_status > 0) exit
      !------------------------------------------------------------
 
      !---------------------------------------
@@ -132,8 +147,8 @@ subroutine cgyro_kernel
      ! Don't wrap timer output in a timer
      if (mod(i_time,print_step) == 0) call write_timers(trim(path)//runfile_timers)
 
-     ! Trap error or convergence
-     if (error_status > 0 .or. signal == 1) exit
+     ! Exit if convergenced
+     if (signal == 1) exit
 
   enddo
   !---------------------------------------------------------------------------

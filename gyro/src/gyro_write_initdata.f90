@@ -14,7 +14,7 @@ subroutine gyro_write_initdata(datafile1,datafile2,datafile3,io)
   use gyro_globals
   use gyro_profile_exp
   use math_constants
-  use GEO_interface
+  use geo
 
   !---------------------------------------------------
   implicit none
@@ -28,6 +28,7 @@ subroutine gyro_write_initdata(datafile1,datafile2,datafile3,io)
   real :: theta
   real :: dr
   integer :: n_wedge
+  real, dimension(:), allocatable :: ttmp
   !---------------------------------------------------
 
   if (output_flag == 0 .or. i_proc /= 0) return
@@ -138,7 +139,8 @@ subroutine gyro_write_initdata(datafile1,datafile2,datafile3,io)
   open(unit=io,file=datafile3,status='replace')
 
   n_wedge = n_theta_plot*n_theta_mult
-
+  allocate(ttmp(n_wedge))
+  
   do i=1,n_x
 
      if (flat_profile_flag == 0) then
@@ -187,35 +189,36 @@ subroutine gyro_write_initdata(datafile1,datafile2,datafile3,io)
      endif
 
      GEO_fourier_in(:,:) = a_fourier_geo_s(:,0:n_fourier_geo,i)
-     call GEO_do()
 
      do j=1,n_wedge
+        ttmp(j) = -pi+(j-1)*pi_2/n_wedge
+     enddo
+     if (n_wedge == 1) ttmp = 0.0
 
-        theta = -pi+(j-1)*pi_2/n_wedge
+     call geo_interp(n_wedge,ttmp,.true.)
+     
+     do j=1,n_wedge
 
-        ! Test for special case
-        if (n_wedge == 1) theta = 0.0
-
-        call GEO_interp(theta)
-
-        write(io,10) GEO_nu
-        write(io,10) GEO_gsin
-        write(io,10) GEO_gcos1
-        write(io,10) GEO_gcos2
-        write(io,10) GEO_usin
-        write(io,10) GEO_ucos
-        write(io,10) GEO_b
-        write(io,10) GEO_g_theta
-        write(io,10) GEO_grad_r
-        write(io,10) GEO_gq
-        write(io,10) GEO_captheta
-        write(io,10) GEO_theta_nc
+        write(io,10) GEO_nu(j)
+        write(io,10) GEO_gsin(j)
+        write(io,10) GEO_gcos1(j)
+        write(io,10) GEO_gcos2(j)
+        write(io,10) GEO_usin(j)
+        write(io,10) GEO_ucos(j)
+        write(io,10) GEO_b(j)
+        write(io,10) GEO_g_theta(j)
+        write(io,10) GEO_grad_r(j)
+        write(io,10) GEO_gq(j)
+        write(io,10) GEO_captheta(j)
+        write(io,10) GEO_theta_nc(j)
 
      enddo ! j
   enddo ! i
 
   close(io)
 
+  deallocate(ttmp)
+  
   if (debug_flag == 1 ) then
      print *,'[gyro_write_initdata done]'
   endif

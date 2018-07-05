@@ -50,6 +50,9 @@ then
   echo "         -r"
   echo "         Run full regression suite."
   echo
+  echo "         -rs <case>"
+  echo "         Run specified regression case."
+  echo
   echo "         -reset"
   echo "         Reset regression data."
   echo
@@ -116,6 +119,7 @@ INIT_FLAG=0
 GLOBALMAP_FLAG=0
 HELP_TAG=null
 RHOS=0.002
+SCASE=
 #=============================================================
 
 #=============================================================
@@ -147,6 +151,7 @@ while [ $# -gt 0 ] ; do
   -g) shift ; LOCDIR=$1 ; GENERATE_FLAG=1 ;;
 
   -r) REGRESS_FLAG=1 ;;
+  -rs) REGRESS_FLAG=1 ; shift ; SCASE=$1 ;;
 
   -reset) RESET=1 ;;
 
@@ -184,7 +189,7 @@ fi
 
 #============================================================
 # Check for inconsistent flags:
-FLAG_SUM=$[ $EXEC_FLAG + $TEST_FLAG + $GENERATE_FLAG 
+FLAG_SUM=$[ $EXEC_FLAG + $TEST_FLAG + $GENERATE_FLAG
                        + $REGRESS_FLAG + $INIT_FLAG ]
 if [ $FLAG_SUM -gt 1 ]
 then
@@ -226,18 +231,18 @@ fi
 if [ $CBIN_FLAG -eq 1 ]
 then
     EXEC="$GACODE_ROOT/cgyro/bin/cgyro_trm"
-    $EXEC cgyro.kxky_phi   
-    $EXEC cgyro.kxky_n      
-    $EXEC cgyro.kxky_e     
+    $EXEC cgyro.kxky_phi
+    $EXEC cgyro.kxky_n
+    $EXEC cgyro.kxky_e
     $EXEC cgyro.kxky_flux_e
     $EXEC cgyro.kxky_flux_n
     $EXEC cgyro.ky_flux
-    $EXEC cgyro.lky_flux_n  
-    $EXEC cgyro.lky_flux_e  
-    $EXEC cgyro.lky_flux_v 
+    $EXEC cgyro.lky_flux_n
+    $EXEC cgyro.lky_flux_e
+    $EXEC cgyro.lky_flux_v
     $EXEC cgyro.phib
     $EXEC cgyro.aparb
-    $EXEC cgyro.bparb 
+    $EXEC cgyro.bparb
     $EXEC cgyro.freq
     $EXEC cgyro.geo
     exit 0
@@ -274,8 +279,8 @@ fi
 #============================================================
 # Do the regression test if -r set, then exit.
 #
-if [ $REGRESS_FLAG -eq 1 ] 
-then 
+if [ $REGRESS_FLAG -eq 1 ]
+then
    N2=$[ NPROC / 2 ]
    if [ $[ NPROC - 2 * N2 ] -eq 1 ]
    then
@@ -283,19 +288,19 @@ then
       exit 1
    fi
    # NOMP=1 RESET=0
-   gacode_reg_do $NPROC $NOMP $RESET cgyro 1e-6
+   gacode_reg_do $NPROC $NOMP $RESET cgyro 1e-6 $SCASE
    exit 0
 fi
 #============================================================
 
 #============================================================
-# Everything else must be done in $SIMDIR; so ensure existence 
-# of $SIMDIR (needed at this point) and go there: 
+# Everything else must be done in $SIMDIR; so ensure existence
+# of $SIMDIR (needed at this point) and go there:
 #
 if ! gacode_sim_warn $SIMDIR
 then
-   exit 1 
-fi 
+   exit 1
+fi
 
 cd $SIMDIR
 #============================================================
@@ -304,7 +309,7 @@ cd $SIMDIR
 # Global map option
 if [ $GLOBALMAP_FLAG -eq 1 ]
 then
-    echo "$RHOS" > input.globalmap 
+    echo "$RHOS" > input.globalmap
     $GACODE_ROOT/cgyro/tools/globalmap/src/globalmap
     echo "INFO: (cgyro) Global mapping done."
     exit 1
@@ -318,7 +323,7 @@ CFILES="out.* bin.* batch.out batch.err *~ *gen"
 
 if [ $CLEAN_FLAG -eq 1 ] ; then
     rm -f $CFILES
-    echo "INFO: (cgyro) Cleaned directory." 
+    echo "INFO: (cgyro) Cleaned directory."
     exit 1
 fi
 if [ $NEW_FLAG -eq 1 ] ; then
@@ -332,7 +337,7 @@ fi
 python $CGYRO_DIR/bin/cgyro_parse.py
 if [ $? -eq 1 ]
 then
-    exit 1 
+    exit 1
 fi
 #==========================================================
 
@@ -370,12 +375,12 @@ then
    exit 0
 fi
 #============================================================
-	
+
 #==========================================================
 # See if we are using experimental profiles
 
 if [ -f input.profiles ]
-then 
+then
    python $GACODE_ROOT/profiles_gen/bin/profile_parse.py input.profiles
 fi
 #==========================================================
@@ -383,7 +388,7 @@ fi
 #===========================================================
 # RUN CGYRO
 #
-# Version stamp 
+# Version stamp
 # NOTE: log all starts and restarts, but NOT test mode
 if [ $TEST_FLAG -eq 0 ]
 then
@@ -399,14 +404,14 @@ then
    if [ -f out.cgyro.tag ]
    then
       simtime=`tail -1 out.cgyro.tag`
-      simtime=`echo $simtime` 
+      simtime=`echo $simtime`
    else
       simtime=0.0
    fi
    echo "$date_tag [$version_tag][$GACODE_PLATFORM][$simtime]" >> out.cgyro.version
 else
    NUMA=1
-   MPINUMA=1 
+   MPINUMA=1
 fi
 
 gacode_printversion CGYRO

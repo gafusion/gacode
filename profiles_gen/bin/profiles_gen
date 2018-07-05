@@ -205,7 +205,7 @@ then
    echo "             -omfitres <resolution>"
    echo "              <resolution>=low,medium,high (default medium)."
    echo
-   echo "input.profiles with possible GFILE MERGE MODE"
+   echo "input.profiles (simple passthrough if no gfile specified)"
    echo
    echo "             -i <data>"
    echo "             Data in input.profiles format."
@@ -215,9 +215,6 @@ then
    echo 
    echo "             -nfourier <int>"
    echo "             Number of Fourier modes to retain in input.profiles.geo/input.geo. (default: 24)"
-   echo
-   echo "             -gmerge"
-   echo "             Toggle gmerge mode."
    echo
    echo "VELOCITY GENERATION (VGEN) MODE"
    echo
@@ -325,15 +322,14 @@ FILE_FLAG=0
 G_FLAG=0
 VERBOSE_FLAG=0
 ORDER_FLAG=0
-GMERGE_FLAG=0
 LUMP_FLAG=0
 LUMP_FAST_FLAG=0
 
 # Number of points for -i null option
 N_NULL=40
 
-IPCCW=1
-BTCCW=-1
+IPCCW=0
+BTCCW=0
 NFOURIER=24
 
 # GATO variables
@@ -401,8 +397,8 @@ while [ $# -gt 0 ] ; do
 
   -describe) shift ; DESCRIBE_FLAG=1 ;;
 
-  -cer) shift ;
-        echo "INFO: (profiles_gen) Will merge data from $CER_FILE" ; CER_FILE="$1" ;;
+  -cer) shift ; CER_FILE="$1" ;
+        echo "INFO: (profiles_gen) Will merge data from $CER_FILE" ;;
 
   -ipccw) shift ; IPCCW="$1" ;;
   -btccw) shift ; BTCCW="$1" ;;
@@ -463,8 +459,6 @@ while [ $# -gt 0 ] ; do
   -dump) shift ; DUMP_FLAG=1 ; DUMP_VAR=$1 ;;
   -x) shift ; X=$1 ;;
   -dens) shift ; DUMP_DENS_METHOD=$1 ;;
-
-  -gmerge) GMERGE_FLAG=1 ;;
 
   -plot) PLOT_FLAG=1 ;;
 
@@ -750,23 +744,6 @@ then
    fi
 
    exit 0
-fi
-#=============================================================
-
-#=============================================================
-# Manage execution of gmerge
-#
-if [ $GMERGE_FLAG -eq 1 ] 
-then
-   rm -f input.profiles.gen
-   python $PRGEN_BIN/profile_parse.py $FILE
-   if [ "$FILE" != "input.profiles" ] ; then
-      mv $FILE.gen input.profiles.gen
-   fi
-   a=`grep IONS $FILE`
-   CER_FILE=${a:25} 
-   a=`grep INPUT $FILE`
-   FILE=${a:25}
 fi
 #=============================================================
 

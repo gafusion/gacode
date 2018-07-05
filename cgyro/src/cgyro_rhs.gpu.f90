@@ -13,25 +13,38 @@ subroutine cgyro_rhs(ij)
 
   call timer_lib_in('str_mem')
 
-  ! Prepare suitable distribution (g, not h) for conservative upwind method
-  g_x(:,:) = h_x(:,:)
+!$acc data present(h_x,g_x,psi,rhs,field)
 
   call timer_lib_out('str_mem')
 
 
+  ! Prepare suitable distribution (g, not h) for conservative upwind method
   if (n_field > 1) then
      call timer_lib_in('str')
 
-!$omp parallel do private(iv_loc,is,ic) schedule(dynamic, 1)
+!$acc parallel loop  collapse(2) independent private(iv_loc,is) &
+!$acc&         present(is_v,z,temp,jvec_c) default(none)
      do iv=nv1,nv2
-        iv_loc = iv-nv1+1
-        is = is_v(iv)
         do ic=1,nc
-           g_x(ic,iv_loc) = g_x(ic,iv_loc)+ & 
+           iv_loc = iv-nv1+1
+           is = is_v(iv)
+
+           g_x(ic,iv_loc) = h_x(ic,iv_loc)+ & 
                 (z(is)/temp(is))*jvec_c(2,ic,iv_loc)*field(2,ic)
         enddo
      enddo
+
      call timer_lib_out('str')
+  else
+     call timer_lib_in('str_mem')
+!$acc parallel loop collapse(2) independent present(g_x,h_x)
+     do iv_loc=1,nv_loc
+        do ic_loc=1,nc
+          g_x(:,:) = h_x(:,:)
+        enddo
+      enddo
+
+     call timer_lib_out('str_mem')
   endif
 
   call cgyro_upwind
@@ -44,8 +57,8 @@ subroutine cgyro_rhs(ij)
   call timer_lib_in('str_mem')
 
 !$acc data  &
-!$acc& pcopyout(rhs(:,:,ij)) &
-!$acc& pcopyin(g_x,h_x,field,cap_h_c) &
+!$acc& present(rhs) &
+!$acc& pcopyin(cap_h_c) &
 !$acc& present(is_v,ix_v,ie_v,it_c) &
 !$acc& present(omega_cap_h,omega_h,omega_s) &
 !$acc& present(omega_stream,xi,vel) &
@@ -87,12 +100,6 @@ subroutine cgyro_rhs(ij)
   ! Wavenumber advection shear terms
   call cgyro_advect_wavenumber(ij)
 
-  call timer_lib_in('str_mem')
-
-!$acc end data    
-
-  call timer_lib_out('str_mem')
-
   if ( (nonlinear_flag == 1) .and. (nonlinear_method /= 1) .and. (.not. is_staggered_comm_2)) then 
      ! stagger comm1, to load ballance network traffic
      call cgyro_nl_fftw_comm1
@@ -106,5 +113,13 @@ subroutine cgyro_rhs(ij)
         call cgyro_nl_fftw(ij)
      endif
   endif
+
+ call timer_lib_in('str_mem')
+
+!$acc end data    
+
+  ! g_x and h_x
+!$acc end data 
+  call timer_lib_out('str_mem')
 
 end subroutine cgyro_rhs

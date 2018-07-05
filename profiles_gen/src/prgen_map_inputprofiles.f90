@@ -15,7 +15,11 @@ subroutine prgen_map_inputprofiles
   integer :: i
   real :: xnew(nx)
 
-  if (gmerge_flag == 1) then
+  EXPRO_n_exp = nx
+  call EXPRO_alloc('./',1) 
+  call EXPRO_read
+
+  if (efit_method > 1) then
 
      ! Compute rho, bref and arho based on GATO dpsi and q.
      call prgen_get_chi(nx,q,kappa,rmin,dpsi,rho,EXPRO_b_ref,EXPRO_arho)
@@ -43,7 +47,7 @@ subroutine prgen_map_inputprofiles
      EXPRO_flow_wall = xnew
      call cub_spline(EXPRO_rho,EXPRO_ptot,nx,rho,xnew,nx)
      EXPRO_ptot = xnew
-     do i=1,5
+     do i=1,10
         call cub_spline(EXPRO_rho,EXPRO_ni(i,:),nx,rho,xnew,nx)
         EXPRO_ni(i,:) = xnew(:)
         call cub_spline(EXPRO_rho,EXPRO_ti(i,:),nx,rho,xnew,nx)
@@ -76,6 +80,14 @@ subroutine prgen_map_inputprofiles
   call swap(EXPRO_ti(:,1:10))  
   call swap(EXPRO_vpol(:,1:10))  
   call swap(EXPRO_vtor(:,1:10))  
+
+  !---------------------------------------------------------
+  ! Read the cer file and overlay
+  !
+  if (cer_file /= "null") then
+    print '(a)','INFO: (prgen_map_inputprofiles) IGNORING cer file'
+  endif
+  !---------------------------------------------------------
 
 end subroutine prgen_map_inputprofiles
 

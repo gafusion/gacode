@@ -10,7 +10,7 @@ program globalmap
   use globalmap_globals
   use cgyro_globals
   use cgyro_io
-  use GEO_interface
+  use geo
 
   implicit none
 
@@ -81,15 +81,11 @@ program globalmap
 
      print '(3(1pe12.5,1x))',ri,GEO_q_in,GEO_rmaj_in
 
-     call GEO_do()  
+     call geo_interp(n_theta,theta,.true.)
 
      do it=1,n_theta
-
-        call GEO_interp(theta(it))     
-
-        write(1,10) GEO_bigr
-        write(1,10) GEO_nu
-
+        write(1,10) GEO_bigr(it)
+        write(1,10) GEO_nu(it)
      enddo
   enddo
   close(1)

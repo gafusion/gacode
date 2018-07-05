@@ -13,11 +13,11 @@ ROOT=${HOME}/GIT
 
 # Compilers
 
-FC     = mpif90 -std=f2008 -I $(GACODE_ROOT)/modules
+FC     = mpif90 -std=f2008 -I $(GACODE_ROOT)/modules -J $(GACODE_ROOT)/modules -fPIC
 F77    = mpif77
 FOMP   =-fopenmp
-FMATH  =-fdefault-real-8 -fPIC -J $(GACODE_ROOT)/modules
-FOPT   =-Ofast
+FMATH  =-fdefault-real-8 -fdefault-double-8
+FOPT   =-Ofast 
 FDEBUG =-Wall -W -fcheck=all -g -fbacktrace -ffpe-trap=invalid,zero,overflow
 F2PY   = f2py
 

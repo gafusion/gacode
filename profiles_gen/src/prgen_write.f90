@@ -114,9 +114,6 @@ subroutine prgen_write
 
   case (7)
 
-     if (gmerge_flag == 1) then
-        write(1,40) '#          SHOT NUMBER : [DATA MODIFIED WITH GMERGE]'
-     endif
      write(1,20) '#'
      write(1,'(a)') '#'
      write(1,'(a)') header
@@ -199,7 +196,7 @@ subroutine prgen_write
      EXPRO_b_ref = -btccw*abs(onetwo_Btor)
      EXPRO_arho  = onetwo_rho_grid(nx)
      EXPRO_rvbv  = onetwo_R0*onetwo_Btor
-     EXPRO_ip_exp = ip_tot
+     EXPRO_ip_exp = -ipccw*abs(ip_tot)
   case (2)
      ! plasmastate 
      EXPRO_b_ref = -btccw*abs(plst_b_axis_vac)
@@ -248,7 +245,7 @@ subroutine prgen_write
   !
   call EXPRO_write(1)
   close(1)
-  print '(a)','INFO: (prgen) Wrote input.profiles.'
+  print '(a)','INFO: (prgen_write) Wrote input.profiles.'
   !-------------------------------------------------------------------------------------
 
   !-----------------------------------------------------------
@@ -267,7 +264,7 @@ subroutine prgen_write
   !
   call EXPRO_compute_derived
   call EXPRO_write_derived(1,'input.profiles.extra')
-  print '(a)','INFO: (prgen) Wrote input.profiles.extra.'
+  print '(a)','INFO: (prgen_write) Wrote input.profiles.extra.'
   !-----------------------------------------------------------------------------------
 
 20 format(5(a))
@@ -275,6 +272,6 @@ subroutine prgen_write
 25 format(a,i2)
 30 format(a,i3)
 40 format(a,i6)
-60 format(a,1pe13.7)
+60 format(a,1pe14.7)
 
 end subroutine prgen_write

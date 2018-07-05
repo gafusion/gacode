@@ -3,7 +3,7 @@ subroutine cgyro_init_rotation
   use timer_lib
   use cgyro_globals
   use cgyro_io
-  use GEO_interface
+  use geo
   
   implicit none
 
@@ -32,7 +32,7 @@ subroutine cgyro_init_rotation
      omega_rot_edrift_r(:)  = 0.0
      return
   endif
-
+  
   allocate(phi_rot(n_theta))
   allocate(phi_rot_tderiv(n_theta))
   allocate(phi_rot_rderiv(n_theta))
@@ -50,7 +50,7 @@ subroutine cgyro_init_rotation
      enddo
   enddo
 
-  if(ae_flag == 1) then
+  if (ae_flag == 1) then
      dens_ele_rot(:) = 1.0
   else
      dens_ele_rot(:) = exp(0.5 * (mach/vth(is_ele))**2 &
@@ -149,7 +149,7 @@ subroutine cgyro_init_rotation
      do is=1,n_species
         sum_zn = sum_zn + z(is)*z(is)/temp(is)*dens(is)*dens_rot(it,is)
      enddo
-     if(ae_flag == 1) then
+     if (ae_flag == 1) then
         sum_zn = sum_zn + 1.0/temp_ele*dens_ele*dens_ele_rot(it)
      endif
 
@@ -175,7 +175,7 @@ subroutine cgyro_init_rotation
              * (-gamma_p/rmaj) * (bigr(it)**2 - bigr_th0**2))
 
      enddo
-     if(ae_flag == 1) then
+     if (ae_flag == 1) then
       
         phi_rot_rderiv(it) = phi_rot_rderiv(it) &
              - dens_ele*dens_ele_rot(it)*(-dlnndr_ele &
@@ -241,14 +241,11 @@ subroutine cgyro_init_rotation
      GEO_beta_star_2_in = beta_star(2)
   endif
 
-  ! Set rotation-related geometry terms
-  
-  call GEO_do()
+  ! Need to recompute interpolation since GEO_beta_star now set
+  call geo_interp(n_theta,theta,.true.)
   
   do it=1,n_theta
-
-     call GEO_interp(theta(it)) 
-     
+ 
      do is=1,n_species
      
         lambda_rot(it,is) = z(is)/temp(is) * (phi_rot(it) - phi_rot_avg) &
@@ -257,39 +254,38 @@ subroutine cgyro_init_rotation
         ! bhat dot grad lambda
         dlambda_rot(it,is) = z(is)/temp(is) * phi_rot_tderiv(it) &
              / (q*rmaj*g_theta(it)) &
-             - (mach / rmaj /vth(is))**2 * GEO_bigr &
-             * GEO_bigr_t / (q*rmaj*GEO_g_theta)
+             - (mach / rmaj /vth(is))**2 * GEO_bigr(it) &
+             * GEO_bigr_t(it) / (q*rmaj*GEO_g_theta(it))
            
         omega_rot_trap(it,is) = -0.5*sqrt(2.0)*vth(is) *dlambda_rot(it,is)
 
         omega_rot_u(it,is) = -vth(is)/sqrt(2.0)*dlambda_rot(it,is)
         
         omega_rot_star(it,is) = dlntdr(is) * (z(is)/temp(is)*phi_rot(it) &
-             - 0.5*(mach/vth(is))**2 * (GEO_bigr**2 - bigr_th0**2)/rmaj**2)  &
-             + mach*gamma_p/vth(is)**2 * (GEO_bigr**2 - bigr_th0**2)/rmaj**2 &
+             - 0.5*(mach/vth(is))**2 * (GEO_bigr(it)**2 - bigr_th0**2)/rmaj**2)  &
+             + mach*gamma_p/vth(is)**2 * (GEO_bigr(it)**2 - bigr_th0**2)/rmaj**2 &
              + (mach/vth(is))**2 * bigr_th0/rmaj**2 * bigr_r_th0 
 
-        omega_rot_drift(it,is) = -(mach/rmaj)**2 * GEO_bigr * rho &
-             * mass(is)/(z(is)*GEO_b) * GEO_gq &
-             * (GEO_captheta*GEO_usin*GEO_bt/GEO_b + GEO_ucos*GEO_b/GEO_bt)
+        omega_rot_drift(it,is) = -(mach/rmaj)**2 * GEO_bigr(it) * rho &
+             * mass(is)/(z(is)*GEO_b(it)) * GEO_gq(it) &
+             * (GEO_captheta(it)*GEO_usin(it)*GEO_bt(it)/GEO_b(it) + GEO_ucos(it)*GEO_b(it)/GEO_bt(it))
 
-        omega_rot_drift_r(it,is) = -(mach/rmaj)**2 * GEO_bigr * rho &
-             * mass(is)/(z(is)*GEO_b) * GEO_usin * GEO_grad_r &
-             * GEO_bt / GEO_b 
+        omega_rot_drift_r(it,is) = -(mach/rmaj)**2 * GEO_bigr(it) * rho &
+             * mass(is)/(z(is)*GEO_b(it)) * GEO_usin(it) * GEO_grad_r(it) &
+             * GEO_bt(it) / GEO_b(it) 
         
      enddo
 
      omega_rot_edrift(it) =  rho*phi_rot_rderiv(it) &
           - rho * phi_rot_tderiv(it) / (q*rmaj*g_theta(it)) &
-          * (GEO_bt/GEO_bp * GEO_captheta / GEO_grad_r &
-          + GEO_l_r * GEO_b/GEO_bp)
+          * (GEO_bt(it)/GEO_bp(it) * GEO_captheta(it) / GEO_grad_r(it) &
+          + GEO_l_r(it) * GEO_b(it)/GEO_bp(it))
      
-     omega_rot_edrift_r(it) = -rho * GEO_bt/GEO_bp/GEO_b * GEO_grad_r &
+     omega_rot_edrift_r(it) = -rho * GEO_bt(it)/GEO_bp(it)/GEO_b(it) * GEO_grad_r(it) &
           * phi_rot_tderiv(it) / (q*rmaj*g_theta(it))
      
   enddo  
   
-
   if (rotation_model == 3) then
      ! O(mach^2) terms only 
      ! no O(mach) terms

@@ -141,7 +141,7 @@ subroutine EXPRO_read_driver
      read(io,*) dummy(:)
      read(io,*) dummy(:)
   else
-     print('(a)'),'INFO: (EXPRO) This is an OLD format input.profiles.  Please regenerate.'
+     print('(a)'),'INFO: (EXPRO_read_driver) This is an OLD format input.profiles.  Please regenerate.'
   endif
 
   close(io)

@@ -32,17 +32,17 @@ subroutine gyro_lambda_grid
      if (i == 1 .or. flat_profile_flag == 0) then
 
         call gyro_to_geo(i)
-
+        
         call gyro_banana_init(nint_ORB_s)
-
+        
         ! Passing
 
         call gyro_banana_getlambda(lambda_tp(i),lambda_max(i))
-
+       
         ! two regions
 
         call gyro_banana_integrate_tau(lambda_tp(i),s_tp)
-
+        
         ! s_tp => s at trapped-passing boundary
 
         allocate(s_temp(n_pass))
@@ -61,6 +61,7 @@ subroutine gyro_lambda_grid
         deallocate(s_temp)
         deallocate(w_temp)
 
+        print *,'s2'
         do k=1,n_lambda
            call gyro_banana_s2lambda(s_lambda(k),lambda(i,k))
         enddo

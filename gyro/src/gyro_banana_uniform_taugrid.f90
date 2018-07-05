@@ -10,7 +10,7 @@
 subroutine gyro_banana_uniform_taugrid(lambda,n_tau,n_sub,theta,tau)
 
   use gyro_banana_private
-  use GEO_interface
+  use geo
 
   !-----------------------------------------------------------
   implicit none
@@ -27,7 +27,6 @@ subroutine gyro_banana_uniform_taugrid(lambda,n_tau,n_sub,theta,tau)
   !
   real, intent(in) :: lambda
   real, dimension(:), allocatable :: f
-  real, dimension(:), allocatable :: x
   real :: fsum
   real :: dt
   real :: theta_bm
@@ -55,38 +54,37 @@ subroutine gyro_banana_uniform_taugrid(lambda,n_tau,n_sub,theta,tau)
   !
   ni = 1+(n_tau-1)*(n_sub+1)
   !
-  allocate(x(ni))
+  allocate(ttmp(ni))
   allocate(f(ni))
   !----------------------------------------
 
   do i=1,ni
-     x(i) = theta_bm+(i-1)*(theta_bp-theta_bm)/(ni-1)
+     ttmp(i) = theta_bm+(i-1)*(theta_bp-theta_bm)/(ni-1)
   enddo
 
   do j=1,n_iterate
 
+     call geo_interp(ni,ttmp,.false.)
      do i=1,ni
-        call GEO_interp(x(i))
-        f(i) = sqrt(abs(1.0-lambda*GEO_b))/GEO_g_theta
+        f(i) = sqrt(abs(1.0-lambda*GEO_b(i)))/GEO_g_theta(i)
      enddo
 
      fsum = 0.5*(f(1)+f(ni))+sum(f(2:ni-1))
      dt = (theta_bp-theta_bm)/fsum
 
-     x(1) = theta_bm
+     ttmp(1) = theta_bm
      do i=2,ni
-        x(i) = x(i-1)+0.5*dt*(f(i)+f(i-1))
+        ttmp(i) = ttmp(i-1)+0.5*dt*(f(i)+f(i-1))
      enddo
 
   enddo ! j
 
   do j=1,n_tau
      i = 1+(j-1)*(n_sub+1)
-     theta(j) = x(i)
+     theta(j) = ttmp(i)
      tau(j)   = (i-1)*dt
   enddo
 
-  deallocate(x)
-  deallocate(f)
+  deallocate(f,ttmp)
 
 end subroutine gyro_banana_uniform_taugrid

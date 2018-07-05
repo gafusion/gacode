@@ -1,7 +1,7 @@
 subroutine le3_geometry_rho
 
   use le3_globals
-  use GEO_interface
+  use geo
 
   implicit none
 

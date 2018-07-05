@@ -1,15 +1,27 @@
 subroutine cgyro_equilibrium
 
   use cgyro_globals
-  use GEO_interface
+  use geo
 
   implicit none
 
   integer :: it,ir,is,r
   real :: gtheta_ave,gtheta0,err
   real, dimension(n_theta+1) :: x,y
-
+  real, dimension(n_theta) :: ttmp
   real, parameter :: tol=1e-14
+
+  ! Compute equilibrium quantities (even in test mode)
+  GEO_model_in    = geo_numeq_flag
+  GEO_ntheta_in   = geo_ntheta
+  GEO_nfourier_in = geo_ny
+
+  if (zf_test_mode == 0) then
+     ! Location of theta=0
+     it0 = n_theta/2+1
+  else
+     it0 = n_theta/3+1
+  endif
 
   ! Parameters needed for equilibrium
   ! geo_numeq_flag, geo_ny, and geo_yin already set 
@@ -29,9 +41,13 @@ subroutine cgyro_equilibrium
   GEO_zeta_in      = zeta
   GEO_s_zeta_in    = s_zeta
   GEO_beta_star_in = beta_star(0)
-  GEO_fourier_in(:,:) = geo_yin(:,:)
+  GEO_fourier_in(:,0:GEO_nfourier_in) = geo_yin(:,:)
 
-  call GEO_do()  
+  ! Get initial geo solution, then set R,dR/dr at theta=0 
+  ttmp(1) = 0.0
+  call geo_interp(1,ttmp,.true.)
+  bigr_th0   = GEO_bigr(1)
+  bigr_r_th0 = GEO_bigr_r(1)
 
   !-----------------------------------------------------------------
   ! Generate theta-grid (equally-spaced or constant-wind-speed)
@@ -55,13 +71,16 @@ subroutine cgyro_equilibrium
      ! However, theta_eq never appears explicitly EXCEPT for this derivative,
      ! so stencils are for the equally-spaced theta_eq grid.
 
-     gtheta_ave = GEO_g_theta  ! at theta=0
      err = 1e4
+     gtheta_ave = GEO_g_theta(1)
 
      do while (err > tol)
         do it=1,n_theta
-           call GEO_interp(0.5*(y(it)+y(it+1)))
-           x(it+1) = x(it)+d_theta/GEO_g_theta
+           ttmp(it) = 0.5*(y(it)+y(it+1))
+        enddo
+        call geo_interp(n_theta,ttmp,.false.)
+        do it=1,n_theta
+           x(it+1) = x(it)+d_theta/GEO_g_theta(it)
         enddo
         gtheta0 = gtheta_ave
         gtheta_ave  = (2*pi)/(x(n_theta+1)-x(1))
@@ -84,13 +103,6 @@ subroutine cgyro_equilibrium
   !--------------------------------------------------------
   ! Manage subset of theta-values for plotting output
   !
-  if (zf_test_mode == 0) then
-     ! Location of theta=0
-     it0 = n_theta/2+1
-  else
-     it0 = n_theta/3+1
-  endif
-
   r = n_theta/theta_plot
 
   itp(:) = 0
@@ -113,32 +125,28 @@ subroutine cgyro_equilibrium
      enddo
   enddo
 
-  call GEO_interp(0.0)
-  bigr_th0   = GEO_bigr
-  bigr_r_th0 = GEO_bigr_r
-  
+  call geo_interp(n_theta,theta,.false.)     
+
   do it=1,n_theta
 
-     call GEO_interp(theta(it))     
-
-     bigr(it)   = GEO_bigr
-     bigr_r(it) = GEO_bigr_r
-     bmag(it)   = GEO_b
-     btor(it)   = GEO_bt
-     bpol(it)   = GEO_bp
+     bigr(it)   = geo_bigr(it)
+     bigr_r(it) = geo_bigr_r(it)
+     bmag(it)   = geo_b(it)
+     btor(it)   = geo_bt(it)
+     bpol(it)   = geo_bp(it)
 
      ! Define modified G_theta
      if (constant_stream_flag == 0) then
         ! Theta-dependent
-        g_theta(it) = GEO_g_theta
+        g_theta(it) = geo_g_theta(it)
      else
         ! Constant by construction
         g_theta(it) = gtheta_ave
      endif
-     g_theta_geo(it) = GEO_g_theta
+     g_theta_geo(it) = geo_g_theta(it)
 
      ! flux-surface average weights
-     w_theta(it) = g_theta(it)/GEO_b
+     w_theta(it) = g_theta(it)/geo_b(it)
 
   enddo
 
@@ -154,50 +162,49 @@ subroutine cgyro_equilibrium
 
 
   ! 2. Compute terms required for O(M) rotation, and no rotation.
-  ! 
+  !
+  
   do it=1,n_theta
-
-     call GEO_interp(theta(it))
 
      do is=1,n_species
   
         omega_stream(it,is) = sqrt(2.0)*vth(is)/(q*rmaj*g_theta(it))
         
         omega_trap(it,is) = -0.5*sqrt(2.0)*vth(is) &
-             *(GEO_dbdt/GEO_b)/(q*rmaj*GEO_g_theta) 
+             *(GEO_dbdt(it)/GEO_b(it))/(q*rmaj*GEO_g_theta(it)) 
         
-        omega_rdrift(it,is) = -rho*vth(is)**2*mass(is)/(Z(is)*GEO_b) &
-             *GEO_grad_r/rmaj*GEO_gsin 
+        omega_rdrift(it,is) = -rho*vth(is)**2*mass(is)/(Z(is)*GEO_b(it)) &
+             *GEO_grad_r(it)/rmaj*GEO_gsin(it) 
 
-        omega_adrift(it,is) = -rho*vth(is)**2*mass(is)/(Z(is)*GEO_b) &
-             *GEO_gq/rmaj*(GEO_gcos1+GEO_gcos2+GEO_captheta*GEO_gsin)
+        omega_adrift(it,is) = -rho*vth(is)**2*mass(is)/(Z(is)*GEO_b(it)) &
+             *GEO_gq(it)/rmaj*(GEO_gcos1(it)+GEO_gcos2(it)+GEO_captheta(it)*GEO_gsin(it))
 
         omega_aprdrift(it,is) = 2.0*rho*vth(is)**2 &
-             *mass(is)/(Z(is)*GEO_b)*GEO_gq/rmaj*GEO_gcos2
+             *mass(is)/(Z(is)*GEO_b(it))*GEO_gq(it)/rmaj*GEO_gcos2(it)
         
         omega_cdrift(it,is) = -2.0*sqrt(2.0)*rho*vth(is) &
-             * mass(is)/(Z(is)*GEO_b)*GEO_gq/rmaj &
-             *(GEO_ucos+GEO_captheta*GEO_usin)*mach*mach_one_fac
+             * mass(is)/(Z(is)*GEO_b(it))*GEO_gq(it)/rmaj &
+             *(GEO_ucos(it)+GEO_captheta(it)*GEO_usin(it))*mach*mach_one_fac
         
         omega_cdrift_r(it,is) = -2.0*sqrt(2.0)*rho*vth(is) &
-             * mass(is)/(Z(is)*GEO_b)*GEO_grad_r/rmaj*GEO_usin &
+             * mass(is)/(Z(is)*GEO_b(it))*GEO_grad_r(it)/rmaj*GEO_usin(it) &
              * mach*mach_one_fac
  
      enddo
      
-     omega_gammap(it) = GEO_bt/GEO_b*GEO_bigr/rmaj*gamma_p*mach_one_fac
+     omega_gammap(it) = GEO_bt(it)/GEO_b(it)*GEO_bigr(it)/rmaj*gamma_p*mach_one_fac
 
      do ir=1,n_radial
-        k_perp(ic_c(ir,it)) = sqrt((2.0*pi*px(ir)*GEO_grad_r/length &
-             + k_theta*GEO_gq*GEO_captheta)**2 &
-             + (k_theta*GEO_gq)**2)
-        k_x(ic_c(ir,it)) = 2.0*pi*px(ir)*GEO_grad_r/length &
-             + k_theta*GEO_gq*GEO_captheta
+        k_perp(ic_c(ir,it)) = sqrt((2.0*pi*px(ir)*GEO_grad_r(it)/length &
+             + k_theta*GEO_gq(it)*GEO_captheta(it))**2 &
+             + (k_theta*GEO_gq(it))**2)
+        k_x(ic_c(ir,it)) = 2.0*pi*px(ir)*GEO_grad_r(it)/length &
+             + k_theta*GEO_gq(it)*GEO_captheta(it)
      enddo
      
   enddo
 !$acc enter data copyin(xi,vel,omega_stream)
-  
+    
 end subroutine cgyro_equilibrium
 
 

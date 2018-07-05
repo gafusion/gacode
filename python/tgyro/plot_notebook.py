@@ -81,9 +81,12 @@ def plot_input_profiles(ax,tag,scale=0):
     
    xp = xp/max(xp)
 
-   ax.plot(xp,prof.data[tag]*snorm,color=color,alpha=alpha,linewidth=width,
-           label=r'$\mathbf{'+label+'}$')
-
+   try:
+      ax.plot(xp,prof.data[tag]*snorm,color=color,alpha=alpha,linewidth=width,
+              label=r'$\mathbf{'+label+'}$')
+   except:
+      print 'WARNING: input.profiles.extra missing'
+      
    if os.path.isfile(fn):
       prof = profiles_genData(fn)
       ax.plot(xp,prof.data[tag]*snorm,color=color,alpha=alpha,linewidth=width,

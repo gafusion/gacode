@@ -95,7 +95,9 @@ subroutine cgyro_init_arrays
         endif
      enddo
   enddo
-  
+ 
+!$acc update device(jxvec_c)
+ 
   deallocate(jloc_c)
   do i_field=1,n_field
      call parallel_lib_rtrans_real(jvec_c(i_field,:,:),jvec_v(i_field,:,:))
@@ -142,6 +144,8 @@ subroutine cgyro_init_arrays
         upfac2(ic,iv_loc) = jvec_c(1,ic,iv_loc)/res_norm(ic,is)
      enddo
   enddo
+
+!$acc enter data copyin(upfac1,upfac2,jvec_c)
 
   !------------------------------------------------------------------------------
 

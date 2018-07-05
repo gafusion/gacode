@@ -8,16 +8,9 @@ endif
 
 EXEC = exprodump
 
-EXTRA_LIBS = ${GACODE_ROOT}/shared/EXPRO/EXPRO_lib.a \
-             ${GACODE_ROOT}/shared/GEO/GEO_lib.a  \
+EXTRA_LIBS = ${GACODE_ROOT}/gapy/EXPRO/EXPRO_lib.a \
+             ${GACODE_ROOT}/gapy/src/geo_lib.a  \
              ${GACODE_ROOT}/shared/math/math_lib.a
-
-OBJECTS = create_globals.o \
-          create_check.o \
-          create_importvec.o \
-          create_set.o \
-          create_read_input.o \
-          create_write.o
 
 .SUFFIXES : .o .f90
 

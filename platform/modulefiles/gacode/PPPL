@@ -1,0 +1,25 @@
+#%Module
+#
+# Module file for setting the GACODE machine-dependent environmental variables
+#
+if { [ module-info mode load ] } {
+
+module load intel/2015.u1
+module load openmpi/1.8.4
+module load netcdf
+
+}
+module load fftw/3.3.6-pl1
+module load hdf5-parallel/1.8.14
+
+module load acml/5.3.1/ifort64
+
+module load git
+
+module load gacode_base
+
+if { [ module-info mode remove ] } {
+module load netcdf
+module load openmpi/1.8.4
+module load intel/2015.u1
+}

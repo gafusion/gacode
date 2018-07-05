@@ -25,13 +25,14 @@ subroutine neo_do
   use neo_3d_driver
   use neo_neural
   use mpi
+  
   implicit none
 
   integer :: ir, is, ie, ix, it, js, je, jx, jt, ks
   integer, dimension(:,:,:,:), allocatable :: mindx  ! (ns,ne,nxi+1,nth)
   integer :: i, j, k, id
   integer :: ierr
-  integer :: n_elem, asize
+  integer :: asize
   real, dimension(:), allocatable :: a
   integer, dimension(:), allocatable :: a_iindx
   integer, dimension(:), allocatable :: a_jindx

@@ -17,7 +17,7 @@ subroutine cgyro_step_collision
 
   implicit none
 
-  integer :: is,ivp,it
+  integer :: is,ivp,it,j,k,nj_loc
   complex, dimension(nv) :: bvec,cvec
   real :: cvec_re,cvec_im
   real :: cval
@@ -34,10 +34,12 @@ subroutine cgyro_step_collision
 
   call timer_lib_in('coll')
 
-!$omp parallel do private(ic,ic_loc, it, iv,ivp,cvec,bvec,cvec_re,cvec_im,cval) firstprivate(collision_model)
+  call parallel_lib_nj_loc(nj_loc)
+
   do ic=nc1,nc2
 
      ic_loc = ic-nc1+1
+     ! Set-up the RHS: H = f + ze/T G phi
 
      it = it_c(ic)
 
@@ -59,7 +61,12 @@ subroutine cgyro_step_collision
         enddo
      enddo
 
-     call parallel_lib_f_i_set(ic_loc, bvec)
+    do k=1,nproc
+       do j=1,nj_loc
+          fsendf(j,ic_loc,k) = bvec(j+(k-1)*nj_loc)
+       enddo
+    enddo
+
      if (collision_field_model == 1) then
        ! cap_h_v not re-used else
        do iv=1,nv

@@ -107,11 +107,11 @@ subroutine prgen_map_plasmastate
   if (true_aux_flag == 1) then
      pow_e_aux(:) = pow_e_ohm+pow_e_nb+pow_e_rf
      pow_i_aux(:) =          +pow_i_nb+pow_i_rf
-     print '(a)','INFO: (prgen) Setting aux. power as ohmic+NB+RF.'
+     print '(a)','INFO: (prgen_map_plasmastate) Setting aux. power as ohmic+NB+RF.'
   else
      pow_e_aux(:) = pow_e-(pow_e_fus-pow_ei-pow_e_sync-pow_e_brem-pow_e_line)
      pow_i_aux(:) = pow_i-(pow_i_fus+pow_ei)
-     print '(a)','INFO: (prgen) Setting aux. power as total-fus-rad.'
+     print '(a)','INFO: (prgen_map_plasmastate) Setting aux. power as total-fus-rad.'
   endif
   !
   pow_e_err = abs(1.0-(pow_e_fus(nx)+pow_e_aux(nx)-pow_ei(nx)- &
@@ -158,7 +158,7 @@ subroutine prgen_map_plasmastate
      f2_therm(:) = f2_therm(:)+plst_ns(:,i)*(plst_q_all(i)/1.6022e-19)**2   
   enddo
 
-  print '(a)','INFO: (prgen) Found these ion species:'
+  print '(a)','INFO: (prgen_map_plasmastate) Found these ion species:'
   do i=2,plst_dp1_nspec_all
      print '(t6,i2,1x,a)', i-1,trim(plst_all_name(i))
   enddo
@@ -339,7 +339,7 @@ subroutine prgen_map_plasmastate
 
   ! Ion reordering diagnostics
 
-  print '(a)','INFO: (prgen) Created these species:'
+  print '(a)','INFO: (prgen_map_plasmastate) Created these species:'
   do i=1,n_ion_max
      ip = reorder_vec(i)
      if (ip >= plst_dp1_nspec_all) then

@@ -19,6 +19,15 @@ contains
     real, dimension(:), intent (in) :: rhs        !right-hand-side vector
     real, dimension(:), intent (inout) :: sol     !solution vector
 
+    if (use_cuda == 1) then
+#ifdef NEO_HAVE_CUDA
+      call SOLVE_cuda(m_size, m_iindx, m_jindx, m, m_asize, m_rows, rhs, sol)
+      if(error_status == 0) return
+#endif
+      call neo_error('ERROR: (NEO) CUDA solver not used')
+      error_status = 0 ! try with other solvers
+    endif
+
     if (use_petsc == 1) then
 #ifdef NEO_HAVE_PETSC
       call SOLVE_petsc(m_size, m_iindx, m_jindx, m, m_asize, m_rows, rhs, sol)

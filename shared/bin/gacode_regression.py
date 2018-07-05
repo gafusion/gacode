@@ -13,7 +13,7 @@ def make():
 class RegressionError():
     pass
 def run_regressions():
-    for code in ['gyro','neo','tglf','tgyro']:
+    for code in ['gyro','neo','tglf','tgyro','cgyro']:
         print('Starting regression testing of the %s code'%code)
         parallel = '-n 4'
         if code=='neo':

@@ -1,0 +1,34 @@
+#---------------------------------------------------
+# GA Internal nodes - Summit like
+#---------------------------------------------------
+
+# FIXED Hardware parameters
+IDENTITY="GA summit"
+CORES_PER_NODE=256
+NUMAS_PER_NODE=1
+
+# Compilers and flags
+
+# Fortran 90/95 compiler
+FC = mpif90 -module ${GACODE_ROOT}/modules -Mpreprocess -DUSE_INLINE
+
+# Fortran 77 compiler
+F77 = ${FC}
+
+# Compiler options/flags
+FACC   =-acc -Minfo=accel -ta=nvidia:cc70 -Mcudalib=cufft
+FOMP   =-mp -Mstack_arrays ${FACC}
+FMATH  =-r8 -I${FFTW_INC}
+FOPT   =-fast
+FDEBUG =-g -Kieee -Ktrap=fp,divz -Mbounds -Mchkptr -Mchkstk -traceback -Minform=inform
+F2PY   = f2py --fcompiler=pg
+
+# System math libraries
+LMATH=-L${FFTW_DIR} -lfftw3_threads -lfftw3f_threads -lfftw3f -lfftw3 -llapack -lblas
+
+# NetCDF
+NETCDF =-L${NETCDF_DIR}/lib -lnetcdff -lnetcdf -L${NETCDF_DIR}/lib -L${NETCDF_DIR}/lib -lz -lm
+NETCDF_INC =${NETCDF_DIR}/include
+
+# Archive
+ARCH = ar cr

@@ -32,5 +32,8 @@ export OMP_NUM_THREADS=${nomp}
 export CRAY_CUDA_MPS=1
 module load daint-gpu
 
+# Uncomment below, if you want GPUDirect MPI
+# export MPICH_RDMA_ENABLED_CUDA=1
+
 echo "> srun -n ${nmpi} $exec"
 srun -n ${nmpi} $exec

@@ -1,0 +1,7 @@
+echo "SCRIPT: running ./geo_test"
+
+./geo_test
+
+echo "SCRIPT: running python geo_test.py"
+
+python geo_test.py

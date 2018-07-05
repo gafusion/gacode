@@ -6,8 +6,8 @@ program cgyro
   use timer_lib
 
   implicit none
+  
   integer :: supported
-  integer :: narg
   integer, external :: omp_get_max_threads
   character(len=32) :: arg
 
