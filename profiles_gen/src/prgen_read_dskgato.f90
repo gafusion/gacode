@@ -43,11 +43,11 @@ subroutine prgen_read_dskgato
      read(1,'(a)') cdum
      read(1,'(a)') cdum
      read(1,*) nsurf,ntht,neqsym
-     print '(a)','INFO: (prgen) Assuming new-type dskgato flux-surface format.'
+     print '(a)','INFO: (prgen_read_dskgato) Assuming new-type dskgato flux-surface format.'
   else
      read(1,*) nsurf,ntht
      neqsym = 1
-     print '(a)','INFO: (prgen) Assuming old-type dskgato flux-surface format.' 
+     print '(a)','INFO: (prgen_read_dskgato) Assuming old-type dskgato flux-surface format.' 
   endif
   ! Accounting for magnetic axis
   nsurf = nsurf-1
@@ -108,9 +108,13 @@ subroutine prgen_read_dskgato
   if (psi(nsurf) < 0.0) then
      ! Flux negative
      psi(:) = -psi(:)
-     ipccw  = 1
+     if(ipccw == 0) then
+        ipccw  = 1
+     endif
   else
-     ipccw = -1
+     if(ipccw == 0) then
+        ipccw = -1
+     endif
   endif
   !----------------------------------------------------
 
@@ -244,5 +248,7 @@ subroutine prgen_read_dskgato
   deallocate(q_dsk)
  
 10 format(1p4e19.12)
+
+  print '(a)','INFO: (prgen_read_dskgato) Wrote input.profiles.geo'
 
 end subroutine prgen_read_dskgato

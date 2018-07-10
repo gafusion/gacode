@@ -18,7 +18,7 @@ subroutine prgen_read_plasmastate
   integer :: varid
   integer :: err
   real :: dummy
-  real, parameter :: idiag=1
+  real, parameter :: idiag=0
 
   ! Open the file (NF90_NOWRITE means read-only)
   err = nf90_open(raw_data_file,NF90_NOWRITE,ncid)
@@ -114,12 +114,18 @@ subroutine prgen_read_plasmastate
 
   ! B_phi orientation
   err = nf90_inq_varid(ncid,trim('kccw_Bphi'),varid)
-  err = nf90_get_var(ncid,varid,btccw)
-
+  err = nf90_get_var(ncid,varid,plst_btccw)
+  if(btccw == 0) then
+     btccw = plst_btccw
+  endif
+     
   ! J_phi orientation
   err = nf90_inq_varid(ncid,trim('kccw_Jphi'),varid)
-  err = nf90_get_var(ncid,varid,ipccw)
-
+  err = nf90_get_var(ncid,varid,plst_ipccw)
+  if(ipccw == 0) then
+     ipccw = plst_ipccw
+  endif
+  
   ! Root of normalized toroidal flux (rho)
   err = nf90_inq_varid(ncid,trim('rho'),varid)
   err = nf90_get_var(ncid,varid,plst_rho(:))

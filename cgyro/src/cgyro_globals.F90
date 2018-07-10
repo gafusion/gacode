@@ -91,6 +91,7 @@ module cgyro_globals
   integer :: theta_plot
   integer :: mpiio_small_stripe_factor
   integer :: mpiio_stripe_factor
+  integer :: gpu_bigmem_flag
   !
   ! Geometry input
   !

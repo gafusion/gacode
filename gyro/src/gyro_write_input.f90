@@ -13,7 +13,7 @@ subroutine gyro_write_input
   use gyro_profile_exp
   use gyro_pointers
   use math_constants
-  use GEO_interface
+  use geo
   use ompdata
 
   !--------------------------------------------------

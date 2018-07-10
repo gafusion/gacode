@@ -86,6 +86,9 @@ subroutine cgyro_write_initdata
      write(io,'(t2,3(a,1x,f3.1,2x),t48,a)') &
           'up_theta:',up_theta , 'up_radial:',up_radial ,'up_alpha:',up_alpha,&
           '[dissipation strength]'
+     write(io,'(t2,3(a,1x,f3.1,2x),t48,a)') &
+          'C(theta):',maxval(omega_stream)*maxval(vel)*maxval(xi)*delta_t/d_theta/1.6
+
 
      write(io,*) 
      write(io,20) '    r/a:',rmin

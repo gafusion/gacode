@@ -13,12 +13,13 @@ IDENTITY="GA saturn or iris cluster"
 CORES_PER_NODE=1
 NUMAS_PER_NODE=1
 
-FC  = mpif90 -std=f2008 -I$(GACODE_ROOT)/modules
+FC  = mpif90 -std=f2008 -I$(GACODE_ROOT)/modules -J $(GACODE_ROOT)/modules -fPIC
 F77 = mpif77 -I$(GACODE_ROOT)/modules
 F2PY = f2py2.7
+CC  = gcc
 
 FOMP   = -fopenmp
-FMATH  = -fdefault-real-8 -fPIC -J $(GACODE_ROOT)/modules
+FMATH  = -fdefault-real-8 -fdefault-double-8 
 FOPT   = -Ofast
 FDEBUG = -Wall -W fcheck=mem,bounds -g -fbacktrace -ffpe-trap=invalid,zero,overflow
 
@@ -33,3 +34,19 @@ NETCDF_INC = $(NETCDF_DIR)/include
 # Archive
 
 ARCH = ar cr
+
+# NEO platform defs
+ifdef SUPERLU_DIR
+  SUPERLU_LIB += -Wl,-rpath,${SUPERLU_DIR}/lib -L${SUPERLU_DIR}/lib -lsuperlu
+  SUPERLU_INC += -I${SUPERLU_DIR}/include
+endif
+
+ifdef PETSC_DIR
+  PETSC_LIB += -Wl,-rpath,$(PETSC_DIR)/lib -L$(PETSC_DIR)/lib -lpetsc -lsuperlu
+  PETSC_INC += -I$(PETSC_DIR)/include
+endif
+
+ifdef CUDA_DIR
+  CUDA_LIB += -L$(CUDA_DIR)/lib64 -lcusolver -lcudart -lcusparse
+  CUDA_INC += -I$(CUDA_DIR)/include
+endif

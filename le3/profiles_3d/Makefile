@@ -4,6 +4,12 @@ export EXTRA_LIBS = \
 	${GACODE_ROOT}/shared/fluxfit/fluxfit_lib.a \
    	${GACODE_ROOT}/shared/math/math_lib.a
 
+ifeq ($(OPT),debug)
+   FFLAGS=${FDEBUG}
+else
+   FFLAGS=${FOPT}
+endif
+
 EXEC = profiles_3d
 
 OBJECTS = profiles_3d.o

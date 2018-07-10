@@ -1,0 +1,21 @@
+#!/bin/bash
+
+echo "-queue: debug, batch"
+
+# Default queue
+if [ "$QUEUE" == "null_queue" ] ; then
+   QUEUE=debug
+fi
+
+bfile=$SIMDIR/batch.src
+echo "#!/bin/bash -l" > $bfile
+echo "#PBS -N $LOCDIR" >> $bfile
+echo "#PBS -A $REPO" >> $bfile
+echo "#PBS -o $SIMDIR/batch.out" >> $bfile
+echo "#PBS -e $SIMDIR/batch.err" >> $bfile
+echo "#PBS -q $QUEUE" >> $bfile
+echo "#PBS -l walltime=$WALLTIME" >> $bfile
+echo "#PBS -l nodes=$nodes" >> $bfile
+echo "module load python" >> $bfile
+
+echo "$CODE -e $LOCDIR -n $nmpi -nomp $nomp -numa $numa -mpinuma $mpinuma -p $SIMROOT" >> $bfile

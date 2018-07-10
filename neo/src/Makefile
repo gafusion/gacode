@@ -42,32 +42,38 @@ OBJECTS = neo_globals.o \
           neo_read_input.o \
           neo_run.o \
           neo_spitzer.o \
-          st_to_cc.o
+          matconv.o
 
-#-------------------------------------------------
-# NEO_SOLVER can be set in platform Makefiles to:
-#     slu   : SuperLU sparse solver library
-#     petsc : PETSc library suite
-#-------------------------------------------------
-ifeq ($(NEO_SOLVER),slu)
-   OBJECTS += neo_superlu.o
-else
-   OBJECTS += neo_superlu_stub.o
+NEO_FLAGS = -cpp
+ifdef CUDA_DIR
+   OBJECTS   += neo_cusolve.o cusolve.o
+   NEO_FLAGS += -DNEO_HAVE_CUDA $(CUDA_INC)
+   NEO_LIBS  += $(CUDA_LIB)
+endif
+ifdef PETSC_DIR
+   OBJECTS   += neo_petsc.o
+   NEO_FLAGS += -DNEO_HAVE_PETSC $(PETSC_INC)
+   NEO_LIBS  += $(PETSC_LIB)
+endif
+ifdef SUPERLU_DIR
+   OBJECTS   += neo_superlu.o st_to_cc.o c_fortran_dgssv.o
+   NEO_FLAGS += -DNEO_HAVE_SUPERLU $(SUPERLU_INC)
+   NEO_LIBS  += $(SUPERLU_LIB)
 endif
 
 .SUFFIXES : .o .f90 .F90
 
 all: neo_lib.a $(EXEC).o $(EXTRA_LIBS)
-	$(FC) $(FFLAGS) -o $(EXEC) $(EXEC).o neo_lib.a $(EXTRA_LIBS) $(LMATH) $(NN_LIB)
+	$(FC) $(FFLAGS) $(NEO_FLAGS) -o $(EXEC) $(EXEC).o neo_lib.a $(EXTRA_LIBS) $(LMATH) $(NN_LIB) ${NEO_LIBS}
 
 neo_lib.a: $(OBJECTS)
 	$(ARCH) neo_lib.a $(OBJECTS)
 
 .f90.o .F90.o :
-	$(FC) $(FMATH) $(FFLAGS) $(NN_LIB) -c $< 
+	$(FC) $(FMATH) $(FFLAGS) $(NN_LIB) $(NEO_FLAGS) -c $< 
 
 .c.o:
-	$(CC) $(CFLAGS) $(CDEFS) $(EXTRA_HEADERS) -c $< $(VERBOSE)
+	$(CC) $(CFLAGS) $(CDEFS) $(NEO_FLAGS) -c $< $(VERBOSE)
 
 clean:  
 	rm -rf *.o neo_lib.a $(EXEC) *~

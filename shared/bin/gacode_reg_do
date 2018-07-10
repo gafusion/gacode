@@ -14,7 +14,7 @@ n=$#
 
 if [ $n -lt 5 ] 
 then
-  echo "Usage: gacode_reg_do <n_proc> <n_omp> <reset_flag> <code> <tol>"
+  echo "Usage: gacode_reg_do <n_proc> <n_omp> <reset_flag> <code> <tol> <scase>"
   exit 1
 fi
 
@@ -25,6 +25,7 @@ n_omp=${2}
 reset=${3}
 code=${4}
 tol=${5}
+scase=${6}
 
 echo "REGRESSION TESTING: $code"
 
@@ -45,13 +46,18 @@ fi
 
 precfile=out.$code.prec
 
-list=`cat $compdir/reg_list`
+if [ "$scase" == "" ] 
+then
+   list=`cat $compdir/reg_list`
+else
+   list=$scase
+fi
 
 rm -rf $testdir ; mkdir $testdir
 cd $testdir
 
 for sim in $list
-do 
+do
    $code -g $sim -p $testdir > out
    rm -f $sim/$precfile
    if [ $n_omp -eq 1 ] && [ $n_proc -eq 1 ] ; then 

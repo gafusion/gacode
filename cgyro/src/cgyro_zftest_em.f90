@@ -16,7 +16,7 @@ subroutine cgyro_zftest_em
   implicit none
 
   integer :: ir,it,is,ie,ix
-  real :: arg, ang
+  real :: arg
   real, dimension(n_species,n_theta) :: ansum,adsum,alphah,sum_loc
 
   sum_loc(:,:) = 0.0

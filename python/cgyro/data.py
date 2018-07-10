@@ -239,7 +239,7 @@ class cgyrodata:
       import numpy as np
 
       #-----------------------------------------------------------------
-      # Particle and energy fluxes
+      # Particle, momentum and energy fluxes
       #
       nt = self.n_time
       nd = self.n_species*3*self.n_field*self.n_n*nt

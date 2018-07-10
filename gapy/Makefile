@@ -2,17 +2,16 @@
 # Toplevel makefile for gapy
 #---------------------------
 
-include ${GACODE_ROOT}/platform/build/make.inc.${GACODE_PLATFORM}
-
-export EXTRA_LIBS = \
-       ${GACODE_ROOT}/shared/math/math_lib.a 
-
-
 all:
-	cd ${GACODE_ROOT}/shared ; make
-	cd src ; make
+	cd src  ; make
+	cd EXPRO  ; make
+#	cd f2py ; make
+	cd test ; make
 
 clean:
 	cd src ; make clean
+	cd EXPRO ; make clean
+	cd f2py ; make clean
+	cd test ; make clean
 
 .IGNORE:

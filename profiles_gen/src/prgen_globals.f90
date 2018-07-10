@@ -20,7 +20,6 @@ module prgen_globals
   integer :: noq_flag
   integer :: nop_flag
   integer :: verbose_flag
-  integer :: gmerge_flag
   character (len=70) :: efit_header
   integer :: ipccw
   integer :: btccw
@@ -33,8 +32,6 @@ module prgen_globals
   integer :: n_null
   integer :: n_lump
   integer, dimension(:), allocatable :: lump_vec
-  integer :: n_ion_sanitize
-  character(len=2), dimension(:), allocatable :: ion_sanitize
   integer :: ntop
 
   integer :: true_aux_flag=0
@@ -186,6 +183,8 @@ module prgen_globals
   !
   integer :: plst_shot_number
   character (len=32) :: plst_tokamak_id
+  integer :: plst_btccw
+  integer :: plst_ipccw
   integer :: plst_dim_nrho
   integer :: plst_dim_nrho_eq_geo
   integer :: plst_dp1_nspec_th

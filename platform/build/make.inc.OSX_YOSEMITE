@@ -17,7 +17,7 @@
 
 # Compilers and flags
 
-FC  = mpif90-mpich-gcc5 -I$(GACODE_ROOT)/modules -J$(GACODE_ROOT)/modules
+FC  = mpif90-mpich-gcc5 -I$(GACODE_ROOT)/modules -J$(GACODE_ROOT)/modules -fPIC
 F77 = mpif90-mpich-gcc5
 CC  = ${FC}
 GOMPTEST := $(shell ${CC} -v 2>&1 | grep " version " | grep gcc >/dev/null; echo $$?)
@@ -25,7 +25,7 @@ ifeq ($(GOMPTEST),0)
   FOMP  = -fopenmp
 endif
 
-FMATH	= -fdefault-real-8 -fPIC
+FMATH	= -fdefault-real-8 -fdefault-double-8
 FOPT	= -O3 -framework Accelerate
 FDEBUG  = -Wall -fcheck=all -ffpe-trap=invalid,zero,overflow
 F2PY    = f2py

@@ -37,7 +37,6 @@ subroutine tgyro_iteration_driver
   allocate(f_vec0(p_max))
   allocate(g_vec0(p_max))
   allocate(b(p_max))
-  allocate(weight(p_max))
 
   call tgyro_allocate_globals
 
@@ -122,28 +121,24 @@ subroutine tgyro_iteration_driver
         ip = ip+1
         pmap(i,ip) = p
         x_vec(p) = dlntidr(1,i)
-        weight(p) = 1.0
      endif
      if (loc_te_feedback_flag == 1) then
         p  = p+1
         ip = ip+1
         pmap(i,ip) = p
         x_vec(p) = dlntedr(i)
-        weight(p) = 1.0
      endif
      if (loc_er_feedback_flag == 1) then
         p  = p+1
         ip = ip+1
         pmap(i,ip) = p
         x_vec(p) = f_rot(i)
-        weight(p) = 1.0
      endif
      if (evo_e(0) == 1) then
         p  = p+1
         ip = ip+1
         pmap(i,ip) = p
         x_vec(p) = dlnnedr(i)
-        weight(p) = tgyro_search_weight
      endif
      do i_ion=1,loc_n_ion
         if (evo_e(i_ion) == 1) then
@@ -151,7 +146,6 @@ subroutine tgyro_iteration_driver
            ip = ip+1
            pmap(i,ip) = p
            x_vec(p) = dlnnidr(i_ion,i)
-           weight(p) = 1.0
         endif
      enddo
   enddo

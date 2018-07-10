@@ -525,7 +525,7 @@ subroutine tgyro_write_data(i_print)
      do i=2,loc_n_ion
         write(1,55,advance='no') 'E(pflux_i',i,')','R',i+4
      enddo
-     write(1,*) '' ! Get new line
+     write(1,'(a)')
 
      if (tgyro_relax_iterations == 0) then
         write(1,30) 'ITERATION*: ',i_tran,sum(res_norm)/size(res_norm),flux_counter*n_worker*n_inst

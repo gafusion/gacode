@@ -8,8 +8,8 @@ endif
 
 export EXTRA_LIBS = \
 	${GACODE_ROOT}/shared/math/math_lib.a \
-	${GACODE_ROOT}/shared/EXPRO/EXPRO_lib.a \
-	${GACODE_ROOT}/shared/GEO/GEO_lib.a \
+	${GACODE_ROOT}/gapy/EXPRO/EXPRO_lib.a \
+	${GACODE_ROOT}/gapy/src/geo_lib.a \
 	${GACODE_ROOT}/shared/fluxfit/fluxfit_lib.a
 
 EXEC = prgen
@@ -42,7 +42,7 @@ OBJECTS = prgen_globals.o \
 	  prgen_read_corsica.o \
 	  prgen_read_ufile.o \
 	  prgen_read_inputprofiles.o \
-          prgen_write.o 
+          prgen_write.o
 
 .SUFFIXES : .o .f90
 

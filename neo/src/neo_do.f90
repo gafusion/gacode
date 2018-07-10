@@ -25,13 +25,14 @@ subroutine neo_do
   use neo_3d_driver
   use neo_neural
   use mpi
+  
   implicit none
 
   integer :: ir, is, ie, ix, it, js, je, jx, jt, ks
   integer, dimension(:,:,:,:), allocatable :: mindx  ! (ns,ne,nxi+1,nth)
   integer :: i, j, k, id
   integer :: ierr
-  integer :: n_elem, asize
+  integer :: asize
   real, dimension(:), allocatable :: a
   integer, dimension(:), allocatable :: a_iindx
   integer, dimension(:), allocatable :: a_jindx
@@ -476,7 +477,7 @@ subroutine neo_do
      call set_RHS_source
 
      ! Factor and Solve the Matrix 
-     call SOLVE_sparse(k, asize, a, a_iindx, a_jindx)
+     call SOLVE_sparse(k, a_iindx, a_jindx, a, asize, n_row, g, g)
      if(error_status > 0) goto 100
 
      ! Compute the neo transport coefficients

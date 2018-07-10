@@ -133,7 +133,7 @@ subroutine tgyro_iteration_serial
      do i_worker=1,n_evolve+1
 
         ! Update gradient using search vector
-        x_vec1(:) = x_vec0(:)+b(:)*search(i_worker,search_index)*weight(:)
+        x_vec1(:) = x_vec0(:)+b(:)*search(i_worker,search_index)
         call tgyro_target_vector(x_vec1,g_vec1)
         call tgyro_flux_vector(x_vec1,f_vec1,0.0,0)
         call tgyro_residual(f_vec1,g_vec1,res1,p_max,loc_residual_method)

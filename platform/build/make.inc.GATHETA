@@ -7,11 +7,11 @@ IDENTITY="GA theta cluster"
 CORES_PER_NODE=288
 NUMAS_PER_NODE=1
 
-FC  = mpif90 -std=f2008 -I$(GACODE_ROOT)/modules -L/usr/local/lib
+FC  = mpif90 -std=f2008 -I$(GACODE_ROOT)/modules -J $(GACODE_ROOT)/modules -L/usr/local/lib
 F77 = mpif77 -I$(GACODE_ROOT)/modules -L/usr/local/lib
 
 FOMP   = -fopenmp
-FMATH  = -fdefault-real-8 -J $(GACODE_ROOT)/modules
+FMATH  = -fdefault-real-8 -fdefault-double-8
 FOPT   = -Ofast -mavx512f -mavx512pf -mavx512er -mavx512cd
 FDEBUG = -Wall -W -fcheck=mem,bounds -g -fbacktrace -ffpe-trap=invalid,zero,overflow -mavx -mavx2 -mavx512f -mavx512pf -mavx512er -mavx512cd
 

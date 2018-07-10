@@ -20,41 +20,76 @@ subroutine cgyro_step_gk
   ! Bpar -> field(3)
 
   call timer_lib_in('str_mem')
-  h0_x = h_x
+!$omp parallel do collapse(2)
+  do iv_loc=1,nv_loc
+     do ic_loc=1,nc
+       h0_x(ic_loc,iv_loc) = h_x(ic_loc,iv_loc)
+     enddo
+  enddo
+
   call timer_lib_out('str_mem')
 
   
   ! Stage 1
   call cgyro_rhs(1)
   call timer_lib_in('str')
-  h_x = h0_x + 0.5 * delta_t * rhs(:,:,1)
+!$omp parallel do collapse(2)
+  do iv_loc=1,nv_loc
+     do ic_loc=1,nc
+       h_x(ic_loc,iv_loc) = h0_x(ic_loc,iv_loc) + 0.5 * delta_t * rhs(ic_loc,iv_loc,1)
+     enddo
+  enddo
   call timer_lib_out('str')
   call cgyro_field_c
 
   ! Stage 2
   call cgyro_rhs(2)
   call timer_lib_in('str')
-  h_x = h0_x + 0.5 * delta_t * rhs(:,:,2)
+!$omp parallel do collapse(2)
+  do iv_loc=1,nv_loc
+     do ic_loc=1,nc
+       h_x(ic_loc,iv_loc) = h0_x(ic_loc,iv_loc) + 0.5 * delta_t * rhs(ic_loc,iv_loc,2)
+     enddo
+  enddo
   call timer_lib_out('str')
   call cgyro_field_c
 
   ! Stage 3
   call cgyro_rhs(3)
   call timer_lib_in('str')
-  h_x = h0_x + delta_t * rhs(:,:,3)
+!$omp parallel do collapse(2)
+  do iv_loc=1,nv_loc
+     do ic_loc=1,nc
+        h_x(ic_loc,iv_loc) = h0_x(ic_loc,iv_loc) + delta_t * rhs(ic_loc,iv_loc,3)
+     enddo
+  enddo
   call timer_lib_out('str')
   call cgyro_field_c
 
   ! Stage 4
   call cgyro_rhs(4)
   call timer_lib_in('str')
-  h_x = h0_x+delta_t*(rhs(:,:,1)+2*rhs(:,:,2)+2*rhs(:,:,3)+rhs(:,:,4))/6  
+!$omp parallel do collapse(2)
+  do iv_loc=1,nv_loc
+     do ic_loc=1,nc
+       h_x(ic_loc,iv_loc) = h0_x(ic_loc,iv_loc) &
+                          + delta_t*( rhs(ic_loc,iv_loc,1)+2*rhs(ic_loc,iv_loc,2)+ &
+                                      2*rhs(ic_loc,iv_loc,3)+rhs(ic_loc,iv_loc,4) )/6  
+     enddo
+  enddo
   call timer_lib_out('str')
   call cgyro_field_c
 
   ! rhs(1) = 3rd-order error estimate
   call timer_lib_in('str')
-  rhs(:,:,1) = h0_x+delta_t*(rhs(:,:,2)+2*rhs(:,:,3))/3-h_x
+!$omp parallel do collapse(2)
+  do iv_loc=1,nv_loc
+     do ic_loc=1,nc
+       rhs(ic_loc,iv_loc,1) = h0_x(ic_loc,iv_loc) &
+                            + delta_t*(rhs(ic_loc,iv_loc,2)+2*rhs(ic_loc,iv_loc,3))/3 &
+                            - h_x(ic_loc,iv_loc)
+     enddo
+  enddo
   call timer_lib_out('str')
   
   ! Filter special spectral components

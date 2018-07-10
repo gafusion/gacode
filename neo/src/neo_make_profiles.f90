@@ -218,9 +218,9 @@ subroutine neo_make_profiles
 
         dens(1:n_species,ir)   = dens_loc(1:n_species)     
         temp(1:n_species,ir)   = temp_loc(1:n_species)     
-        dlnndr(1:n_species,ir) = dlnndr_loc(1:n_species) * profile_dlnndr_scale(is)      
-        dlntdr(1:n_species,ir) = dlntdr_loc(1:n_species) * profile_dlntdr_scale(is) 
-
+        dlnndr(1:n_species,ir) = dlnndr_loc(1:n_species) * profile_dlnndr_scale(1:n_species)      
+        dlntdr(1:n_species,ir) = dlntdr_loc(1:n_species) * profile_dlntdr_scale(1:n_species) 
+        
         ! Sanity check for densities
         do is=1,n_species
            if (dens(is,ir) <= 0.0) then

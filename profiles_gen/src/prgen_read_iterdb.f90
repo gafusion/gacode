@@ -163,7 +163,7 @@ subroutine prgen_read_iterdb
   ! Torque density may be missing in iterdb file
   read(1,'(a)',iostat=i) t
   if (i == 0) then
-     print '(3(a))', 'INFO: (prgen) Assuming "', trim(t), '" is beam torque density.'
+     print '(3(a))', 'INFO: (prgen_read_iterdb) Assuming "', trim(t), '" is beam torque density.'
      read(1,*) onetwo_storqueb !torque density nt-m/m**3
   else
      onetwo_storqueb(:) = 0.0
@@ -172,7 +172,7 @@ subroutine prgen_read_iterdb
   ! Beam pressure may be missing in iterdb file
   read(1,'(a)',iostat=i) t
   if (i == 0) then
-     print '(3(a))', 'INFO: (prgen) Assuming "', trim(t), '" is beam pressure.'
+     print '(3(a))', 'INFO: (prgen_read_iterdb) Assuming "', trim(t), '" is beam pressure.'
      read(1,*) onetwo_pressb(:,1)
   else
      onetwo_pressb(:,:) = 0.0
@@ -182,7 +182,7 @@ subroutine prgen_read_iterdb
   ! Total pressure may be missing in iterdb file
   read(1,'(a)',iostat=i) t
   if (i == 0) then
-     print '(3(a))', 'INFO: (prgen) Assuming "', trim(t), '" is total pressure.'
+     print '(3(a))', 'INFO: (prgen_read_iterdb) Assuming "', trim(t), '" is total pressure.'
     read(1,*) p_tot(:)
   else
     p_tot(:) = 0.0
@@ -191,7 +191,7 @@ subroutine prgen_read_iterdb
   ! sscxl may be missing in iterdb file
   read(1,'(a)',iostat=i) t
   if (i == 0) then
-     print '(3(a))', 'INFO: (prgen) Found new quantity "', trim(t), '" in iterdb file.'
+     print '(3(a))', 'INFO: (prgen_read_iterdb) Found new quantity "', trim(t), '" in iterdb file.'
     read(1,*) onetwo_sscxl(:)
   else
     onetwo_sscxl(:) = 0.0

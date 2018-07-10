@@ -8,7 +8,7 @@
 subroutine gyro_banana_init(n_IN)
 
   use gyro_banana_private
-  use GEO_interface
+  use geo
 
   !-----------------------------------------------------------
   implicit none
@@ -23,31 +23,37 @@ subroutine gyro_banana_init(n_IN)
 
   n = n_IN
 
-  allocate(f(n))
-
   !----------------------------------------------
   ! Determine maximum lambda, and lambda at
   ! the trapped-passing boundary:
   !
-  call GEO_interp(0.0)
+  allocate(ttmp(1))
+  ttmp(1) = 0.0
+  call geo_interp(1,ttmp,.true.)
   !
-  lambda_max = 1.0/GEO_b
+  lambda_max = 1.0/GEO_b(1)
   !
-  call GEO_interp(pi)
+  ttmp(1) = pi
+  call geo_interp(1,ttmp,.false.)
   !
-  lambda_tp = 1.0/GEO_b
+  lambda_tp = 1.0/GEO_b(1)
+  deallocate(ttmp)
   !-----------------------------------------------
+  
+  allocate(f(n))
+  allocate(ttmp(n))
 
   d_theta = 2.0*pi/(n-1)
 
   do i=1,n
-     theta_0 = -pi+(i-1)*d_theta
-     call GEO_interp(theta_0)
-     f(i) = GEO_g_theta/GEO_b
+     ttmp(i) = -pi+(i-1)*d_theta
   enddo
+  call geo_interp(n,ttmp,.false.)
+  
+  f(:) = GEO_g_theta(:)/GEO_b(:)
 
   fluxave = (0.5*(f(1)+f(n))+sum(f(2:n-1)))*d_theta
 
-  deallocate(f)
+  deallocate(f,ttmp)
 
 end subroutine gyro_banana_init

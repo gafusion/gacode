@@ -19,7 +19,7 @@
 subroutine gyro_bounce_points(lambda,theta_bp,theta_bm)
 
   use math_constants
-  use GEO_interface
+  use geo
 
   !---------------------------------
   implicit none
@@ -32,7 +32,7 @@ subroutine gyro_bounce_points(lambda,theta_bp,theta_bm)
   !
   real :: lambda_tp
   real :: lambda_max
-  real :: theta_b
+  real :: theta_b(1)
   !
   real :: b0_1
   real :: b0_2
@@ -44,7 +44,7 @@ subroutine gyro_bounce_points(lambda,theta_bp,theta_bm)
   !---------------------------------
   
   theta_b = 0.0
-  call GEO_interp(theta_b) ; b0 = GEO_b
+  call geo_interp(1,theta_b,.false.) ; b0 = GEO_b(1)
   lambda_max = 1.0/b0
 
   ! Test for lambda too large:
@@ -54,7 +54,7 @@ subroutine gyro_bounce_points(lambda,theta_bp,theta_bm)
   endif
 
   theta_b = pi
-  call GEO_interp(theta_b) ; b0 = GEO_b
+  call GEO_interp(1,theta_b,.false.) ; b0 = GEO_b(1)
   lambda_tp = 1.0/b0
 
   ! Test for lambda too small:
@@ -74,8 +74,8 @@ subroutine gyro_bounce_points(lambda,theta_bp,theta_bm)
 
   do while (residual > eps_theta)
 
-     call GEO_interp(theta_b) ; b0_1 = GEO_b
-     call GEO_interp(theta_b+dtheta) ; b0_2 = GEO_b
+     call geo_interp(1,theta_b,.false.) ; b0_1 = GEO_b(1)
+     call geo_interp(1,theta_b+dtheta,.false.) ; b0_2 = GEO_b(1)
 
      dtheta = 0.5*dtheta
 
@@ -89,7 +89,7 @@ subroutine gyro_bounce_points(lambda,theta_bp,theta_bm)
 
   enddo
 
-  theta_bp = theta_b
+  theta_bp = theta_b(1)
 
   ! Lower bounce point
 
@@ -102,8 +102,8 @@ subroutine gyro_bounce_points(lambda,theta_bp,theta_bm)
 
   do while (residual > eps_theta)
 
-     call GEO_interp(theta_b) ; b0_1 = GEO_b
-     call GEO_interp(theta_b+dtheta) ; b0_2 = GEO_b
+     call geo_interp(1,theta_b,.false.) ; b0_1 = GEO_b(1)
+     call geo_interp(1,theta_b+dtheta,.false.) ; b0_2 = GEO_b(1)
 
      dtheta = 0.5*dtheta
 
@@ -117,6 +117,6 @@ subroutine gyro_bounce_points(lambda,theta_bp,theta_bm)
 
   enddo
 
-  theta_bm = theta_b
+  theta_bm = theta_b(1)
 
 end subroutine gyro_bounce_points

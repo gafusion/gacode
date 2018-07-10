@@ -7,4 +7,6 @@ module gyro_banana_private
   real :: lambda_max
   real :: fluxave
 
+  real, dimension(:), allocatable :: ttmp(:)
+
 end module gyro_banana_private

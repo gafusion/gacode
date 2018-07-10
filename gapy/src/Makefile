@@ -1,30 +1,28 @@
 include ${GACODE_ROOT}/platform/build/make.inc.${GACODE_PLATFORM}
 
-DESTLIB=${GACODE_ROOT}/python/gapy.so
-SRC=gapy_math.f90 gapy_fluct.f90 gapy_geo.f90
-
-LMATH:=$(filter-out -lfftw3,$(LMATH))
-LMATH:=$(filter-out -lfftw3f,$(LMATH))
-LMATH:=$(filter-out -lfftw3_threads,$(LMATH))
-LMATH:=$(filter-out -lfftw3f_threads,$(LMATH))
-LMATH:=$(filter-out -lcufft,$(LMATH))
-F2PYM:=$(filter-out --fcompiler=pg,$(F2PY))
-
-ifndef F2PY
-   all:
+ifeq ($(OPT),debug)
+   FFLAGS=${FDEBUG}
 else
-   all: objs
+   FFLAGS=${FOPT}
 endif
 
-objs:
-	${F2PYM} --quiet -m gapy -h sgn.pyf ${SRC}
-	${F2PY} --quiet -lgomp --f90flags='${FOMP} ${FOPT}' -c sgn.pyf ${SRC} ${GACODE_ROOT}/shared/math/math_lib.a ${LMATH}
+FC += ${FOMP}
 
-	rm -f ${DESTLIB}
-	ln -s ${GACODE_ROOT}/gapy/src/gapy.so ${DESTLIB}
+.SUFFIXES : .o .f90
+
+all: geo_lib.a vpro_lib.a util_lib.a
+
+geo_lib.a: gapy_geo.o
+	$(ARCH) geo_lib.a gapy_geo.o
+
+vpro_lib.a: gapy_vpro.o
+	$(ARCH) vpro_lib.a gapy_vpro.o
+
+util_lib.a: gapy_util.o
+	$(ARCH) util_lib.a gapy_util.o
+
+.f90.o :
+	$(FC) $(FFLAGS) $(FMATH) -c $<
 
 clean:
-	rm -f gapy.so ${DESTLIB} sgn.pyf *~
-
-exit:
-	echo "No f2py"
+	rm -f *.o *.a *.mod

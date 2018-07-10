@@ -101,7 +101,9 @@ module neo_globals
   integer :: subroutine_flag  ! only used for neo_read_input
   integer :: laguerre_method
   integer :: write_cmoments_flag
-  integer :: use_slu ! use the SuperLU solver
+  integer :: use_cuda  ! use GPU CUDA solvers
+  integer :: use_petsc ! use the PetSc package
+  integer :: use_slu   ! use the SuperLU solver
   !---------------------------------------------------------------
 
   !---------------------------------------------------------------

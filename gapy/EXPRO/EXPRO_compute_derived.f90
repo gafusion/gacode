@@ -9,7 +9,7 @@
 subroutine EXPRO_compute_derived
 
   use EXPRO_interface
-  use GEO_interface
+  use geo
 
   implicit none
 
@@ -31,6 +31,7 @@ subroutine EXPRO_compute_derived
 
   real :: r_min
   real :: fa,fb
+  real :: theta(1)
 
   !---------------------------------------------------------------------
   ! Sanity checks
@@ -184,7 +185,6 @@ subroutine EXPRO_compute_derived
   !
   GEO_nfourier_in = EXPRO_nfourier
   GEO_signb_in    = EXPRO_signb
-  call GEO_alloc(1)
 
   r_min = EXPRO_rmin(EXPRO_n_exp)
 
@@ -209,16 +209,17 @@ subroutine EXPRO_compute_derived
      GEO_s_zeta_in    = EXPRO_szeta(i)
      GEO_beta_star_in = 0.0
      !
+     theta(1) = 0.0
      if (EXPRO_ctrl_numeq_flag == 0) then
         ! Call GEO with model shape
         GEO_model_in = 0
-        call GEO_do()
+        call GEO_interp(1,theta,.true.)
      else
         ! Call GEO with general (numerical) shape
         GEO_model_in = 1
-        GEO_fourier_in(1:4,:) = EXPRO_geo(:,:,i)/r_min
-        GEO_fourier_in(5:8,:) = EXPRO_dgeo(:,:,i)
-        call GEO_do()
+        GEO_fourier_in(1:4,0:GEO_nfourier_in) = EXPRO_geo(:,:,i)/r_min
+        GEO_fourier_in(5:8,0:GEO_nfourier_in) = EXPRO_dgeo(:,:,i)
+        call GEO_interp(1,theta,.true.)
         if (minval(GEOV_jac_r) <= 0.0) then
            print '(a,i3,a)','WARNING: (EXPRO) Negative GEO Jacobian for i =',i,' in input.profiles'
         endif
@@ -234,11 +235,9 @@ subroutine EXPRO_compute_derived
      ! <|grad r|> 
      EXPRO_ave_grad_r(i) = GEO_fluxsurfave_grad_r
 
-     call GEO_interp(0.0)
-
      ! B_poloidal and B_toroidal [T] at theta=0
-     EXPRO_bp0(i) = GEO_bp*EXPRO_bunit(i)
-     EXPRO_bt0(i) = GEO_bt*EXPRO_bunit(i)
+     EXPRO_bp0(i) = GEO_bp(1)*EXPRO_bunit(i)
+     EXPRO_bt0(i) = GEO_bt(1)*EXPRO_bunit(i)
 
      EXPRO_thetascale(i) = GEO_thetascale
 
@@ -321,7 +320,6 @@ subroutine EXPRO_compute_derived
   !--------------------------------------------------------------
 
   ! Clean up
-  call GEO_alloc(0)
   deallocate(rho)
 
   ! Density profile control

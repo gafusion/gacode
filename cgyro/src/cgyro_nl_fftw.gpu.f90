@@ -23,17 +23,19 @@ subroutine cgyro_nl_fftw_comm1
 
   call timer_lib_in('nl_mem')
 
-!$omp parallel do private(it,ir,iexch,ic_loc_m,iv_loc_m)
+!$acc parallel loop collapse(3) independent private(iexch,ic_loc_m) &
+!$acc&         present(h_x,fpack) default(none)
   do iv_loc_m=1,nv_loc
      do it=1,n_theta
-        iexch = it + (iv_loc_m-1)*n_theta
         do ir=1,n_radial
+           iexch = it + (iv_loc_m-1)*n_theta
            ic_loc_m = it + (ir-1)*n_theta
            fpack(ir,iexch) = h_x(ic_loc_m,iv_loc_m)
         enddo
      enddo
   enddo
 
+!$acc parallel loop gang present(fpack) if(nv_loc*n_theta+1>=nsplit*n_toroidal)
   do iexch=nv_loc*n_theta+1,nsplit*n_toroidal
      fpack(:,iexch) = (0.0,0.0)
   enddo
@@ -41,7 +43,7 @@ subroutine cgyro_nl_fftw_comm1
   call timer_lib_out('nl_mem')
   call timer_lib_in('nl_comm')
 
-  call parallel_slib_f_nc(fpack,f_nl)
+  call parallel_slib_f_nc_gpu(fpack,f_nl)
 
   call timer_lib_out('nl_comm')
 
@@ -59,17 +61,20 @@ subroutine cgyro_nl_fftw_comm2
 
   call timer_lib_in('nl_mem')
 
-!$omp parallel do private(it,ir,iexch,ic_loc_m,iv_loc_m)
+
+!$acc parallel loop collapse(3) independent private(iexch,ic_loc_m) &
+!$acc&         present(psi,gpack) default(none)
   do iv_loc_m=1,nv_loc
      do it=1,n_theta
-        iexch = it + (iv_loc_m-1)*n_theta
         do ir=1,n_radial
+           iexch = it + (iv_loc_m-1)*n_theta
            ic_loc_m = it + (ir-1)*n_theta
            gpack(ir,iexch) = psi(ic_loc_m,iv_loc_m)
         enddo
      enddo
   enddo
 
+!$acc parallel loop gang present(gpack) if(nv_loc*n_theta+1>=nsplit*n_toroidal)
   do iexch=nv_loc*n_theta+1,nsplit*n_toroidal
      gpack(:,iexch) = (0.0,0.0)
   enddo
@@ -77,7 +82,7 @@ subroutine cgyro_nl_fftw_comm2
   call timer_lib_out('nl_mem')
   call timer_lib_in('nl_comm')
 
-  call parallel_slib_f_nc(gpack,g_nl)
+  call parallel_slib_f_nc_gpu(gpack,g_nl)
 
   call timer_lib_out('nl_comm')
 
@@ -138,18 +143,16 @@ subroutine cgyro_nl_fftw(ij)
 
   real :: inv_nxny
 
-  include 'fftw3.f03'
-
 
   if (is_staggered_comm_2) then ! stagger comm2, to load ballance network traffic
      call cgyro_nl_fftw_comm2
   endif
 
   call timer_lib_in('nl_mem')
-!$acc  data pcopyin(f_nl)  &
-!$acc& pcreate(fxmany,fymany,gxmany,gymany) &
-!$acc& pcreate(uxmany,uymany,vxmany,vymany) &
-!$acc& pcreate(uvmany)
+!$acc  data present(f_nl)  &
+!$acc&      present(fxmany,fymany,gxmany,gymany) &
+!$acc&      present(uxmany,uymany,vxmany,vymany) &
+!$acc&      present(uvmany)
 
   call timer_lib_out('nl_mem')
 
@@ -194,7 +197,7 @@ subroutine cgyro_nl_fftw(ij)
   endif
 
   call timer_lib_in('nl_mem')
-!$acc data copy(g_nl)  
+!$acc data present(g_nl)  
 
   call timer_lib_out('nl_mem')
   call timer_lib_in('nl')
@@ -273,16 +276,17 @@ subroutine cgyro_nl_fftw(ij)
   call timer_lib_out('nl_mem')
 
   call timer_lib_in('nl_comm')
-  call parallel_slib_r_nc(g_nl,gpack)
+  call parallel_slib_r_nc_gpu(g_nl,gpack)
   call timer_lib_out('nl_comm')
 
   call timer_lib_in('nl_mem')
 
-!$omp parallel do private(it,ir,iexch,ic_loc)
+!$acc parallel loop collapse(3) independent private(iexch,ic_loc) &
+!$acc&         present(psi,gpack) default(none)
   do iv_loc=1,nv_loc
      do it=1,n_theta
-        iexch = it + (iv_loc-1)*n_theta
         do ir=1,n_radial
+           iexch = it + (iv_loc-1)*n_theta
            ic_loc = it + (ir-1)*n_theta
            psi(ic_loc,iv_loc) = gpack(ir,iexch) 
         enddo
@@ -294,9 +298,14 @@ subroutine cgyro_nl_fftw(ij)
   ! RHS -> -[f,g] = [f,g]_{r,-alpha}
 
   call timer_lib_in('nl')
-!$omp workshare 
-  rhs(:,:,ij) = rhs(:,:,ij)+((q*rho/rmin)*(2*pi/length))*psi(:,:)
-!$omp end workshare
+
+!$acc parallel loop collapse(2) independent present(rhs(:,:,ij),psi)
+  do iv_loc=1,nv_loc
+     do ic_loc=1,nc
+        rhs(ic_loc,iv_loc,ij) = rhs(ic_loc,iv_loc,ij)+((q*rho/rmin)*(2*pi/length))*psi(ic_loc,iv_loc)
+     enddo
+  enddo
+
   call timer_lib_out('nl')
 
 end subroutine cgyro_nl_fftw

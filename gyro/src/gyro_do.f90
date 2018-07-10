@@ -12,7 +12,7 @@ subroutine gyro_do
   use gyro_pointers
   use gyro_interface
   use math_constants
-  use GEO_interface
+  use geo
 
   !--------------------------------------
   implicit none
@@ -144,10 +144,10 @@ subroutine gyro_do
   GEO_nfourier_in = n_fourier_geo 
   GEO_model_in    = geometry_method
   GEO_signb_in    = -btccw
-  call GEO_alloc(1)
   !
   ! Lambda (pitch-angle) weights (GEO needed again, so just reallocate)
   call gyro_lambda_grid
+
   !
   ! Energy weights
   !
@@ -164,9 +164,6 @@ subroutine gyro_do
   !
   do i=1,n_x
      call gyro_to_geo(i)
-     if (i_proc == 0 .and. i == ir_norm .and. debug_flag == 1) then
-        call GEO_write(trim(path)//'out.gyro.geo_diagnostic',1)
-     endif
   enddo
   !
   ! Generate geometry-dependent factors using model or Miller equilibrium:
@@ -288,8 +285,6 @@ subroutine gyro_do
        trim(path)//'out.gyro.units',&
        trim(path)//'out.gyro.geometry_arrays',1)
   !
-  ! Close geometry (GEO) library
-  call GEO_alloc(0)
   !---------------------------------------------------------------
 
   !------------------------------------------------------------

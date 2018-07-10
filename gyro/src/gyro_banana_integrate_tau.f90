@@ -8,7 +8,7 @@
 subroutine gyro_banana_integrate_tau(lambda,s)
 
   use gyro_banana_private
-  use GEO_interface
+  use geo
 
   !-----------------------------------------------------------
   implicit none
@@ -23,12 +23,12 @@ subroutine gyro_banana_integrate_tau(lambda,s)
   real :: f0
   real :: theta_bm
   real :: theta_bp
-  real :: theta_0
   !
   real, parameter :: zero_tol = 1e-14
   !-----------------------------------------------------------
 
   allocate(f(n))
+  allocate(ttmp(n))
 
   ! Added '=' in test to take care of
   ! calls at the tp boundary.
@@ -40,7 +40,10 @@ subroutine gyro_banana_integrate_tau(lambda,s)
      ! Limits of integration: [-pi,pi]
 
      d_theta = 2.0*pi/(n-1)
-
+     do i=1,n
+        ttmp(i) = -pi+(i-1)*d_theta
+     enddo
+     call geo_interp(n,ttmp,.false.)
      do i=1,n
 
         ! The zero-check here will pick out the 
@@ -48,11 +51,9 @@ subroutine gyro_banana_integrate_tau(lambda,s)
         ! theta_0=-pi, and set f=0 to maintain
         ! accuracy.
 
-        theta_0 = -pi+(i-1)*d_theta
-        call GEO_interp(theta_0)
-        f0 = abs(1.0-lambda*GEO_b)
+        f0 = abs(1.0-lambda*GEO_b(i))
         if (f0 < zero_tol) f0 = 0.0
-        f(i) = (1.0-sqrt(f0))*GEO_g_theta/GEO_b
+        f(i) = (1.0-sqrt(f0))*GEO_g_theta(i)/GEO_b(i)
 
      enddo
 
@@ -69,9 +70,12 @@ subroutine gyro_banana_integrate_tau(lambda,s)
      d_theta = (theta_bp-theta_bm)/(n-1)
 
      do i=1,n
-        theta_0 = theta_bm+(i-1)*d_theta
-        call GEO_interp(theta_0)
-        f(i) = sqrt(abs(1.0-lambda*GEO_b))*GEO_g_theta/GEO_b
+        ttmp(i) = theta_bm+(i-1)*d_theta
+     enddo
+     call geo_interp(n,ttmp,.false.)
+
+     do i=1,n
+        f(i) = sqrt(abs(1.0-lambda*GEO_b(i)))*GEO_g_theta(i)/GEO_b(i)
      enddo
 
      s = 1.0-d_theta*(0.5*(f(1)+f(n))+sum(f(2:n-1)))/fluxave
@@ -79,5 +83,6 @@ subroutine gyro_banana_integrate_tau(lambda,s)
   endif
 
   deallocate(f)
+  deallocate(ttmp)
 
 end subroutine gyro_banana_integrate_tau

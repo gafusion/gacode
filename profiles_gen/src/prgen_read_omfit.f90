@@ -227,4 +227,6 @@ subroutine prgen_read_omfit
   deallocate(q_omfit)
   deallocate(p_omfit)
 
+  print '(a)','INFO: (prgen_read_omfit) Wrote input.profiles.geo'
+
 end subroutine prgen_read_omfit

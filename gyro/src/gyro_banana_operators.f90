@@ -51,7 +51,6 @@ subroutine gyro_banana_operators
   real :: banana_tau(n_tau(1)+1)
   !-------------------------------------------
 
-
   m_cyc = 0
 
   ! Physical signs of velocity (needed only for finite-beta coding).

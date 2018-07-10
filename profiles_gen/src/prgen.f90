@@ -41,7 +41,6 @@ program prgen
   read(1,*) noq_flag
   read(1,*) nop_flag
   read(1,*) verbose_flag
-  read(1,*) gmerge_flag
   read(1,*) ipccw
   read(1,*) btccw
   read(1,*) nfourier
@@ -51,12 +50,9 @@ program prgen
   read(1,*) n_lump
   allocate(lump_vec(n_lump))
   read(1,*) lump_vec(:)
-  read(1,*) n_ion_sanitize
-  allocate(ion_sanitize(n_ion_sanitize))
-  read(1,*) ion_sanitize(:)
   close(1)
   !--------------------------------------------------
-  
+
   !------------------------------------------------------------------
   ! Read the iterdb file and define standard variables.
   !
@@ -64,7 +60,7 @@ program prgen
   !
   if (trim(raw_data_type) == 'GACODE') then
 
-     ! Note (we may or may not have gmerge_flag == 1
+     ! Note (we may or may not have gmerge_flag == 1)
      print '(a)','INFO: (prgen) Assuming input.profiles (GACODE) format.'
 
      call prgen_read_inputprofiles
@@ -107,7 +103,7 @@ program prgen
      format_type = 3
 
      call prgen_read_peqdsk
-     
+
   else if (trim(raw_data_type) == 'CORSICA') then
 
      ! corsica format
@@ -144,8 +140,7 @@ program prgen
 
   endif
   !------------------------------------------------------------------
-  
-  
+
   !---------------------------------------------------
   ! Read the GATO file for "better" geometry.  At this
   ! point, GATO has already run and we are just reading 
@@ -158,18 +153,25 @@ program prgen
   case (2)
      ! Use GATO-EFIT mapper
      call prgen_read_gato
-     print '(a)','INFO: (prgen) Wrote input.profiles.geo.'
   case (3)
      ! Use OMFIT-EFIT mapper
      call prgen_read_omfit
-     print '(a)','INFO: (prgen) Wrote input.profiles.geo'
   case (4,5)
      ! Use DSKGATO data
      call prgen_read_dskgato
-     print '(a)','INFO: (prgen) Wrote input.profiles.geo'
   end select
   !---------------------------------------------------
 
+  !--------------------------------------------------
+  ! Set ipccw and btccw if not defined at input
+  if(ipccw == 0) then
+     ipccw = 1
+  endif
+  if(btccw == 0) then
+     btccw = -1
+  endif
+  !---------------------------------------------------
+  
   select case (format_type)
 
   case (0)
@@ -185,20 +187,10 @@ program prgen
   case (6)
      call prgen_map_ufile
   case (7)
-     if (gmerge_flag == 1) then
-        call prgen_map_inputprofiles
-     endif
-
+     call prgen_map_inputprofiles
   end select
 
-  ! Handle special case of generating input.profiles.extra
-  if (format_type == 7 .and. gmerge_flag == 0) then
-     call EXPRO_write_derived(1,'input.profiles.extra')
-     print '(a)','INFO: (prgen) Wrote input.profiles.extra.'
-     call prgen_write
-  else
-     call prgen_write
-  endif
+  call prgen_write
   call EXPRO_alloc('./',0)
 
   ! Successful completion

@@ -49,12 +49,12 @@ module neo_equilibrium
 contains
   
   subroutine EQUIL_alloc(flag)
+
     use neo_globals
-    use GEO_interface
+  
     implicit none
     integer, intent (in) :: flag  ! flag=1: allocate; else deallocate
     integer :: it
-    integer, parameter :: geo_ntheta=2001 ! num grid pts for Miller geo grid
 
     if(flag == 1) then
        if(initialized) return
@@ -83,15 +83,7 @@ contains
        do it=1,n_theta
           theta(it) = -pi+(it-1)*d_theta
        enddo
-       
-       if (equilibrium_model == 2 .or. equilibrium_model == 3) then
-          ! additional allocations for Miller geometry
-          GEO_ntheta_in   = geo_ntheta
-          GEO_nfourier_in = geo_ny
-          GEO_model_in    = geo_numeq_flag
-          call GEO_alloc(1)
-       endif
-
+      
        initialized = .true.
        
     else
@@ -116,11 +108,7 @@ contains
        deallocate(jacobln_rderiv)
        deallocate(v_prime_g)
        deallocate(geo_param)
-       
-       if (equilibrium_model == 2 .or. equilibrium_model == 3) then
-          call GEO_alloc(0)
-       endif
-       
+              
        initialized = .false.
 
     endif
@@ -129,12 +117,12 @@ contains
   
   subroutine EQUIL_do(ir)
     use neo_globals
-    use GEO_interface
+    use geo
     implicit none
     integer, intent(in) :: ir
     integer :: it, jt, id, is
     real :: sum
-    ! parameters needed for Miller equilibrium
+    real :: ttmp(1)
 
     sum=0.0
 
@@ -142,20 +130,20 @@ contains
 
        ! geo_numeq_flag, geo_ny, and geo_yin already set
 
-       GEO_signb_in     = sign_bunit
-       GEO_rmin_in      = r(ir)
-       GEO_rmaj_in      = rmaj(ir)
-       GEO_drmaj_in     = shift(ir)
-       GEO_zmag_in      = zmag(ir)
-       GEO_dzmag_in     = s_zmag(ir)
-       GEO_q_in         = q(ir)
-       GEO_s_in         = shear(ir)
-       GEO_kappa_in     = kappa(ir)
-       GEO_s_kappa_in   = s_kappa(ir)
-       GEO_delta_in     = delta(ir)
-       GEO_s_delta_in   = s_delta(ir)
-       GEO_zeta_in      = zeta(ir)
-       GEO_s_zeta_in    = s_zeta(ir)
+       GEO_signb_in   = sign_bunit
+       GEO_rmin_in    = r(ir)
+       GEO_rmaj_in    = rmaj(ir)
+       GEO_drmaj_in   = shift(ir)
+       GEO_zmag_in    = zmag(ir)
+       GEO_dzmag_in   = s_zmag(ir)
+       GEO_q_in       = q(ir)
+       GEO_s_in       = shear(ir)
+       GEO_kappa_in   = kappa(ir)
+       GEO_s_kappa_in = s_kappa(ir)
+       GEO_delta_in   = delta(ir)
+       GEO_s_delta_in = s_delta(ir)
+       GEO_zeta_in    = zeta(ir)
+       GEO_s_zeta_in  = s_zeta(ir)
        !!!!! beta_star !!!!!
        ! EAB: does not enter in the first-order calc
        ! NOTE: it is not implemented in v_drift defs
@@ -167,47 +155,53 @@ contains
              GEO_beta_star_in = beta_star(ir)
           endif
        enddo
-       GEO_fourier_in(:,:) = geo_yin(:,:,ir)
-       call GEO_do()  
+       GEO_fourier_in(:,0:geo_ny) = geo_yin(:,:,ir)
 
+       ! GEO dimensions
+       GEO_ntheta_in   = 2001
+       GEO_nfourier_in = geo_ny
+       GEO_model_in    = geo_numeq_flag
+
+       call geo_interp(n_theta,theta,.true.)
+       
        do it=1,n_theta
-          call GEO_interp(theta(it))
-          k_par(it) = 1.0 / (q(ir) * rmaj(ir) * GEO_g_theta)
-          bigR(it) = GEO_bigr
-          bigR_rderiv(it) = GEO_bigr_r
-          Bmag(it)  = GEO_b
-          Btor(it)  = GEO_bt
-          Bpol(it)  = GEO_bp
-          Bmag_rderiv(it)  = -GEO_b/(rmaj(ir)*GEO_grad_r) &
-               * (GEO_gcos1 + GEO_gcos2)
-          gradpar_Bmag(it) = k_par(it) * GEO_dbdt
-          gradr(it)        = GEO_grad_r
+          k_par(it) = 1.0 / (q(ir) * rmaj(ir) * GEO_g_theta(it))
+          bigR(it) = GEO_bigr(it)
+          bigR_rderiv(it) = GEO_bigr_r(it)
+          Bmag(it)  = GEO_b(it)
+          Btor(it)  = GEO_bt(it)
+          Bpol(it)  = GEO_bp(it)
+          Bmag_rderiv(it)  = -GEO_b(it)/(rmaj(ir)*GEO_grad_r(it)) &
+               * (GEO_gcos1(it) + GEO_gcos2(it))
+          gradpar_Bmag(it) = k_par(it) * GEO_dbdt(it)
+          gradr(it)        = GEO_grad_r(it)
           v_drift_x(it)  = -rho(ir)/(rmaj(ir) * Bmag(it)) * &
-               GEO_grad_r * GEO_gsin
-          v_drift_th(it) = -rho(ir)/(rmaj(ir) * Bmag(it) * GEO_l_t) &
-               * (GEO_gcos1 * GEO_bt / Bmag(it)  & 
-               -  GEO_gsin * GEO_nsin * GEO_grad_r) &
+               GEO_grad_r(it) * GEO_gsin(it)
+          v_drift_th(it) = -rho(ir)/(rmaj(ir) * Bmag(it) * GEO_l_t(it)) &
+               * (GEO_gcos1(it) * GEO_bt(it) / Bmag(it)  & 
+               -  GEO_gsin(it) * GEO_nsin(it) * GEO_grad_r(it)) &
                * r(ir)
-          theta_nc(it) = GEO_theta_nc
+          theta_nc(it) = GEO_theta_nc(it)
           jacobln_rderiv(it) = 2.0/bigR(it)*bigR_rderiv(it) &
                - 1.0/Btor(it) * r(ir)/(q(ir)*bigR(it)) * GEO_ffprime/GEO_f
           ! flux-surface average weights
-          w_theta(it) = GEO_g_theta / Bmag(it)
+          w_theta(it) = GEO_g_theta(it) / Bmag(it)
           sum = sum + w_theta(it)
        enddo
 
        I_div_psip = GEO_f * q(ir) / r(ir)
 
        ! values at theta=0
-       call GEO_interp(0.0)
-       bigR_th0        = GEO_bigr
-       bigR_th0_rderiv = GEO_bigr_r
-       gradr_th0       = GEO_grad_r
-       Btor_th0        = GEO_bt
-       Bpol_th0        = GEO_bp
-       Bmag_th0        = GEO_b
-       Bmag_th0_rderiv = -GEO_b/(rmaj(ir)*GEO_grad_r) &
-               * (GEO_gcos1 + GEO_gcos2)
+       ttmp(1) = 0.0
+       call geo_interp(1,ttmp,.false.)
+       bigR_th0        = GEO_bigr(1)
+       bigR_th0_rderiv = GEO_bigr_r(1)
+       gradr_th0       = GEO_grad_r(1)
+       Btor_th0        = GEO_bt(1)
+       Bpol_th0        = GEO_bp(1)
+       Bmag_th0        = GEO_b(1)
+       Bmag_th0_rderiv = -GEO_b(1)/(rmaj(ir)*GEO_grad_r(1)) &
+               * (GEO_gcos1(1) + GEO_gcos2(1))
 
     else
 

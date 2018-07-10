@@ -18,7 +18,7 @@ FC	= mpif90 -std=f2008 -J $(GACODE_ROOT)/modules -I $(GACODE_ROOT)/modules -L $(
 F77	= mpif90
 CC	= mpicc
 
-FMATH	= -fdefault-real-8
+FMATH	= -fdefault-real-8 -fdefault-double-8
 FOPT	= -O3
 FDEBUG	= -Wall -fcheck=all -fbacktrace -fbounds-check -O0 -Wextra -finit-real=nan -Wunderflow -ffpe-trap=invalid,zero,overflow
 FBOUND	= -Wall -fbounds-check

@@ -1,0 +1,25 @@
+#---------------------------------------------------
+# Linux Mint PGI
+#---------------------------------------------------
+
+IDENTITY="Linux Mint PGI"
+CORES_PER_NODE=4
+NUMAS_PER_NODE=1
+
+# Compilers
+
+FC     = mpif90 -module $(GACODE_ROOT)/modules -Mpreprocess -DUSE_INLINE
+F77    = ${FC}
+FACC   =-acc -ta=tesla:cc35 -Minfo=accel -Mcudalib=cufft -Mcuda
+FOMP   =-mp -Mstack_arrays ${FACC}
+FMATH  =-r8
+FOPT   =-O2
+FDEBUG =
+
+# System math libraries
+LMATH = /opt/pgi/linux86-64/18.4/lib/liblapack.a \
+      /opt/pgi/linux86-64/18.4/lib/libblas.a 
+
+# Archive 
+
+ARCH = ar cr

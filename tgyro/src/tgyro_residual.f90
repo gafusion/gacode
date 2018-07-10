@@ -9,7 +9,7 @@ subroutine tgyro_residual(f,g,res,n,method)
   real, intent(in), dimension(n) :: f
   real, intent(in), dimension(n) :: g
   real, intent(inout), dimension(n) :: res
-
+  
   select case (method)
 
   case (2)
@@ -28,5 +28,5 @@ subroutine tgyro_residual(f,g,res,n,method)
      stop
 
   end select
-
+  
 end subroutine tgyro_residual

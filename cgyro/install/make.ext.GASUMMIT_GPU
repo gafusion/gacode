@@ -1,0 +1,20 @@
+cgyro_nl_fftw.o : cgyro_nl_fftw.gpu.f90
+	$(FC) $(FMATH) $(FFLAGS) -o cgyro_nl_fftw.o -c cgyro_nl_fftw.gpu.f90
+cgyro_rhs.o : cgyro_rhs.gpu.f90
+	$(FC) $(FMATH) $(FFLAGS) -o cgyro_rhs.o -c cgyro_rhs.gpu.f90
+<<<<<<< HEAD
+cgyro_step_gk.o : cgyro_step_gk.gpu.f90
+	$(FC) $(FMATH) $(FFLAGS) -o cgyro_step_gk.o -c cgyro_step_gk.gpu.f90
+cgyro_advect_wavenumber.o : cgyro_advect_wavenumber.gpu.f90
+	$(FC) $(FMATH) $(FFLAGS) -o cgyro_advect_wavenumber.o -c cgyro_advect_wavenumber.gpu.f90
+cgyro_upwind.o : cgyro_upwind.gpu.F90
+	$(FC) $(FMATH) $(FFLAGS) -o cgyro_upwind.o -c cgyro_upwind.gpu.F90
+cgyro_step_collision_simple.o : cgyro_step_collision_simple.gpu.f90
+	$(FC) $(FMATH) $(FFLAGS) -o cgyro_step_collision_simple.o -c cgyro_step_collision_simple.gpu.f90
+cgyro_step_collision.o : cgyro_step_collision.gpu.f90
+	$(FC) $(FMATH) $(FFLAGS) -o cgyro_step_collision.o -c cgyro_step_collision.gpu.f90
+=======
+cgyro_advect_wavenumber.o : cgyro_advect_wavenumber.gpu.f90
+	$(FC) $(FMATH) $(FFLAGS) -o cgyro_advect_wavenumber.o -c cgyro_advect_wavenumber.gpu.f90
+
+>>>>>>> gapy

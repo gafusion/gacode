@@ -89,9 +89,9 @@
 
    INPUT_PARAMETERS( 1) = a_in
    INPUT_PARAMETERS( 2) = betan_in
-   INPUT_PARAMETERS( 3) = bt_in
+   INPUT_PARAMETERS( 3) = abs(bt_in)
    INPUT_PARAMETERS( 4) = delta_in
-   INPUT_PARAMETERS( 5) = ip_in
+   INPUT_PARAMETERS( 5) = abs(ip_in)
    INPUT_PARAMETERS( 6) = kappa_in
    INPUT_PARAMETERS( 7) = m_in
    INPUT_PARAMETERS( 8) = nped_in
@@ -114,6 +114,12 @@
 
    nn_p_ped = OUTPUT_PARAMETERS(p_index)*1e6*tgyro_ped_scale
    nn_t_ped = (10*nn_p_ped)/(2*(1e13*nped_in)*k)
+
+   if ((nn_w_ped .le.0.0).or.(nn_p_ped.le.0.0)) then
+      write(*,*)'ERROR: EPED1-NN pedestal height is ',nn_p_ped
+      write(*,*)'ERROR: EPED1-NN pedestal width is ',nn_w_ped
+      stop
+   endif
 
    nn_n_cor = nped_in*1.5
    nn_t_cor = t_axis

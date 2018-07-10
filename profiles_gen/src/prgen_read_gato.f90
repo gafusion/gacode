@@ -152,11 +152,11 @@ subroutine prgen_read_gato
   ! Total pressure and q from GATO-EFIT 
   ! (possible overwrite from raw data input in statefile)
   if (nop_flag == 0) then
-     print '(a)','INFO: (prgen) Using total pressure from gfile.'
+     print '(a)','INFO: (prgen_read_gato) Using total pressure from gfile.'
      call cub_spline(gato_psi,gato_p,nsurf+1,dpsi,p_tot,nx)
   endif
   if (noq_flag == 0) then
-     print '(a)','INFO: (prgen) Using safety factor (q) from gfile.'
+     print '(a)','INFO: (prgen_read_gato) Using safety factor (q) from gfile.'
      call cub_spline(gato_psi,gato_q,nsurf+1,dpsi,q,nx)
   endif
 
@@ -225,5 +225,7 @@ subroutine prgen_read_gato
   deallocate(gato_dummy)
   deallocate(gato_bigr)
   deallocate(gato_bigz)
+
+  print '(a)','INFO: (prgen_read_gato) Wrote input.profiles.geo.'
 
 end subroutine prgen_read_gato
