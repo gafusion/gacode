@@ -465,7 +465,7 @@ subroutine tgyro_init_profiles
      endif
      ip_in = 1e-6*EXPRO_ip_exp
      ! betan [%] = betat/In*100 where In = Ip/(a Bt) 
-     betan_in = ( p_ave/(0.5*bt_in**2/mu_0) ) / ( ip_in/(a_in*bt_in) ) * 100.0
+     betan_in = abs(( p_ave/(0.5*bt_in**2/mu_0) ) / ( ip_in/(a_in*bt_in) ) * 100.0)
      ! Triangularity [-]
      delta_in = EXPRO_delta(n_exp-3)  
      ! Elongation [-]
