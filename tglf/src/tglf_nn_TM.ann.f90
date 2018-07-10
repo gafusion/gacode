@@ -26,7 +26,7 @@
 !
      real :: OUT_ENERGY_FLUX_1_RNG, OUT_ENERGY_FLUX_i_RNG
      real :: OUT_PARTICLE_FLUX_1_RNG, OUT_STRESS_TOR_i_RNG
-     real :: INPUT_PARAMETERS(21)
+     real :: INPUT_PARAMETERS(22)
      real :: OUTPUT_PARAMETERS(6)
 !     real :: start, finish
      integer :: n, i
@@ -57,35 +57,9 @@
      enddo
 
 !
-!fill in input parameters array
-!
-
-    INPUT_PARAMETERS( 1)=tglf_as_in(2)         ! AS_2
-    INPUT_PARAMETERS( 2)=tglf_as_in(3)         ! AS_3
-    INPUT_PARAMETERS( 3)=tglf_betae_in         ! BETAE
-    INPUT_PARAMETERS( 4)=tglf_delta_loc_in     ! DELTA_LOC
-    INPUT_PARAMETERS( 5)=tglf_drmajdx_loc_in   ! DRMAJDX_LOC
-    INPUT_PARAMETERS( 6)=tglf_kappa_loc_in     ! KAPPA_LOC
-    INPUT_PARAMETERS( 7)=tglf_p_prime_loc_in   ! P_PRIME_LOC
-    INPUT_PARAMETERS( 8)=tglf_q_loc_in         ! Q_LOC
-    INPUT_PARAMETERS( 9)=tglf_q_prime_loc_in   ! Q_PRIME_LOC
-    INPUT_PARAMETERS(10)=tglf_rlns_in(1)       ! RLNS_1
-    INPUT_PARAMETERS(11)=tglf_rlns_in(2)       ! RLNS_2
-    INPUT_PARAMETERS(12)=tglf_rlns_in(3)       ! RLNS_3
-    INPUT_PARAMETERS(13)=tglf_rlts_in(1)       ! RLTS_1
-    INPUT_PARAMETERS(14)=tglf_rlts_in(2)       ! RLTS_2
-    INPUT_PARAMETERS(15)=tglf_rmaj_loc_in      ! RMAJ_LOC
-    INPUT_PARAMETERS(16)=tglf_rmin_loc_in      ! RMIN_LOC
-    INPUT_PARAMETERS(17)=tglf_s_kappa_loc_in   ! S_KAPPA_LOC
-    INPUT_PARAMETERS(18)=tglf_taus_in(2)       ! TAUS_2
-    INPUT_PARAMETERS(19)=tglf_vexb_shear_in    ! VEXB_SHEAR
-    INPUT_PARAMETERS(20)=tglf_xnue_in          ! XNUE
-    INPUT_PARAMETERS(21)=tglf_zeff_in          ! ZEFF
-
-!    WRITE(*,*)INPUT_PARAMETERS
-
-!
 !sort ions by A, Z, Te/Ti
+!electrons always first (as required by TGLF)
+!main ion always second (affects GB normalization)
 !
      tmp=0.0
      tmp(1)=1E10
@@ -110,10 +84,39 @@
     endif
 
 !
+!fill in input parameters array
+!
+
+    INPUT_PARAMETERS( 1)=tglf_as_in(2)         ! AS_2
+    INPUT_PARAMETERS( 2)=tglf_as_in(3)         ! AS_3
+    INPUT_PARAMETERS( 3)=tglf_betae_in         ! BETAE
+    INPUT_PARAMETERS( 4)=tglf_debye_in         ! DEBYE
+    INPUT_PARAMETERS( 5)=tglf_delta_loc_in     ! DELTA_LOC
+    INPUT_PARAMETERS( 6)=tglf_drmajdx_loc_in   ! DRMAJDX_LOC
+    INPUT_PARAMETERS( 7)=tglf_kappa_loc_in     ! KAPPA_LOC
+    INPUT_PARAMETERS( 8)=tglf_p_prime_loc_in   ! P_PRIME_LOC
+    INPUT_PARAMETERS( 9)=tglf_q_loc_in         ! Q_LOC
+    INPUT_PARAMETERS(10)=tglf_q_prime_loc_in   ! Q_PRIME_LOC
+    INPUT_PARAMETERS(11)=tglf_rlns_in(1)       ! RLNS_1
+    INPUT_PARAMETERS(12)=tglf_rlns_in(2)       ! RLNS_2
+    INPUT_PARAMETERS(13)=tglf_rlns_in(3)       ! RLNS_3
+    INPUT_PARAMETERS(14)=tglf_rlts_in(1)       ! RLTS_1
+    INPUT_PARAMETERS(15)=tglf_rlts_in(2)       ! RLTS_2
+    INPUT_PARAMETERS(16)=tglf_rmaj_loc_in      ! RMAJ_LOC
+    INPUT_PARAMETERS(17)=tglf_rmin_loc_in      ! RMIN_LOC
+    INPUT_PARAMETERS(18)=tglf_s_kappa_loc_in   ! S_KAPPA_LOC
+    INPUT_PARAMETERS(19)=tglf_taus_in(2)       ! TAUS_2
+    INPUT_PARAMETERS(20)=tglf_vexb_shear_in    ! VEXB_SHEAR
+    INPUT_PARAMETERS(21)=tglf_xnue_in          ! XNUE
+    INPUT_PARAMETERS(22)=tglf_zeff_in          ! ZEFF
+
+!    WRITE(*,*)INPUT_PARAMETERS
+
+!
 !run NN
 !
     call get_environment_variable('TGLFNN_MODEL',tglfnn_model)
-    ierr=btf_run(TRIM(tglfnn_model)//NUL,INPUT_PARAMETERS, 21, OUTPUT_PARAMETERS, 6)
+    ierr=btf_run(TRIM(tglfnn_model)//NUL,INPUT_PARAMETERS, SIZE(INPUT_PARAMETERS), OUTPUT_PARAMETERS, SIZE(OUTPUT_PARAMETERS))
 
     if (iProcTglf==-1) then !only write if not MPI
         open(unit=1,file='std.tglf.gbflux',status='replace')
