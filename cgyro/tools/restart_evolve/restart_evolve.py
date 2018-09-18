@@ -71,7 +71,7 @@ class CgyroInput:
         return isSame
 
     # if true, also return pre, post and new species
-    def isSpeciesSuperset(self, other, org_pre_species, org_post_species, new_species):
+    def isSpeciesSuperset(self, other, diff_species):
         my_n_species = int(self.user_dict["N_SPECIES"])
         other_n_species = int(other.user_dict["N_SPECIES"])
         if (my_n_species<=other_n_species):
@@ -103,6 +103,10 @@ class CgyroInput:
                 org_post_species+=1
             else:
                 return False # all post should have been the same
+
+        diff_species["org_pre"]     = org_pre_species
+        diff_species["org_post"]    = org_post_species
+        diff_species["new_species"] = new_species
 
         return True
 
@@ -141,12 +145,11 @@ if (new_cfg.isSameSpecies(old_cfg)):
     print("INFO: No changes detected. No restart file generated")
     sys.exit(1)
 
-org_pre_species=0
-org_post_species=0
-new_species=0
-if (not new_cfg.isSpeciesSuperset(old_cfg,org_pre_species, org_post_species, new_species)):
+diff_species={"org_pre":0,"org_post":0,"new_species":0}
+if (not new_cfg.isSpeciesSuperset(old_cfg,diff_species)):
     print("ERROR: New species are not a superset of the old ones")
     sys.exit(11)
 
+print("INFO: Adding %i species"%diff_species["new_species"])
 cgyro_restart_resize.add_species(old_dir, new_dir, grid_obj,
-                                 org_pre_species, org_post_species, new_species)
+                                 diff_species["org_pre"],diff_species["org_post"],diff_species["new_species"])
