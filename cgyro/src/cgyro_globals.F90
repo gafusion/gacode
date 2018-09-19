@@ -211,7 +211,8 @@ module cgyro_globals
   character(len=13) :: runfile_mpi     = 'out.cgyro.mpi'
   character(len=16) :: runfile_memory  = 'out.cgyro.memory'
   character(len=15) :: runfile_hosts   = 'out.cgyro.hosts'
-  character(len=17) :: runfile_restart = 'out.cgyro.restart'
+  character(len=17) :: runfile_restart = 'bin.cgyro.restart'
+  character(len=17) :: runfile_restart_old = 'out.cgyro.restart'
   character(len=13) :: runfile_restart_tag = 'out.cgyro.tag'
   character(len=15) :: runfile_grids   = 'out.cgyro.grids'
   character(len=14) :: runfile_prec    = 'out.cgyro.prec'
@@ -235,6 +236,7 @@ module cgyro_globals
   ! Restart tags
   character(len=8) :: fmt='(I2.2)'
   character(len=6), dimension(100) :: rtag
+  integer, parameter :: restart_header_size = 1024
   !
   ! error checking
   integer :: error_status = 0
