@@ -72,6 +72,11 @@ subroutine cgyro_read_restart_one_old
   use cgyro_globals
   use cgyro_io
 
+#ifdef __INTEL_COMPILER
+  ! ifort defined rename in the ifport module
+  use ifport
+#endif
+
   !---------------------------------------------------
   implicit none
   !
@@ -84,6 +89,10 @@ subroutine cgyro_read_restart_one_old
   integer(kind=MPI_OFFSET_KIND) :: disp
   integer(kind=MPI_OFFSET_KIND) :: offset1
   !---------------------------------------------------
+
+#ifndef __INTEL_COMPILER
+  integer :: rename
+#endif
 
   character(8)  :: sdate
   character(10) :: stime
@@ -160,7 +169,7 @@ subroutine cgyro_read_restart_one_old
 
   ! re-create the restart file using the new format
   if (i_proc == 0) then
-     RENAME(trim(path)//runfile_restart_old, trim(path)//runfile_restart_old//".old")
+     i_err = RENAME(trim(path)//runfile_restart_old, trim(path)//runfile_restart_old//".old")
   endif
 
   call MPI_BARRIER(CGYRO_COMM_WORLD,i_err)
