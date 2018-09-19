@@ -237,6 +237,7 @@ module cgyro_globals
   character(len=8) :: fmt='(I2.2)'
   character(len=6), dimension(100) :: rtag
   integer, parameter :: restart_header_size = 1024
+  integer, parameter :: restart_magic = 140906808
   !
   ! error checking
   integer :: error_status = 0
@@ -457,5 +458,5 @@ module cgyro_globals
   !---------------------------------------------------------------
 
   real :: total_memory
-  
+
 end module cgyro_globals
