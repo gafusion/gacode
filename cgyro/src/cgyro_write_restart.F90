@@ -183,7 +183,7 @@ subroutine cgyro_write_restart_header_part
 
   write(io,"(i10)") restart_magic
   write(io,"(i4)") 2
-  write(io,"(6(i8,1x)") n_theta,n_radial,n_species,n_xi,n_energy,n_toroidal
+  write(io,"(6(i8,1x))") n_theta,n_radial,n_species,n_xi,n_energy,n_toroidal
   write(io,"(i2)") mpi_rank_order
   write(io,"(i10)") n_proc
   write(io,"(i2)") 0 ! just to have a clean end

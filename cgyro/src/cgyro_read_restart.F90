@@ -205,7 +205,7 @@ subroutine cgyro_read_restart_verify
      return
   endif
 
-  read(io,"(6(i8,1x)") t_n_theta,t_n_radial,t_n_species,t_n_xi,t_n_energy,t_n_toroidal
+  read(io,"(6(i8,1x))") t_n_theta,t_n_radial,t_n_species,t_n_xi,t_n_energy,t_n_toroidal
   if ( (t_n_theta/=n_theta) .or. (t_n_radial/=n_radial) .or. &
        (t_n_species/=n_species) .or. (t_n_xi/=n_xi) .or. &
        (t_n_energy/=n_energy) .or. (t_n_toroidal/=n_toroidal) ) then
