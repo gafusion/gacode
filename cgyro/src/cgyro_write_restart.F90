@@ -175,20 +175,35 @@ subroutine cgyro_write_restart_header_part
   !---------------------------------------------------
   implicit none
 
-  integer :: magic, version
+  integer, parameter :: version = 2
+  integer :: recid
 
   open(unit=io,&
-       file=trim(path)//runfile_restart,&
-       status='old')
+       file=trim(path)//runfile_restart//".part",&
+       status='old',access='DIRECT',RECL=4)
 
-  write(io,"(i10)") restart_magic
-  write(io,"(i4)") 2
-  write(io,"(6(i8,1x))") n_theta,n_radial,n_species,n_xi,n_energy,n_toroidal
-  write(io,"(i2)") mpi_rank_order
-  write(io,"(i10)") n_proc
-  write(io,"(i2)") 0 ! just to have a clean end
-
-  ! follow MPI params... will ignore them for v2, as they do not change the file format
+  recid = 1
+  write(io,REC=recid) restart_magic
+  recid = recid + 1
+  write(io,REC=recid) version
+  recid = recid + 1
+  write(io,REC=recid) n_theta
+  recid = recid + 1
+  write(io,REC=recid) n_radial
+  recid = recid + 1
+  write(io,REC=recid) n_species
+  recid = recid + 1
+  write(io,REC=recid) n_xi
+  recid = recid + 1
+  write(io,REC=recid) n_energy
+  recid = recid + 1
+  write(io,REC=recid) n_toroidal
+  recid = recid + 1
+  write(io,REC=recid) mpi_rank_order
+  recid = recid + 1
+  write(io,REC=recid) n_proc
+  recid = recid + 1
+  write(io,REC=recid) restart_magic ! just to have a clean end
 
   close(io)
 end subroutine cgyro_write_restart_header_part
