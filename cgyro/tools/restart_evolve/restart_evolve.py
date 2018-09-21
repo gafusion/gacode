@@ -151,5 +151,9 @@ if (not new_cfg.isSpeciesSuperset(old_cfg,diff_species)):
     sys.exit(11)
 
 print("INFO: Adding %i species"%diff_species["new_species"])
-cgyro_restart_resize.add_species(old_dir, new_dir, grid_obj,
-                                 diff_species["org_pre"],diff_species["org_post"],diff_species["new_species"])
+try:
+  cgyro_restart_resize.add_species(old_dir, new_dir, grid_obj,
+                                   diff_species["org_pre"],diff_species["org_post"],diff_species["new_species"])
+except IOError as err:
+    print("IO error: {0}".format(err))
+    sys.exit(21)

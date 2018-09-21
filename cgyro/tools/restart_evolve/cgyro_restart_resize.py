@@ -3,24 +3,26 @@
 #
 import sys,os
 
+restart_fname="bin.cgyro.restart"
+
 class CGyroGrid:
     def __init__(self):
         # nc
-        self.n_radial = 0
         self.n_theta = 0
+        self.n_radial = 0
 
         # nv
-        self.n_energy = 0
         self.n_xi = 0
+        self.n_energy = 0
 
         # toroidal
         self.n_toroidal = 0
 
     def load_from_dict(self,adict):
-        self.n_radial =   int(adict["N_RADIAL"])
         self.n_theta =    int(adict["N_THETA"])
-        self.n_energy =   int(adict["N_ENERGY"])
+        self.n_radial =   int(adict["N_RADIAL"])
         self.n_xi =       int(adict["N_XI"])
+        self.n_energy =   int(adict["N_ENERGY"])
         self.n_toroidal = int(adict["N_TOROIDAL"])
 
     def get_nc(self):
@@ -29,10 +31,41 @@ class CGyroGrid:
     def get_nvg(self):
         return self.n_energy*self.n_xi
 
+    def isSame(self,other):
+        return ( (self.n_theta==other.n_theta) and
+                 (self.n_radial==other.n_radial) and
+                 (self.n_xi==other.n_xi) and
+                 (self.n_energy==other.n_energy) and
+                 (self.n_toroidal==other.n_toroidal))
+
+class CGyroRestartHeader:
+    def __init__(self):
+        self.grid = CGyroGrid()
+        self.n_species = 0
+
+    def load(self,fdir):
+        fname = os.path.join(fdir,restart_fname)
+        with open(fname,"rb") as fd:
+            magic_b = fd.read(4)
+            [magic] = struct.unpack('i',magic_b)
+            if (magic!=140906808):
+                raise IOError("Wrong CGyroRestartHeader magic number %i"%magic)
+            version_b = fd.read(4)
+            [version] = struct.unpack('i',version_b)
+            if (version!=2):
+                raise IOError("Unsupported CGyroRestartHeader version %i"%version)
+
+            grid_b = fd.read(6*4)
+            [self.grid.n_theta,self.grid.n_radial,
+             self.n_species,
+             self.grid.n_xi,self.grid.n_energy,
+             self.grid.n_toroidal] = struct.unpack('iiiiii',grid_b)
+            
+
 
 def add_species(org_dir, new_dir, grid, org_pre_species, org_post_species, new_species):
+    header_size = 1024
 
-    restart_fname="out.cgyro.restart"
     org_fname = os.path.join(org_dir,restart_fname)
     new_fname = os.path.join(new_dir,restart_fname)
 
@@ -55,8 +88,19 @@ def add_species(org_dir, new_dir, grid, org_pre_species, org_post_species, new_s
     for i in range(ncbytes*new_species):
         zerobuf[i] = 0  # 0.0 is also a binary 0
 
+    org_header = CGyroRestartHeader()
+    org_header.load(org_dir)
+    # TODO: verify consistency
+    if (not grid.isSame(org_header.grid)):
+        raise IOError("Wrong CGyroRestartHeader grid content")
+    if (org_header.n_species!=(org_pre_species+org_post_species)):
+        raise IOError("Wrong CGyroRestartHeader number of species")
+
     with open(org_fname,"rb") as org_fd:
         with  open(new_fname,"wb") as new_fd:
+            tmp=org_fd.read(header_size)
+            new_fd.write(tmp)
+
             for t in range(tor2):
                 if (org_pre_species>0):
                     tmp=org_fd.read(ncbytes*org_pre_species)
