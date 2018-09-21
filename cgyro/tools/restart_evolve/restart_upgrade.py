@@ -78,12 +78,4 @@ if mpi_rank_order==1:
 else:
     print("ERROR: MPI_RANK_ORDER %i not supported"%mpi_rank_order)
     sys.exit(21)
-   
 
-
-try:
-  cgyro_restart_resize.add_species(old_dir, new_dir, grid_obj,
-                                   diff_species["org_pre"],diff_species["org_post"],diff_species["new_species"])
-except IOError as err:
-    print("IO error: {0}".format(err))
-    sys.exit(21)

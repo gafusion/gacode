@@ -121,7 +121,7 @@ def upgrade_v1v2_ro1(org_dir, new_dir, grid, n_species, n_proc):
     # update the header
     new_header = CGyroRestartHeader()
     new_header.grid = grid
-    new_header.n_species = species
+    new_header.n_species = n_species
     new_header.mpi_rank_order = 1
     new_header.n_proc = n_proc
     new_header.savev2(new_dir)
