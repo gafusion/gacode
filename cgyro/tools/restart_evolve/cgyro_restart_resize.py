@@ -2,6 +2,7 @@
 # cgyro_restart_resize module
 #
 import sys,os
+import struct
 
 restart_fname="bin.cgyro.restart"
 
@@ -46,20 +47,20 @@ class CGyroRestartHeader:
     def load(self,fdir):
         fname = os.path.join(fdir,restart_fname)
         with open(fname,"rb") as fd:
-            magic_b = fd.read(4)
-            [magic] = struct.unpack('i',magic_b)
+            magic_b = fd.read(4+12)
+            [magic] = struct.unpack('i12x',magic_b)
             if (magic!=140906808):
                 raise IOError("Wrong CGyroRestartHeader magic number %i"%magic)
-            version_b = fd.read(4)
-            [version] = struct.unpack('i',version_b)
+            version_b = fd.read(4+12)
+            [version] = struct.unpack('i12x',version_b)
             if (version!=2):
                 raise IOError("Unsupported CGyroRestartHeader version %i"%version)
 
-            grid_b = fd.read(6*4)
+            grid_b = fd.read(6*(4+12))
             [self.grid.n_theta,self.grid.n_radial,
              self.n_species,
              self.grid.n_xi,self.grid.n_energy,
-             self.grid.n_toroidal] = struct.unpack('iiiiii',grid_b)
+             self.grid.n_toroidal] = struct.unpack('i12xi12xi12xi12xi12xi12x',grid_b)
             
 
 
