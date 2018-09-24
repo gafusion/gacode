@@ -76,7 +76,7 @@ class CGyroRestartHeader:
 
     def savev2(self,fdir):
         fname = os.path.join(fdir,restart_fname)
-        with open(fname,"wb+") as fd:
+        with open(fname,"rb+") as fd:
             magic_b= struct.pack('4i',140906808,0,0,0)
             fd.write(magic_b)
             version_b= struct.pack('4i',2,0,0,0)
