@@ -75,6 +75,15 @@ if mpi_rank_order==1:
     except:
         print("Unexpected error:", sys.exc_info()[0])
         sys.exit(22)
+elif mpi_rank_order==2:
+    try:
+        cgyro_restart_resize.upgrade_v1v2_ro2(old_dir, new_dir, grid_obj, n_species, n_proc)
+    except IOError as err:
+        print("IO error: {0}".format(err))
+        sys.exit(21)
+    except:
+        print("Unexpected error:", sys.exc_info()[0])
+        sys.exit(22)
 else:
     print("ERROR: MPI_RANK_ORDER %i not supported"%mpi_rank_order)
     sys.exit(21)
