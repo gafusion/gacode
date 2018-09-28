@@ -187,9 +187,15 @@ subroutine cgyro_read_restart_verify
   integer :: magic, version, recid
   integer :: t_n_theta,t_n_radial,t_n_species,t_n_xi,t_n_energy,t_n_toroidal
 
+  ! Different compilers have a different semantics for RECL... must use inquire
+  integer :: reclen
+  integer, dimension(1) :: recltest
+
+  inquire(iolength=reclen) recltest
+
   open(unit=io,&
        file=trim(path)//runfile_restart,&
-       status='old',access='DIRECT',RECL=4,ACTION='READ')
+       status='old',access='DIRECT',RECL=reclen,ACTION='READ')
 
   recid = 1
 

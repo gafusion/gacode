@@ -15,6 +15,7 @@ reg12: c4+f1+zf +ie +loc+mil+nrot
 reg13: c1+f1+lin+i  +pro+mil+ rot
 reg14: c1+f1+lin+ie +pro+mil+frot
 reg15: c4+f2+lin+ie +loc+mil+frot [GPU_BIGMEM]
+reg16: c1+f1+lin+i  +loc+mil+ rot [negative shear]
 
 Tiny nonlinear test case:
 

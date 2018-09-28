@@ -181,7 +181,6 @@ subroutine cgyro_write_distributed_bcomplex(datafile,n_fn,fn)
   integer :: fstatus(MPI_STATUS_SIZE)
   integer(kind=MPI_OFFSET_KIND) :: disp
   integer(kind=MPI_OFFSET_KIND) :: offset1
-  complex(kind=4) :: f8(n_fn)
   character :: cdummy
   !------------------------------------------------------
 
@@ -227,7 +226,6 @@ subroutine cgyro_write_distributed_bcomplex(datafile,n_fn,fn)
      if (BYTE == 4) then
 
         ! Single (default) 
-        f8 = fn
         call MPI_FILE_SET_VIEW(fh,&
              disp,&
              MPI_COMPLEX8,&
@@ -238,7 +236,7 @@ subroutine cgyro_write_distributed_bcomplex(datafile,n_fn,fn)
 
         call MPI_FILE_WRITE_AT(fh,&
              offset1,&
-             f8,&
+             cmplx(fn,kind=4),&
              n_fn,&
              MPI_COMPLEX8,&
              fstatus,&
@@ -326,7 +324,6 @@ subroutine cgyro_write_distributed_breal(datafile,n_fn,fn)
   integer(kind=MPI_OFFSET_KIND) :: disp
   integer(kind=MPI_OFFSET_KIND) :: offset1
   !
-  real(kind=4) :: f4(n_fn)
   character :: cdummy
   !------------------------------------------------------
 
@@ -372,7 +369,6 @@ subroutine cgyro_write_distributed_breal(datafile,n_fn,fn)
      if (BYTE == 4) then
 
         ! Single (default) 
-        f4 = fn
         call MPI_FILE_SET_VIEW(fh,&
              disp,&
              MPI_REAL4,&
@@ -383,7 +379,7 @@ subroutine cgyro_write_distributed_breal(datafile,n_fn,fn)
 
         call MPI_FILE_WRITE_AT(fh,&
              offset1,&
-             f4,&
+             real(fn,kind=4),&
              n_fn,&
              MPI_REAL4,&
              fstatus,&
@@ -579,7 +575,6 @@ subroutine write_distribution(datafile)
   integer :: ir,it
   complex, dimension(:,:), allocatable :: h_x_glob
   complex :: ftemp(n_theta,n_radial)
-  complex(kind=4) :: f8(n_theta,n_radial)
   !------------------------------------------------------
 
   select case (io_control)
@@ -625,8 +620,7 @@ subroutine write_distribution(datafile)
               enddo
            enddo
            if (zf_test_mode == 0) call extended_ang(ftemp)
-           f8 = ftemp
-           write(io) f8
+           write(io) cmplx(ftemp,kind=4)
         enddo
         close(io)
      endif
@@ -804,7 +798,6 @@ subroutine write_binary(datafile,fn,n_fn)
   character (len=*), intent(in) :: datafile
   integer, intent(in) :: n_fn
   complex, intent(in) :: fn(n_fn)
-  complex(kind=4) :: fn8(n_fn)
   integer :: disp
   character :: cdummy
   !------------------------------------------------------
@@ -830,8 +823,7 @@ subroutine write_binary(datafile,fn,n_fn)
 
      open(unit=io,file=datafile,status='old',position='append',access='stream')
 
-     fn8 = fn
-     write(io) fn8
+     write(io) cmplx(fn,kind=4)
      close(io)
 
   case (3)
@@ -875,28 +867,23 @@ subroutine extended_ang(f2d)
 
   implicit none
 
-  integer :: ir,jr,it,np
+  integer :: ir
   complex, intent(inout), dimension(n_theta,n_radial) :: f2d
   complex, dimension(n_theta,n_radial) :: f1d 
 
-  np = n_radial/2
-
-  do ir=-np,np-1
-     do it=1,n_theta
-        ! Manage positive/negative q
-        if (ipccw*btccw > 0) then
-           jr = ir+np+1
-        else
-           jr = -ir+np
-        endif
-        f1d(it,ir+np+1) = f2d(it,jr)*exp(-2*pi*i_c*ir*k_theta*rmin)
-     enddo
+  ! Assumption is that box_size=1
+  
+  do ir=1,n_radial
+     f1d(:,ir) = f2d(:,ir)*exp(-2*pi*i_c*px(ir)*k_theta*rmin)
   enddo
 
-  if (ipccw*btccw < 0) then
-     f1d = f1d*exp(2*pi*i_c*abs(k_theta)*rmin)
+  if (sign_qs < 0) then
+     ! Reverse output direction
+     do ir=1,n_radial
+        f2d(:,ir) = f1d(:,n_radial-ir+1)
+     enddo
+  else
+     f2d = f1d
   endif
-
-  f2d = f1d
   
 end subroutine extended_ang

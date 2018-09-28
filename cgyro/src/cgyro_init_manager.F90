@@ -82,7 +82,7 @@ subroutine cgyro_init_manager
   w_xi = 0.5*w_xi
 
   allocate(theta(n_theta))
-  allocate(thetab(n_radial/box_size,n_theta))
+  allocate(thetab(n_theta,n_radial/box_size))
   allocate(w_theta(n_theta))
   allocate(g_theta(n_theta))
   allocate(g_theta_geo(n_theta))

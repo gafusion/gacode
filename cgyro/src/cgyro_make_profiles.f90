@@ -245,6 +245,7 @@ subroutine cgyro_make_profiles
      q_gb_norm     = 0.0
      pi_gb_norm    = 0.0
 
+     ! Set sign of q (assumed positive in input)
      q = abs(q)*(ipccw)*(btccw)
 
      if (ae_flag == 1) then
@@ -282,7 +283,7 @@ subroutine cgyro_make_profiles
   ! z_eff -- only use value from input.cgyro or input.profiles
   ! if simple electron Lorentz collisions (1,5) and z_eff_method=1
   ! else compute z_eff from the input ions' densities and charges
-  if(.not. (z_eff_method == 1 .and. &
+  if (.not. (z_eff_method == 1 .and. &
        (collision_model==1 .or. collision_model==5))) then
      z_eff = 0.0
      do is=1,n_species
@@ -348,6 +349,15 @@ subroutine cgyro_make_profiles
 
      call cgyro_info('Multiple toroidal harmonics')
 
+  endif
+  !
+  ! To account for abs() operations above, we must define a variable
+  ! with sign of (qs) 
+  !
+  if (ipccw*btccw*sign(1.0,s) < 0.0) then
+     sign_qs = -1
+  else
+     sign_qs = 1
   endif
   !-------------------------------------------------------------
 

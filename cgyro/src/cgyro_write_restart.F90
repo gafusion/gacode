@@ -178,9 +178,15 @@ subroutine cgyro_write_restart_header_part
   integer, parameter :: version = 2
   integer :: recid
 
+  ! Different compilers have a different semantics for RECL... must use inquire
+  integer :: reclen
+  integer, dimension(1) :: recltest
+
+  inquire(iolength=reclen) recltest
+
   open(unit=io,&
        file=trim(path)//runfile_restart//".part",&
-       status='old',access='DIRECT',RECL=4)
+       status='old',access='DIRECT',RECL=reclen)
 
   recid = 1
   write(io,REC=recid) restart_magic

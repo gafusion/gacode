@@ -240,7 +240,7 @@ subroutine cgyro_write_initdata
      write(io,'(1pe13.6)') theta(:)
      write(io,'(1pe13.6)') energy(:)
      write(io,'(1pe13.6)') xi(:)
-     write(io,'(1pe13.6)') transpose(thetab(:,:))
+     write(io,'(1pe13.6)') thetab(:,:)
      if (n_toroidal > 1) then
         write(io,'(1pe13.6)') (rho*q/rmin*in,in=0,n_toroidal-1)
      else
