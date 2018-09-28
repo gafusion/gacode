@@ -51,35 +51,35 @@ class CGyroRestartHeader:
     def load(self,fdir):
         fname = os.path.join(fdir,restart_fname)
         with open(fname,"rb") as fd:
-            magic_b = fd.read(4+12)
-            [magic] = struct.unpack('i12x',magic_b)
+            magic_b = fd.read(4)
+            [magic] = struct.unpack('i',magic_b)
             if (magic!=140906808):
                 raise IOError("Wrong CGyroRestartHeader magic number %i"%magic)
-            version_b = fd.read(4+12)
-            [version] = struct.unpack('i12x',version_b)
+            version_b = fd.read(4)
+            [version] = struct.unpack('i',version_b)
             if (version!=2):
                 raise IOError("Unsupported CGyroRestartHeader version %i"%version)
 
-            grid_b = fd.read(6*(4+12))
+            grid_b = fd.read(6*4)
             [self.grid.n_theta,self.grid.n_radial,
              self.n_species,
              self.grid.n_xi,self.grid.n_energy,
-             self.grid.n_toroidal] = struct.unpack('i12xi12xi12xi12xi12xi12x',grid_b)
+             self.grid.n_toroidal] = struct.unpack('6i',grid_b)
             
-            mpi_b = fd.read(2*(4+12))
-            [self.mpi_rank_order,self.n_proc] = struct.unpack('i12xi12x',mpi_b)
+            mpi_b = fd.read(2*4)
+            [self.mpi_rank_order,self.n_proc] = struct.unpack('2i',mpi_b)
 
-            magic_b = fd.read(4+12)
-            [magic] = struct.unpack('i12x',magic_b)
+            magic_b = fd.read(4)
+            [magic] = struct.unpack('i',magic_b)
             if (magic!=140906808):
                 raise IOError("Wrong CGyroRestartHeader magic(2) number %i"%magic)
 
     def savev2(self,fdir):
         fname = os.path.join(fdir,restart_fname)
         with open(fname,"rb+") as fd:
-            magic_b= struct.pack('4i',140906808,0,0,0)
+            magic_b= struct.pack('i',140906808)
             fd.write(magic_b)
-            version_b= struct.pack('4i',2,0,0,0)
+            version_b= struct.pack('i',2)
             fd.write(version_b)
             gridarr=[self.grid.n_theta,self.grid.n_radial,
                      self.n_species,
@@ -87,7 +87,7 @@ class CGyroRestartHeader:
                      self.grid.n_toroidal,
                      self.mpi_rank_order,self.n_proc]
             for g in gridarr:
-                g_b = struct.pack('4i',g,0,0,0)
+                g_b = struct.pack('i',g)
                 fd.write(g_b)
             fd.write(magic_b)
 
@@ -225,5 +225,9 @@ def add_species(org_dir, new_dir, grid, org_pre_species, org_post_species, new_s
     with open(new_tag_fname,"w") as tag_fd:
         tag_fd.write("           0\n 0.0000E+00\n")
 
+
+    new_header = org_header
+    new_header.n_species = org_header.n_species + new_species
+    new_header.savev2(new_dir)
 
     return
