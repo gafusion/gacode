@@ -70,7 +70,11 @@ program tglf
      ! write flux spectrum to file out.tglf.flux_spectrum
 
      CALL write_tglf_flux_spectrum
+     
+     ! write flux spectrum to file out.tglf.flux_spectrum_unweighted
 
+     CALL write_tglf_flux_spectrum_unweighted
+     
      ! write density fluctuation amplitude spectrum to file out.tglf.density_spectrum
      CALL write_tglf_density_spectrum
 

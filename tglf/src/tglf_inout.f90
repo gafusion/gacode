@@ -1890,6 +1890,7 @@ SUBROUTINE write_tglf_intensity_spectrum
         tem = tem + intensity_spectrum_out(2,is,i,n)
         u_par = u_par + intensity_spectrum_out(3,is,i,n)
         q_tot = q_tot + intensity_spectrum_out(4,is,i,n)
+        
       enddo
       write(33,*)ky_spectrum(i),den,tem,u_par,q_tot
     enddo
@@ -1898,6 +1899,69 @@ SUBROUTINE write_tglf_intensity_spectrum
   CLOSE(33)
 !
 END SUBROUTINE write_tglf_intensity_spectrum
+
+!-----------------------------------------------------------------
+
+!
+SUBROUTINE write_tglf_flux_spectrum_unweighted
+  !
+  USE tglf_dimensions
+  USE tglf_global
+  USE tglf_species
+  USE tglf_kyspectrum
+  !   
+  IMPLICIT NONE
+  CHARACTER(33) :: fluxfile="out.tglf.flux_spectrum_unweighted"
+  INTEGER :: i,j,is,imax,jmax
+  REAL :: pflux1,eflux1
+  REAL :: stress_par1,stress_tor1
+  REAL :: exch1
+  
+
+  !
+  if(new_start)then
+     write(*,*)"error: tglf_TM must be called before write_tglf_flux_spectrum"
+     write(*,*)"       NN doesn't compute spectra -> if needed set tglf_nn_max_error_in=-1"
+  endif
+  !
+  OPEN(unit=33,file=fluxfile,status='replace')
+  !
+  !
+  ! initialize fluxes
+  !
+!  write(*,*)"ns0,ns,nky,nmodes",ns0,ns,nky,nmodes_in
+!
+  ! set number of field
+  jmax = 1
+  if(use_Bper_in)jmax=2
+  if(use_Bpar_in)jmax=3
+  ! loop over species and fields
+  do is=ns0,ns
+     do j=1,jmax
+        write(33,*)"species = ",is,"field =",j
+        write(33,*)" ky,particle flux,energy flux,toroidal stress,parallel stress,exchange"
+
+        !
+        ! loop over ky spectrum
+        !
+  
+        do i=1,nky
+           ky_in = ky_spectrum(i)
+           pflux1 = sum(flux_spectrum_out(1,is,j,i,1:nmodes_in))
+           eflux1 = sum(flux_spectrum_out(2,is,j,i,1:nmodes_in))
+           stress_tor1 = sum(flux_spectrum_out(3,is,j,i,1:nmodes_in))
+           stress_par1 = sum(flux_spectrum_out(4,is,j,i,1:nmodes_in))
+           exch1 = sum(flux_spectrum_out(5,is,j,i,1:nmodes_in))
+           write(33,*)ky_in,pflux1,eflux1,stress_tor1,stress_par1,exch1
+        enddo  ! i
+     enddo  ! j
+  enddo  ! is 
+  !
+  CLOSE(33)
+  !    
+END SUBROUTINE write_tglf_flux_spectrum_unweighted
+
+!-----------------------------------------------------------------
 
 !-----------------------------------------------------------------
 
