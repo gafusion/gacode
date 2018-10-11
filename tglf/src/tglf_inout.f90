@@ -1912,7 +1912,7 @@ SUBROUTINE write_tglf_flux_spectrum_unweighted
   !   
   IMPLICIT NONE
   CHARACTER(33) :: fluxfile="out.tglf.flux_spectrum_unweighted"
-  INTEGER :: i,j,is,imax,jmax
+  INTEGER :: i,j,is,imax,jmax,n
   REAL :: pflux1,eflux1
   REAL :: stress_par1,stress_tor1
   REAL :: exch1
@@ -1938,22 +1938,22 @@ SUBROUTINE write_tglf_flux_spectrum_unweighted
   ! loop over species and fields
   do is=ns0,ns
      do j=1,jmax
-        write(33,*)"species = ",is,"field =",j
-        write(33,*)" ky,particle flux,energy flux,toroidal stress,parallel stress,exchange"
-
-        !
-        ! loop over ky spectrum
-        !
-  
-        do i=1,nky
-           ky_in = ky_spectrum(i)
-           pflux1 = sum(flux_spectrum_out(1,is,j,i,1:nmodes_in))
-           eflux1 = sum(flux_spectrum_out(2,is,j,i,1:nmodes_in))
-           stress_tor1 = sum(flux_spectrum_out(3,is,j,i,1:nmodes_in))
-           stress_par1 = sum(flux_spectrum_out(4,is,j,i,1:nmodes_in))
-           exch1 = sum(flux_spectrum_out(5,is,j,i,1:nmodes_in))
-           write(33,*)ky_in,pflux1,eflux1,stress_tor1,stress_par1,exch1
-        enddo  ! i
+        do n =1,nmodes_in
+            write(33,*)"species = ",is,"   field =",j,"   mode =",n
+            write(33,*)" ky,particle flux,energy flux,toroidal stress,parallel stress,exchange"
+            !
+            ! loop over ky spectrum
+            !
+            do i=1,nky
+               ky_in = ky_spectrum(i)
+               pflux1 = flux_spectrum_out(1,is,j,i,n)
+               eflux1 = flux_spectrum_out(2,is,j,i,n)
+               stress_tor1 = flux_spectrum_out(3,is,j,i,n)
+               stress_par1 = flux_spectrum_out(4,is,j,i,n)
+               exch1 = flux_spectrum_out(5,is,j,i,n)
+               write(33,*)ky_in,pflux1,eflux1,stress_tor1,stress_par1,exch1
+            enddo  ! i
+        enddo  ! n
      enddo  ! j
   enddo  ! is 
   !
