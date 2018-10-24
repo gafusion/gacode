@@ -100,7 +100,7 @@ subroutine neo_do
            neo_th_out(1)     = pflux_HH
            neo_th_out(2)     = efluxi_HH
            do is=1, n_species
-              if(Z(is) == -1) then
+              if(Z(is) < 0.0) then
                  neo_th_out(3) = efluxe_HH
               endif
            enddo
@@ -293,16 +293,16 @@ subroutine neo_do
                  driftx(is,it) = v_drift_x(it) &
                       * mass(is)/(1.0*Z(is)) * (vth(is,ir))**2 
                  ! rotation
-                 rotkin = 0.5 * sqrt(2.0) * vth(is,ir) *  k_par(it) &
-                      * (-Z(is)/temp(is,ir)*phi_rot_deriv(it) &
+                 rotkin = 0.5 * sqrt(2.0) * vth(is,ir) &
+                      * (-Z(is)/temp(is,ir) * k_par(it) * phi_rot_deriv(it) &
                       + omega_rot(ir)**2 * bigR(it) / vth(is,ir)**2 &
-                      * bigR_tderiv(it))
-                 driftxrot1(is,it) = I_div_psip * k_par(it) &
+                      * gradpar_bigR(it))
+                 driftxrot1(is,it) = I_div_psip &
                       * mass(is)/(1.0*Z(is)) * rho(ir) / Bmag(it) &
                       * (vth(is,ir))**2 &
-                      * (-Z(is)/temp(is,ir)*phi_rot_deriv(it) &
+                      * (-Z(is)/temp(is,ir) * k_par(it) * phi_rot_deriv(it) &
                       + omega_rot(ir)**2 * bigR(it)/ vth(is,ir)**2 &
-                      * bigR_tderiv(it))
+                      * gradpar_bigR(it))
                  if(aniso_model(is) == 2) then
                     rotkin = rotkin - 0.5 * sqrt(2.0) * vth(is,ir) &
                          * lam_rot_kpar_aniso(is,it)
@@ -310,15 +310,15 @@ subroutine neo_do
                          * mass(is)/(1.0*Z(is)) * rho(ir) / Bmag(it) &
                          * (vth(is,ir))**2 * lam_rot_kpar_aniso(is,it)
                  endif
-                 driftxrot2(is,it) = I_div_psip* k_par(it) / Btor(it) &
+                 driftxrot2(is,it) = I_div_psip / Btor(it) &
                       * mass(is)/(1.0*Z(is)) * rho(ir) &
                       * vth(is,ir) * 2.0 * sqrt(2.0) &
-                      * bigR_tderiv(it) * omega_rot(ir)
+                      * gradpar_bigR(it) * omega_rot(ir)
                  driftxrot3(is,it) = 1.0/sqrt(2.0) &
                       * vth(is,ir)**2 * mass(is)/(1.0*Z(is)) &
                       * rho(ir) / Bmag(it) &
                       * Btor(it)/(Bmag(it)* I_div_psip) &
-                      * (2.0*k_par(it) * gradr(it) * gradr_tderiv(it) &
+                      * (2.0 * gradr(it) * gradpar_gradr(it) &
                       - gradpar_Bmag(it) / Bmag(it) * gradr(it)**2)
 
                  i = mindx(is,ie,ix,it)
@@ -522,7 +522,7 @@ subroutine neo_do
         neo_th_out(1) = pflux_HH
         neo_th_out(2) = efluxi_HH
         do is=1, n_species
-           if(Z(is) == -1) then
+           if(Z(is) < 0.0) then
               neo_th_out(3) = efluxe_HH
            endif
         enddo

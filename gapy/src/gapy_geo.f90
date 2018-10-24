@@ -6,8 +6,8 @@ module geo
   double precision :: GEO_drmaj_in = 0.0
   double precision :: GEO_zmag_in = 0.0
   double precision :: GEO_dzmag_in = 0.0
-  double precision :: GEO_q_in = 1.0
-  double precision :: GEO_s_in = 2.0
+  double precision :: GEO_q_in = 2.0
+  double precision :: GEO_s_in = 1.0
   double precision :: GEO_kappa_in = 1.0
   double precision :: GEO_s_kappa_in = 0.0
   double precision :: GEO_delta_in = 0.0

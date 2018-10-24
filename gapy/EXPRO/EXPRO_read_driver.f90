@@ -13,10 +13,11 @@ subroutine EXPRO_read_driver
   implicit none
 
   integer, parameter :: io=1
-  integer :: ierr
+  integer :: is,ierr
 
   real, dimension(:), allocatable :: dummy
-
+  character(len=7) :: a_in
+  
   !--------------------------------------------------------------
   ! READ generated (stripped) version of input.profiles:
   !
@@ -144,6 +145,24 @@ subroutine EXPRO_read_driver
      print('(a)'),'INFO: (EXPRO_read_driver) This is an OLD format input.profiles.  Please regenerate.'
   endif
 
+  close(io)
+
+  ! Read optional header
+  open(unit=io,&
+       file=trim(path)//'input.profiles.header',&
+       status='old',&
+       iostat=ierr)
+  if (ierr == 0) then
+     do is=1,EXPRO_n_ion
+        read(io,*) EXPRO_z(is),EXPRO_mass(is),a_in
+     enddo
+  else
+     print('(a)'),'INFO: (EXPRO_read_driver) input.profiles header missing!  Assuming defaults'
+     EXPRO_z(1) = 1.0
+     EXPRO_z(2) = 6.0
+     EXPRO_mass(1) = 2.0
+     EXPRO_mass(2) = 12.0
+  endif
   close(io)
   !--------------------------------------------------------------
 

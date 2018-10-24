@@ -60,7 +60,7 @@ subroutine tgyro_profile_set(x_vec,dx,index)
      endif
 
      do i_ion=1,loc_n_ion
-        if (evo_e(i_ion) == 1) then 
+        if (evo_e(i_ion) >= 1) then 
            p = p+1
            if (index == 4+i_ion) then
               dlnnidr(i_ion,i) = x_vec(p)+dx

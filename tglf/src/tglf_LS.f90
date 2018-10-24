@@ -30,7 +30,6 @@
 !  ZGESV storage
       REAL :: small = 1.0E-13
       INTEGER :: info
-      COMPLEX :: field_weight(3,nb)
       INTEGER,ALLOCATABLE,DIMENSION(:) :: di,de
       INTEGER,ALLOCATABLE,DIMENSION(:) :: ipiv
       COMPLEX,ALLOCATABLE,DIMENSION(:,:) :: zmat
@@ -289,11 +288,11 @@
           b_par_QL_out(imax)=b_par_weight
           kx_bar_out(imax)=kx_bar
           kpar_bar_out(imax)=kpar_bar/(R_unit*q_unit*width_in)
-!          do i=1,nbasis
-!            do j=1,3
-!             field_weight_out(imax,j,i)=field_weight(j,i)
-!            enddo
- !         enddo
+          do i=1,nbasis
+            do j=1,3
+             field_weight_out(imax,j,i)=field_weight_QL_out(j,i)
+            enddo
+          enddo
 !
           do is=ns0,ns
             do j=1,3
@@ -592,8 +591,7 @@
 !      COMPLEX :: pt_tot(nsm,nb)
       COMPLEX :: temp(nsm,nb)
       COMPLEX :: stress_par(nsm,nb,3),stress_per(nsm,nb,3)
-      COMPLEX :: phi(nb),psi(nb),bsig(nb)
-      COMPLEX :: field_weight(3,nb)
+      COMPLEX,DIMENSION(nb) :: phi=0.0,psi=0.0,bsig=0.0
       COMPLEX :: phi_wd_phi,wd_phi
       COMPLEX :: phi_b0_phi,b0_phi
       COMPLEX :: phi_modB_phi,modB_phi
@@ -680,11 +678,6 @@
                    (1.5*p_tot(is,i)-0.5*p_par(is,i))
           endif
         enddo
-! save the field weights
-        field_weight(1,i) = xi*phi(i)/SQRT(vnorm)
-        field_weight(2,i) = xi*psi(i)/SQRT(vnorm)
-        field_weight(3,i) = xi*bsig(i)/SQRT(vnorm)
-!        write(*,*)i,"field_weight=",field_weight(1,i),field_weight(2,i),field_weight(3,i)
       enddo
 ! 
 !  add the adiabatic terms to the total moments
@@ -709,6 +702,14 @@
       enddo
       if(phi_norm.lt.epsilon1)phi_norm = epsilon1
 !      write(*,*)"phi_norm =",phi_norm
+!
+! save the field weights
+      do i=1,nbasis
+        field_weight_QL_out(1,i) = xi*phi(i)/SQRT(phi_norm)
+        field_weight_QL_out(2,i) = xi*psi(i)/SQRT(phi_norm)
+        field_weight_QL_out(3,i) = xi*bsig(i)/SQRT(phi_norm)
+!        write(*,*)i,"field_weight=",field_weight_QL_out(1,i),field_weight_QL_out(2,i),field_weight_QL_out(3,i)
+       enddo
 !
 ! compute <phi|*|phi> averages
       phi_wd_phi = 0.0

@@ -422,7 +422,12 @@ class cgyrodata_plot(data.cgyrodata):
 
       ax.plot(x,y1,'-o',color='black',markersize=2,label=r'$\mathrm{Re}$')
       ax.plot(x,y2,'-o',color='red',markersize=2,label=r'$\mathrm{Im}$')
-
+      #gp = 200.0*np.sqrt(2)
+      #w = 0.51*2.0*0.1*np.sqrt((1.0-0.5)*6.0)*(x*np.pi)**2
+      #pa = np.exp(-(1+1j)/np.sqrt(2)*np.sqrt(gp)*w+1j*gp/4*(x*np.pi)*2.0*6.0*0.1/np.sqrt(2))
+      #ax.plot(x,np.real(pa),'--',color='black')
+      #ax.plot(x,-np.imag(pa),'--',color='red')
+      
       ax.legend()
 
       fig.tight_layout(pad=0.3)
@@ -1035,10 +1040,25 @@ class cgyrodata_plot(data.cgyrodata):
 
          n0 = (self.n_radial/2)*self.n_theta+i0
 
-         hp = np.array(func[0,:,spec,ix,:,itime])
-         ax.plot(np.sqrt(self.energy),hp[n0,:],'-o',color='black',markersize=2)
-         hp = np.array(func[1,:,spec,ix,:,itime])
-         ax.plot(np.sqrt(self.energy),hp[n0,:],'-o',color='blue',markersize=2)
+         hpa = np.array(func[0,n0,spec,:,:,itime])
+         hpb = np.array(func[1,n0,spec,:,:,itime])
+         p0 = np.zeros(self.n_energy)
+         p1 = np.zeros(self.n_energy)
+         if row == 0:
+            for ix in range(self.n_xi):
+               p0 = p0+hpa[ix,:]*0.5
+               p1 = p1+hpb[ix,:]*0.5
+         elif row == 1:
+            for ix in range(self.n_xi):
+               p0 = p0+hpa[ix,:]*self.xi[ix]*1.5
+               p1 = p1+hpb[ix,:]*self.xi[ix]*1.5
+         elif row == 2:
+            for ix in range(self.n_xi):
+               p0 = p0+hpa[ix,:]*(3*self.xi[ix]**2-1)/2*2.5
+               p1 = p1+hpb[ix,:]*(3*self.xi[ix]**2-1)/2*2.5
+            
+         ax.plot(np.sqrt(self.energy),p0,'-o',color='black',markersize=2)
+         ax.plot(np.sqrt(self.energy),p1,'-o',color='blue',markersize=2)
          #========================================================
 
       fig.tight_layout(pad=0.3)

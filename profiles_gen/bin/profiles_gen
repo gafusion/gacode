@@ -35,7 +35,7 @@ EXEC=${GACODE_ROOT}/profiles_gen/src/prgen
 # - GATO executable
 GATO=${GACODE_ROOT}/gato/gato
 # - OMFIT script
-OMFIT=${OMFIT_ROOT}/src/omfit.py
+OMFIT=${OMFIT_ROOT}/omfit/omfit.py
 # - locpargen executable
 LOCPARGEN=${GACODE_ROOT}/profiles_gen/locpargen/locpargen
 # - exprodump executable
@@ -562,7 +562,6 @@ fi
 if [ "$itype" == "GACODE" ] ; then
   cp -f $FILE $FILE.save
   python $PRGEN_BIN/profile_parse.py $FILE
-  python $PRGEN_BIN/profile_header_dump.py $FILE
 fi
 #=============================================================
 
@@ -593,11 +592,6 @@ then
   fi
   echo $DUMP_VAR > input.exprodump
   echo $X >> input.exprodump
-  echo $Z1 >> input.exprodump
-  echo $Z2 >> input.exprodump
-  echo $Z3 >> input.exprodump
-  echo $Z4 >> input.exprodump
-  echo $Z5 >> input.exprodump
   echo $DUMP_DENS_METHOD >> input.exprodump
   echo "INFO: (profiles_gen) Calling $EXPRODUMP"
   $EXPRODUMP
@@ -626,20 +620,17 @@ then
   echo $LOC_RAD > input.locpargen
   echo $LOC_RHO >> input.locpargen
   echo $LOC_PSI >> input.locpargen
-  echo $Z1 >> input.locpargen
-  echo $Z2 >> input.locpargen
-  echo $Z3 >> input.locpargen
-  echo $Z4 >> input.locpargen
-  echo $Z5 >> input.locpargen
   echo $HASGEO >> input.locpargen
   $LOCPARGEN
   rm input.locpargen
   if [ $PLOT_FLAG -eq 1 ]
   then
-     python $PRGEN_BIN/locpargen_plot.py
+     echo "WARNING: -plot deprecated.  Should remove locpargen_plot.py"
+     #python $PRGEN_BIN/locpargen_plot.py
   fi 
   exit 0
-fi   
+fi
+
 #=============================================================
 
 #=============================================================
@@ -973,7 +964,7 @@ if [ $EFIT_METHOD -eq 3 ] ; then
       medium) RES="resolution=0.002 uniform=750 levels=256" ;;
       high)   RES="resolution=0.001 uniform=1000 levels=512" ;;
    esac
-   OMFIT_OPT="rhoVSpsi='rho' averages=0 namelist=0 fluxsurfaces=1 maxPSI=0.9999 gfiles='$GFILE'"
+   OMFIT_OPT="rhoVSpsi='rho' maxPSI=0.9999 gfiles='$GFILE'"
    echo "INFO: (omfit) Running with parameters: $RES"
    echo "INFO: (omfit) Fixed mapper parameters: $OMFIT_OPT"
    python $OMFIT fluxSurfaceTracer $RES $OMFIT_OPT >& out.omfit.info
@@ -1053,7 +1044,7 @@ fi
 #  Remove configuration files, output files, etc.
 rm -f egta eqgta nova.* 
 #  Remove stale files
-rm -f input.gato.* dummy.peq profile_header
+rm -f input.gato.* dummy.peq 
 
 if [ $VERBOSE_FLAG -eq 0 ]
 then

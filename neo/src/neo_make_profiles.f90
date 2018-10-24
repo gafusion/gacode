@@ -184,7 +184,6 @@ subroutine neo_make_profiles
              udsymmetry_flag,&
              quasineutral_flag,&
              n_species+adiabatic_ele_model,&
-             z(1:n_species),&
              r(ir),&
              btccw_exp,&
              ipccw_exp,&

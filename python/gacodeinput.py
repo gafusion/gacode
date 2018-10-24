@@ -196,6 +196,23 @@ class ProfileInput:
         # Clean up temporary file
         os.system('rm parse_temp')
 
+        # Finally, read species header (separately) and dump
+        headerfile = open(inputfile+'.header','w')
+        index = 0
+        for line in open(inputfile,'r').readlines():
+           if index > 0:
+              index = index+1
+              line = string.strip(line)
+              if len(line) > 1:
+                 x = line.split()
+                 headerfile.write(x[2]+' '+x[3]+' '+x[4]+'\n')
+              else:
+                 break
+
+           if 'IONS' in line:
+              index = 1
+
+        headerfile.close()
 
 #--------------------------------------------------------------------
 # PARSER FOR input.tgyro

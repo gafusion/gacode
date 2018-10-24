@@ -49,6 +49,7 @@ subroutine cgyro_init_manager
   !  and input timer is initialized by read_input.
   !------------------------------------------------------
   call timer_lib_init('str_init')
+  call timer_lib_init('nl_init')
   call timer_lib_init('coll_init')
   call timer_lib_init('io_init')
 
@@ -56,6 +57,7 @@ subroutine cgyro_init_manager
   ! Initialize GLOBAL arrays
   !----------------------------------------------------
 
+  call timer_lib_in('str_init')
   allocate(energy(n_energy))
   allocate(vel(n_energy))
   allocate(w_e(n_energy))
@@ -80,7 +82,7 @@ subroutine cgyro_init_manager
   w_xi = 0.5*w_xi
 
   allocate(theta(n_theta))
-  allocate(thetab(n_radial/box_size,n_theta))
+  allocate(thetab(n_theta,n_radial/box_size))
   allocate(w_theta(n_theta))
   allocate(g_theta(n_theta))
   allocate(g_theta_geo(n_theta))
@@ -105,6 +107,8 @@ subroutine cgyro_init_manager
   allocate(dlambda_rot(n_theta,n_species))
   allocate(dens_rot(n_theta,n_species))
   allocate(dens_ele_rot(n_theta))
+  allocate(dens_avg_rot(n_species))
+  allocate(dlnndr_avg_rot(n_species))
   allocate(omega_rot_trap(n_theta,n_species))
   allocate(omega_rot_u(n_theta,n_species))
   allocate(omega_rot_drift(n_theta,n_species))
@@ -118,8 +122,6 @@ subroutine cgyro_init_manager
      !----------------------------------------------------
      ! Initialize DISTRIBUTED arrays
      !----------------------------------------------------
-
-     call timer_lib_in('str_init')
 
      ! Global (undistributed) arrays
      allocate(fcoef(n_field,nc))
@@ -215,9 +217,12 @@ subroutine cgyro_init_manager
      call cgyro_init_collision
      call timer_lib_out('coll_init')
 
+     call timer_lib_in('str_init')
   endif
 
   call cgyro_check_memory(trim(path)//runfile_memory)
+
+  call timer_lib_out('str_init')
 
   ! Write initial data
 
@@ -233,6 +238,7 @@ subroutine cgyro_init_manager
   call timer_lib_out('str_init')
 
   ! Initialize nonlinear dimensions and arrays 
+  call timer_lib_in('nl_init')
   if (nonlinear_method == 1) then
 
      ! Direct convolution
@@ -263,6 +269,12 @@ subroutine cgyro_init_manager
      allocate(vx(0:ny-1,0:nx-1,n_omp))
      allocate(vy(0:ny-1,0:nx-1,n_omp))
      allocate(uv(0:ny-1,0:nx-1,n_omp))
+
+#ifdef THREADED_FFT
+     i_err = fftw_init_threads()
+     call fftw_plan_with_nthreads(n_omp)
+#endif
+
 
      ! Create plans once and for all, with global arrays fx,ux
      plan_c2r = fftw_plan_dft_c2r_2d(nx,ny,gx(:,:,1),vx(:,:,1),FFTW_PATIENT)
@@ -338,6 +350,7 @@ subroutine cgyro_init_manager
 #endif
 
   endif
+  call timer_lib_out('nl_init')
 
 end subroutine cgyro_init_manager
 

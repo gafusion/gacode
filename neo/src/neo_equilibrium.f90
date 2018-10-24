@@ -11,16 +11,16 @@ module neo_equilibrium
   real, dimension(:), allocatable :: v_drift_x    ! radial curvature drift vel
   real, dimension(:), allocatable :: v_drift_th   ! theta  curvature drift vel
   real, dimension(:), allocatable :: gradr        ! | grad r|
-  real, dimension(:), allocatable :: gradr_tderiv ! th deriv of grad r
+  real, dimension(:), allocatable :: gradpar_gradr ! bhat dot grad/a | grad r|
   real, dimension(:), allocatable :: w_theta      ! flux surface avg weights
   real, dimension(:), allocatable :: Btor         ! B_t / Bunit
   real, dimension(:), allocatable :: Bpol         ! B_p / Bunit
   real, dimension(:), allocatable :: Bmag         ! B/Bunit
   real, dimension(:), allocatable :: Bmag_rderiv  ! (dB/dr) (a/Bunit)
-  real, dimension(:), allocatable :: gradpar_Bmag ! bhat dot grad/aBmag/Bunit
+  real, dimension(:), allocatable :: gradpar_Bmag ! bhat dot grad/a Bmag/Bunit
   real, dimension(:), allocatable :: bigR       ! R/a (global)
   real, dimension(:), allocatable :: bigR_rderiv       ! R/a (global)
-  real, dimension(:), allocatable :: bigR_tderiv ! theta deriv of bigR
+  real, dimension(:), allocatable :: gradpar_bigR ! bhat dot grad/a R/a
   real, dimension(:), allocatable :: jacobln_rderiv ! 1/sqrt(g) dsqrt(g)/dr
   real                            :: bigR_th0    ! R/a at theta=0
   real                            :: bigR_th0_rderiv ! dR/dr at theta=0
@@ -64,11 +64,11 @@ contains
        allocate(v_drift_x(n_theta))
        allocate(v_drift_th(n_theta))
        allocate(gradr(n_theta))
-       allocate(gradr_tderiv(n_theta))
+       allocate(gradpar_gradr(n_theta))
        allocate(w_theta(n_theta))
        allocate(bigR(n_theta))
        allocate(bigR_rderiv(n_theta))
-       allocate(bigR_tderiv(n_theta))
+       allocate(gradpar_bigR(n_theta))
        allocate(Btor(n_theta))
        allocate(Bpol(n_theta))
        allocate(Bmag(n_theta))
@@ -78,12 +78,12 @@ contains
        allocate(jacobln_rderiv(n_theta))
        allocate(v_prime_g(n_radial))
        allocate(geo_param(n_radial,5))
-       
-       d_theta = 2*pi/n_theta
+
+       d_theta = (2*pi/n_theta)
        do it=1,n_theta
           theta(it) = -pi+(it-1)*d_theta
        enddo
-      
+       
        initialized = .true.
        
     else
@@ -94,10 +94,10 @@ contains
        deallocate(v_drift_x)
        deallocate(v_drift_th)
        deallocate(gradr)
-       deallocate(gradr_tderiv)
+       deallocate(gradpar_gradr)
        deallocate(w_theta)
        deallocate(bigR_rderiv)
-       deallocate(bigR_tderiv)
+       deallocate(gradpar_bigR)
        deallocate(bigR)
        deallocate(Btor)
        deallocate(Bpol)
@@ -122,8 +122,8 @@ contains
     integer, intent(in) :: ir
     integer :: it, jt, id, is
     real :: sum
-    real :: ttmp(1)
-
+    real, dimension(:), allocatable :: ttmp
+    
     sum=0.0
 
     if (equilibrium_model == 2 .or. equilibrium_model == 3) then 
@@ -162,12 +162,31 @@ contains
        GEO_nfourier_in = geo_ny
        GEO_model_in    = geo_numeq_flag
 
-       call geo_interp(n_theta,theta,.true.)
-       
+       ! Get initial geo solution, then set geo params at theta=0
+       allocate(ttmp(1))
+       ttmp(1) = 0.0
+       call geo_interp(1,ttmp,.true.)
+       deallocate(ttmp)
+       bigR_th0        = GEO_bigr(1)
+       bigR_th0_rderiv = GEO_bigr_r(1)
+       gradr_th0       = GEO_grad_r(1)
+       Btor_th0        = GEO_bt(1)
+       Bpol_th0        = GEO_bp(1)
+       Bmag_th0        = GEO_b(1)
+       Bmag_th0_rderiv = -GEO_b(1)/(rmaj(ir)*GEO_grad_r(1)) &
+               * (GEO_gcos1(1) + GEO_gcos2(1))
+            
+       call geo_interp(n_theta,theta,.false.)
+
        do it=1,n_theta
-          k_par(it) = 1.0 / (q(ir) * rmaj(ir) * GEO_g_theta(it))
+          
+          k_par(it)     = 1.0 / (q(ir) * rmaj(ir) * GEO_g_theta(it))
+          w_theta(it)   = GEO_g_theta(it) / GEO_b(it)
+          sum = sum + w_theta(it)
+          
           bigR(it) = GEO_bigr(it)
           bigR_rderiv(it) = GEO_bigr_r(it)
+          gradpar_bigR(it) = k_par(it) * GEO_bigr_t(it) 
           Bmag(it)  = GEO_b(it)
           Btor(it)  = GEO_bt(it)
           Bpol(it)  = GEO_bp(it)
@@ -184,27 +203,40 @@ contains
           theta_nc(it) = GEO_theta_nc(it)
           jacobln_rderiv(it) = 2.0/bigR(it)*bigR_rderiv(it) &
                - 1.0/Btor(it) * r(ir)/(q(ir)*bigR(it)) * GEO_ffprime/GEO_f
-          ! flux-surface average weights
-          w_theta(it) = GEO_g_theta(it) / Bmag(it)
-          sum = sum + w_theta(it)
+         
        enddo
 
        I_div_psip = GEO_f * q(ir) / r(ir)
 
-       ! values at theta=0
-       ttmp(1) = 0.0
-       call geo_interp(1,ttmp,.false.)
-       bigR_th0        = GEO_bigr(1)
-       bigR_th0_rderiv = GEO_bigr_r(1)
-       gradr_th0       = GEO_grad_r(1)
-       Btor_th0        = GEO_bt(1)
-       Bpol_th0        = GEO_bp(1)
-       Bmag_th0        = GEO_b(1)
-       Bmag_th0_rderiv = -GEO_b(1)/(rmaj(ir)*GEO_grad_r(1)) &
-               * (GEO_gcos1(1) + GEO_gcos2(1))
+       do it=1,n_theta
+          gradpar_gradr(it)  = 0.0
+          do id=-2,2
+             if (id /= 0) then
+                jt = thcyc(it+id)
+                gradpar_gradr(it) = gradpar_gradr(it) &
+                     + gradr(jt) * cderiv(id) / (12.0*d_theta)
+             endif
+          enddo
+          gradpar_gradr(it) = gradpar_gradr(it) * k_par(it)
+       enddo
 
+       ! 1/J dJ/dr
+       allocate(ttmp(n_theta))
+       ttmp(:) = theta(:)
+       GEO_rmin_in = r(ir) + 0.001
+       call geo_interp(n_theta,ttmp,.true.)
+       do it=1,n_theta
+          ttmp(it) = GEO_g_theta(it)/GEO_b(it)
+       enddo
+       jacobln_rderiv(:) = 0.0
+       do it=1,n_theta
+          jacobln_rderiv(it) = (ttmp(it) - w_theta(it))/0.001
+       enddo
+       jacobln_rderiv(:) = jacobln_rderiv(:) / w_theta(:)
+       deallocate(ttmp)
+       
     else
-
+       
        ! concentric circular geometry
        shift(ir)   = 0.0
        kappa(ir)   = 1.0
@@ -214,10 +246,11 @@ contains
 
        do it=1,n_theta
           k_par(it)       = 1.0 / (q(ir) * rmaj(ir)) * sign_bunit
-          bigR(it)        = rmaj(ir) * (1.0 + r(ir)/rmaj(ir) * cos(theta(it)))
+          bigR(it)        = rmaj(ir) + r(ir) * cos(theta(it))
           bigR_rderiv(it) = cos(theta(it))
-          jacobln_rderiv(it) = 2.0/bigR(it) * bigR_rderiv(it)
-          gradr(it)       = 1.0
+          gradpar_bigR(it) = -r(ir) * sin(theta(it)) * k_par(it)
+          gradr(it)          = 1.0
+          gradpar_gradr(it)  = 0.0
           theta_nc(it)    = theta(it)
           bigR_th0        = rmaj(ir) + r(ir)
           bigR_th0_rderiv = 1.0 
@@ -265,6 +298,9 @@ contains
              v_drift_th(it) = -rho(ir)/rmaj(ir) * cos(theta(it))
           endif
 
+          ! 1/J dJ/dr
+          jacobln_rderiv(it) = -(1.0/Bmag(it))*Bmag_rderiv(it)
+          
           ! flux-surface average weights
           w_theta(it) = 1.0 * sign_bunit / Bmag(it)
           sum = sum + w_theta(it)
@@ -273,20 +309,9 @@ contains
        I_div_psip = rmaj(ir) * q(ir) / r(ir)
 
     endif
-
+    
     do it=1,n_theta
        w_theta(it) = w_theta(it) / sum
-       bigR_tderiv(it) = 0.0
-       gradr_tderiv(it)     = 0.0
-       do id=-2,2
-          if (id /= 0) then
-             jt = thcyc(it+id)
-             bigR_tderiv(it) = bigR_tderiv(it) &
-                  + bigR(jt) * cderiv(id) / (12.0*d_theta)
-             gradr_tderiv(it) = gradr_tderiv(it) &
-                  + gradr(jt) * cderiv(id) / (12.0*d_theta)
-          endif
-       enddo
     enddo
 
     ! v_prime_g = d Volume of flux surface / dr
@@ -305,7 +330,7 @@ contains
        Btor2_avg = Btor2_avg + w_theta(it)*Btor(it)**2
        bigRinv_avg =  bigRinv_avg + w_theta(it) / bigR(it)
     enddo
-
+    
     call compute_fractrap(ftrap)
 
     if(silent_flag == 0 .and. i_proc == 0) then

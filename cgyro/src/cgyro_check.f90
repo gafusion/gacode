@@ -51,7 +51,7 @@ subroutine cgyro_check
   !-----------------------------------------------------------------------
   ! Profile checks
   !
-  select case(profile_model)
+  select case (profile_model)
 
   case (1)
      call cgyro_info('Profile model: local input (input.cgyro)')
@@ -66,7 +66,7 @@ subroutine cgyro_check
   end select
   !-----------------------------------------------------------------------
 
-  if(profile_model == 2) then
+  if (profile_model == 2) then
      select case(quasineutral_flag)
      case(0)
         call cgyro_info('QN flag: Not enforcing quasi-neutrality')

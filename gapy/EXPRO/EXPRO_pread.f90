@@ -28,6 +28,11 @@ subroutine EXPRO_pread
      call EXPRO_read_driver
   endif
 
+  ! Header variables
+  call MPI_BCAST(EXPRO_z,EXPRO_n_ion_max,MPI_DOUBLE_PRECISION,0,comm,ierr)
+  call MPI_BCAST(EXPRO_mass,EXPRO_n_ion_max,MPI_DOUBLE_PRECISION,0,comm,ierr)
+  
+  ! Scalars
   call MPI_BCAST(EXPRO_shot,1,MPI_INTEGER,0,comm,ierr)
   call MPI_BCAST(EXPRO_n_ion,1,MPI_INTEGER,0,comm,ierr)
   call MPI_BCAST(EXPRO_n_exp,1,MPI_INTEGER,0,comm,ierr)

@@ -287,9 +287,10 @@ module EXPRO_interface
 
   ! Control parameters (force nonsensical default -1 for usage check)
 
-  integer :: EXPRO_ctrl_quasineutral_flag = -1
   integer :: EXPRO_ctrl_n_ion = -1
-  real, dimension(EXPRO_n_ion_max) :: EXPRO_ctrl_z = 0.0
+  real, dimension(EXPRO_n_ion_max) :: EXPRO_z = 0.0
+  real, dimension(EXPRO_n_ion_max) :: EXPRO_mass = 0.0
+  integer :: EXPRO_ctrl_quasineutral_flag = -1
   integer :: EXPRO_ctrl_numeq_flag = -1
   integer :: EXPRO_ctrl_silent_flag = 0
  

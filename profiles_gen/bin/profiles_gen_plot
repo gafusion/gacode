@@ -46,6 +46,9 @@ then
    echo "          -r <flux-surface coordinate for plotting>"
    echo "          Choices are r,r/a,rho"
    echo
+   echo "          -rmin <plot window minimum>"
+   echo "          -rmax <plot window maximum>"
+   echo
    echo " FLUX-SURFACE PLOTTING MODE:"
    echo 
    echo "          -n <integer>"
@@ -87,6 +90,8 @@ TOPTITLE=null
 OPTIONS_FLAG=0
 PLOT_FLAG=0
 RVAR="r"
+RMIN=auto
+RMAX=auto
 
 # Surface options
 SURF=null
@@ -118,6 +123,8 @@ while [ $# -gt 0 ] ; do
   -loc) shift ; LOC=$1 ;;
 
   -t) shift ; T=$1 ;;
+  -rmin) shift ; RMIN=$1 ;;
+  -rmax) shift ; RMAX=$1 ;;
 
   -title) shift ; TOPTITLE=$1 ;;
 
@@ -157,7 +164,7 @@ fi
 
 if [ $PLOT_FLAG -eq 1 ]
 then
-   python $INTERACTIVE $PYROOT/profileplot.py $RVAR $INFILES $PLOTS $FTYPE $LOC "$T" "$TOPTITLE"
+   python $INTERACTIVE $PYROOT/profileplot.py $RVAR $INFILES $PLOTS $FTYPE $LOC "$T" "$TOPTITLE" $RMIN $RMAX
    exit 0
 fi
 #==============================================================================

@@ -211,12 +211,14 @@ module cgyro_globals
   character(len=13) :: runfile_mpi     = 'out.cgyro.mpi'
   character(len=16) :: runfile_memory  = 'out.cgyro.memory'
   character(len=15) :: runfile_hosts   = 'out.cgyro.hosts'
-  character(len=17) :: runfile_restart = 'out.cgyro.restart'
+  character(len=17) :: runfile_restart = 'bin.cgyro.restart'
+  character(len=17) :: runfile_restart_old = 'out.cgyro.restart'
   character(len=13) :: runfile_restart_tag = 'out.cgyro.tag'
   character(len=15) :: runfile_grids   = 'out.cgyro.grids'
   character(len=14) :: runfile_prec    = 'out.cgyro.prec'
   character(len=14) :: runfile_time    = 'out.cgyro.time'
   character(len=16) :: runfile_timers  = 'out.cgyro.timing'
+  character(len=18) :: runfile_startups= 'out.cgyro.startups'
   character(len=14) :: runfile_freq    = 'out.cgyro.freq'
   character(len=14) :: binfile_freq    = 'bin.cgyro.freq'
   character(len=12) :: binfile_hb      = 'bin.cgyro.hb'
@@ -234,6 +236,8 @@ module cgyro_globals
   ! Restart tags
   character(len=8) :: fmt='(I2.2)'
   character(len=6), dimension(100) :: rtag
+  integer, parameter :: restart_header_size = 1024
+  integer, parameter :: restart_magic = 140906808
   !
   ! error checking
   integer :: error_status = 0
@@ -280,6 +284,7 @@ module cgyro_globals
   real :: k_theta
   real :: length
   real :: omega_eb
+  integer :: sign_qs
   !---------------------------------------------------------------
 
   !---------------------------------------------------------------
@@ -432,6 +437,8 @@ module cgyro_globals
   real, dimension(:,:), allocatable :: dlambda_rot
   real, dimension(:,:), allocatable :: dens_rot
   real, dimension(:),   allocatable :: dens_ele_rot
+  real, dimension(:),   allocatable :: dens_avg_rot
+  real, dimension(:),   allocatable :: dlnndr_avg_rot
   real, dimension(:,:), allocatable :: omega_rot_trap
   real, dimension(:,:), allocatable :: omega_rot_u
   real, dimension(:,:), allocatable :: omega_rot_drift
@@ -454,5 +461,5 @@ module cgyro_globals
   !---------------------------------------------------------------
 
   real :: total_memory
-  
+
 end module cgyro_globals

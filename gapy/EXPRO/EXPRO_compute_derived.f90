@@ -33,6 +33,9 @@ subroutine EXPRO_compute_derived
   real :: fa,fb
   real :: theta(1)
 
+  ! Default ion setting
+  if (EXPRO_ctrl_n_ion == -1) EXPRO_ctrl_n_ion = EXPRO_n_ion
+  
   !---------------------------------------------------------------------
   ! Sanity checks
   !
@@ -46,10 +49,6 @@ subroutine EXPRO_compute_derived
   endif
   if (EXPRO_ctrl_numeq_flag == -1) then
      print '(a)','ERROR: (EXPRO) EXPRO_ctrl_numeq_flag not set.'
-     stop
-  endif
-  if (EXPRO_ctrl_n_ion == -1) then
-     print '(a)','ERROR: (EXPRO) EXPRO_ctrl_n_ion not set.'
      stop
   endif
   !---------------------------------------------------------------------
@@ -328,9 +327,9 @@ subroutine EXPRO_compute_derived
 
      EXPRO_ni_new(:) = 0.0
      do is=2,EXPRO_ctrl_n_ion
-        EXPRO_ni_new(:) = EXPRO_ni_new(:)+EXPRO_ctrl_z(is)*EXPRO_ni(is,:)
+        EXPRO_ni_new(:) = EXPRO_ni_new(:)+EXPRO_z(is)*EXPRO_ni(is,:)
      enddo
-     EXPRO_ni_new(:) = (EXPRO_ne(:)-EXPRO_ni_new(:))/EXPRO_ctrl_z(1)
+     EXPRO_ni_new(:) = (EXPRO_ne(:)-EXPRO_ni_new(:))/EXPRO_z(1)
 
      ! 1/L_ni = -dln(ni)/dr (1/m)
      call bound_deriv(EXPRO_dlnnidr_new(:),-log(EXPRO_ni_new(:)),&

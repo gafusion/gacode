@@ -22,6 +22,17 @@ subroutine cgyro_kernel
 
   character(len=30) :: final_msg
 
+  character(8)  :: date
+  character(10) :: time
+  character(5)  :: zone
+  integer(KIND=8) :: start_time,aftermpi_time, beforetotal_time,exit_time
+  integer(KIND=8) :: count_rate, count_max
+  real :: mpi_dt, init_dt,exit_dt
+  integer :: statusfd
+
+  ! the time_lib relies on MPI being initalized, so need to use lower level functions for this
+  call system_clock(start_time,count_rate,count_max)
+
   i_time = 0
 
   ! Need to initialize the info runfile very early
@@ -32,6 +43,13 @@ subroutine cgyro_kernel
   ! 1. MPI setup
   call cgyro_mpi_grid
   if (error_status > 0) goto 100
+
+  call system_clock(aftermpi_time,count_rate,count_max)
+  if (aftermpi_time.gt.start_time) then
+    mpi_dt = (aftermpi_time-start_time)/real(count_rate)
+  else
+    mpi_dt = (aftermpi_time-start_time+count_max)/real(count_rate)
+  endif
 
   ! 2. Profile setup
   call cgyro_make_profiles
@@ -64,6 +82,24 @@ subroutine cgyro_kernel
   call write_timers(trim(path)//runfile_timers)
 
   io_control = 2*(1-silent_flag)
+
+  call system_clock(beforetotal_time,count_rate,count_max)
+  if (beforetotal_time > start_time) then
+    init_dt = (beforetotal_time-start_time)/real(count_rate)
+  else
+    init_dt = (beforetotal_time-start_time+count_max)/real(count_rate)
+  endif
+
+  if (i_proc == 0) then
+    call date_and_time(date,time,zone);
+    open(NEWUNIT=statusfd,FILE=trim(path)//runfile_startups,&
+         action="write",status="unknown",position='append')
+    write(statusfd, '(a,a,a,a,a,a,a,a,a,a,a,a,a,1pe10.3,a,1pe10.3,a)') &
+         date(1:4),"/",date(5:6),"/",date(7:8)," ", &
+         time(1:2),":",time(3:4),":",time(5:10), &
+         zone, ' [STARTED] Initialization time: ', init_dt, " (mpi init: ", mpi_dt, ")"
+    close(statusfd)
+  endif
 
   do i_time=1,n_time
 
@@ -202,6 +238,8 @@ subroutine cgyro_kernel
   if(allocated(dlambda_rot))         deallocate(dlambda_rot)
   if(allocated(dens_rot))            deallocate(dens_rot)
   if(allocated(dens_ele_rot))        deallocate(dens_ele_rot)
+  if(allocated(dens_avg_rot))        deallocate(dens_avg_rot)
+  if(allocated(dlnndr_avg_rot))      deallocate(dlnndr_avg_rot)
   if(allocated(omega_rot_trap))      deallocate(omega_rot_trap)
   if(allocated(omega_rot_u))         deallocate(omega_rot_u)
   if(allocated(omega_rot_drift))     deallocate(omega_rot_drift)
@@ -234,6 +272,21 @@ subroutine cgyro_kernel
   if(allocated(xzf))           deallocate(xzf)
 
   if (allocated(cmat)) deallocate(cmat)
+
+  call system_clock(exit_time,count_rate,count_max)
+  if (exit_time.gt.start_time) then
+    exit_dt = (exit_time-start_time)/real(count_rate)
+  else
+    exit_dt = (exit_time-start_time+count_max)/real(count_rate)
+  endif
+
+  if (i_proc == 0) then
+    call date_and_time(date,time,zone);
+    open(NEWUNIT=statusfd,FILE=trim(path)//runfile_startups,action="write",status="unknown",position='append')
+    write(statusfd, '(a,a,a,a,a,a,a,a,a,a,a,a,a,1pe10.3)') date(1:4),"/",date(5:6),"/",date(7:8)," ", &
+                    time(1:2),":",time(3:4),":",time(5:10), zone, ' [EXIT] After ', exit_dt
+    close(statusfd)
+  endif
 
 end subroutine cgyro_kernel
 

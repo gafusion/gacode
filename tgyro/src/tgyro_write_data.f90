@@ -555,7 +555,7 @@ subroutine tgyro_write_data(i_print)
            relax2(i,3) = relax(p)
         endif
         do is=0,loc_n_ion
-           if (evo_e(is) == 1) then
+           if (evo_e(is) >= 1) then
               p  = p+1
               res2(i,4+is) = res_norm(p)
               relax2(i,4+is) = relax(p)

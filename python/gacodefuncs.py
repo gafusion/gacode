@@ -204,3 +204,68 @@ def extract(d,sd,key,w,spec,moment,norm=False,verbose=False):
       
    
 #---------------------------------------------------------------
+
+#---------------------------------------------------------------
+# Determine species name (returnval) from mass and charge
+def specmap(m_in,z_in):
+ 
+  # Assume Deuterium normalization
+  m = int(m_in*2)
+  z = int(z_in)
+
+  if z < 0:
+    name = 'e'
+  elif m == 1:
+     name = 'H'
+  elif m == 2:
+      name = 'D'
+  elif m == 3:
+     if z == 1:
+        name = 'T'
+     elif z == 2:
+        name = 'He3'
+     else:
+        name = '?'
+  elif m == 4:
+     name = 'He4'
+  elif m == 7:
+     name = 'Li'
+  elif m == 9:
+     name = 'Be'
+  elif m == 12:
+     name = 'C'
+  elif m > 180:
+     name = 'W'
+  else:
+     name = '?'
+
+  return name
+#---------------------------------------------------------------
+
+#---------------------------------------------------------------
+# Determine species name (returnval) from mass and charge
+def tag_helper(mass,z,moment):
+
+  u=specmap(mass,z)
+
+  # Set filename root and title
+  isfield = True
+  if (moment == 'n'):
+      fdata = '.cgyro.kxky_n'
+      title = r'${\delta \mathrm{n}}_'+u+'$'
+      isfield = False
+  elif (moment == 'e'):
+      fdata = '.cgyro.kxky_e'
+      title = r'${\delta \mathrm{E}}_'+u+'$'
+      isfield = False
+  elif (moment == 'phi'):
+      fdata = '.cgyro.kxky_phi'
+      title = r'$\delta\phi$'
+  elif (moment == 'apar'):
+      fdata = '.cgyro.kxky_apar'
+      title = r'$\delta A_\parallel$'
+  elif (moment == 'bpar'):
+      fdata = '.cgyro.kxky_bpar'
+      title = r'$\delta B_\parallel$'
+
+  return fdata,title,isfield

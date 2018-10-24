@@ -60,7 +60,7 @@ subroutine tgyro_comm_setup
         evolve_indx(ip) = 3
      endif
      do is=0,loc_n_ion
-        if (evo_e(is) == 1) then
+        if (evo_e(is) >= 1) then
            ip = ip+1
            evolve_indx(ip) = 4+is
         endif

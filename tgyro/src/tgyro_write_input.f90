@@ -374,6 +374,8 @@ subroutine tgyro_write_input
            write(1,10) 'TGYRO_DEN_METHOD'//itag,'ni'//itag//' profile fixed'
         case (1)
            write(1,10) 'TGYRO_DEN_METHOD'//itag,'ni'//itag//' evolution ON'
+        case (2)
+           write(1,10) 'TGYRO_DEN_METHOD'//itag,'ni'//itag//' evolution ON (alpha source)'
         case default
            error_flag = 1
            error_msg = 'Error: TGYRO_DEN_METHOD'//itag//': invalid value.'

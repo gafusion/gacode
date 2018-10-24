@@ -232,6 +232,33 @@ subroutine prgen_read_peqdsk
      peqdsk_omgeb(:) = 0.0
   endif
 
+  ! powers (MW)
+  inquire(file='pfile.pow_i',exist=ierr)
+  if (ierr) then
+     open(unit=1,file='pfile.pow_i',status='old')
+     read(1,*) i
+     allocate(xv(ncol,i))
+     read(1,*) xv
+     call cub_spline(xv(1,:),xv(2,:),i,peqdsk_psi,peqdsk_pow_i,nx)
+     deallocate(xv)
+     close(1)
+  else
+     peqdsk_pow_i(:) = 0.0
+  endif
+
+  inquire(file='pfile.pow_e',exist=ierr)
+  if (ierr) then
+     open(unit=1,file='pfile.pow_e',status='old')
+     read(1,*) i
+     allocate(xv(ncol,i))
+     read(1,*) xv
+     call cub_spline(xv(1,:),xv(2,:),i,peqdsk_psi,peqdsk_pow_e,nx)
+     deallocate(xv)
+     close(1)
+  else
+     peqdsk_pow_e(:) = 0.0
+  endif
+  
   dpsi(:)   = peqdsk_psi(:)-peqdsk_psi(1)
   rmin(:)   = 0.0
   rmaj(:)   = 0.0

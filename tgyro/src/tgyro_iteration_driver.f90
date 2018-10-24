@@ -141,7 +141,7 @@ subroutine tgyro_iteration_driver
         x_vec(p) = dlnnedr(i)
      endif
      do i_ion=1,loc_n_ion
-        if (evo_e(i_ion) == 1) then
+        if (evo_e(i_ion) >= 1) then
            p  = p+1
            ip = ip+1
            pmap(i,ip) = p

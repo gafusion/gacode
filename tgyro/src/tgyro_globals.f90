@@ -289,7 +289,6 @@ module tgyro_globals
   integer :: loc_ti_feedback_flag
   integer :: loc_te_feedback_flag
   integer :: loc_er_feedback_flag
-  integer :: loc_he_feedback_flag
   integer :: loc_zeff_flag
   integer :: loc_pflux_method
   integer :: loc_residual_method

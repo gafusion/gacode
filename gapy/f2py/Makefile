@@ -3,6 +3,7 @@ include ${GACODE_ROOT}/platform/build/make.inc.${GACODE_PLATFORM}
 DESTLIB=${GACODE_ROOT}/python/gapy.so
 
 SRC=	../src/gapy_realfluct.f90 \
+	../src/gapy_torcut.f90 \
 	../src/gapy_geo.f90 \
 	../src/gapy_surfpar.f90 \
 	../src/gapy_util.f90 \

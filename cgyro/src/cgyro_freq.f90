@@ -2,7 +2,10 @@
 ! cgyro_freq.f90
 !
 ! PURPOSE:
-!  Comput estimates of linear growth rates
+!  Compute estimates of linear eigenvalue w where:
+!
+!                   -iwt
+!            phi ~ e
 !---------------------------------------------------------
 
 subroutine cgyro_freq

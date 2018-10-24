@@ -135,12 +135,13 @@ subroutine tgyro_init_profiles
 
   EXPRO_ctrl_n_ion = loc_n_ion
   EXPRO_ctrl_quasineutral_flag = 0
-  EXPRO_ctrl_z = 0.0
-  EXPRO_ctrl_z(1:loc_n_ion) = zi_vec(1:loc_n_ion)
   EXPRO_ctrl_numeq_flag = loc_num_equil_flag
 
   call EXPRO_palloc(MPI_COMM_WORLD,'./',1) 
   call EXPRO_pread
+
+  ! JC: Can we remove now that EXPRO_z is read from input.profiles header?
+  EXPRO_z(1:loc_n_ion) = zi_vec(1:loc_n_ion)
 
   shot = EXPRO_shot
 

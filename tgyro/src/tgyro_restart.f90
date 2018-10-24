@@ -166,7 +166,7 @@ subroutine tgyro_restart
                  relax(p) = relax2(i,3)
               endif
               do is=0,loc_n_ion
-                 if (evo_e(is) == 1) then
+                 if (evo_e(is) >= 1) then
                     p  = p+1
                     res(p) = res2(i,4+is)
                     relax(p) = relax2(i,4+is)
@@ -184,7 +184,7 @@ subroutine tgyro_restart
 
   n_evolve = loc_ti_feedback_flag+loc_te_feedback_flag+loc_er_feedback_flag
   do is=0,loc_n_ion
-     if (evo_e(is) == 1) n_evolve=n_evolve+1
+     if (evo_e(is) >= 1) n_evolve=n_evolve+1
   enddo
 
   call MPI_BCAST(loc_restart_flag,&

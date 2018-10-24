@@ -41,7 +41,7 @@ subroutine tgyro_flux_set(f_vec)
      endif
 
      do i_ion=1,loc_n_ion
-        if (evo_e(i_ion) == 1) then
+        if (evo_e(i_ion) >= 1) then
            p = p+1
            f_vec(p) = pflux_i_tot(i_ion,i)
         endif

@@ -3,7 +3,6 @@ import matplotlib
 import numpy as np
 matplotlib.use('WXAgg')
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-from gacodeplotdefs import *
 
 data = np.loadtxt('out.locpargen.geo')
 data2 = np.loadtxt('out.locpargen.geo.2')

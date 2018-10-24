@@ -5,7 +5,8 @@ subroutine cgyro_equilibrium
 
   implicit none
 
-  integer :: it,ir,is,r
+  integer :: m
+  integer :: it,ir,is
   real :: gtheta_ave,gtheta0,err
   real, dimension(n_theta+1) :: x,y
   real, dimension(n_theta) :: ttmp
@@ -103,27 +104,31 @@ subroutine cgyro_equilibrium
   !--------------------------------------------------------
   ! Manage subset of theta-values for plotting output
   !
-  r = n_theta/theta_plot
+  m = n_theta/theta_plot
 
   itp(:) = 0
   if (theta_plot == 1) then
      itp(it0) = 1
   else
      do it=1,n_theta
-        if (modulo(it,r) == 1) itp(it) = it/r+1
+        if (modulo(it,m) == 1) itp(it) = it/m+1
      enddo
   endif
   !-----------------------------------------------------------------
 
+  !---------------------------------------------------------------
+  ! Construct balloon-mode extended angle
+  ! (see also extended_ang in cgyro_write_timedata)
+  !
   do ir=1,n_radial/box_size
-     do it=1,n_theta
-        if (ipccw*btccw > 0) then
-           thetab(ir,it) = theta(it)+2*pi*(ir-1-n_radial/2/box_size)
-        else
-           thetab(ir,it) = -theta(it)+2*pi*(-ir+n_radial/2/box_size)
-        endif
-     enddo
+     if (sign_qs > 0) then
+        thetab(:,ir) = theta(:)+2*pi*px(ir)
+     else
+        ! Reverse output direction (see extended_ang)
+        thetab(:,n_radial/box_size-ir+1) = theta(:)-2*pi*px(ir)
+     endif
   enddo
+  !-----------------------------------------------------------------
 
   call geo_interp(n_theta,theta,.false.)     
 

@@ -202,7 +202,6 @@ elif plot_type == 'hbcut':
    
    outfile = 'out.cgyro.hbcut.'+ftype
 
-
 else:
 
    print 'ERROR: (data_plot_single) Plot type not found'

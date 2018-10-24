@@ -25,7 +25,11 @@
       !
       LOGICAL :: USE_MIX=.TRUE.
       LOGICAL :: USE_X3=.FALSE.
+      
+      LOGICAL :: USE_SUB1=.FALSE.
       INTEGER :: i,is,k,j,j1,j2,jmax1,jmax2
+      
+      INTEGER :: expsub=2
       REAL :: test,testmax1,testmax2
       REAL :: gammamax1,kymax1,gammamax2,kymax2,ky0,ky1,ky2
       REAL :: f0,f1,f2,a,b,c,x0,x02,dky,xmax
@@ -46,11 +50,20 @@
       ! need to set alpha_zf_in = 1.0
       ! Miller geometry values igeo=1
       if(xnu_model_in.eq.3)USE_X3=.TRUE.
-      czf = alpha_zf_in
+      
+      if(alpha_zf_in.lt.0.0)USE_SUB1=.TRUE.
+      czf = ABS(alpha_zf_in)
       bz1=0.0
       bz2=0.0
       kyetg=1.28
       cnorm=14.21
+      
+      if(USE_SUB1)then
+        
+        cnorm=12.12       
+        expsub=1
+      
+      endif
       cz1=0.48*czf
       cz2=1.0*czf
       ax=0.0
@@ -71,6 +84,8 @@
         cky=3.0
         sqcky=SQRT(cky)
         cnorm = 14.29
+
+        if(USE_SUB1)cnorm=12.12
         cz1=0.48*czf
 !original         cz2=0.92*czf  
 ! retuned June 22,2017
@@ -257,7 +272,8 @@
         kx = spectral_shift_out(j)
         do i=1,nmodes_in
           gammaeff = 0.0
-          if(gamma0.gt.small)gammaeff = gamma_mix(j)*(eigenvalue_spectrum_out(1,j,i)/gamma0)**2
+          if(gamma0.gt.small)gammaeff = &
+               gamma_mix(j)*(eigenvalue_spectrum_out(1,j,i)/gamma0)**expsub
           if(USE_X3)then
             if(ky0.gt.kyetg)gammaeff = gammaeff*(ky0/kyetg)
           else
