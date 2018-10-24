@@ -157,10 +157,8 @@ subroutine tgyro_write_data(i_print)
            close(1)
         enddo
 
-        if (tgyro_ped_model > 1) then
-           open(unit=1,file='out.tgyro.ped',status='replace')
-           close(1)
-        endif
+        open(unit=1,file='out.tgyro.ped',status='replace')
+        close(1)
 
         open(unit=1,file='out.tgyro.control',status='replace')
         write(1,*) n_r
