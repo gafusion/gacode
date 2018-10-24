@@ -406,11 +406,10 @@ contains
              rfac = rfac + lam_rot_aniso(is,it)
           endif
           fac1 = fac1 + w_theta(it) * dens(is,ir)  * dens_fac(is,it) &
-               / Bmag(it)**3 * (2.0*gradr(it) * k_par(it) * gradr_tderiv(it) &
+               / Bmag(it)**3 * (2.0 * gradr(it) * gradpar_gradr(it) &
                - 1.0/Bmag(it) * gradr(it)**2 * gradpar_Bmag(it))
           fac2 = fac2 + w_theta(it) * dens(is,ir)  * dens_fac(is,it) &
-               / Bmag(it)**3 * (2.0 * gradr(it) * k_par(it) &
-               * gradr_tderiv(it) &
+               / Bmag(it)**3 * (2.0 * gradr(it) * gradpar_gradr(it) &
                - 1.0/Bmag(it) * gradr(it)**2 * gradpar_Bmag(it)) &
                * (1.0 + rfac)
        enddo

@@ -12,10 +12,10 @@ ROOT=/home/candy/SOFTWARE
 
 # Compilers
 
-FC     = mpif90 -std=f2008 -I $(GACODE_ROOT)/modules
+FC     = mpif90 -std=f2008 -fall-intrinsics -I $(GACODE_ROOT)/modules -J $(GACODE_ROOT)/modules -fPIC 
 F77    = mpif77
 FOMP   =-fopenmp
-FMATH  =-fdefault-real-8 -J $(GACODE_ROOT)/modules
+FMATH  =-fdefault-real-8 -fdefault-double-8 
 FOPT   =-Ofast
 FDEBUG =-Wall -W -fcheck=mem,bounds -g -fbacktrace -ffpe-trap=invalid,zero,overflow
 F2PY   = f2py

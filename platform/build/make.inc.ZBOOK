@@ -13,13 +13,13 @@ ROOT=${HOME}/local_software
 
 # Compilers
 
-FC     = mpif90 -std=f2008 -I $(GACODE_ROOT)/modules -J $(GACODE_ROOT)/modules -fPIC
+FC     = mpif90 -std=f2008 -fall-intrinsics -I $(GACODE_ROOT)/modules -J $(GACODE_ROOT)/modules -fPIC
 F77    = mpif77
 FOMP   =-fopenmp
 FMATH  =-fdefault-real-8 -default-double-8
 FOPT   =-Ofast
 FDEBUG =-Wall -W -fcheck=all -g -fbacktrace -ffpe-trap=invalid,zero,overflow
-F2PY   = f2py
+#F2PY   = f2py
 
 # System math libraries
 # LMATH = ${ROOT}/OpenBLAS/libopenblas.a $(FFTWDIR)/libfftw3f.so.3 $(FFTWDIR)/libfftw3f_omp.so.3

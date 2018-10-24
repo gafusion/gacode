@@ -12,11 +12,10 @@ subroutine cgyro_write_initdata
 
   implicit none
 
-  integer :: p,in,is
+  integer :: p,in,is,it
   real :: kymax
-  real(kind=4) :: f4vec(n_theta) 
   real, external :: spectraldiss
-
+  
   !----------------------------------------------------------------------------
   ! Runfile to give complete summary to user
   ! 
@@ -87,7 +86,7 @@ subroutine cgyro_write_initdata
           'up_theta:',up_theta , 'up_radial:',up_radial ,'up_alpha:',up_alpha,&
           '[dissipation strength]'
      write(io,'(t2,3(a,1x,f3.1,2x),t48,a)') &
-          'C(theta):',maxval(omega_stream)*maxval(vel)*maxval(xi)*delta_t/d_theta/1.6
+          'C(theta):',maxval(abs(omega_stream))*maxval(vel)*maxval(xi)*delta_t/d_theta/1.6
 
 
      write(io,*) 
@@ -95,7 +94,11 @@ subroutine cgyro_write_initdata
      write(io,20) '    R/a:',rmaj, '  shift:',shift,  '  betae:',betae_unit
      write(io,20) '      q:',q,    '      s:',s,      ' beta_*:',beta_star(0)
      write(io,20) '  kappa:',kappa,'s_kappa:',s_kappa,' lamb_*:',lambda_star
-     write(io,20) '  delta:',delta,'s_delta:',s_delta,'gamma_e:',gamma_e
+     if (nonlinear_flag == 1) then
+        write(io,20) '  delta:',delta,'s_delta:',s_delta,'gamma_e:',gamma_e
+     else
+        write(io,20) '  delta:',delta,'s_delta:',s_delta,'gamma_e:',gamma_e,'[OFF]'
+     endif
      write(io,20) '   zeta:',zeta, ' s_zeta:',s_zeta, 'gamma_p:',gamma_p
      write(io,20) '   zmag:',zmag, '  dzmag:',dzmag,  '   mach:',mach
 
@@ -103,11 +106,11 @@ subroutine cgyro_write_initdata
      write(io,20) '[rho/a]:',rho,'[z_eff]:',z_eff,'[w_E*dt]',(n_toroidal-1)*q/rmin*length*gamma_e/(2*pi)*delta_t
      write(io,*)
      write(io,'(a)') &
-          ' i  z  n/n_norm   T/T_norm   m/m_norm     a/Ln       a/Lt       nu        d(a/Ln)    d(a/Lt)'
+          ' i  z  n/n_norm   T/T_norm   m/m_norm     a/Ln       a/Lt       nu        s(a/Ln)    s(a/Lt)'
      do is=1,n_species
         write(io,'(t1,i2,1x,i2,3(2x,1pe9.3),2(1x,1pe10.3),(2x,1pe9.3),2(1x,1pe10.3))') &
              is,int(z(is)),dens(is),temp(is),mass(is),dlnndr(is),dlntdr(is),nu(is),&
-             sdlnndr(is)*length/rho*0.25,sdlntdr(is)*length/rho*0.25
+             sdlnndr(is),sdlntdr(is)
      enddo
 
      if (profile_model == 2) then
@@ -180,34 +183,41 @@ subroutine cgyro_write_initdata
   if (silent_flag == 0 .and. i_proc == 0) then
 
      open(unit=io,file=trim(path)//'bin.cgyro.geo',status='replace',access='stream')
-     f4vec = theta
-     write(io) f4vec
-     f4vec = w_theta
-     write(io) f4vec
-     f4vec = bmag
-     write(io) f4vec
-     f4vec = omega_stream(:,1)
-     write(io) f4vec
-     f4vec = omega_trap(:,1)
-     write(io) f4vec
-     f4vec = omega_rdrift(:,1)
-     write(io) f4vec
-     f4vec = omega_adrift(:,1) 
-     write(io) f4vec
-     f4vec = omega_aprdrift(:,1)
-     write(io) f4vec
-     f4vec = omega_cdrift(:,1)
-     write(io) f4vec
-     f4vec = omega_cdrift_r(:,1)
-     write(io) f4vec
-     f4vec = omega_gammap(:)
-     write(io) f4vec
-     f4vec = k_perp(ic_c(n_radial/2+1,:))
-     write(io) f4vec
+     write(io) real(theta,kind=4)
+     write(io) real(w_theta,kind=4)
+     write(io) real(bmag,kind=4)
+     write(io) real(omega_stream(:,1),kind=4)
+     write(io) real(omega_trap(:,1),kind=4)
+     write(io) real(omega_rdrift(:,1),kind=4)
+     write(io) real(omega_adrift(:,1),kind=4)
+     write(io) real(omega_aprdrift(:,1),kind=4)
+     write(io) real(omega_cdrift(:,1),kind=4)
+     write(io) real(omega_cdrift_r(:,1),kind=4)
+     write(io) real(omega_gammap(:),kind=4)
+     write(io) real(k_perp(ic_c(n_radial/2+1,:)),kind=4)
      close(io)
 
   endif
   !----------------------------------------------------------------------------
+
+  !----------------------------------------------------------------------------
+  ! Write the initial rotation data
+  !
+  if (silent_flag == 0 .and. i_proc == 0) then
+     open(unit=io,file=trim(path)//'out.cgyro.rotation',status='replace')
+     do is=1,n_species
+        write (io,fmtstr) dens_avg_rot(is)
+     enddo
+     do is=1,n_species
+        write (io,fmtstr) dlnndr_avg_rot(is)
+     enddo
+     do is=1,n_species
+        do it=1,n_theta
+           write (io,fmtstr) dens(is)*dens_rot(it,is)
+        enddo
+     enddo
+     close(io)
+  endif
 
   !----------------------------------------------------------------------------
   ! Write the initial grid data 
@@ -215,29 +225,29 @@ subroutine cgyro_write_initdata
   if (silent_flag == 0 .and. i_proc == 0) then
 
      open(unit=io,file=trim(path)//runfile_grids,status='replace')
-     write(io,'(i4)') n_toroidal
-     write(io,'(i4)') n_species
-     write(io,'(i4)') n_field
-     write(io,'(i4)') n_radial
-     write(io,'(i4)') n_theta
-     write(io,'(i4)') n_energy
-     write(io,'(i4)') n_xi
-     write(io,'(i4)') box_size
-     write(io,'(1pe12.5)') length/rho
-     write(io,'(i4)') n_global
-     write(io,'(i4)') theta_plot
-     write(io,'(i4)') px(:)
-     write(io,'(1pe12.5)') theta(:)
-     write(io,'(1pe12.5)') energy(:)
-     write(io,'(1pe12.5)') xi(:)
-     write(io,'(1pe12.5)') transpose(thetab(:,:))
+     write(io,'(i0)') n_toroidal
+     write(io,'(i0)') n_species
+     write(io,'(i0)') n_field
+     write(io,'(i0)') n_radial
+     write(io,'(i0)') n_theta
+     write(io,'(i0)') n_energy
+     write(io,'(i0)') n_xi
+     write(io,'(i0)') box_size
+     write(io,'(1pe13.6)') length/rho
+     write(io,'(i0)') n_global
+     write(io,'(i0)') theta_plot
+     write(io,'(i0)') px(:)
+     write(io,'(1pe13.6)') theta(:)
+     write(io,'(1pe13.6)') energy(:)
+     write(io,'(1pe13.6)') xi(:)
+     write(io,'(1pe13.6)') thetab(:,:)
      if (n_toroidal > 1) then
-        write(io,'(1pe12.5)') (rho*q/rmin*in,in=0,n_toroidal-1)
+        write(io,'(1pe13.6)') (rho*q/rmin*in,in=0,n_toroidal-1)
      else
-        write(io,'(1pe12.5)') rho*q/rmin
+        write(io,'(1pe13.6)') rho*q/rmin
      endif
-     write(io,'(1pe12.5)') (spectraldiss((pi/n_toroidal)*in,nup_alpha),in=0,n_toroidal-1)
-     write(io,'(1pe12.5)') (spectraldiss((2*pi/n_radial)*p,nup_radial),p=-n_radial/2,n_radial/2-1)
+     write(io,'(1pe13.6)') (spectraldiss((pi/n_toroidal)*in,nup_alpha),in=0,n_toroidal-1)
+     write(io,'(1pe13.6)') (spectraldiss((2*pi/n_radial)*p,nup_radial),p=-n_radial/2,n_radial/2-1)
      close(io)
 
   endif

@@ -11,7 +11,7 @@ subroutine cgyro_init_arrays
   real :: u
   real :: fac
   integer :: ir,it,is,ie,ix
-  integer :: jr,jt,id,ccw_fac
+  integer :: jr,jt,id
   integer :: i_field
   integer :: l,ll
   complex :: thfac,carg
@@ -260,22 +260,16 @@ subroutine cgyro_init_arrays
   !-------------------------------------------------------------------------
   ! Streaming coefficient arrays
   !
-  if (ipccw*btccw < 0) then
-     ccw_fac = -1
-  else
-     ccw_fac = 1
-  endif
-
   do ir=1,n_radial
      do it=1,n_theta
         do id=-nup_theta,nup_theta
            jt = modulo(it+id-1,n_theta)+1
            if (it+id < 1) then
               thfac = exp(2*pi*i_c*k_theta*rmin)
-              jr = modulo(ir-n*box_size*ccw_fac-1,n_radial)+1
+              jr = modulo(ir-n*box_size*sign_qs-1,n_radial)+1
            else if (it+id > n_theta) then
               thfac = exp(-2*pi*i_c*k_theta*rmin)
-              jr = modulo(ir+n*box_size*ccw_fac-1,n_radial)+1
+              jr = modulo(ir+n*box_size*sign_qs-1,n_radial)+1
            else
               thfac = (1.0,0.0)
               jr = ir
@@ -346,8 +340,9 @@ subroutine cgyro_init_arrays
 
         omega_s(:,ic,iv_loc) = carg*jvec_c(:,ic,iv_loc)
 
-        ! Profile curvature via wavenumber advection
-        carg = k_theta*length*(sdlnndr(is)+sdlntdr(is)*(energy(ie)-1.5))/(2*pi)
+        ! Profile curvature via wavenumber advection (ix -> d/dp)
+        ! See whiteboard notes 
+        carg = -k_theta*length*(sdlnndr(is)+sdlntdr(is)*(energy(ie)-1.5))/(2*pi)
 
         ! This array *not* used by OpenACC
         omega_ss(:,ic,iv_loc) = carg*jvec_c(:,ic,iv_loc)

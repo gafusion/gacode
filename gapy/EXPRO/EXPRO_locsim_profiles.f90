@@ -58,7 +58,6 @@ subroutine EXPRO_locsim_profiles(&
      udsymmetry_flag,&
      quasineutral_flag,&
      n_species_in,&
-     z,&
      rmin,&
      btccw,&
      ipccw,&
@@ -75,29 +74,27 @@ subroutine EXPRO_locsim_profiles(&
   integer, intent(in) :: udsymmetry_flag
   integer, intent(in) :: quasineutral_flag
   integer, intent(in) :: n_species_in
-  real, intent(in), dimension(n_species_in-1) :: z
   real, intent(in) :: rmin
   real, intent(inout) :: btccw,ipccw,a_meters
 
-  integer :: i,j,is,i_ion
+  integer :: i,j,i_ion
 
   n_species_exp = n_species_in
 
   !--------------------------------------------------------------
   ! use EXPRO routines to read data:
   !
-  call EXPRO_palloc(comm,path,1)
   EXPRO_ctrl_quasineutral_flag = 1  ! quasi-neutrality density flag
   EXPRO_ctrl_numeq_flag = numeq_flag
-
-  ! Number and charge of ion species
-  EXPRO_ctrl_z(:) = 0.0
   EXPRO_ctrl_n_ion = n_species_exp-1
-  do is=1,EXPRO_ctrl_n_ion
-     EXPRO_ctrl_z(is) = z(is)
-  enddo
 
-  call EXPRO_pread
+  if (comm == -1) then
+     call EXPRO_alloc(path,1)
+     call EXPRO_read
+  else
+     call EXPRO_palloc(comm,path,1)
+     call EXPRO_pread
+  endif
   call EXPRO_locsim_alloc(1)
   !--------------------------------------------------------------
 
@@ -127,6 +124,9 @@ subroutine EXPRO_locsim_profiles(&
   dlnndr_exp(n_species_exp,:)  = EXPRO_dlnnedr(:)*a_meters 
   sdlnndr_exp(n_species_exp,:) = EXPRO_sdlnnedr(:)*a_meters
 
+  mass_loc(n_species_exp) = 1.0/1837
+  z_loc(n_species_exp) = -1.0
+ 
   ! Pack ions from the bottom
   do i_ion=1,n_species_exp-1
      ! ion temps should be equal, but not enforced 
@@ -134,6 +134,9 @@ subroutine EXPRO_locsim_profiles(&
      dlntdr_exp(i_ion,:)  = EXPRO_dlntidr(i_ion,:)*a_meters 
      sdlntdr_exp(i_ion,:) = EXPRO_sdlntidr(i_ion,:)*a_meters 
 
+     mass_loc(i_ion) = EXPRO_mass(i_ion)
+     z_loc(i_ion) = EXPRO_z(i_ion)
+   
      ! First species density is reset by quasi-neutrality
      if (quasineutral_flag == 1 .and. i_ion == 1) then
         dens_exp(i_ion,:)    = EXPRO_ni_new(:)
@@ -179,6 +182,7 @@ subroutine EXPRO_locsim_profiles(&
   call cub_spline(rmin_exp,gamma_p_exp,EXPRO_n_exp,rmin,gamma_p_loc,1)
   call cub_spline(rmin_exp,mach_exp,EXPRO_n_exp,rmin,mach_loc,1)
   call cub_spline(rmin_exp,EXPRO_rhos,EXPRO_n_exp,rmin,rhos_loc,1)
+  call cub_spline(rmin_exp,EXPRO_cs,EXPRO_n_exp,rmin,cs_loc,1)
   call cub_spline(rmin_exp,EXPRO_z_eff,EXPRO_n_exp,rmin,z_eff_loc,1)
   call cub_spline(rmin_exp,EXPRO_bunit,EXPRO_n_exp,rmin,b_unit_loc,1)
   call cub_spline(rmin_exp,EXPRO_rho,EXPRO_n_exp,rmin,rho_norm_loc,1)
@@ -219,7 +223,11 @@ subroutine EXPRO_locsim_profiles(&
 
   endif
 
-  call EXPRO_palloc(comm,path,0)
+  if (comm == -1) then
+     call EXPRO_alloc(path,0)
+  else
+     call EXPRO_palloc(comm,path,0)
+  endif
   call EXPRO_locsim_alloc(0)
 
 end subroutine EXPRO_locsim_profiles

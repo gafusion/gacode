@@ -41,7 +41,7 @@ class cgyrodata_dump(data.cgyrodata):
             head = head+'       '+ttag+'_'+str(ispec+1)+'/'+ttag+'_GB'
             data = np.column_stack((data,y[ispec,:]))
          np.savetxt(fname,data,fmt='%.8e',header=head)
-         print 'INFO: (dump_flux.py) Created '+fname
+         print 'INFO: (dump_flux) Created '+fname
 
    def dump_ky_flux(self,w=0.5,field=0,moment='e',fc=0,fig=None):
 
@@ -84,7 +84,7 @@ class cgyrodata_dump(data.cgyrodata):
          ftag = 'flux_v'
          y = ys[:,2,:,:]
       else:
-         print 'ERROR (plot_ky_flux.py) Invalid moment.'
+         print 'ERROR (dump_ky_flux) Invalid moment.'
          sys.exit()
 
       # Determine tmin
@@ -108,4 +108,4 @@ class cgyrodata_dump(data.cgyrodata):
       np.savetxt(fid,arr,fmt='%.5e')
       fid.close()
 
-      print 'INFO: (plot_ky_flux) Created '+fname
+      print 'INFO: (dump_ky_flux) Created '+fname

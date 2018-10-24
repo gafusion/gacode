@@ -57,6 +57,8 @@ tgyro/src/tgyro_main
 le3/src/le3
 le3/profiles_3d/profiles_3d
 quick/src/quick
+gapy/test/test_geo/geo_test
+gapy/test/test_vpro/vpro_test
 
 # Regression logs and directories
 *.log

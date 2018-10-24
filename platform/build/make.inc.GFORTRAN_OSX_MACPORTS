@@ -15,14 +15,14 @@ MF90 = mpif90
 #set up for diff mpif90s
 #
 
-FC  = ${MF90} -std=f2008 -I$(GACODE_ROOT)/modules -J$(GACODE_ROOT)/modules -I/opt/local/include -fPIC
+FC  = ${MF90} -std=f2008 -fall-intrinsics -I$(GACODE_ROOT)/modules -J$(GACODE_ROOT)/modules -I/opt/local/include -fPIC
 F77 = ${MF90} 
 
 FOMP	= -fopenmp
 FMATH	= -fdefault-real-8 -fdefault-double-8
 FOPT	= -O3 -m64 -framework Accelerate
 FDEBUG	= -Wall -g -fcheck=all -fbacktrace -fbounds-check -O0 -Wextra -finit-real=nan -Wunderflow -ffpe-trap=invalid,zero,overflow
-F2PY    = f2py-2.7
+#F2PY    = f2py-2.7
 
 # System math libraries
 

@@ -68,13 +68,13 @@ subroutine prgen_map_peqdsk
   EXPRO_z_eff(:)  = z_eff(:)
   ! COORDINATES: -ipccw accounts for DIII-D toroidal angle convention
   EXPRO_w0(:)        = -ipccw*1e3*peqdsk_omgeb(:) 
-  EXPRO_flow_mom(:)  = 0.0      ! flow_mom
-  EXPRO_pow_e(:)     = 0.0      ! pow_e
-  EXPRO_pow_i(:)     = 0.0      ! pow_i 
-  EXPRO_pow_ei(:)    = 0.0      ! pow_ei_exp
+  EXPRO_flow_mom(:)  = 0.0               ! flow_mom
+  EXPRO_pow_e(:)     = peqdsk_pow_e(:)   ! pow_e
+  EXPRO_pow_i(:)     = peqdsk_pow_i(:)   ! pow_i 
+  EXPRO_pow_ei(:)    = 0.0               ! pow_ei_exp
   EXPRO_zeta(:)      = zeta(:)
-  EXPRO_flow_beam(:) = 0.0      ! flow_beam
-  EXPRO_flow_wall(:) = 0.0      ! flow_wall_exp
+  EXPRO_flow_beam(:) = 0.0               ! flow_beam
+  EXPRO_flow_wall(:) = 0.0               ! flow_wall_exp
   EXPRO_zmag(:)      = zmag(:)  
   EXPRO_ptot(:)      = p_tot(:)      
   ! COORDINATES: set sign of poloidal flux

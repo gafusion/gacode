@@ -1,0 +1,31 @@
+#! /usr/bin/env bash
+# GACODE Parallel execution script (TITAN_PGI)
+
+simdir=${1}
+nmpi=${2}
+exec=${3}
+nomp=${4}
+numa=${5}
+mpinuma=${6}
+
+# nmpi = MPI tasks
+# nomp = OpenMP threads per MPI task
+# numa = NUMAs active per node
+# mpinuma = MPI tasks per active NUMA 
+
+# . $GACODE_ROOT/shared/bin/gacode_mpi_tool
+
+export OMP_NUM_THREADS=$nomp
+
+cd $simdir
+
+export OMP_STACKSIZE=400M
+#export MPICH_MAX_THREAD_SAFETY=funneled
+
+export OMP_NUM_THREADS=$nomp
+echo ">mpirun -n $nmpi $exec"
+#
+# jsrun
+#mpirun --host summit2:32,summit1:32 --map-by core -n $nmpi $GACODE_ROOT/platform/exec/wrap.${GACODE_PLATFORM} $exec
+# mpirun -n $nmpi $GACODE_ROOT/platform/exec/wrap.${GACODE_PLATFORM} $exec
+mpirun -n $nmpi $exec

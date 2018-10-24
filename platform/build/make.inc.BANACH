@@ -11,11 +11,11 @@ FFTWDIR=/usr/lib/x86_64-linux-gnu
 
 # Compilers
 
-FC    = mpif90 -std=f2008 -fPIC -I $(GACODE_ROOT)/modules -J $(GACODE_ROOT)/modules
-F77   = mpif77 -I $(GACODE_ROOT)/modules
+FC    = mpif90 -std=f2008 -fall-intrinsics -I $(GACODE_ROOT)/modules -J $(GACODE_ROOT)/modules -fPIC
+F77   = mpif77
 
 FOMP  =-fopenmp
-FMATH =-fdefault-real-8 -fdefault-double-8 
+FMATH =-fdefault-real-8 -fdefault-double-8
 FOPT  =-Ofast
 FDEBUG=-Wall -W -fcheck=mem,bounds -g -fbacktrace -ffpe-trap=invalid,zero,overflow
 F2PY  = f2py

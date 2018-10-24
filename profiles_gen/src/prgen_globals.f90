@@ -258,6 +258,8 @@ module prgen_globals
   real, dimension(:), allocatable :: peqdsk_omgeb
   real, dimension(:), allocatable :: peqdsk_nb
   real, dimension(:), allocatable :: peqdsk_pb
+  real, dimension(:), allocatable :: peqdsk_pow_i
+  real, dimension(:), allocatable :: peqdsk_pow_e
   integer :: peqdsk_fmt, peqdsk_nion, peqdsk_nimp, peqdsk_nbeams
   real, dimension(n_ion_max) :: peqdsk_z
   real, dimension(n_ion_max) :: peqdsk_m

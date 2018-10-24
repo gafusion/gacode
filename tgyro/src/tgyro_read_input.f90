@@ -106,7 +106,6 @@ subroutine tgyro_read_input
   call tgyro_readbc_int(loc_ti_feedback_flag)
   call tgyro_readbc_int(loc_te_feedback_flag)
   call tgyro_readbc_int(loc_er_feedback_flag)
-  call tgyro_readbc_int(loc_he_feedback_flag)
   call tgyro_readbc_int(loc_zeff_flag)
   call tgyro_readbc_int(loc_pflux_method)
   call tgyro_readbc_int(loc_residual_method)

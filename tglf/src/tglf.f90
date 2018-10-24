@@ -96,6 +96,15 @@ program tglf
      ! write ne-te crossphase spectrum to file out.tglf.nete_crossphase_spectrum
      CALL write_tglf_nete_crossphase_spectrum
 
+     ! write QL weights spectrum to file out.tglf.QL_weight_spectrum
+     CALL write_tglf_QL_weight_spectrum
+
+     ! write intensity fluctuation amplitude spectrum per mode to file out.tglf.intensity_spectrum_per_mode
+     CALL write_tglf_intensity_spectrum_per_mode
+
+     ! write field fluctuation amplitude spectrum per mode to file out.tglf.field_spectrum_per_mode
+     CALL write_tglf_field_spectrum_per_mode
+
   else
 
      print 10,'     ky:',tglf_ky_in

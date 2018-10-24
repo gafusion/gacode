@@ -164,6 +164,7 @@ subroutine cgyro_write_distributed_bcomplex(datafile,n_fn,fn)
 
   use mpi
   use cgyro_globals
+  use cgyro_io, only: cgyro_error
 
   !------------------------------------------------------
   implicit none
@@ -180,7 +181,7 @@ subroutine cgyro_write_distributed_bcomplex(datafile,n_fn,fn)
   integer :: fstatus(MPI_STATUS_SIZE)
   integer(kind=MPI_OFFSET_KIND) :: disp
   integer(kind=MPI_OFFSET_KIND) :: offset1
-  complex(kind=4) :: f8(n_fn)
+  character :: cdummy
   !------------------------------------------------------
 
   if (i_proc_1 /= 0) return
@@ -225,7 +226,6 @@ subroutine cgyro_write_distributed_bcomplex(datafile,n_fn,fn)
      if (BYTE == 4) then
 
         ! Single (default) 
-        f8 = fn
         call MPI_FILE_SET_VIEW(fh,&
              disp,&
              MPI_COMPLEX8,&
@@ -236,7 +236,7 @@ subroutine cgyro_write_distributed_bcomplex(datafile,n_fn,fn)
 
         call MPI_FILE_WRITE_AT(fh,&
              offset1,&
-             f8,&
+             cmplx(fn,kind=4),&
              n_fn,&
              MPI_COMPLEX8,&
              fstatus,&
@@ -273,8 +273,19 @@ subroutine cgyro_write_distributed_bcomplex(datafile,n_fn,fn)
         disp = i_current
         disp = disp*n_proc_2*size(fn)*BYTE*2
 
-        open(unit=io,file=datafile,status='old',access='stream')
-        read(io,pos=disp+1) 
+        open(unit=io,file=datafile,status='old',access='stream',iostat=i_err)
+        if (i_err/=0) then
+          call cgyro_error('ERROR: (CGYRO) [REWIND] Failed to open '//datafile)
+          return
+        endif
+        if (disp>0) then
+          read(io,pos=disp, iostat=i_err) cdummy
+          if (i_err/=0) then
+            call cgyro_error('ERROR: (CGYRO) [REWIND] Failed to rewind '//datafile)
+            close(io)
+            return
+          endif
+        endif
         endfile(io)
         close(io)
 
@@ -295,6 +306,7 @@ subroutine cgyro_write_distributed_breal(datafile,n_fn,fn)
 
   use mpi
   use cgyro_globals
+  use cgyro_io, only: cgyro_error
 
   !------------------------------------------------------
   implicit none
@@ -312,7 +324,7 @@ subroutine cgyro_write_distributed_breal(datafile,n_fn,fn)
   integer(kind=MPI_OFFSET_KIND) :: disp
   integer(kind=MPI_OFFSET_KIND) :: offset1
   !
-  real(kind=4) :: f4(n_fn)
+  character :: cdummy
   !------------------------------------------------------
 
   if (i_proc_1 /= 0) return
@@ -357,7 +369,6 @@ subroutine cgyro_write_distributed_breal(datafile,n_fn,fn)
      if (BYTE == 4) then
 
         ! Single (default) 
-        f4 = fn
         call MPI_FILE_SET_VIEW(fh,&
              disp,&
              MPI_REAL4,&
@@ -368,7 +379,7 @@ subroutine cgyro_write_distributed_breal(datafile,n_fn,fn)
 
         call MPI_FILE_WRITE_AT(fh,&
              offset1,&
-             f4,&
+             real(fn,kind=4),&
              n_fn,&
              MPI_REAL4,&
              fstatus,&
@@ -405,8 +416,19 @@ subroutine cgyro_write_distributed_breal(datafile,n_fn,fn)
         disp = i_current
         disp = disp*n_proc_2*size(fn)*BYTE
 
-        open(unit=io,file=datafile,status='old',access='stream')
-        read(io,pos=disp+1)
+        open(unit=io,file=datafile,status='old',access='stream',iostat=i_err)
+        if (i_err/=0) then
+          call cgyro_error('ERROR: (CGYRO) [REWIND] Failed to open '//datafile)
+          return
+        endif
+        if (disp>0) then
+          read(io,pos=disp, iostat=i_err) cdummy
+          if (i_err/=0) then
+            call cgyro_error('ERROR: (CGYRO) [REWIND] Failed to rewind '//datafile)
+            close(io)
+            return
+          endif
+        endif
         endfile(io)
         close(io)
 
@@ -553,7 +575,6 @@ subroutine write_distribution(datafile)
   integer :: ir,it
   complex, dimension(:,:), allocatable :: h_x_glob
   complex :: ftemp(n_theta,n_radial)
-  complex(kind=4) :: f8(n_theta,n_radial)
   !------------------------------------------------------
 
   select case (io_control)
@@ -599,8 +620,7 @@ subroutine write_distribution(datafile)
               enddo
            enddo
            if (zf_test_mode == 0) call extended_ang(ftemp)
-           f8 = ftemp
-           write(io) f8
+           write(io) cmplx(ftemp,kind=4)
         enddo
         close(io)
      endif
@@ -640,7 +660,7 @@ subroutine write_timers(datafile)
   !-------------------------------------------------
 
   if (io_control == 1 .or. io_control == 3) then
-     ! Timer initialization (starts at timer 4)
+     ! Timer initialization (starts at timer 6)
      call timer_lib_init('str')
      call timer_lib_init('str_mem')
      call timer_lib_init('str_comm')
@@ -669,14 +689,15 @@ subroutine write_timers(datafile)
      if (i_proc == 0) then
         open(unit=io,file=datafile,status='replace')
         write(io,'(a)') 'Setup time'
-        write(io,'(1x,9(a11,1x))') timer_cpu_tag(1:4)
+        write(io,'(1x,9(a11,1x))') timer_cpu_tag(1:5)
         write(io,'(9(1pe10.3,2x))') &
              timer_lib_time('input'),&
              timer_lib_time('str_init'),&
+             timer_lib_time('nl_init'),&
              timer_lib_time('coll_init'),&
              timer_lib_time('io_init')
         write(io,'(a)') 'Run time'
-        write(io,'(1x,14(a10,1x))') timer_cpu_tag(5:18)
+        write(io,'(1x,14(a10,1x))') timer_cpu_tag(6:19)
         close(io)
      endif
 
@@ -769,6 +790,7 @@ end subroutine print_scrdata
 subroutine write_binary(datafile,fn,n_fn)
 
   use cgyro_globals
+  use cgyro_io, only: cgyro_error
 
   !------------------------------------------------------
   implicit none
@@ -776,8 +798,8 @@ subroutine write_binary(datafile,fn,n_fn)
   character (len=*), intent(in) :: datafile
   integer, intent(in) :: n_fn
   complex, intent(in) :: fn(n_fn)
-  complex(kind=4) :: fn8(n_fn)
   integer :: disp
+  character :: cdummy
   !------------------------------------------------------
 
   if (i_proc > 0) return
@@ -801,8 +823,7 @@ subroutine write_binary(datafile,fn,n_fn)
 
      open(unit=io,file=datafile,status='old',position='append',access='stream')
 
-     fn8 = fn
-     write(io) fn8
+     write(io) cmplx(fn,kind=4)
      close(io)
 
   case (3)
@@ -812,8 +833,19 @@ subroutine write_binary(datafile,fn,n_fn)
      disp = i_current
      disp = disp*size(fn)*BYTE*2
 
-     open(unit=io,file=datafile,status='old',access='stream')
-     read(io,pos=disp+1) 
+     open(unit=io,file=datafile,status='old',access='stream', iostat=i_err)
+     if (i_err/=0) then
+       call cgyro_error('ERROR: (CGYRO) [REWIND] Failed to open '//datafile)
+       return
+     endif
+     if (disp>0) then
+       read(io,pos=disp, iostat=i_err) cdummy
+       if (i_err/=0) then
+         call cgyro_error('ERROR: (CGYRO) [REWIND] Failed to rewind '//datafile)
+         close(io)
+         return
+       endif
+     endif
      endfile(io)
      close(io)
 
@@ -835,28 +867,23 @@ subroutine extended_ang(f2d)
 
   implicit none
 
-  integer :: ir,jr,it,np
+  integer :: ir
   complex, intent(inout), dimension(n_theta,n_radial) :: f2d
   complex, dimension(n_theta,n_radial) :: f1d 
 
-  np = n_radial/2
-
-  do ir=-np,np-1
-     do it=1,n_theta
-        ! Manage positive/negative q
-        if (ipccw*btccw > 0) then
-           jr = ir+np+1
-        else
-           jr = -ir+np
-        endif
-        f1d(it,ir+np+1) = f2d(it,jr)*exp(-2*pi*i_c*ir*k_theta*rmin)
-     enddo
+  ! Assumption is that box_size=1
+  
+  do ir=1,n_radial
+     f1d(:,ir) = f2d(:,ir)*exp(-2*pi*i_c*px(ir)*k_theta*rmin*sign_qs)
   enddo
 
-  if (ipccw*btccw < 0) then
-     f1d = f1d*exp(2*pi*i_c*abs(k_theta)*rmin)
+  if (sign_qs < 0) then
+     ! Reverse output direction
+     do ir=1,n_radial
+        f2d(:,ir) = f1d(:,n_radial-ir+1)
+     enddo
+  else
+     f2d = f1d
   endif
-
-  f2d = f1d
   
 end subroutine extended_ang

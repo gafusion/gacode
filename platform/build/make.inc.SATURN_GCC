@@ -13,15 +13,15 @@ IDENTITY="GA saturn or iris cluster"
 CORES_PER_NODE=1
 NUMAS_PER_NODE=1
 
-FC  = mpif90 -std=f2008 -I$(GACODE_ROOT)/modules -J $(GACODE_ROOT)/modules -fPIC
+FC  = mpif90 -std=f2008 -fall-intrinsics -I$(GACODE_ROOT)/modules -J $(GACODE_ROOT)/modules -fPIC
 F77 = mpif77 -I$(GACODE_ROOT)/modules
-F2PY = f2py2.7
 CC  = gcc
 
 FOMP   = -fopenmp
 FMATH  = -fdefault-real-8 -fdefault-double-8 
 FOPT   = -Ofast
 FDEBUG = -Wall -W fcheck=mem,bounds -g -fbacktrace -ffpe-trap=invalid,zero,overflow
+#F2PY = f2py2.7
 
 # System math libraries
 

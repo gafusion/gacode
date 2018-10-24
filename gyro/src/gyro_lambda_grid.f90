@@ -61,7 +61,6 @@ subroutine gyro_lambda_grid
         deallocate(s_temp)
         deallocate(w_temp)
 
-        print *,'s2'
         do k=1,n_lambda
            call gyro_banana_s2lambda(s_lambda(k),lambda(i,k))
         enddo

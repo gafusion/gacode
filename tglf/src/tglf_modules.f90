@@ -111,7 +111,7 @@
       INTEGER :: kygrid_model_in=1
       INTEGER :: xnu_model_in=2
       INTEGER :: vpar_model_in=0
-      INTEGER :: vpar_shear_model_in=0
+      INTEGER :: vpar_shear_model_in=1    
       REAL :: alpha_n_in =0.0  !not used
       REAL :: alpha_t_in =0.0  !not used
 ! Input signs
@@ -201,6 +201,7 @@
       REAL :: midplane_shear=1.0
       REAL :: kx0_factor=1.0
 ! output
+      COMPLEX,DIMENSION(3,nb) :: field_weight_QL_out=0.0
       COMPLEX,DIMENSION(maxmodes,3,nb) :: field_weight_out=0.0
       COMPLEX,DIMENSION(maxmodes,3,max_plot) :: plot_field_out=0.0
       REAL,DIMENSION(max_plot) :: plot_angle_out=0.0
@@ -241,6 +242,8 @@
       REAL :: Bp0_out = 1.0
       REAL :: RBt_ave_out=1.0
       REAL :: Grad_r_ave_out=1.0
+      REAL :: SAT_geo_ave_out=1.0
+      REAL :: SAT_geo0_out=1.0
       REAL :: DM_out = 0.25
       REAL :: DR_out = 0.0
       INTEGER :: nmodes_out

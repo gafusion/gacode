@@ -1,0 +1,59 @@
+#---------------------------------------------------
+# SATURN_GCC at General Atomics:
+#
+# module load mpich/gcc-4.7.2
+# module load netcdf
+# module load fann
+# module load fftw
+#
+# Note that CORES PER NODE is set to 1 to allow for dealing with the iris queue,
+# where each node is not reserved by an individual user.
+#---------------------------------------------------
+
+IDENTITY="SWIP cluster"
+CORES_PER_NODE=1
+NUMAS_PER_NODE=1
+
+FC  = mpif90 -std=f2008 -fall-intrinsics -I$(GACODE_ROOT)/modules -J $(GACODE_ROOT)/modules -fPIC
+F77 = mpif77 -I$(GACODE_ROOT)/modules
+#F2PY = f2py2.7
+CC  = gcc
+
+FOMP   = -fopenmp
+FMATH  = -fdefault-real-8 -fdefault-double-8 
+FOPT   = #-Ofast
+FDEBUG = -Wall -W fcheck=mem,bounds -g -fbacktrace -ffpe-trap=invalid,zero,overflow
+
+# System math libraries
+
+FFTW_DIR = /opt/Library/fftw/3.3.1/gnu/
+LMATH  = $(LLIBS) -llapack -lblas -L$(FFTW_DIR)/lib ${FFTW_DIR}/lib/libfftw3.a ${FFTW_DIR}/lib/libfftw3_omp.a
+FFTW_INC = $(FFTW_DIR)/include
+
+ifdef FANN_ROOT
+   # neural net libraries
+   NN_LIB=-L$(GACODE_ROOT)/../neural/ -I$(GACODE_ROOT)/../neural/ -lbrainfuse -L$(FANN_ROOT)/lib -lfann
+endif
+
+NETCDF = -L$(NETCDF_DIR)/lib -lnetcdff -lnetcdf -Wl,-rpath,$(NETCDF_DIR)/lib
+NETCDF_INC = $(NETCDF_DIR)/include
+
+# Archive
+
+ARCH = ar cr
+
+# NEO platform defs
+ifdef SUPERLU_DIR
+  SUPERLU_LIB += -Wl,-rpath,${SUPERLU_DIR}/lib -L${SUPERLU_DIR}/lib -lsuperlu
+  SUPERLU_INC += -I${SUPERLU_DIR}/include
+endif
+
+ifdef PETSC_DIR
+  PETSC_LIB += -Wl,-rpath,$(PETSC_DIR)/lib -L$(PETSC_DIR)/lib -lpetsc -lsuperlu
+  PETSC_INC += -I$(PETSC_DIR)/include
+endif
+
+ifdef CUDA_DIR
+  CUDA_LIB += -L$(CUDA_DIR)/lib64 -lcusolver -lcudart -lcusparse
+  CUDA_INC += -I$(CUDA_DIR)/include
+endif

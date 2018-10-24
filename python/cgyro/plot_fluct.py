@@ -6,6 +6,7 @@ from matplotlib import rc
 import matplotlib.pyplot as plt
 from gacodefuncs import *
 from cgyro.data import cgyrodata
+
 try:
    import gapy
    hasgapy = True
@@ -37,6 +38,13 @@ nr = sim.n_radial
 nn = sim.n_n
 ns = sim.n_species
 
+if nx < 0 or ny < 0:
+   nx = nr+1
+   ny = 2*nn-1
+   usefft = True
+else:
+   usefft = False
+   
 epx = np.zeros([nx,nr],dtype=np.complex)
 eny = np.zeros([ny,nn],dtype=np.complex)
 x = np.zeros([nx])
@@ -45,15 +53,18 @@ y = np.zeros([ny])
 #------------------------------------------------------------------------
 # Some setup 
 #
-if hasgapy:
+if usefft:
+   for i in range(nx):
+      x[i] = i*2*np.pi/nx
+   for j in range(ny):
+      y[j] = j*2*np.pi/ny
+elif hasgapy:
    for i in range(nx):
       x[i] = i*2*np.pi/(nx-1)
-
    for j in range(ny):
       y[j] = j*2*np.pi/(ny-1)
 else:
    # Fourier arrays
-   #
    for i in range(nx):
       x[i] = i*2*np.pi/(nx-1)
       for p in range(nr):    
@@ -67,7 +78,8 @@ else:
    # factor of 1/2 for n=0
    eny[:,0] = 0.5*eny[:,0] 
       
-# Real-space field resonstruction (if no gapy)
+#------------------------------------------------------------------------
+# Real-space field reconstruction (if no gapy)
 def maptoreal(nr,nn,nx,ny,c):
 
     import numpy as np
@@ -83,7 +95,43 @@ def maptoreal(nr,nn,nx,ny,c):
     
     end = time.time()
   
-    return f,str(end-start)
+    return f,end-start
+#------------------------------------------------------------------------
+
+#------------------------------------------------------------------------
+# FFT version
+def maptoreal_fft(nr,nn,nx,ny,c):
+
+   import numpy as np
+   import time
+   
+   d = np.zeros([nx,ny],dtype=np.complex)
+
+   # Mapping
+   # d[ ix, iy] = c[ ix,iy] 
+   # d[ ix,-iy] = c[-ix,iy]^* 
+
+   for ix in range(-nr/2+1,nr/2):
+      i = ix
+      if ix < 0:
+         i = ix+nx
+      d[i,0:nn] = c[-ix+nr/2,0:nn]
+
+   for ix in range(-nr/2,nr/2-1):
+      i = ix
+      if ix < 0:
+         i = ix+nx
+      for iy in range(1,nn):
+         d[i,ny-iy] = np.conj(c[ix+nr/2,iy])
+          
+   start = time.time()
+
+   # Sign convention negative exponent exp(-inx)
+   f = np.real(np.fft.fft2(d))*0.5
+    
+   end = time.time()
+  
+   return f,end-start
 #------------------------------------------------------------------------
 
 
@@ -93,29 +141,8 @@ if istr == '-1':
 else:
     ivec = str2list(istr)
 
-u=specmap(sim.mass[species],sim.z[species])
-
-# Set filename root and title
-isfield = True
-if (moment == 'n'):
-    fdata = '.cgyro.kxky_n'
-    title = r'${\delta \mathrm{n}}_'+u+'$'
-    isfield = False
-elif (moment == 'e'):
-    fdata = '.cgyro.kxky_e'
-    title = r'${\delta \mathrm{E}}_'+u+'$'
-    isfield = False
-elif (moment == 'phi'):
-    fdata = '.cgyro.kxky_phi'
-    title = r'$\delta\phi$'
-elif (moment == 'apar'):
-    fdata = '.cgyro.kxky_apar'
-    title = r'$\delta A_\parallel$'
-elif (moment == 'bpar'):
-    fdata = '.cgyro.kxky_bpar'
-    title = r'$\delta B_\parallel$'
-
-# ERROR CHECKS
+# Get filename and tags 
+fdata,title,isfield = tag_helper(sim.mass[species],sim.z[species],moment)
 
 # Check to see if data exists (try binary data first)
 if os.path.isfile('bin'+fdata):
@@ -129,6 +156,9 @@ elif os.path.isfile('out'+fdata):
 else:
     print 'ERROR: (plot_fluct) No data for -moment '+moment+' exists.  Try -moment phi'
     sys.exit()
+
+if usefft:
+    print 'INFO: (plot_fluct) Using FFT (fast)'
 
 # **WARNING** Assumes theta_plot=1 
 if isfield:
@@ -150,8 +180,12 @@ def frame():
       f = np.zeros([nx,ny],order='F')
       if hasgapy:
          gapy.realfluct(c,f)
+         t = 0.0
       else:
-         f,t = maptoreal(nr,nn,nx,ny,c)
+         if usefft:
+            f,t = maptoreal_fft(nr,nn,nx,ny,c)
+         else:
+            f,t = maptoreal(nr,nn,nx,ny,c)
          
       if fmin == 'auto':
          f0=np.min(f)
@@ -161,8 +195,9 @@ def frame():
          f1=float(fmax)
 
       xp = x/(2*np.pi)*sim.length
-      yp = y/sim.ky[1]
-      aspect = max(yp)/max(xp)
+      # ky[1] < 0 is possible
+      yp = y/np.abs(sim.ky[1])
+      aspect = max(abs(yp))/max(abs(xp))
 
       fig = plt.figure(figsize=(8,8*aspect))
       ax = fig.add_subplot(111)
@@ -173,7 +208,7 @@ def frame():
         
       levels = np.arange(f0,f1,(f1-f0)/256)
       ax.contourf(xp,yp,np.transpose(f),levels,cmap=plt.get_cmap(colormap))
-      print 'INFO: (plot_fluct) min,max = ',f0,f1
+      print 'INFO: (plot_fluct) min=%e , max=%e  (t=%e)' % (f0,f1,t)
 
       fig.tight_layout(pad=0.3)
       plt.subplots_adjust(top=0.94)

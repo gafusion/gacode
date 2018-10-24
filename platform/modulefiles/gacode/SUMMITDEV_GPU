@@ -1,0 +1,22 @@
+#%Module
+#
+# Module file for setting the GACODE machine-dependent environmental variables
+#
+
+setenv GACODE_PLATFORM [lrange [file split ${ModulesCurrentModulefile}]	end end]
+set GACODE_PLATFORM $::env(GACODE_PLATFORM)
+puts stderr "Use GACODE_PLATFORM: ${GACODE_PLATFORM}"
+
+module load pgi/18.4
+module load spectrum-mpi
+module load fftw
+module load hdf5
+module load netcdf
+module load netcdf-fortran
+module load essl
+module load netlib-lapack
+module load cuda
+
+# setenv PAT_REPORT_IGNORE_CHECKSUM 1
+setenv OMP_STACKSIZE 200M
+setenv OMP_DYNAMIC FALSE

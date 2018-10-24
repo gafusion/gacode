@@ -24,7 +24,6 @@ FOMP   =-mp -Mstack_arrays ${FACC}
 FMATH  =-r8
 FOPT   =-fast -fastsse -Mvect
 FDEBUG =-g -Kieee -Ktrap=fp,divz -Mbounds -Mchkptr -Mchkstk -traceback -Minform=inform
-F2PY   = f2py --fcompiler=pg
 
 # System math libraries
 LMATH=-lfftw3_threads -lfftw3f_threads -lfftw3f -lfftw3

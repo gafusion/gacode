@@ -42,9 +42,6 @@ subroutine tgyro_harvest
        'tgyro_sum_mflux_i_neo'//NUL,&
        & sum(mflux_i_neo(therm_vec(:),i_r)))
 
-  ! Turbulent fluxes interface
-  call tglf_harvest_local
-
   ! Gyrobohm normalizations
   harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_q_gb'//NUL,q_gb(i_r))
   harvest_err=set_harvest_payload_dbl(tglf_harvest_extra_in,'tgyro_pi_gb'//NUL,pi_gb(i_r))
@@ -56,6 +53,9 @@ subroutine tgyro_harvest
 
   ! Experimental shot
   harvest_err=set_harvest_payload_int(tglf_harvest_extra_in,'shot'//NUL,shot)
+
+  ! Turbulent fluxes interface (and send data)
+  call tglf_harvest_local
 
 end subroutine tgyro_harvest
 

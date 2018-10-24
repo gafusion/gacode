@@ -254,7 +254,7 @@ subroutine prgen_write
   EXPRO_n_ion = n_ion ! Need to set this since we aren't EXPRO_pread-ing it
   EXPRO_ctrl_n_ion = n_ion
   EXPRO_ctrl_quasineutral_flag = 0
-  EXPRO_ctrl_z(1) = 1.0
+  EXPRO_z(1) = 1.0
   if (efit_method > 1) then
      EXPRO_ctrl_numeq_flag = 1
      call EXPRO_read_geo

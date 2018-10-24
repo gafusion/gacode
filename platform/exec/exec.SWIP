@@ -1,0 +1,13 @@
+#!/bin/sh
+# GACODE Parallel execution script (SWIP)
+
+simdir=${1}
+nmpi=${2}
+exec=${3}
+nomp=${4}
+numa=${5}
+mpinuma=${6}
+
+cd $simdir
+export OMP_NUM_THREADS=$nomp ; /opt/mpich-eth/gnu/mpich2-1.5/bin/mpirun -np $nmpi $exec
+

@@ -14,135 +14,147 @@ n=$#
 if [ $n -eq 0 ]
 then
   echo
-  echo "Usage:    cgyro_plot [options]"
+  echo "Usage:   cgyro_plot [options]"
   echo
-  echo "          -p <path>"
-  echo "           Set optional path to simulation directory."
-  echo "           [The default path is the current directory]"
+  echo "         -p <path>"
+  echo "         Set optional path to simulation directory."
+  echo "         [The default path is the current directory]"
   echo
-  echo "          -e <simdir>"
-  echo "           Use data in <simdir>."
+  echo "         -e <simdir>"
+  echo "         Use data in <simdir>."
   echo
-  echo "          -ext <filetype>"
-  echo "           Output file type."
-  echo "           <filetype>=eps, pdf, png, svg, dump"
+  echo "         -ext <filetype>"
+  echo "         Output file type."
+  echo "         <filetype>=eps, pdf, png, svg, dump"
   echo
-  echo "          -species <value>"
-  echo "           Specify species to be plotted: [0,n_species-1]."
+  echo "PLOT MODE"
+  echo 
+  echo "         -plot <type>"
+  echo "         <type> = text     (text summary of fluxes)"
+  echo "                = freq     (frequency versus time)"
+  echo "                = ky_freq  (frequency versus ky)"
+  echo "                = ball     (ballooning modes OR ZF test)"
+  echo "                = hb       (2D ballooning distribution)"
+  echo "                = hbcut    (1D ballooning distribution line plots),"
+  echo "                = geo      (geometry arrays)"
+  echo "                = zf       (zonal flow potential plot vs. time),"
+  echo "                = error    (time-integration error)"
+  echo "                = flux     (time-trace of fluxes for all species)"
+  echo "                = ky_flux  (bar plot of flux versus ky)"
+  echo "                = phi      (time-dependent ZF vs. finite-n intensities)"
+  echo "                = ky_phi   (time-dependent ky-phi intensities)"
+  echo "                = kx_phi   (average kx-phi intensities)"
+  echo "                = kxky_phi (kx-ky spectra of ave(|phi|))"
+  echo "                = rcorr_phi (time-average radial correlation function)"
+  echo "                = xflux    (radial profile of fluxes for all species)"
+  echo "                = fluct    (x-y fluctuation contours at fixed timeslice)"
+  echo "                = rt       (x-t fluctuation contours)"
+  echo "                = vid      (create video from png files)"
+  echo "                = template (create simple template file to read data)"
+  echo "                = fix      (fix old simulation directory)"
   echo
-  echo "          -field <value>"
-  echo "           Specify field to be plotted: [0,n_field-1]."
+  echo "VISUALIZATION MODE (requires Mayavi)"
+  echo 
+  echo "         -vis <type>"
+  echo "         <type> = slices   (fieldline slices)"
+  echo "                = torcut   (toroidal cut)"
   echo
-  echo "          -fc"
-  echo "           Toggle plotting of field breakdown of fluxes."
+  echo "OPTIONS"
   echo
-  echo "          -moment <value>"
-  echo "           Specify moment to be plotted [n,e,m,s]."
+  echo "         -species <value>"
+  echo "         Specify species to be plotted: [0,n_species-1]."
   echo
-  echo "          -w <float>"
-  echo "           Width of time-average window (1.0 is entire time history)."
+  echo "         -field <value>"
+  echo "         Specify field to be plotted: [0,n_field-1]."
   echo
-  echo "          -plot <type>"
-  echo "           Function to plot."
-  echo "           <type> = text     (text summary of fluxes)"
-  echo "                  = freq     (frequency versus time),"
-  echo "                  = ky_freq  (frequency versus ky),"
-  echo "                  = ball     (ballooning modes OR ZF test)"
-  echo "                  = hb       (2D ballooning distribution)"
-  echo "                  = hbcut    (1D ballooning distribution line plots),"
-  echo "                  = geo      (geometry arrays)"
-  echo "                  = zf       (zonal flow potential plot vs. time),"
-  echo "                  = error    (time-integration error)"
-  echo "                  = flux     (time-trace of fluxes for all species)"
-  echo "                  = ky_flux  (bar plot of flux versus ky)"
-  echo "                  = phi      (time-dependent ZF vs. finite-n intensities)"
-  echo "                  = ky_phi   (time-dependent ky-phi intensities)"
-  echo "                  = kx_phi   (average kx-phi intensities)"
-  echo "                  = kxky_phi (kx-ky spectra of ave(|phi|))"
-  echo "                  = rcorr_phi (time-average radial correlation function)"
-  echo "                  = xflux    (radial profile of fluxes for all species)"
-  echo "                  = fluct    (fluctuations)"
-  echo "                  = vid      (create video from png files)"
-  echo "                  = template (create simple template file to read data)"
-  echo "                  = fix      (fix old simulation directory)"
+  echo "         -fc"
+  echo "         Toggle plotting of field breakdown of fluxes."
   echo
-  echo "          -mesh"
-  echo "          Add mesh to hb plot."
+  echo "         -moment <value>"
+  echo "         Specify moment to be plotted [n,e,m,s]."
   echo
-  echo "          -ymin <float>"
-  echo "          Minimum value of vertical axis (where applicable)."
-  echo "          *Affects: flux, ky_flux"
+  echo "         -w <float>"
+  echo "         Width of time-average window (1.0 is entire time history)."
+  echo 
+  echo "         -mesh"
+  echo "         Add theta-xi mesh"
+  echo "         *Affects: hb" 
   echo
-  echo "          -ymax <float>"
-  echo "          Maximum value of vertical axis (where applicable)."
-  echo "          *Affects: flux, ky_flux"
+  echo "         -ymin <float>"
+  echo "         Minimum value of vertical axis (where applicable)."
+  echo "         *Affects: flux, ky_flux"
   echo
-  echo "          -lx <float>"
-  echo "          Plot width (default 12)"
+  echo "         -ymax <float>"
+  echo "         Maximum value of vertical axis (where applicable)."
+  echo "         *Affects: flux, ky_flux"
   echo
-  echo "          -ly <float>"
-  echo "          Plot height (default 6)."
+  echo "         -lx <float>"
+  echo "         Plot width (default 12)"
   echo
-  echo "          -fontsize <float>"
-  echo "          Font size (default 18)."
+  echo "         -ly <float>"
+  echo "         Plot height (default 6)."
   echo
-  echo "          -nscale"
-  echo "          Scale the fluxes with ne/ni factor"
-  echo "          *Affects: flux"
+  echo "         -fontsize <float>"
+  echo "         Font size (default 18)."
   echo
-  echo "          -theta <value>"
-  echo "          Value of theta/pi used in hbcut"
-  echo "          *Affects: hbcut"
+  echo "         -nscale"
+  echo "         Scale the fluxes with ne/ni factor"
+  echo "         *Affects: flux"
   echo
-  echo "          -tmax <float>"
-  echo "          Maximum value of ballooning angle."
-  echo "          *Affects: ball, hb, hbcut"
+  echo "         -theta <value>"
+  echo "         Value of theta/pi used in hbcut"
+  echo "         *Affects: hbcut"
   echo
-  echo "          -t <value>"
-  echo "          Specify integer time index (-1 is last time)."
-  echo "          *Affects: ball, hb, hbcut, fluct"
+  echo "         -tmax <float>"
+  echo "         Maximum value of ballooning angle."
+  echo "         *Affects: ball, hb, hbcut"
   echo
-  echo "          -n <value>"
-  echo "          Specify values of n (toroidal mode index)"
-  echo "          *Affects: ky_phi"
+  echo "         -t <value>"
+  echo "         Specify integer time index (-1 is last time)."
+  echo "         *Affects: ball, hb, hbcut, fluct"
+  echo "         *Contour examples: all, -1, 3-8"
   echo
-  echo "          -cmap <value>"
-  echo "          Name of colormap (jet,hsv,brg,...)"  
+  echo "         -n <value>"
+  echo "         Specify values of n (toroidal mode index)"
+  echo "         *Affects: ky_phi"
   echo
-  echo "          -loc <loc>"
-  echo "          Legend location (1-4)"  
+  echo "         -cmap <value>"
+  echo "         Name of colormap (jet,hsv,brg,...)"  
   echo
-  echo " OPTIONS FOR -plot fluct/vid"
+  echo "         -loc <loc>"
+  echo "         Legend location (1-4)"  
   echo
-  echo "          -nomp <threads>"
-  echo "           Number of OpenMP threads per MPI task."
+  echo "OPTIONS FOR -plot fluct/vid"
   echo
-  echo "          -nx <int>"
-  echo "           Number of radial interpolation points (default 128)"
+  echo "         -nomp <threads>"
+  echo "         Number of OpenMP threads per MPI task."
   echo
-  echo "          -ny <int>"
-  echo "           Number of alpha interpolation points (default 128)"
+  echo "         -nx <int>"
+  echo "         Number of radial interpolation points (default FFT)"
   echo
-  echo "          -fmin <float>"
-  echo "           Minimum value for contour plot"
+  echo "         -ny <int>"
+  echo "          Number of alpha interpolation points (default FFT)"
   echo
-  echo "          -fmax <float>"
-  echo "           Maximum value for contout plot"
+  echo "         -fmin <float>"
+  echo "         Minimum value for contour plot"
   echo
-  echo "          -start <int>"
-  echo "           First frame for encoding"
+  echo "         -fmax <float>"
+  echo "         Maximum value for contout plot"
   echo
-  echo " LINEAR EXAMPLES:"
+  echo "         -start <int>"
+  echo "         First frame for encoding"
+  echo
+  echo "LINEAR EXAMPLES:"
   echo "  $ cgyro_plot -e . -plot freq           [frequency versus time]"
   echo "  $ cgyro_plot -e . -plot ball -field 0  [phi versus ballooning angle]"
   echo "  $ cgyro_plot -e . -plot zf             [zf phi versus time]"
   echo
   echo
-  echo " NONLINEAR EXAMPLES (fields):"
+  echo "NONLINEAR EXAMPLES (fields):"
   echo "  $ cgyro_plot -e . -plot phi               [phi(t) for n=0 and n>0]"
   echo "  $ cgyro_plot -e . -plot ky_phi -n 0,2,4-8 [phi harmonics versus time]"
   echo "  $ cgyro_plot -e . -plot ky_phi -field 2   [bpar harmonics versus time]"
-  echo " NONLINEAR EXAMPLES (fluxes):"
+  echo "NONLINEAR EXAMPLES (fluxes):"
   echo "  $ cgyro_plot -e . -plot flux              [energy flux versus time]"
   echo "  $ cgyro_plot -e . -plot flux -ext png     [... above to PNG file]"
   echo "  $ cgyro_plot -e . -plot flux -moment n    [particle flux versus time]"
@@ -165,11 +177,13 @@ FONTSIZE=18
 LX=12
 LY=6
 
+PLOT_TYPE=null
+VIS_TYPE=null
+FTYPE=screen
+
 SPECIES=0
 FIELD=0
 FC=0
-FTYPE=screen
-PLOT_TYPE=field
 TIME=-1
 TMAX=-1.0
 YMIN=0.0
@@ -180,8 +194,9 @@ INDX=1
 THETA=0.0
 N=null
 MESH=0
-NX=128
-NY=128
+NX=-1
+NY=-1
+ND=0
 NOMP=1
 FMIN=auto
 FMAX=auto
@@ -197,7 +212,8 @@ LOC=2
 while [ $# -gt 0 ] ; do
   case "$1" in
 
-  -plot) shift ; PLOT_FLAG=1 ; PLOT_TYPE=$1 ;;
+  -plot) shift ; PLOT_TYPE=$1 ;;
+  -vis)  shift ; VIS_TYPE=$1 ;;
 
   -e) shift ; LOCDIR=$1 ;;
 
@@ -235,6 +251,7 @@ while [ $# -gt 0 ] ; do
   -n) shift ; N=$1 ;;
   -nx) shift ; NX=$1 ;;
   -ny) shift ; NY=$1 ;;
+  -nd) shift ; ND=$1 ;;
   -fmin) shift ; FMIN=$1 ;;
   -fmax) shift ; FMAX=$1 ;;
   -cmap) shift ; CMAP=$1 ;;
@@ -264,8 +281,24 @@ PYROOT=$GACODE_ROOT/python/cgyro
 #==============================================================================
 PLT="$PYROOT/data_plot_single.py $FONTSIZE $LX $LY"
 
+case "$VIS_TYPE" in
+
+   null) ;;
+	
+   slices)
+	python $PYROOT/vis_slices.py ;;
+	
+   torcut)
+	export OMP_NUM_THREADS=$NOMP ; python $PYROOT/vis_torcut.py $FTYPE $MOMENT $SPECIES $NX $NY $TIME $FMIN $FMAX $CMAP $FONTSIZE ;;
+	   
+    *)
+        echo "Unrecognized argument to -vis" ; exit 1 ;;
+esac
+
 case "$PLOT_TYPE" in
 
+   null) ;;
+	
    ball)
 	python $PLT $PLOT_TYPE $TIME $FIELD $TMAX $FTYPE ;;
 
@@ -317,14 +350,17 @@ case "$PLOT_TYPE" in
    fluct)
        export OMP_NUM_THREADS=$NOMP ; python $PYROOT/plot_fluct.py $FTYPE $MOMENT $SPECIES $YMIN $YMAX $NX $NY $TIME $FMIN $FMAX $CMAP $FONTSIZE ;;
 
+   rt)
+       export OMP_NUM_THREADS=$NOMP ; python $PYROOT/plot_rt.py $FTYPE $MOMENT $SPECIES $YMIN $YMAX $NX $ND $TIME $FMIN $FMAX $CMAP $FONTSIZE ;;
+
    text)
-   	python $PYROOT/text.py $W $FTYPE ;;
+   	python $PYROOT/plot_text.py $W $FTYPE ;;
 
    fix)
    	python $PYROOT/fix.py ;;
 
    template)
-   	cp $PYROOT/template.py . ;;
+   	cp $PYROOT/plot_template.py . ;;
 
    vid)
 	FRAMERATE=20

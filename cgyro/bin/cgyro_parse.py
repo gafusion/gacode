@@ -76,7 +76,7 @@ x.add('PSYM_FLAG','0')
 x.add('PROFILE_SHEAR_FLAG','0')
 x.add('THETA_PLOT','1')
 x.add('MPIIO_SMALL_STRIPE_FACTOR','4')
-x.add('MPIIO_STRIPE_FACTOR','32')
+x.add('MPIIO_STRIPE_FACTOR','24')
 x.add('GPU_BIGMEM_FLAG','0')
 
 x.add('RMIN','0.5')

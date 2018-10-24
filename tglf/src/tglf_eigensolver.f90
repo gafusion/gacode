@@ -202,9 +202,13 @@
            g10r33 = 0.0
        endif
        if(use_bper_in)then
-         betae_psi = 0.5*betae_in/(ky*ky)
+         if(nbasis.eq.2)then
+           betae_psi = 0.5*betae_in/(ky*ky+(damp_psi_in*vs(2)/(q_unit*width_in))**2)
+        else
+           betae_psi = 0.5*betae_in/(ky*ky)
+        endif
 !       write(*,*)"betae_psi = ",betae_psi
-         damp_psi = damp_psi_in/MAX(betae_psi*vs(1)*vs(1),0.001)
+!         damp_psi = damp_psi_in/MAX(betae_psi*vs(1)*vs(1),0.001)
        endif
        max_freq=2.0*ABS(ave_wdh(1,1))/R_unit
 !       if(filter_in.gt.0.0)then
@@ -220,8 +224,12 @@
        betae_sig = 0.0
        damp_sig = 0.0
        if(use_bpar_in)then
-          betae_sig = 0.5*betae_in/(ky*ky)
-          damp_sig = damp_sig_in/MAX(betae_sig*vs(1)*vs(1),0.001)
+         if(nbasis.eq.2)then
+           betae_psi = 0.5*betae_in/(ky*ky+(damp_sig_in*vs(2)/(q_unit*width_in))**2)
+         else
+           betae_psi = 0.5*betae_in/(ky*ky)
+         endif
+!      damp_sig = damp_sig_in/MAX(betae_sig*vs(1)*vs(1),0.001)
        endif
 !       write(*,*)"betae_psi=",betae_psi,"betae_sig=",betae_sig
 !       write(*,*)"damp_psi=",damp_psi,"damp_sig=",damp_sig

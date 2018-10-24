@@ -14,24 +14,16 @@ program exprodump
 
   character(len=20) :: var,x
   integer :: i
-  real, dimension(5) :: z
   integer :: density_method
 
 
   open(unit=1,file='input.exprodump',status='old')
   read(1,*) var
   read(1,*) x
-  read(1,*) z(1)
-  read(1,*) z(2)
-  read(1,*) z(3)
-  read(1,*) z(4)
-  read(1,*) z(5)
   read(1,*) density_method
   close(1)
 
-  EXPRO_ctrl_n_ion = 5
   EXPRO_ctrl_quasineutral_flag = density_method-1
-  EXPRO_ctrl_z(1:5) = z(1:5)
   EXPRO_ctrl_numeq_flag = 0 
 
   call EXPRO_alloc('./',1) 
