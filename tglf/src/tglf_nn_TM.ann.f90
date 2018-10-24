@@ -142,8 +142,8 @@
     endif
 
     energy_flux_out(1,1)   = OUTPUT_PARAMETERS(1)
-    energy_flux_out(2,1)   = OUTPUT_PARAMETERS(2)
-    energy_flux_out(3,1)   = OUTPUT_PARAMETERS(2)
+    energy_flux_out(2,1)   = OUTPUT_PARAMETERS(2)/2.
+    energy_flux_out(3,1)   = OUTPUT_PARAMETERS(2)/2.
     particle_flux_out(1,1) = OUTPUT_PARAMETERS(3)
     particle_flux_out(2,1) = OUTPUT_PARAMETERS(4)
     particle_flux_out(3,1) = OUTPUT_PARAMETERS(5)
