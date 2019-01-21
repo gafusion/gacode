@@ -191,6 +191,8 @@ else
        sbatch $bfile 
     elif hash qsub 2> /dev/null ; then
        qsub $bfile
+    elif hash bsub 2> /dev/null ; then
+       bsub $bfile
     else
        echo "ERROR: (gacode_qsub) No batch command recognized."
     fi 

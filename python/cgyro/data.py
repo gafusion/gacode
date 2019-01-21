@@ -331,8 +331,7 @@ class cgyrodata:
       elif moment == 'v':
          z = np.sum(self.lky_flux_v,axis=3)
       else:
-         print 'ERROR (xfluxave) Invalid moment.'
-         sys.exit()
+         raise ValueError('(xfluxave) Invalid moment.')
 
 
       #--------------------------------------------
@@ -375,24 +374,24 @@ class cgyrodata:
       t,fmt,data = self.extract('.cgyro.kxky_phi')
       if fmt != 'null':
          print 'INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_phi. '+t
-         self.kxky_phi = np.reshape(data[0:nd],(2,self.n_radial,self.theta_plot,self.n_n,nt),'F')
-         self.kxky_phi_abs = np.sqrt(self.kxky_phi[0,:,:,:,:]**2+self.kxky_phi[1,:,:,:,:]**2)
+         tmp = np.reshape(data[0:nd],(2,self.n_radial,self.theta_plot,self.n_n,nt),'F')
+         self.kxky_phi_abs = np.sqrt(tmp[0,:,:,:,:]**2+tmp[1,:,:,:,:]**2)
 
       # 1b. kxky_apar
       nd = 2*self.n_radial*self.theta_plot*self.n_n*nt
       t,fmt,data = self.extract('.cgyro.kxky_apar')
       if fmt != 'null':
          print 'INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_apar. '+t
-         self.kxky_apar = np.reshape(data[0:nd],(2,self.n_radial,self.theta_plot,self.n_n,nt),'F')
-         self.kxky_apar_abs = np.sqrt(self.kxky_apar[0,:,:,:,:]**2+self.kxky_apar[1,:,:,:,:]**2)
+         tmp = np.reshape(data[0:nd],(2,self.n_radial,self.theta_plot,self.n_n,nt),'F')
+         self.kxky_apar_abs = np.sqrt(tmp[0,:,:,:,:]**2+tmp[1,:,:,:,:]**2)
 
       # 1c. kxky_bpar
       nd = 2*self.n_radial*self.theta_plot*self.n_n*nt
       t,fmt,data = self.extract('.cgyro.kxky_bpar')
       if fmt != 'null':
          print 'INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_bpar. '+t
-         self.kxky_bpar = np.reshape(data[0:nd],(2,self.n_radial,self.theta_plot,self.n_n,nt),'F')
-         self.kxky_bpar_abs = np.sqrt(self.kxky_bpar[0,:,:,:,:]**2+self.kxky_bpar[1,:,:,:,:]**2)
+         tmp = np.reshape(data[0:nd],(2,self.n_radial,self.theta_plot,self.n_n,nt),'F')
+         self.kxky_bpar_abs = np.sqrt(tmp[0,:,:,:,:]**2+tmp[1,:,:,:,:]**2)
 
       # 2. kxky_n
       nd = 2*self.n_radial*self.theta_plot*self.n_species*self.n_n*nt

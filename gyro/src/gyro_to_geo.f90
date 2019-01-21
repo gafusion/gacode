@@ -32,6 +32,6 @@ subroutine gyro_to_geo(i0)
   GEO_s_zeta_in  = s_zeta_s(i0)
   GEO_beta_star_in = beta_star_s(i0)
 
-  GEO_fourier_in(:,:) = a_fourier_geo_s(:,0:n_fourier_geo,i0)
+  GEO_fourier_in(:,:) = a_fourier_geo_s(:,:,i0)
 
 end subroutine gyro_to_geo

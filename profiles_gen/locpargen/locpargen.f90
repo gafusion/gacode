@@ -12,8 +12,7 @@ program locpargen
   use EXPRO_locsim_interface
 
   implicit none
-
-  integer :: j1,j2
+  
   integer :: is,ise
   real :: r0
   real :: rho0
@@ -40,9 +39,6 @@ program locpargen
   call EXPRO_alloc('./',1) 
   call EXPRO_read
 
-  print '(a)','INFO: (locpargen) Local input parameters:'
-  print *
-
   ! Minor radius
   a = EXPRO_rmin(EXPRO_n_exp)
 
@@ -50,7 +46,7 @@ program locpargen
   ise = EXPRO_n_ion+1
 
   if (rho0 > 0.0) then
-
+ 
      ! Use local rho
 
      x(1) = rho0
@@ -61,23 +57,17 @@ program locpargen
 
      ! Use local psi_N
 
-     x(1) = psi0*EXPRO_polflux(EXPRO_n_exp)
-     call cub_spline(EXPRO_polflux,EXPRO_rmin/a,EXPRO_n_exp,x,y,1)
+     x(1) = psi0*abs(EXPRO_polflux(EXPRO_n_exp))
+     call cub_spline(abs(EXPRO_polflux),EXPRO_rmin/a,EXPRO_n_exp,x,y,1)
      r0 = y(1)
 
   endif
-
-  !------------------------------------------------------------
-  ! Create input.geo with local parameters for general geometry
-  !
-  if (hasgeo == 1) call locpargen_geo
-  !------------------------------------------------------------
 
   call EXPRO_alloc('./',0) 
 
   call EXPRO_locsim_profiles('./',&
        -1,&
-       0,&
+       hasgeo,&
        0,&
        0,&
        EXPRO_n_ion+1,&
@@ -86,7 +76,17 @@ program locpargen
        ipccw,&
        a)
 
-  print 10,'# rhos/a=',rhos_loc/a
+  !------------------------------------------------------------
+  ! Create input.geo with local parameters for general geometry
+  !
+  if (hasgeo == 1) call locpargen_geo
+  !------------------------------------------------------------
+
+  print 10,'# rhos/a   =',rhos_loc/a
+  print 10,'# rhoi/a   =',rhos_loc/a*sqrt(temp_loc(ise)/temp_loc(1))
+  print 10,'# Te [keV] =',temp_loc(ise)
+  print 10,'# Ti [keV] =',temp_loc(1)
+  print 10,'# Bunit    =',b_unit_loc
 
   print 10,'RMIN=',r0
   print 10,'RMAJ=',rmaj_loc
@@ -148,6 +148,15 @@ program locpargen
      print 10,'SDLNTDR_'//tag(is)//'=',sdlntdr_loc(is)
   enddo
 
+  open(unit=1,file='out.locpargen',status='replace')
+  write(1,*) q_loc
+  write(1,*) r0
+  write(1,*) rmaj_loc
+  write(1,*) shift_loc
+  write(1,*) kappa_loc
+  write(1,*) q_loc*rhos_loc*sqrt(temp_loc(ise)/temp_loc(1))/a
+  close(1)
+  
 10 format(a,sp,1pe12.5)
 11 format(a,i0)
 

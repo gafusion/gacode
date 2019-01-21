@@ -1,0 +1,66 @@
+#!/bin/bash
+#=============================================================
+# cgyro_restart
+#
+# PURPOSE:
+#  Top-level script managing restart tool
+#=============================================================
+
+#=============================================================
+# Syntax validity check and help message
+#
+n=$#
+
+if [ $n -eq 0 ]
+then
+  echo
+  echo "Usage:   cgyro_restart [options]"
+  echo
+  echo "         -o <simdir>"
+  echo "         Original directory containing input.cgyro.gen and bin.cgyro.restart"
+  echo
+  echo "         -n <simdir>"
+  echo "         New directory containing input.cgyro.gen with added species."
+  echo
+  
+  exit 1
+fi
+#=============================================================
+
+#=============================================================
+# Define variables for flag capture
+#
+ORIG=null
+NEW=null
+
+#=============================================================
+# Parse command line options
+#
+while [ $# -gt 0 ] ; do
+  case "$1" in
+
+  -o) shift ; ORIG=$1 ;;
+
+  -n) shift ; NEW=$1 ;;
+
+  *) echo "ERROR (cgyro_restart): unknown option $1." ; exit 1 ;;
+
+  esac
+  shift
+done
+#=============================================================
+
+if [ "$ORIG" == "null" ]
+then
+   echo "ERROR (cgyro_restart): Need to set original directory"
+   exit 1
+fi
+
+if [ "$NEW" == "null" ]
+then
+   echo "ERROR (cgyro_restart): Need to set new directory"
+   exit 1 
+fi
+
+$GACODE_ROOT/cgyro/tools/restart_evolve/restart_evolve.py $ORIG $NEW
+

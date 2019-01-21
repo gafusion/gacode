@@ -270,3 +270,49 @@ def tag_helper(mass,z,moment):
       title = r'$\delta B_\parallel$'
 
   return fdata,title,isfield
+#---------------------------------------------------------------
+
+#---------------------------------------------------------------
+# Get time vector from commmand line option
+def time_vector(istr,nt):
+
+   if istr == '-1':
+      ivec = [nt]
+   elif istr == 'all':
+      ivec = range(nt)
+   else:
+      ivec = str2list(istr)
+
+   return ivec
+#---------------------------------------------------------------
+
+#---------------------------------------------------------------
+def theta_indx(theta,theta_plot):
+
+   # Select theta index
+   if theta_plot == 1:
+      itheta = 0
+   else:
+       # theta=0 check just to be safe
+       if theta == 0.0:
+           itheta = theta_plot/2
+       else:
+           itheta = int((theta+1.0)/2.0*theta_plot)
+
+   print 'INFO: (theta_indx) Selected index',itheta+1,'of',theta_plot
+   return itheta
+#---------------------------------------------------------------
+
+#---------------------------------------------------------------
+def mkfile(ext):
+
+    s=ext.split('.')
+    if len(s) == 2:
+        pre   = s[0]
+        ftype = s[1]
+    else:
+        pre = ''
+        ftype = s[0]
+
+    return pre,ftype
+#---------------------------------------------------------------

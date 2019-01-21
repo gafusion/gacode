@@ -73,7 +73,7 @@ subroutine gyro_blend_ampereperp
 
                  rho_gyro = rhos_norm*v_perp(m0,i,p_nek_loc,is)/omega_c
                  !
-                 a_gyro = grad_r_t(i,k,m0)/x_length*dr_eodr(i)
+                 a_gyro = grad_r_t(i,k,m0)/x_length
                  u_gyro = qrat_t(i,k,m0)*n_1(in_1)*q_s(i)/r_s(i)*captheta_t(i,k,m0)
                  v_gyro = qrat_t(i,k,m0)*n_1(in_1)*q_s(i)/r_s(i)
                  !---------------------------------------------------------------

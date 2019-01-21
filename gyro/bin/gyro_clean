@@ -5,32 +5,19 @@ n=$#
 if [ $n -eq 0 ]
 then
    echo "Usage: gyro_clean -a  (remove all runtime files)"
-   echo "Usage: gyro_clean -l  (remove large runtime files)"  
    exit 1
 fi
 
 if [ "$1" == "-a" ]
 then
-   rm -f *.gz
-   rm -f *.out
-   rm -f *.h5
    rm -f RE*
    rm -f halt
+   rm -f gyrotest_flag
+   rm -f *.dat
+   rm -f regress
    rm -f out.*
-   rm -f *ps
+   rm -f bin.*
    rm -f *.err
    rm -f *.src
-   rm -f *.log *.log.*
    rm -f *.gen
-   rm -f gyrotest_flag
 fi 
-
-if  [ "$1" == "-l" ]
-then
-   rm -f u.out   
-   rm -f mom*.out   
-   rm -f spectrum.out   
-   rm -f RE*
-   rm -f source.out
-   rm -f entropy.out
-fi

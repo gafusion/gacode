@@ -5,7 +5,7 @@
 all:
 	cd src  ; make
 	cd EXPRO  ; make
-	cd f2py ; make
+#	cd f2py ; make
 	cd test ; make
 
 clean:

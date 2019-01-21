@@ -91,12 +91,6 @@ subroutine gyro_fulladvance
   !------------------------------------------------------
 
   !------------------------------------------------------
-  ! Increment micro-step counter
-  !
-  alltime_index = alltime_index+1
-  !------------------------------------------------------
-
-  !------------------------------------------------------
   ! MANAGE time:
   !
   ! Increment simulation time; this is the actual time 
@@ -118,23 +112,6 @@ subroutine gyro_fulladvance
      if (modulo(step,time_skip) == 0) then
         data_step = data_step+1
      endif
-
-     !------------------------------------------------
-     ! Compute nonlinear transfer and turbulent energy 
-     !------------------------------------------------
-
-     if (n_substep == 0 .and. nonlinear_transfer_flag == 1) then
-
-        rhs(:,:,:,:) = (0.0,0.0)
-
-        call gyro_rhs_nonlinear
-        call gyro_nonlinear_transfer
-
-     endif
-
-     ! Reset micro-step counter.
-
-     alltime_index = 0
 
      ! Main data I/O handler
 

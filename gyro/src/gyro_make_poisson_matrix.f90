@@ -82,11 +82,7 @@ subroutine gyro_make_poisson_matrix
 
   endif
 
-  if (sparse_method == 1) then
-     call gyro_sparse_solve_umfpack(n_poisson,n_poisson_row,1,0)
-  else
-     call gyro_sparse_solve_mumps(n_poisson,n_poisson_row,1,0)
-  endif
+  call gyro_sparse_solve_umfpack(n_poisson,n_poisson_row,1,0)
 
   !--------------------------------------------------------
   ! These are large matrices and deallocation is important:

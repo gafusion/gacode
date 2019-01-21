@@ -77,10 +77,15 @@ subroutine tgyro_iteration_driver
      ! GLF23
      flux_method = 3
 
-  else
+  else if (lcode == 'gyro') then
 
      ! GYRO
      flux_method = 4
+
+  else if (lcode == 'etg') then
+     
+     ! ETG critical gradient
+     flux_method = 5
 
   endif
   !---------------------------------------------

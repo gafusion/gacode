@@ -7,8 +7,8 @@
 !  contains the MPI IO routines 
 !
 !  - write_distributed_real
-!  - write_distributed_complex
-!  - write_local_real
+!  - write_distributed_bcomplex
+!  - write_binary
 !-----------------------------------------------------
 
 subroutine gyro_write_timedata
@@ -18,8 +18,6 @@ subroutine gyro_write_timedata
 
   !---------------------------------------------------
   implicit none
-  !
-  real, dimension(:,:,:), allocatable :: a3
   !
   complex, dimension(n_theta_plot,n_x,n_kinetic) :: n_plot
   complex, dimension(n_theta_plot,n_x,n_kinetic) :: e_plot
@@ -47,8 +45,8 @@ subroutine gyro_write_timedata
 
      ! POTENTIALS
 
-     call write_distributed_complex(&
-          trim(path)//'out.gyro.moment_u',&
+     call write_distributed_bcomplex(&
+          trim(path)//'bin.gyro.moment_u',&
           10,&
           size(phi_plot(:,:,1:n_field)),&
           phi_plot(:,:,1:n_field))
@@ -59,8 +57,8 @@ subroutine gyro_write_timedata
 
      ! PARALLEL ELECTRIC FIELD
 
-     call write_distributed_complex(&
-          trim(path)//'out.gyro.moment_epar',&
+     call write_distributed_bcomplex(&
+          trim(path)//'bin.gyro.moment_epar',&
           10,&
           size(phi_plot(:,:,n_field+1)),&
           phi_plot(:,:,n_field+1))
@@ -71,8 +69,8 @@ subroutine gyro_write_timedata
 
      ! DENSITY
 
-     call write_distributed_complex(&
-          trim(path)//'out.gyro.moment_n',&
+     call write_distributed_bcomplex(&
+          trim(path)//'bin.gyro.moment_n',&
           10,&
           size(n_plot),&
           n_plot)
@@ -83,8 +81,8 @@ subroutine gyro_write_timedata
 
      ! ENERGY
 
-     call write_distributed_complex(&
-          trim(path)//'out.gyro.moment_e',&
+     call write_distributed_bcomplex(&
+          trim(path)//'bin.gyro.moment_e',&
           10,&
           size(e_plot),&
           e_plot)
@@ -95,8 +93,8 @@ subroutine gyro_write_timedata
 
      ! PARALLEL VELOCITY
 
-     call write_distributed_complex(&
-          trim(path)//'out.gyro.moment_v',&
+     call write_distributed_bcomplex(&
+          trim(path)//'bin.gyro.moment_v',&
           10,&
           size(v_plot),&
           v_plot)
@@ -107,15 +105,15 @@ subroutine gyro_write_timedata
 
   call gyro_kxky_spectrum
 
-  call write_distributed_real(&
-       trim(path)//'out.gyro.kxkyspec',&
+  call write_distributed_breal(&
+       trim(path)//'bin.gyro.kxkyspec',&
        10,&
        size(kxkyspec),&
        kxkyspec)
 
-  if (i_proc == 0) then
-     call write_local_real(&
-          trim(path)//'out.gyro.k_perp_squared',&
+  if (i_proc == 0 .and. extra_print_flag == 1) then
+     call gyro_write_binary(&
+          trim(path)//'bin.gyro.k_perp_squared',&
           10,&
           size(k_perp_squared),&
           k_perp_squared)
@@ -224,22 +222,15 @@ subroutine gyro_write_timedata
 
      if (i_proc == 0 .and. lindiff_method > 1) then
 
-        call write_local_real( &
-             trim(path)//'out.gyro.gbflux',10,size(gbflux),gbflux)
-        call write_local_real( &
-             trim(path)//'out.gyro.gbflux_mom',10,size(gbflux_mom),gbflux_mom)
-        call write_local_real( &
-             trim(path)//'out.gyro.gbflux_i',10,size(gbflux_i),gbflux_i)
-
-        if (trapdiff_flag == 1) then
-           call write_local_real( &
-                trim(path)//'out.gyro.gbflux_trapped',&
-                10,size(gbflux_trapped),gbflux_trapped)
-           call write_local_real( &
-                trim(path)//'out.gyro.gbflux_i_trapped',&
-                10,size(gbflux_i_trapped),gbflux_i_trapped)
+        call gyro_write_binary( &
+             trim(path)//'bin.gyro.gbflux',10,size(gbflux),gbflux)
+        if (extra_print_flag == 1) then
+           call gyro_write_binary( &
+                trim(path)//'bin.gyro.gbflux_mom',10,size(gbflux_mom),gbflux_mom)
+           call gyro_write_binary( &
+                trim(path)//'bin.gyro.gbflux_i',10,size(gbflux_i),gbflux_i)
         endif
-
+        
      endif !i_proc ==0 and lindiff >1 
 
      !=============
@@ -252,66 +243,38 @@ subroutine gyro_write_timedata
      ! BEGIN NONLINEAR 
      !================
 
-     call write_distributed_real(&
-          trim(path)//'out.gyro.gbflux_n',&
+     call write_distributed_breal(&
+          trim(path)//'bin.gyro.gbflux_n',&
           10,&
           size(gbflux_n),&
           gbflux_n)
 
-     if (nonlinear_transfer_flag == 1) then
-        call write_distributed_real(&
-             trim(path)//'out.gyro.nl_transfer',&
-             10,&
-             size(nl_transfer),&
-             nl_transfer)
-     endif !nonlinear_transfer_flag ==1 
-
      if (i_proc == 0) then
 
-        call write_local_real(trim(path)//'out.gyro.field_rms',10,size(ave_phi),ave_phi)
+        call gyro_write_binary( &
+             trim(path)//'bin.gyro.gbflux',10,size(gbflux),gbflux)
 
-        call write_local_real( &
-             trim(path)//'out.gyro.gbflux',10,size(gbflux),gbflux)
-        call write_local_real( &
-             trim(path)//'out.gyro.gbflux_i',10,size(gbflux_i),gbflux_i)
+        call gyro_write_binary( &
+             trim(path)//'bin.gyro.gbflux_i',10,size(gbflux_i),gbflux_i)
 
-        call write_local_real( &
-             trim(path)//'out.gyro.gbflux_mom',10,size(gbflux_mom),gbflux_mom)
-        call write_local_real( &
-             trim(path)//'out.gyro.gbflux_exc',10,size(gbflux_exc),gbflux_exc)
-
-        if (trapdiff_flag == 1) then
-           call write_local_real( &
-                trim(path)//'out.gyro.gbflux_trapped',10,&
-                size(gbflux_trapped),gbflux_trapped)
-           call write_local_real( &
-                trim(path)//'out.gyro.gbflux_i_trapped',10,&
-                size(gbflux_i_trapped),gbflux_i_trapped)
-        endif !trapdiff_flag == 1
-
-        call write_local_real( &
-             trim(path)//'out.gyro.zerobar',10,&
-             size(field_fluxave),transpose(field_fluxave))
-
-
-        allocate(a3(n_kinetic,4,n_x))
-        do i=1,n_x
-           a3(:,1,i) = h0_n(:,i)
-           a3(:,2,i) = h0_e(:,i)
-           a3(:,3,i) = source_n(:,i)
-           a3(:,4,i) = source_e(:,i)
-        enddo
-
-        call write_local_real( &
-             trim(path)//'out.gyro.source',10,size(a3),a3)
-
-        call write_local_real( &
-             trim(path)//'out.gyro.moment_zero',10,&
+        call gyro_write_binary( &
+             trim(path)//'bin.gyro.moment_zero',10,&
              size(moments_zero_plot),moments_zero_plot)
 
-        deallocate(a3)
+        call gyro_write_binary(&
+             trim(path)//'bin.gyro.field_rms',10,size(ave_phi),ave_phi)
 
-     endif! i_proc ==0
+        if (extra_print_flag == 1) then
+           call gyro_write_binary( &
+                trim(path)//'bin.gyro.gbflux_mom',10,size(gbflux_mom),gbflux_mom)
+           call gyro_write_binary( &
+                trim(path)//'bin.gyro.gbflux_exc',10,size(gbflux_exc),gbflux_exc)
+           call gyro_write_binary( &
+                trim(path)//'bin.gyro.zerobar',10,&
+                size(field_fluxave),transpose(field_fluxave))
+        endif
+        
+     endif ! i_proc = 0
 
      !================
      ! END NONLINEAR 
@@ -328,24 +291,10 @@ subroutine gyro_write_timedata
   if (entropy_flag == 1) then
      call gyro_entropy 
      if (i_proc == 0) then 
-        call write_local_real(&
-             trim(path)//'out.gyro.entropy.out',10,size(entropy),entropy)
+        call gyro_write_binary(&
+             trim(path)//'bin.gyro.entropy.out',10,size(entropy),entropy)
      endif
   endif
-  !------------------------------------------------------------
-
-  !------------------------------------------------------------
-  ! Velocity-space diagnostics
-  !
-  if (velocity_output_flag == 1) then
-     call gyro_nonlinear_flux_velocity
-     call write_distributed_real(&
-          trim(path)//'out.gyro.flux_velocity',&
-          10,&
-          size(nonlinear_flux_velocity),&
-          nonlinear_flux_velocity)
-  endif
-  !
   !------------------------------------------------------------
 
   !------------------------------------------------------------
@@ -362,15 +311,72 @@ subroutine gyro_write_timedata
 
 end subroutine gyro_write_timedata
 
-!===========================================================================
-!------------------------------------------------------
-! write_distributed_real.f90
-!
-! PURPOSE:
-!  Control merged output of real distributed array.
-!------------------------------------------------------
+subroutine gyro_write_binary(datafile,io,n_fn,fn)
 
-subroutine write_distributed_real(datafile,io,n_fn,fn)
+  use gyro_globals, only: BYTE,io_control,data_step,i_proc
+
+  !------------------------------------------------------
+  implicit none
+  !
+  character (len=*), intent(in) :: datafile
+  integer, intent(in) :: io,n_fn
+  real, intent(in) :: fn(n_fn)
+  integer :: i_err,disp
+  character :: cdummy
+  !------------------------------------------------------
+
+  if (i_proc > 0) return
+
+  select case (io_control)
+
+  case(0)
+
+     return
+
+  case (1)
+
+     ! Open
+
+     open(unit=io,file=datafile,status='replace')
+     close(io)
+
+  case (2)
+
+     ! Append
+
+     open(unit=io,file=datafile,status='old',position='append',access='stream')
+
+     write(io) real(fn,kind=4)
+     close(io)
+
+  case (3)
+
+     ! Rewind
+
+     disp = data_step+1
+     disp = disp*size(fn)*BYTE
+
+     open(unit=io,file=datafile,status='old',access='stream', iostat=i_err)
+     if (i_err/=0) then
+       call catch_error('ERROR: (CGYRO) [REWIND] Failed to open '//datafile)
+       return
+     endif
+     if (disp>0) then
+       read(io,pos=disp, iostat=i_err) cdummy
+       if (i_err/=0) then
+         call catch_error('ERROR: (CGYRO) [REWIND] Failed to rewind '//datafile)
+         close(io)
+         return
+       endif
+     endif
+     endfile(io)
+     close(io)
+
+  end select
+
+end subroutine gyro_write_binary
+
+subroutine write_distributed_breal(datafile,io,n_fn,fn)
 
   use mpi
   use gyro_globals
@@ -379,10 +385,8 @@ subroutine write_distributed_real(datafile,io,n_fn,fn)
   implicit none
   !
   character (len=*), intent(in) :: datafile
-  integer, intent(in) :: n_fn
+  integer, intent(in) :: io,n_fn
   real, intent(in) :: fn(n_fn)
-  !
-  integer, intent(in) :: io
   !
   ! Required for MPI-IO:
   !
@@ -393,9 +397,7 @@ subroutine write_distributed_real(datafile,io,n_fn,fn)
   integer(kind=MPI_OFFSET_KIND) :: disp
   integer(kind=MPI_OFFSET_KIND) :: offset1
   !
-  character(len=fmtstr_len*n_fn) :: fnstr
-  character(len=fmtstr_len) :: tmpstr
-  character :: c
+  character :: cdummy
   !------------------------------------------------------
 
   if (i_proc_1 /= 0) return
@@ -419,26 +421,16 @@ subroutine write_distributed_real(datafile,io,n_fn,fn)
 
      ! Append
 
-     ! Create human readable string ready to be written
-     ! Do it in one shot, to minimize IO
-     do in=1,n_fn
-        write(tmpstr, fmtstr) fn(in)
-        fnstr((in-1)*fmtstr_len+1:in*fmtstr_len-1) = tmpstr(1:11)
-        fnstr(in*fmtstr_len:in*fmtstr_len) = NEW_LINE('A')
-     enddo
-
-     ! now write in parallel to the common file
+     ! Write in parallel to the binary datafile
      filemode = MPI_MODE_WRONLY
      disp = data_step
-     disp = disp*n_proc_2
-     disp = disp*fmtstr_len*n_fn
+     disp = disp*n_proc_2*size(fn)*BYTE
 
-     offset1 = i_proc_2
-     offset1 = offset1*fmtstr_len*n_fn
+     offset1 = i_proc_2*size(fn)
 
      call MPI_INFO_CREATE(finfo,i_err)
 
-     call MPI_INFO_SET(finfo,"striping_factor","4",i_err)
+     call MPI_INFO_SET(finfo,"striping_factor",'4',i_err)
 
      call MPI_FILE_OPEN(NEW_COMM_2,&
           datafile,&
@@ -447,39 +439,68 @@ subroutine write_distributed_real(datafile,io,n_fn,fn)
           fh,&
           i_err)
 
-     call MPI_FILE_SET_VIEW(fh,&
-          disp,&
-          MPI_CHAR,&
-          MPI_CHAR,&
-          'native',&
-          finfo,&
-          i_err)
+     if (BYTE == 4) then
 
-     call MPI_FILE_WRITE_AT(fh,&
-          offset1,&
-          fnstr,&
-          n_fn*fmtstr_len,&
-          MPI_CHAR,&
-          fstatus,&
-          i_err)
+        ! Single (default) 
+        call MPI_FILE_SET_VIEW(fh,&
+             disp,&
+             MPI_REAL4,&
+             MPI_REAL4,&
+             'native',&
+             finfo,&
+             i_err)
+
+        call MPI_FILE_WRITE_AT(fh,&
+             offset1,&
+             real(fn,kind=4),&
+             n_fn,&
+             MPI_REAL4,&
+             fstatus,&
+             i_err)
+     else
+        
+        call MPI_FILE_SET_VIEW(fh,&
+             disp,&
+             MPI_REAL8,&
+             MPI_REAL8,&
+             'native',&
+             finfo,&
+             i_err)
+
+        call MPI_FILE_WRITE_AT(fh,&
+             offset1,&
+             fn,&
+             n_fn,&
+             MPI_REAL8,&
+             fstatus,&
+             i_err)
+     endif
 
      call MPI_FILE_SYNC(fh,i_err)
      call MPI_FILE_CLOSE(fh,i_err)
      call MPI_INFO_FREE(finfo,i_err)
 
-  case(3)
+  case (3)
 
      ! Rewind
 
      if (i_proc == 0) then
 
         disp = data_step+1
-        disp = disp*n_proc_2
-        disp = disp*fmtstr_len*n_fn
+        disp = disp*n_proc_2*size(fn)*BYTE
 
-        open(unit=io,file=datafile,status='old',access='STREAM')
-        if (disp > 0) then
-           read(io,pos=disp) c
+        open(unit=io,file=datafile,status='old',access='stream',iostat=i_err)
+        if (i_err/=0) then
+          call catch_error('ERROR: (CGYRO) [REWIND] Failed to open '//datafile)
+          return
+        endif
+        if (disp>0) then
+          read(io,pos=disp, iostat=i_err) cdummy
+          if (i_err/=0) then
+            call catch_error('ERROR: (CGYRO) [REWIND] Failed to rewind '//datafile)
+            close(io)
+            return
+          endif
         endif
         endfile(io)
         close(io)
@@ -488,16 +509,9 @@ subroutine write_distributed_real(datafile,io,n_fn,fn)
 
   end select
 
-end subroutine write_distributed_real
+end subroutine write_distributed_breal
 
-!------------------------------------------------------
-! write_distributed_complex.f90
-!
-! PURPOSE:
-!  Control merged output of complex distributed array.
-!------------------------------------------------------
-
-subroutine write_distributed_complex(datafile,io,n_fn,fn)
+subroutine write_distributed_bcomplex(datafile,io,n_fn,fn)
 
   use mpi
   use gyro_globals
@@ -506,10 +520,8 @@ subroutine write_distributed_complex(datafile,io,n_fn,fn)
   implicit none
   !
   character (len=*), intent(in) :: datafile
-  integer, intent(in) :: n_fn
+  integer, intent(in) :: io,n_fn
   complex, intent(in) :: fn(n_fn)
-  !
-  integer, intent(in) :: io
   !
   ! Required for MPI-IO:
   !
@@ -519,10 +531,7 @@ subroutine write_distributed_complex(datafile,io,n_fn,fn)
   integer :: fstatus(MPI_STATUS_SIZE)
   integer(kind=MPI_OFFSET_KIND) :: disp
   integer(kind=MPI_OFFSET_KIND) :: offset1
-  !
-  character(len=fmtstr_len*n_fn*2) :: fnstr
-  character(len=fmtstr_len) :: tmpstr
-  character :: c
+  character :: cdummy
   !------------------------------------------------------
 
   if (i_proc_1 /= 0) return
@@ -542,33 +551,20 @@ subroutine write_distributed_complex(datafile,io,n_fn,fn)
         close(io)
      endif
 
-  case(2)
+  case (2)
 
      ! Append
 
-     ! Create human readable string ready to be written
-     ! Do it in one shot, to minimize IO
-     do in=1,n_fn
-        write(tmpstr, fmtstr) real(fn(in))
-        fnstr((in-1)*fmtstr_len*2+1:(in-1)*fmtstr_len*2+fmtstr_len-1) = tmpstr(1:11)
-        fnstr((in-1)*fmtstr_len*2+fmtstr_len:(in-1)*fmtstr_len*2+fmtstr_len) = NEW_LINE('A')
-        write(tmpstr, fmtstr) aimag(fn(in))
-        fnstr((in-1)*fmtstr_len*2+fmtstr_len+1:in*fmtstr_len*2-1) = tmpstr(1:11)
-        fnstr(in*fmtstr_len*2:in*fmtstr_len*2) = NEW_LINE('A')
-     enddo
-
-     ! now write in parallel to the common file
+     ! Write in parallel to the binary datafile
      filemode = MPI_MODE_WRONLY
      disp = data_step
-     disp = disp*n_proc_2
-     disp = disp*fmtstr_len*2*n_fn
+     disp = disp*n_proc_2*size(fn)*BYTE*2
 
-     offset1 = i_proc_2
-     offset1 = offset1*fmtstr_len*2*n_fn
+     offset1 = i_proc_2*size(fn)
 
      call MPI_INFO_CREATE(finfo,i_err)
 
-     call MPI_INFO_SET(finfo,"striping_factor","4",i_err)
+     call MPI_INFO_SET(finfo,"striping_factor",'4',i_err)
 
      call MPI_FILE_OPEN(NEW_COMM_2,&
           datafile,&
@@ -577,39 +573,68 @@ subroutine write_distributed_complex(datafile,io,n_fn,fn)
           fh,&
           i_err)
 
-     call MPI_FILE_SET_VIEW(fh,&
-          disp,&
-          MPI_CHAR,&
-          MPI_CHAR,&
-          'native',&
-          finfo,&
-          i_err)
+     if (BYTE == 4) then
 
-     call MPI_FILE_WRITE_AT(fh,&
-          offset1,&
-          fnstr,&
-          n_fn*fmtstr_len*2,&
-          MPI_CHAR,&
-          fstatus,&
-          i_err)
+        ! Single (default) 
+        call MPI_FILE_SET_VIEW(fh,&
+             disp,&
+             MPI_COMPLEX8,&
+             MPI_COMPLEX8,&
+             'native',&
+             finfo,&
+             i_err)
+
+        call MPI_FILE_WRITE_AT(fh,&
+             offset1,&
+             cmplx(fn,kind=4),&
+             n_fn,&
+             MPI_COMPLEX8,&
+             fstatus,&
+             i_err)
+     else
+
+        call MPI_FILE_SET_VIEW(fh,&
+             disp,&
+             MPI_COMPLEX16,&
+             MPI_COMPLEX16,&
+             'native',&
+             finfo,&
+             i_err)
+
+        call MPI_FILE_WRITE_AT(fh,&
+             offset1,&
+             fn,&
+             n_fn,&
+             MPI_COMPLEX16,&
+             fstatus,&
+             i_err)
+     endif
 
      call MPI_FILE_SYNC(fh,i_err)
      call MPI_FILE_CLOSE(fh,i_err)
      call MPI_INFO_FREE(finfo,i_err)
 
-  case(3)
+  case (3)
 
      ! Rewind
 
      if (i_proc == 0) then
 
-        disp     = data_step+1
-        disp     = disp * n_proc_2
-        disp = disp * fmtstr_len * 2 * n_fn
+        disp = data_step+1
+        disp = disp*n_proc_2*size(fn)*BYTE*2
 
-        open(unit=io,file=datafile,status='old',access="STREAM")
+        open(unit=io,file=datafile,status='old',access='stream',iostat=i_err)
+        if (i_err/=0) then
+          call catch_error('ERROR: (CGYRO) [REWIND] Failed to open '//datafile)
+          return
+        endif
         if (disp>0) then
-           read(io,pos=disp) c
+          read(io,pos=disp, iostat=i_err) cdummy
+          if (i_err/=0) then
+            call catch_error('ERROR: (CGYRO) [REWIND] Failed to rewind '//datafile)
+            close(io)
+            return
+          endif
         endif
         endfile(io)
         close(io)
@@ -618,69 +643,4 @@ subroutine write_distributed_complex(datafile,io,n_fn,fn)
 
   end select
 
-end subroutine write_distributed_complex
-
-!------------------------------------------------------
-! write_local_real.f90
-!
-! PURPOSE:
-!  This routine write a vector of nondistributed reals.
-!------------------------------------------------------
-
-subroutine write_local_real(datafile,io,n_fn,fn)
-
-  use gyro_globals, only : &
-       data_step, &
-       io_control, &
-       fmtstr
-
-  !---------------------------------------------------
-  implicit none
-  !
-  character (len=*), intent(in) :: datafile
-  integer, intent(in) :: io
-  integer, intent(in) :: n_fn
-  real, intent(in) :: fn(n_fn)
-  !
-  integer :: data_loop
-  real :: dummy(n_fn)
-  !---------------------------------------------------
-
-  select case (io_control)
-
-  case(0)
-
-     return
-
-  case(1)
-
-     ! Open
-
-     open(unit=io,file=datafile,status='replace')
-     close(io)
-
-  case(2)
-
-     ! Append
-
-     open(unit=io,file=datafile,status='old',position='append')
-     write(io,fmtstr)  fn(:)
-     close(io)
-
-  case(3)
-
-     ! Rewind
-
-     open(unit=io,file=datafile,status='old')
-
-     do data_loop=0,data_step
-        read(io,fmtstr) dummy(:)
-     enddo
-
-     endfile(io)
-     close(io)
-
-  end select
-
-end subroutine write_local_real
-
+end subroutine write_distributed_bcomplex

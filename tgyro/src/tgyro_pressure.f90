@@ -17,19 +17,10 @@ subroutine tgyro_pressure
   ! exp_ni [1/cm^3]
   ! exp_ti [eV]
 
-  ! First compute thermal pressure
+  ! Compute total pressure (thermal and fast ions)
   ptot_exp = exp_ne*exp_te
   do i_ion=1,loc_n_ion
-     if (therm_flag(i_ion) == 1) then
-        ptot_exp = ptot_exp + exp_ni(i_ion,:)*exp_ti(i_ion,:)
-     endif
-  enddo
-
-  ! Now add fast ions
-  do i_ion=1,loc_n_ion
-     if (therm_flag(i_ion) == 0) then
-        ptot_exp = ptot_exp + exp_ni(i_ion,:)*exp_ti(i_ion,:)
-     endif
+     ptot_exp = ptot_exp + exp_ni(i_ion,:)*exp_ti(i_ion,:)
   enddo
 
   ! Mean temperature on axis [eV].  Need this for input 

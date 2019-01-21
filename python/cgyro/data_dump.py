@@ -33,6 +33,8 @@ class cgyrodata_dump(data.cgyrodata):
             ttag = 'Pi'
             ftag = 'flux_v'
             y = ys[:,2,:]
+         else:
+            raise ValueError('(dump_flux.py) Invalid moment.')
 
          data  = np.column_stack((self.t,y[0,:]))
          head  = '(cs/a) t     '+ttag+'_1/'+ttag+'_GB'
@@ -84,8 +86,7 @@ class cgyrodata_dump(data.cgyrodata):
          ftag = 'flux_v'
          y = ys[:,2,:,:]
       else:
-         print 'ERROR (dump_ky_flux) Invalid moment.'
-         sys.exit()
+         raise ValueError('(dump_ky_flux.py) Invalid moment.')
 
       # Determine tmin
       imin=iwindow(t,w)

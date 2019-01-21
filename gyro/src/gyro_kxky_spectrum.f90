@@ -1,5 +1,5 @@
 !-------------------------------------------------------
-! get_field_spectrum.f90
+! gyro_kxky_spectrum.f90
 !
 ! PURPOSE:
 !  This routine calculates the instantaneous potential
@@ -41,7 +41,7 @@ subroutine gyro_kxky_spectrum
   ! Compute FT of phi.
 !$omp parallel private(i,p,j)
   do i=1,n_x  
-     do p = ibeg, iend
+     do p=ibeg,iend
         do j=1,n_theta_int
            f_bar(j,p) = f_bar(j,p)+phi(j,i,1)*cRi(p,i)
         enddo ! j
@@ -66,7 +66,7 @@ subroutine gyro_kxky_spectrum
   enddo ! p
 
   if (i_proc == 0 .and. debug_flag == 1) then
-     print *,'[gyro_field_spectrum done]' 
+     print *,'[gyro_kxky_spectrum done]' 
   endif
 
 end subroutine gyro_kxky_spectrum

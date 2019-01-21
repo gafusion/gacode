@@ -37,6 +37,7 @@ module EXPRO_locsim_interface
   real :: gamma_e_loc
   real :: gamma_p_loc
   real :: mach_loc
+  real :: rmin_loc
   real :: rmaj_loc
   real :: rhos_loc
   real :: z_eff_loc

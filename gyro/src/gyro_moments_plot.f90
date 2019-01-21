@@ -36,11 +36,8 @@ subroutine gyro_moments_plot
   complex, dimension(n_theta_plot,n_x,3) :: mom_tmp
   !---------------------------------------------------
 
-  if (alltime_index == 0) then
-     moments_plot(:,:,:,:) = (0.0,0.0)
-  endif
-  moments_zero_plot(:,:,:) = 0.0
-
+  moments_plot(:,:,:,:) = (0.0,0.0)
+  moments_zero_plot(:,:,1:3) = 0.0
 
   do is=1,n_kinetic
 
@@ -177,7 +174,7 @@ subroutine gyro_moments_plot
      !---------------------------------------------------------------
      ! Integrate to obtain flux-surface averages
      !
-     do ix=1,2
+     do ix=1,3
         do i=1,n_x
            do j=1,n_blend
               moments_zero_plot(i,is,ix) = &
@@ -190,8 +187,7 @@ subroutine gyro_moments_plot
      !----------------------------------------------------------------
      ! Compute moments_plot with averaging:
      !
-     moments_plot(:,:,is,:) = moments_plot(:,:,is,:)+&
-          w_time(alltime_index+1)*mom_tmp(:,:,:)
+     moments_plot(:,:,is,:) = mom_tmp(:,:,:)
      !----------------------------------------------------------------
 
   enddo ! is

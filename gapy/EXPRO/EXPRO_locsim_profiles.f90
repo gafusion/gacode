@@ -79,6 +79,8 @@ subroutine EXPRO_locsim_profiles(&
 
   integer :: i,j,i_ion
 
+  rmin_loc = rmin
+  
   n_species_exp = n_species_in
 
   !--------------------------------------------------------------
@@ -203,7 +205,6 @@ subroutine EXPRO_locsim_profiles(&
   if (numeq_flag == 1) then
 
      if (EXPRO_nfourier <= 0) then
-        !call cgyro_error('Geometry coefficients missing')
         return
      endif
 

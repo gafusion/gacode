@@ -1,7 +1,0 @@
--------------------------------------------------------------------------------------
-out.cgyro.kxky_flux_n : (n_radial,n_n,n_species,n_time)  : Particle flux
-out.cgyro.kxky_flux_e : (n_radial,n_n,n_species,n_time)  : Energy flux
-
-out.cgyro.kxky_phi    : (2,n_radial,n_n,n_time)           : phi (theta=0)
-out.cgyro.kxky_n      : (2,n_radial,n_species,n_n,n_time) : density moment (theta=0)
--------------------------------------------------------------------------------------

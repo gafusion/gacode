@@ -14,13 +14,13 @@ subroutine tgyro_neo_map
   neo_test_flag_in = gyrotest_flag
   
   ! Simulation mode (dke solve vs. analytic)
-  if (loc_neo_method == 1) then
-     ! Analytic theory
-     neo_sim_model_in = 0
-  else
+  if (tgyro_neo_method == 2) then
      ! Kinetic NEO and theory (no NCLASS)
      neo_sim_model_in = 2
-  end if
+  else
+     ! Analytic theory
+     neo_sim_model_in = 0
+  endif
 
   ! Resolution 
   neo_n_energy_in = 5
@@ -48,13 +48,10 @@ subroutine tgyro_neo_map
 
   neo_rho_star_in  = 0.001
 
-  if (tgyro_quickfast_flag == 1) then
-     neo_n_species_in = sum(therm_flag(1:loc_n_ion))+1
-  else
-     neo_n_species_in = loc_n_ion+1
-  endif
-  if (loc_n_ion > 9) then
-     call tgyro_catch_error('ERROR: (TGYRO) n_ion > 9 not supported in NEO interface.') 
+  neo_n_species_in = sum(calc_flag(1:loc_n_ion))+1
+
+  if (neo_n_species_in > 9) then
+     call tgyro_catch_error('ERROR: (TGYRO) n_species > 9 not supported in NEO interface.') 
   endif
 
   ! Assuming NEO mass and temp norm based on first ion
@@ -78,7 +75,7 @@ subroutine tgyro_neo_map
   ! Ions
   i0 = 1
   do is=1,loc_n_ion
-     if (therm_flag(is) == 0 .and. tgyro_quickfast_flag == 1) cycle
+     if (calc_flag(is) == 0) cycle
      i0 = i0 + 1
      neo_z_in(i0)      = zi_vec(is)
      neo_mass_in(i0)   = mi(is)/m_norm

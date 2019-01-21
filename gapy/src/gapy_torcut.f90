@@ -1,19 +1,20 @@
-subroutine torcut(m,q,nr,nth,nn,nx,ny,g1,g2,c,f)
+subroutine torcut(m,q,nr,nth,nn,nx,nz,g1,g2,c,f)
 
   implicit none
 
   integer, intent(in) :: m
   double precision, intent(in) :: q
-  integer, intent(in) :: nr,nn,nth,nx,ny
-  double precision, intent(in) :: g1(0:ny-1),g2(0:ny-1)
+  integer, intent(in) :: nr,nn,nth,nx,nz
+  double precision, intent(in) :: g1(0:nz-1),g2(0:nz-1)
   double complex, intent(in) :: c(0:nr-1,0:nth-1,0:nn-1)
-  double precision, intent(inout) :: f(0:nx-1,0:ny-1)
+  double precision, intent(inout) :: f(0:nx-1,0:nz-1)
 
-  double complex, dimension(:,:), allocatable :: epx,eny,cj
+  double complex, dimension(:,:), allocatable :: epx,eny,c0
   double complex, dimension(:,:,:), allocatable :: cx
-  double precision, dimension(:), allocatable :: xi,yj,th
+  double precision, dimension(:), allocatable :: x,z,th
 
-  integer :: i,j,n,p,jc,pp
+  integer :: i,k,kc
+  integer :: n,p,pp
   double precision :: pi,fsum,x0
   double complex :: ic
 
@@ -23,36 +24,38 @@ subroutine torcut(m,q,nr,nth,nn,nx,ny,g1,g2,c,f)
   ! f2py intent(in) nth
   ! f2py intent(in) nn
   ! f2py intent(in) nx
-  ! f2py intent(in) ny
+  ! f2py intent(in) nz
+  ! f2py intent(in) g1
+  ! f2py intent(in) g2
   ! f2py intent(in) c
   ! f2py intent(in,out) f
 
   allocate(epx(0:nr-1,0:nx-1))
-  allocate(eny(0:nn-1,0:ny-1))
-  allocate(xi(0:nx-1))
-  allocate(yj(0:ny-1))
+  allocate(eny(0:nn-1,0:nz-1))
+  allocate(x(0:nx-1))
+  allocate(z(0:nz-1))
   allocate(th(0:nth))
-  allocate(cj(0:nr-1,0:nn-1))
+  allocate(c0(0:nr-1,0:nn-1))
   allocate(cx(0:nr-1,0:nth,0:nn-1))
 
   ic = (0d0,1d0)
   pi = atan(1d0)*4d0
 
-  do j=0,nth
-     th(j) = j*2*pi/nth-pi
+  do kc=0,nth
+     th(kc) = kc*2*pi/nth-pi
   enddo
 
   do i=0,nx-1
-     xi(i) = i*2*pi/(nx-1)
+     x(i) = i*2*pi/(nx-1)
      do p=0,nr-1    
-        epx(p,i) = exp(ic*(p-nr/2)*xi(i))
+        epx(p,i) = exp(ic*(p-nr/2)*x(i))
      enddo
   enddo
 
-  do j=0,ny-1
-     yj(j) = j*2*pi/(ny-1)-pi
+  do k=0,nz-1
+     z(k) = k*2*pi/(nz-1)-pi
      do n=0,nn-1    
-        eny(n,j) = exp(ic*n*g1(j))
+        eny(n,k) = exp(ic*n*g1(k))
      enddo
   enddo
 
@@ -67,34 +70,32 @@ subroutine torcut(m,q,nr,nth,nn,nx,ny,g1,g2,c,f)
   enddo
 
   ! factor of 1/2 for n=0
-  eny(0,:) = 0.5d0*eny(0,:)
+  eny(0,:) = eny(0,:)/2
 
-  f = 0d0
+!$omp parallel do private(k,kc,c0,i,fsum,x0,n,p)
+  do k=0,nz-1
 
-!$omp parallel do private(j,jc,cj,i,fsum,x0,n,p)
-  do j=0,ny-1
-
-     do jc=0,nth-1
-        if (yj(j) >= th(jc) .and. yj(j) <= th(jc+1)) then 
-           cj(:,:) = ( cx(:,jc+1,:)*(yj(j)-th(jc)) &
-                + cx(:,jc,:)*(th(jc+1)-yj(j)) )/(th(1)-th(0))
+     do kc=0,nth-1
+        if (z(k) >= th(kc) .and. z(k) <= th(kc+1)) then 
+           c0(:,:) = ( cx(:,kc+1,:)*(z(k)-th(kc)) &
+                + cx(:,kc,:)*(th(kc+1)-z(k)) )/(th(1)-th(0))
            exit
         endif
      enddo
-
+     
      do i=0,nx-1
         fsum = 0.0
-        x0 = m*xi(i)*g2(j)/(2*pi)
+        x0 = m*x(i)*g2(k)/(2*pi)
         do n=0,nn-1
            do p=0,nr-1
-              fsum = fsum+real( cj(p,n)*epx(p,i)*eny(n,j)*exp(ic*n*x0) )
+              fsum = fsum+real( c0(p,n)*epx(p,i)*eny(n,k)*exp(ic*n*x0) )
            enddo
         enddo
-        f(i,j) = fsum
+        f(i,k) = fsum
      enddo
 
   enddo
 
-  deallocate(epx,eny,xi,yj,th,cj,cx)
+  deallocate(epx,eny,x,z,th,c0,cx)
 
 end subroutine torcut

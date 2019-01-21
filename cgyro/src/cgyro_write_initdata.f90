@@ -115,7 +115,7 @@ subroutine cgyro_write_initdata
 
      if (profile_model == 2) then
         write(io,*)
-        write(io,10) '           a[m]:',a_meters, '  b_unit[T]:',b_unit
+        write(io,10) '           a[m]:',a_meters, '  b_unit[T]:',b_unit,  '     rhos/a:', rhos/a_meters
         write(io,10) 'n_norm[e19/m^3]:',dens_norm,'v_norm[m/s]:',vth_norm,'T_norm[keV]:',temp_norm
      endif
      write(io,*)

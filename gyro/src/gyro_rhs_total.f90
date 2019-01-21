@@ -45,7 +45,7 @@ subroutine gyro_rhs_total
   ! Compute orbit-time derivative for ions ONLY, because this term is 
   ! explicit for ions.
   !
-  if (kill_i_parallel_flag == 0) call gyro_tau_derivative
+  call gyro_tau_derivative
   !----------------------------------------------------------------------
 
   !----------------------------------------------------------------------
@@ -122,7 +122,7 @@ subroutine gyro_rhs_total
   !----------------------------------------------------------------------
   ! Adaptive source
   !
-  if (source_flag == 1) then
+  if (source_method > 1) then
 
      call gyro_adaptive_source
 
@@ -135,17 +135,32 @@ subroutine gyro_rhs_total
 
            p_nek_loc = p_nek_loc+1
 
-           ie = nek_e(p_nek)  
+           if (source_method == 2) then
 
-           do i = ibeg, iend
+              ie = nek_e(p_nek)  
+              
+              do i=ibeg,iend
 
-              ! In this expression, nu_source = 0 if n > 0.
-              ! (see gyro_radial_operators).
-              rhs(:,i,p_nek_loc,is) = rhs(:,i,p_nek_loc,is) &
-                   -nu_source*h0_eq(is,ie,i)
+                 ! In this expression, nu_source = 0 if n > 0.
+                 ! (see gyro_radial_operators).
+                 rhs(:,i,p_nek_loc,is) = rhs(:,i,p_nek_loc,is) &
+                      -nu_source*h0_eq(is,ie,i)
 
-           enddo ! i
+              enddo ! i
 
+           else
+
+              do i=ibeg,iend
+
+                 ! In this expression, nu_source = 0 if n > 0.
+                 ! (see gyro_radial_operators).
+                 rhs(:,i,p_nek_loc,is) = rhs(:,i,p_nek_loc,is) &
+                      -nu_source*h_source(:,i,p_nek_loc,is)
+                 
+              enddo ! i
+
+           endif
+        
         enddo ! p_nek
 
      enddo ! is
@@ -158,23 +173,10 @@ subroutine gyro_rhs_total
   ! Er shear
   !
 !$omp parallel private(i)
-   do i = ibeg, iend
+   do i=ibeg,iend
       rhs(:,i,:,:) = rhs(:,i,:,:)-i_c*omega_eb_s(i)*h(:,i,:,:)
    enddo 
 !$omp end parallel
-  !---------------------------------------------------------
-
-  !---------------------------------------------------------
-  ! Krook ion-ion collision operator:
-  !
-  if (krook_flag == 1) then
-     call gyro_collision_krook
-!$omp parallel private(i)
-     do i = ibeg, iend
-        rhs(:,i,:,1) = rhs(:,i,:,1)+rhs_krook(:,i,:)
-     end do
-!$omp end parallel
-  endif
   !---------------------------------------------------------
 
   deallocate(cap_h)

@@ -4,7 +4,7 @@
 # PURPOSE:
 #  Collection of classes for parsing of GACODE free-format input files.
 #
-# NOTES: 
+# NOTES:
 #  SimpleInput  : input.gyro, input.neo, input.tglf input.glf23
 #  ProfileInput : input.profiles
 #  ManagerInput : input.tgyro [see tgyro/bin/tgyro_parse.py]
@@ -12,7 +12,7 @@
 
 import string
 import os
- 
+
 #--------------------------------------------------------------------
 # PARSER FOR input.cgyro, etc.
 #--------------------------------------------------------------------
@@ -48,7 +48,7 @@ class SimpleInput:
     def printmsg(self):
         if self.error == 1:
             print self.error_msg
-        
+
     def set_extension(self,text):
         self.extension = text
 
@@ -370,6 +370,8 @@ class ManagerInput:
                 code='ifs'
             elif os.path.isfile(basedir+'/input.glf23'):
                 code='glf23'
+            elif os.path.isfile(basedir+'/input.etg'):
+                code='etg'
             else:
                 code='unknown'
                 self.error=1
@@ -387,10 +389,10 @@ class ManagerInput:
                 print 'INFO: (gacodeinput.py) Found '+code+' input in '+basedir
 
             if os.path.isfile(basedir+'/input.profiles'):
-               os.system('python $GACODE_ROOT/shared/bin/profile_parse.py '+basedir+'/input.profiles')
- 
-            basefile = basedir+'/input.'+code 
-            tempfile = basefile+'.temp' 
+               os.system('python $GACODE_ROOT/profiles_gen/bin/profile_parse.py '+basedir+'/input.profiles')
+
+            basefile = basedir+'/input.'+code
+            tempfile = basefile+'.temp'
 
             file_base = open(basefile,'r')
             file_temp = open(tempfile,'w')

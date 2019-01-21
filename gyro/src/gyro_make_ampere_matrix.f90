@@ -64,11 +64,7 @@ subroutine gyro_make_ampere_matrix
   call gyro_blend_ampere
   call gyro_make_jpar_elec(0)
 
-  if (sparse_method == 1) then
-     call gyro_sparse_solve_umfpack(n_ampere,n_ampere_row,2,0)
-  else
-     call gyro_sparse_solve_mumps(n_ampere,n_ampere_row,2,0)
-  endif
+  call gyro_sparse_solve_umfpack(n_ampere,n_ampere_row,2,0)
 
   !---------------------------------------------
   ! These are large matrices and deallocation is

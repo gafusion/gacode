@@ -15,17 +15,16 @@ mpinuma=${6}
 
 # . $GACODE_ROOT/shared/bin/gacode_mpi_tool
 
-export OMP_NUM_THREADS=$nomp
+export GACODE_NOMP=${nomp}
+let nproc=4/${nomp}
+
+let ngrp=$nmpi/$nproc
+
 
 cd $simdir
 
 export OMP_STACKSIZE=400M
-#export MPICH_MAX_THREAD_SAFETY=funneled
 
-export OMP_NUM_THREADS=$nomp
-echo ">mpirun -n $nmpi $exec"
+echo ">jsrun -n$ngrp -g1 -a${nproc} -c4 $GACODE_ROOT/platform/exec/wrap.${GACODE_PLATFORM} $exec"
 #
-# jsrun
-#mpirun --host summit2:32,summit1:32 --map-by core -n $nmpi $GACODE_ROOT/platform/exec/wrap.${GACODE_PLATFORM} $exec
-# mpirun -n $nmpi $GACODE_ROOT/platform/exec/wrap.${GACODE_PLATFORM} $exec
-mpirun -n $nmpi $exec
+jsrun -n$ngrp -g1 -a${nproc} -c4 $GACODE_ROOT/platform/exec/wrap.${GACODE_PLATFORM} $exec 

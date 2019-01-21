@@ -28,7 +28,7 @@ then
   echo "EXECUTE MODE"
   echo
   echo "         -e <simdir>"
-  echo "         Run CGYRO using INPUT data in <simdir>."
+  echo "         Use input data in <simdir>."
   echo
   echo "         -n <MPI tasks>"
   echo "         Number of MPI tasks."
@@ -41,9 +41,6 @@ then
   echo
   echo "         -mpinuma <n>"
   echo "         MPI tasks per active NUMA."
-  echo
-  echo "         -new"
-  echo "         Clean any existing data and start anew"
   echo
   echo "REGRESSION TESTING"
   echo
@@ -75,11 +72,8 @@ then
   echo "         -clean"
   echo "         Clean simulation directory."
   echo
-  echo "         -iclean"
-  echo "         Clean simulation directory except for out.cgyro.restart"
-  echo
   echo "         -compress"
-  echo "         Compress simulation directory."
+  echo "         Replicate directory, but without restart or nonstandard files."
   echo
   echo "         -bin"
   echo "         Map old-style ASCII data to binary files."
@@ -114,7 +108,6 @@ COMPRESS_FLAG=0
 BIN_FLAG=0
 CBIN_FLAG=0
 RESET=0
-NEW_FLAG=0
 INIT_FLAG=0
 GLOBALMAP_FLAG=0
 HELP_TAG=null
@@ -130,8 +123,6 @@ while [ $# -gt 0 ] ; do
 
   -p) shift ; SIMROOT=$1 ;;
 
-  -start) shift ; START=$1 ;;
-
   -e) shift ; LOCDIR=$1 ;;
 
   -t) shift ; LOCDIR=$1 ; TEST_FLAG=1 ;;
@@ -146,11 +137,10 @@ while [ $# -gt 0 ] ; do
 
   -mpinuma) shift ; MPINUMA=$1 ;;
 
-  -nidle) shift ; NIDLE=$1 ;;
-
   -g) shift ; LOCDIR=$1 ; GENERATE_FLAG=1 ;;
 
   -r) REGRESS_FLAG=1 ;;
+
   -rs) REGRESS_FLAG=1 ; shift ; SCASE=$1 ;;
 
   -reset) RESET=1 ;;
@@ -161,11 +151,10 @@ while [ $# -gt 0 ] ; do
 
   -clean) CLEAN_FLAG=1 ;;
 
-  -new) NEW_FLAG=1 ;;
-
   -compress) COMPRESS_FLAG=1 ;;
 
   -bin) BIN_FLAG=1 ;;
+
   -cbin) CBIN_FLAG=1 ;;
 
   -globalmap) GLOBALMAP_FLAG=1 ;;
@@ -199,7 +188,7 @@ fi
 #============================================================
 
 #============================================================
-# Compress option
+# compress option
 if [ $COMPRESS_FLAG -eq 1 ]
 then
     cgyro_compress $SIMDIR $LOCDIR
@@ -325,9 +314,6 @@ if [ $CLEAN_FLAG -eq 1 ] ; then
     rm -f $CFILES
     echo "INFO: (cgyro) Cleaned directory."
     exit 1
-fi
-if [ $NEW_FLAG -eq 1 ] ; then
-   rm -f $CFILES
 fi
 #============================================================
 
