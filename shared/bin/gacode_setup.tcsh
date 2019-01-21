@@ -42,6 +42,7 @@ endif
 if ( $?NEURAL_ROOT ) then
     setenv NN_LIB '-L$(NEURAL_ROOT) -I$(NEURAL_ROOT) -lbrainfusetf'
     setenv EPEDNN_MODEL $NEURAL_ROOT/eped1nn/models/EPED_mb_128_pow_norm_common_30x10.pb
-    setenv TGLFNN_MODEL $NEURAL_ROOT/tglfnn/models/nn_SAT0_mb_1024_abs_reg_common_stair2x2x6.pb
+    setenv TGLFNN_MODEL_2IONS $NEURAL_ROOT/tglfnn/models/2IONS.pb
+    setenv TGLFNN_MODEL_3IONS $NEURAL_ROOT/tglfnn/models/3IONS.pb
     setenv NEONN_MODEL $NEURAL_ROOT/neonn/models/NEO_mb_64_common_30.pb
 endif
