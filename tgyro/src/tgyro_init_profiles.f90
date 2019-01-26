@@ -468,9 +468,9 @@ subroutine tgyro_init_profiles
      ! betan [%] = betat/In*100 where In = Ip/(a Bt) 
      betan_in = abs(( p_ave/(0.5*bt_in**2/mu_0) ) / ( ip_in/(a_in*bt_in) ) * 100.0)
      ! Triangularity [-]
-     delta_in = EXPRO_delta(n_exp-3)  
+     delta_in = EXPRO_delta(n_exp)
      ! Elongation [-]
-     kappa_in = EXPRO_kappa(n_exp-3) 
+     kappa_in = EXPRO_kappa(n_exp)
      ! Main ion mass [mp]
      m_in = mi_vec(1)
      ! R0(a) [m]
