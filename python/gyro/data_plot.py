@@ -412,16 +412,16 @@ class gyrodata_plot(data.GYROData):
          print 'INFO: (plot_gbflux_i) Full average = {:.2f}'.format(ave)
          # Partial-r average
          if aw > 0:
-            ave = np.average(avei[aw:-aw])
+            ave = np.average(avei[aw:-(aw+1)])
          else:
-            ave = np.average(avei[nd:-nd])
+            ave = np.average(avei[nd:-(nd+1)])
          label = r'$'+mtag+mnorm+'_'+u+'/'+mtag+'_\mathrm{GB}: '+str(round(ave,3))+'$'
 
          if aw > 0:
-            ax.plot(r[aw:-aw],ave*one[aw:-aw],'--',label=label,color=color[ispec])
+            ax.plot(r[aw:-(aw+1)],ave*one[aw:-(aw+1)],'--',label=label,color=color[ispec])
          else:
             if nd > 0:
-               ax.plot(r[nd:-nd],ave*one[nd:-nd],'--',label=label,color=color[ispec])
+               ax.plot(r[nd:-(nd+1)],ave*one[nd:-(nd+1)],'--',label=label,color=color[ispec])
             else:
                ax.plot(r,ave*one,'--',label=label,color=color[ispec])
 

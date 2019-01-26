@@ -223,14 +223,12 @@ subroutine gyro_write_timedata
      if (i_proc == 0 .and. lindiff_method > 1) then
 
         call gyro_write_binary( &
-             trim(path)//'bin.gyro.gbflux',10,size(gbflux),gbflux)
+             trim(path)//'bin.gyro.gbflux_i',10,size(gbflux_i),gbflux_i)
         if (extra_print_flag == 1) then
            call gyro_write_binary( &
                 trim(path)//'bin.gyro.gbflux_mom',10,size(gbflux_mom),gbflux_mom)
-           call gyro_write_binary( &
-                trim(path)//'bin.gyro.gbflux_i',10,size(gbflux_i),gbflux_i)
         endif
-        
+
      endif !i_proc ==0 and lindiff >1 
 
      !=============
@@ -252,9 +250,6 @@ subroutine gyro_write_timedata
      if (i_proc == 0) then
 
         call gyro_write_binary( &
-             trim(path)//'bin.gyro.gbflux',10,size(gbflux),gbflux)
-
-        call gyro_write_binary( &
              trim(path)//'bin.gyro.gbflux_i',10,size(gbflux_i),gbflux_i)
 
         call gyro_write_binary( &
@@ -273,7 +268,7 @@ subroutine gyro_write_timedata
                 trim(path)//'bin.gyro.zerobar',10,&
                 size(field_fluxave),transpose(field_fluxave))
         endif
-        
+
      endif ! i_proc = 0
 
      !================

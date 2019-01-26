@@ -145,13 +145,13 @@ subroutine tgyro_source
 
      p_i(:) = &
           +p_i_fus(:) &                ! Fusion power to ions
-          +tgyro_input_paux_scale*p_i_aux_in(:) & ! Auxiliary ion heating [fixed]
+          +p_i_aux_in(:) &             ! Auxiliary ion heating [fixed]
           +p_exch(:) &                 ! Collisional exchange
           +p_expwd(:)*tgyro_expwd_flag ! Turbulent exchange
 
      p_e(:) = &
           +p_e_fus(:) &                ! Fusion power to electrons
-          +tgyro_input_paux_scale*p_e_aux_in(:) & ! Auxiliary electron heating [fixed]
+          +p_e_aux_in(:) &             ! Auxiliary electron heating [fixed]
           -p_exch(:)   &               ! Collisional exchange
           -p_brem(:) &                 ! Bremsstrahlung radiation
           -p_sync(:) &                 ! Synchrotron radiation

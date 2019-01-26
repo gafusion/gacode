@@ -263,6 +263,7 @@ class GYROData:
       if fmt != 'null':
          self.gbflux_i = np.reshape(data[0:nd],(n_kinetic,n_field,4,n_x,nt),'F')
          print "INFO: (data.py) Read data in "+fmt+".gyro.gbflux_i. "+t
+         # NOTE: The average below used to occur in GYRO, but not it's done here.
          if self.profile['boundary_method'] == 1:
             # Periodic simulation
             self.gbflux = np.mean(self.gbflux_i,axis=3)
