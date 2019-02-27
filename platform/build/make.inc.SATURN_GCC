@@ -22,7 +22,7 @@ CC  = gcc
 FOMP   = -fopenmp
 FMATH  = -fdefault-real-8 -fdefault-double-8 
 FOPT   = -Ofast
-FDEBUG = -Wall -W fcheck=mem,bounds -g -fbacktrace -ffpe-trap=invalid,zero,overflow
+FDEBUG = -Wall -Warray-bounds -g -fbacktrace -ffpe-trap=invalid,zero,overflow
 
 # System math libraries
 
