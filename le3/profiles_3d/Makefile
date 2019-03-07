@@ -22,10 +22,7 @@ $(EXEC): $(OBJECTS) $(EXTRA_LIBS)
 	$(FC) $(FMATH) $(FFLAGS) -o $(EXEC) $(OBJECTS) $(EXTRA_LIBS) $(LMATH) $(NETCDF)
 
 .f90.o :
-	$(FC) $(FMATH) $(FFLAGS) -I $(NETCDF_INC) -c $<
+	$(FC) $(FMATH) $(FFLAGS) -I$(NETCDFF_INC) -c $<
 
 clean:
 	rm -f *.o $(EXEC)
-
-
-

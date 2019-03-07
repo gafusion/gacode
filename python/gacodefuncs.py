@@ -9,24 +9,24 @@
 TIME=r'$(c_s/a)\,t$'
 
 #---------------------------------------------------------------
-def average(f,t,window):
+def average(f,t,wmin,wmax):
  
     n_time = len(t)
 
     # Manage case with 2 time points (eigenvalue)
     if len(t) == 2:
-        tmin = t[n_time-1]
+        tmin = t[-1]
         tmax = tmin
-        ave  = f[n_time-1]
+        ave  = f[-1]
         return ave
 
-    tmin = (1.0-window)*t[n_time-1]
-    tmax = t[n_time-1]
+    tmin = (1.0-wmin)*t[-1]
+    tmax = (1.0-wmax)*t[-1]
 
     t_window = 0.0
     ave      = 0.0
     for i in range(n_time-1):
-        if t[i] > tmin: 
+        if t[i] >= tmin and t[i] <= tmax: 
             ave = ave+0.5*(f[i]+f[i+1])*(t[i+1]-t[i])
             t_window = t_window+t[i+1]-t[i]
 
@@ -35,19 +35,19 @@ def average(f,t,window):
     return ave
 #---------------------------------------------------------------
 #---------------------------------------------------------------
-def average_n(f,t,window,n):
+def average_n(f,t,wmin,wmax,n):
  
     import numpy as np
 
     ave = np.zeros(n)
 
     n_time = len(t)
-    tmin = (1.0-window)*t[n_time-1]
-    tmax = t[n_time-1]
+    tmin = (1.0-wmin)*t[-1]
+    tmax = (1.0-wmax)*t[-1]
 
     t_window = 0.0
     for i in range(n_time-1):
-        if t[i] > tmin:
+        if t[i] >= tmin and t[i] <= tmax: 
             ave[:] = ave[:]+0.5*(f[:,i]+f[:,i+1])*(t[i+1]-t[i])
             t_window = t_window+t[i+1]-t[i]
 
@@ -56,15 +56,16 @@ def average_n(f,t,window,n):
     return ave
 #---------------------------------------------------------------
 #---------------------------------------------------------------
-# Determine index imin for time-averaging window
-def iwindow(t,window):
+# Determine index imin,imax for time-averaging window
+def iwindow(t,wmin,wmax):
  
-    imin=0
     for i in range(len(t)):
-        if t[i] < (1.0-window)*t[-1]:
+        if t[i] < (1.0-wmin)*t[-1]:
             imin = i+1
+        if t[i] <= (1.0-wmax)*t[-1]:
+            imax = i
 
-    return imin
+    return imin,imax
 #---------------------------------------------------------------
 
 #------------------------------------------------------
@@ -165,7 +166,7 @@ def smooth_pro(x,z,p,n):
 #---------------------------------------------------------------
 
 #---------------------------------------------------------------
-def extract(d,sd,key,w,spec,moment,norm=False,verbose=False):
+def extract(d,sd,key,w,spec,moment,norm=False,verbose=False,wmax=0.0,cflux='auto'):
 
    import os
    import re
@@ -173,10 +174,17 @@ def extract(d,sd,key,w,spec,moment,norm=False,verbose=False):
    import numpy as np
    from cgyro.data import cgyrodata
 
-   # d   = directory
-   # sd  = prefix of subdirectory ('a' for a1,a2,a3)
-   # key = key to scan (for example, 'GAMMA_P') 
-
+   # d       = directory
+   # sd      = prefix of subdirectory ('a' for a1,a2,a3)
+   # key     = key to scan (for example, 'GAMMA_P') 
+   # w       = time-averaging width 
+   # spec    = (0 ...) 
+   # moment  = (0 ...)
+   # norm    = True (density normalization)
+   # verbose = True (error diagnostics)
+   # wmax    = time-averaging minimum
+   # cflux   = 'on'/'off'/'auto'
+   
    x = []
    f = []
    for i in range(20):
@@ -189,17 +197,18 @@ def extract(d,sd,key,w,spec,moment,norm=False,verbose=False):
          x.append(found)
          # Get the corresponding flux
          sim = cgyrodata(ddir)
-         sim.getflux()
+         sim.getflux(cflux)
          y = np.sum(sim.ky_flux,axis=(2,3))
-         # Energy flux of species k
-         f.append(average(y[spec,moment,:],sim.t,w))
-         print 'INFO: (extract) Processed data in '+ddir
+         # Flux for input (spec,moment) window w
+         f.append(average(y[spec,moment,:],sim.t,w,wmax))
+         print('INFO: (extract) Processed data in '+ddir)
       else:
          if verbose:
-            print 'INFO: (extract) Checked for but cannot find '+ddir
+            print('INFO: (extract) Checked for but cannot find '+ddir)
 
+   # return (scan parameter, flux)
    if norm == True:
-      return np.array(x),np.array(f)*sim.dens[1]/sim.dens[spec]
+      return np.array(x),np.array(f)/sim.dens[spec]
    else:
       return np.array(x),np.array(f)
       
@@ -299,7 +308,7 @@ def theta_indx(theta,theta_plot):
        else:
            itheta = int((theta+1.0)/2.0*theta_plot)
 
-   print 'INFO: (theta_indx) Selected index',itheta+1,'of',theta_plot
+   print('INFO: (theta_indx) Selected index',itheta+1,'of',theta_plot)
    return itheta
 #---------------------------------------------------------------
 
@@ -315,4 +324,16 @@ def mkfile(ext):
         ftype = s[0]
 
     return pre,ftype
+#---------------------------------------------------------------
+#---------------------------------------------------------------
+def parameter_val(infile,par):
+
+   val = 'null'
+   f = open(infile,'r')
+   for line in f:
+      x = line.split()
+      if x[1] == par:
+         val = x[0]
+
+   return val
 #---------------------------------------------------------------

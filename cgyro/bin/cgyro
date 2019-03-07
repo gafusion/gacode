@@ -66,9 +66,6 @@ then
   echo "         -h"
   echo "         Version and platform information."
   echo
-  echo "         -help <input.cgyro parameter>"
-  echo "         Parameter help information."
-  echo
   echo "         -clean"
   echo "         Clean simulation directory."
   echo
@@ -239,18 +236,6 @@ fi
 #============================================================
 
 #============================================================
-# Help option
-HFILE=$CGYRO_DIR/tools/help.json
-
-if [ "$HELP_TAG" != "null" ]
-then
-    v=\""$HELP_TAG\""
-    jq -r ".[] | select(.tag==$v) | .text" $HFILE
-    exit 1
-fi
-#============================================================
-
-#============================================================
 # Generate simdir if -g set, then exit.
 #
 if [ $GENERATE_FLAG -eq 1 ]
@@ -354,14 +339,6 @@ else
 fi
 #==========================================================
 
-#============================================================
-# Init mode
-if [ $INIT_FLAG -eq 1 ]
-then
-   exit 0
-fi
-#============================================================
-
 #==========================================================
 # See if we are using experimental profiles
 
@@ -370,6 +347,15 @@ then
    python $GACODE_ROOT/profiles_gen/bin/profile_parse.py input.profiles
 fi
 #==========================================================
+
+#============================================================
+# Init mode
+if [ $INIT_FLAG -eq 1 ]
+then
+   python $GACODE_ROOT/cgyro/bin/cgyro_mpi_grid.py
+   exit 0
+fi
+#============================================================
 
 #===========================================================
 # RUN CGYRO

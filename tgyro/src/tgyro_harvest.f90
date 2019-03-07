@@ -77,7 +77,7 @@ subroutine tglf_harvest_local()
   character NUL
   parameter(NUL = char(0))
 
-  real, dimension(10) :: tmp
+  real dimension(10) :: tmp
   integer, dimension(10) :: ions_order
 
   real, dimension(:), allocatable :: spectrum

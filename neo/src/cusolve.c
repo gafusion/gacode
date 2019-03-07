@@ -10,7 +10,9 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <cuda_runtime.h>
+#include <cuda.h>
 #include <cusolverSp.h>
+#include <cusparse.h>
 
 #define USE_DOUBLE 1
 

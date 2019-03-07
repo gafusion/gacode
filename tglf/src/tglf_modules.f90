@@ -9,7 +9,7 @@
       INTEGER, PARAMETER :: nxm=2*32-1
       INTEGER, PARAMETER :: nsm=12, nt0=40
       INTEGER, PARAMETER :: nkym=480
-      INTEGER, PARAMETER :: maxmodes=4
+      INTEGER, PARAMETER :: maxmodes=16
       INTEGER, PARAMETER :: max_ELITE=700
       INTEGER, PARAMETER :: max_fourier = 24
       INTEGER, PARAMETER :: ms = 128  ! ms needs to be divisible by 8
@@ -242,6 +242,7 @@
       REAL :: Bp0_out = 1.0
       REAL :: RBt_ave_out=1.0
       REAL :: Grad_r_ave_out=1.0
+      REAL :: grad_r0_out=1.0
       REAL :: SAT_geo_ave_out=1.0
       REAL :: SAT_geo0_out=1.0
       REAL :: DM_out = 0.25

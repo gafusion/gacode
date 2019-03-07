@@ -70,11 +70,17 @@ then
   echo "         -fc"
   echo "         Toggle plotting of field breakdown of fluxes."
   echo
+  echo "         -cflux <on,off,auto>"
+  echo "         Selector for central flux (on=on,off=off,auto=select based on gamma_e"
+  echo
   echo "         -moment <value>"
   echo "         Specify moment to be plotted [n,e,m,s]."
   echo
   echo "         -w <float>"
-  echo "         Width of time-average window (1.0 is entire time history)."
+  echo "         Width of time-average window min (1.0 is entire time history)."
+  echo
+  echo "         -wmax <float>"
+  echo "         Width of time-average window max (0.0 is entire time history)."
   echo 
   echo "         -mesh"
   echo "         Add theta-xi mesh"
@@ -223,6 +229,7 @@ TMAX=-1.0
 YMIN=0.0
 YMAX=auto
 W=0.5
+WMAX=0.0
 MOMENT=e
 INDX=1
 THETA=0.0
@@ -245,6 +252,7 @@ LAND_FLAG=0
 PX=800
 PY=800
 DISS=0
+CFLUX=auto
 
 PRE=
 FRAMERATE=20
@@ -274,6 +282,8 @@ while [ $# -gt 0 ] ; do
 
   -moment) shift ; MOMENT=$1 ;;
 
+  -cflux) shift ; CFLUX=$1 ;;
+
   -ext) shift ; EXT=$1 ;;
 
   -nomp) shift ; NOMP=$1 ;;
@@ -294,6 +304,7 @@ while [ $# -gt 0 ] ; do
   -fontsize) shift ; FONTSIZE=$1 ;;
 
   -w) shift ; W=$1 ;;
+  -wmax) shift ; WMAX=$1 ;;
   -loc) shift ; LOC=$1 ;;
 
   -start) shift ; START=$1 ;;
@@ -370,22 +381,22 @@ case "$PLOT_TYPE" in
 	python $PLT $PLOT_TYPE $TIME $SPECIES $TMAX $THETA $EXT ;;
 
    freq)
-	python $PLT $PLOT_TYPE $W $EXT ;;
+	python $PLT $PLOT_TYPE $W $WMAX $EXT ;;
 
    ky_freq)
-	python $PLT $PLOT_TYPE $W $EXT ;;
+	python $PLT $PLOT_TYPE $W $WMAX $EXT ;;
 
    error)
 	python $PLT $PLOT_TYPE $EXT ;;
 
    xflux)
-	python $PLT $PLOT_TYPE $W $MOMENT $YMIN $YMAX $EXT $NSCALE ;;
+	python $PLT $PLOT_TYPE $W $WMAX $MOMENT $YMIN $YMAX $EXT $NSCALE ;;
 
    flux)
-        python $PLT $PLOT_TYPE $W $FIELD $MOMENT $YMIN $YMAX $FC $EXT $LOC $NSCALE;;
+        python $PLT $PLOT_TYPE $W $WMAX $FIELD $MOMENT $YMIN $YMAX $FC $EXT $LOC $NSCALE $CFLUX ;;
 
    ky_flux)
-	python $PLT $PLOT_TYPE $W $FIELD $MOMENT $YMIN $YMAX $FC $EXT $DISS ;;
+	python $PLT $PLOT_TYPE $W $WMAX $FIELD $MOMENT $YMIN $YMAX $FC $EXT $DISS $CFLUX ;;
 
    phi)
 	python $PLT $PLOT_TYPE $FIELD $EXT ;;
@@ -394,16 +405,16 @@ case "$PLOT_TYPE" in
 	python $PLT $PLOT_TYPE $FIELD $THETA $YMIN $YMAX $N $EXT ;;
 
    kx_phi)
-	python $PLT $PLOT_TYPE $FIELD $THETA $W $YMIN $YMAX $N $EXT $DISS ;;
+	python $PLT $PLOT_TYPE $FIELD $THETA $W $WMAX $YMIN $YMAX $N $EXT $DISS ;;
 
    kxky_phi)
-	python $PLT $PLOT_TYPE $FIELD $THETA $W $EXT ;;
+	python $PLT $PLOT_TYPE $FIELD $THETA $W $WMAX $EXT ;;
 
    rcorr_phi)
-        python $PLT $PLOT_TYPE $FIELD $THETA $W $EXT ;;
+        python $PLT $PLOT_TYPE $FIELD $THETA $W $WMAX $EXT ;;
 
    zf)
-	python $PLT $PLOT_TYPE $W $FIELD $EXT ;;
+	python $PLT $PLOT_TYPE $W $WMAX $FIELD $EXT ;;
 
    geo)
        python $PLT $PLOT_TYPE $EXT ;;
@@ -423,7 +434,7 @@ case "$PLOT_TYPE" in
 	      $EXT $MOMENT $SPECIES $YMIN $YMAX $NX $ND $TIME $FMIN $FMAX $CMAP $FONTSIZE $THETA ;;
 
    text)
-   	python $PYROOT/plot_text.py $W $EXT ;;
+   	python $PYROOT/plot_text.py $W $WMAX $EXT ;;
 
    fix)
    	python $PYROOT/fix.py ;;

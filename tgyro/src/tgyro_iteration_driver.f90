@@ -117,6 +117,7 @@ subroutine tgyro_iteration_driver
 
   correct_flag = 0
 
+  mask = 0
   ! Mapping function from radius/field to p
   p = 0
   do i=2,n_r
@@ -126,24 +127,28 @@ subroutine tgyro_iteration_driver
         ip = ip+1
         pmap(i,ip) = p
         x_vec(p) = dlntidr(1,i)
+        mask(p,1) = 1 
      endif
      if (loc_te_feedback_flag == 1) then
         p  = p+1
         ip = ip+1
         pmap(i,ip) = p
         x_vec(p) = dlntedr(i)
+        mask(p,2) = 1
      endif
      if (loc_er_feedback_flag == 1) then
         p  = p+1
         ip = ip+1
         pmap(i,ip) = p
         x_vec(p) = f_rot(i)
+        mask(p,3) = 1
      endif
      if (evo_e(0) == 1) then
         p  = p+1
         ip = ip+1
         pmap(i,ip) = p
         x_vec(p) = dlnnedr(i)
+        mask(p,4) = 1
      endif
      do i_ion=1,loc_n_ion
         if (evo_e(i_ion) >= 1) then
@@ -151,6 +156,7 @@ subroutine tgyro_iteration_driver
            ip = ip+1
            pmap(i,ip) = p
            x_vec(p) = dlnnidr(i_ion,i)
+           mask(p,4+i_ion) = 1
         endif
      enddo
   enddo
@@ -167,6 +173,10 @@ subroutine tgyro_iteration_driver
   case (1) 
 
      call tgyro_iteration_standard
+
+  case (2) 
+
+     call tgyro_iteration_diagonal
 
   case (4) 
 

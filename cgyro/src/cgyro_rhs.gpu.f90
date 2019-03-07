@@ -37,12 +37,14 @@ subroutine cgyro_rhs(ij)
      call timer_lib_out('str')
   else
      call timer_lib_in('str_mem')
-!$acc parallel loop collapse(2) independent present(g_x,h_x)
-     do iv_loc=1,nv_loc
-        do ic_loc=1,nc
-          g_x(:,:) = h_x(:,:)
+
+!$acc parallel loop  collapse(2) independent private(iv_loc) default(none)
+     do iv=nv1,nv2
+        do ic=1,nc
+           iv_loc = iv-nv1+1
+           g_x(ic,iv_loc) = h_x(ic,iv_loc)
         enddo
-      enddo
+     enddo
 
      call timer_lib_out('str_mem')
   endif

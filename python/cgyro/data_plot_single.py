@@ -23,18 +23,20 @@ doplot=True
 if plot_type == 'freq':
 
    w     = float(sys.argv[2])
-   ftype = sys.argv[3]
+   wmax  = float(sys.argv[3])
+   ftype = sys.argv[4]
 
-   data_in.plot_freq(w=w)
+   data_in.plot_freq(w=w,wmax=wmax)
 
    outfile = 'out.cgyro.freq.'+ftype
 
 elif plot_type == 'ky_freq':
 
    w     = float(sys.argv[2])
-   ftype = sys.argv[3]
+   wmax  = float(sys.argv[3])
+   ftype = sys.argv[4]
 
-   data_in.plot_ky_freq(w=w)
+   data_in.plot_ky_freq(w=w,wmax=wmax)
 
    outfile = 'out.cgyro.ky_freq.'+ftype
 
@@ -56,9 +58,10 @@ elif plot_type == 'rcorr_phi':
    field = int(sys.argv[2])
    theta = float(sys.argv[3])
    w     = float(sys.argv[4])
-   ftype = sys.argv[5]
+   wmax  = float(sys.argv[5])
+   ftype = sys.argv[6]
 
-   data_in.plot_rcorr_phi(field=field,theta=theta,w=w)
+   data_in.plot_rcorr_phi(field=field,theta=theta,w=w,wmax=wmax)
 
    outfile = 'out.cgyro.rcorr_phi.'+ftype
 
@@ -92,10 +95,11 @@ elif plot_type == 'ball':
 elif plot_type == 'zf':
 
    w     = float(sys.argv[2])
-   field = int(sys.argv[3])
-   ftype = sys.argv[4]
+   wmax  = float(sys.argv[3])
+   field = int(sys.argv[4])
+   ftype = sys.argv[5]
 
-   data_in.plot_zf(w=w,field=field)
+   data_in.plot_zf(w=w,wmax=wmax,field=field)
 
    outfile = 'out.cgyro.zf.'+ftype
 
@@ -112,54 +116,59 @@ elif plot_type == 'phi':
 elif plot_type == 'flux':
 
    w      = float(sys.argv[2])
-   field  = int(sys.argv[3])
-   moment = sys.argv[4]
-   ymin   = sys.argv[5]
-   ymax   = sys.argv[6]
-   fc     = int(sys.argv[7])
-   ftype  = sys.argv[8]
-   loc    = int(sys.argv[9])
-   nscale = int(sys.argv[10])
+   wmax   = float(sys.argv[3])
+   field  = int(sys.argv[4])
+   moment = sys.argv[5]
+   ymin   = sys.argv[6]
+   ymax   = sys.argv[7]
+   fc     = int(sys.argv[8])
+   ftype  = sys.argv[9]
+   loc    = int(sys.argv[10])
+   nscale = int(sys.argv[11])
+   cflux  = sys.argv[12]
 
    if ftype == 'dump':
       cgyrodata_dump('./').dump_flux(fc=fc)
       doplot=False
    else:
-      data_in.plot_flux(w=w,field=field,moment=moment,
-                        ymin=ymin,ymax=ymax,fc=fc,loc=loc,nscale=nscale)
+      data_in.plot_flux(w=w,wmax=wmax,field=field,moment=moment,
+                        ymin=ymin,ymax=ymax,fc=fc,loc=loc,nscale=nscale,cflux=cflux)
 
    outfile = 'out.cgyro.flux.'+ftype
 
 elif plot_type == 'ky_flux':
 
    w      = float(sys.argv[2])
-   field  = int(sys.argv[3])
-   moment = sys.argv[4]
-   ymin   = sys.argv[5]
-   ymax   = sys.argv[6]
-   fc     = int(sys.argv[7])
-   ftype  = sys.argv[8]
-   diss   = int(sys.argv[9])
+   wmax   = float(sys.argv[3])
+   field  = int(sys.argv[4])
+   moment = sys.argv[5]
+   ymin   = sys.argv[6]
+   ymax   = sys.argv[7]
+   fc     = int(sys.argv[8])
+   ftype  = sys.argv[9]
+   diss   = int(sys.argv[10])
+   cflux  = sys.argv[11]
 
    if ftype == 'dump':
-      cgyrodata_dump('./').dump_ky_flux(w=w,field=field,moment=moment,fc=fc)
+      cgyrodata_dump('./').dump_ky_flux(w=w,wmax=wmax,field=field,moment=moment,fc=fc)
       doplot=False
    else:
       data_in.plot_ky_flux(w=w,field=field,moment=moment,
-                           ymin=ymin,ymax=ymax,fc=fc,diss=diss)
+                           ymin=ymin,ymax=ymax,fc=fc,diss=diss,cflux=cflux)
 
    outfile = 'out.cgyro.ky_flux.'+ftype
 
 elif plot_type == 'xflux':
 
    w      = float(sys.argv[2])
-   moment = sys.argv[3]
-   ymin   = sys.argv[4]
-   ymax   = sys.argv[5]
-   ftype  = sys.argv[6]
-   nscale = int(sys.argv[7])
+   wmax   = float(sys.argv[3])
+   moment = sys.argv[4]
+   ymin   = sys.argv[5]
+   ymax   = sys.argv[6]
+   ftype  = sys.argv[7]
+   nscale = int(sys.argv[8])
 
-   data_in.plot_xflux(w=w,moment=moment,ymin=ymin,ymax=ymax,nscale=nscale)
+   data_in.plot_xflux(w=w,wmax=wmax,moment=moment,ymin=ymin,ymax=ymax,nscale=nscale)
 
    outfile = 'out.cgyro.xflux.'+ftype
 
@@ -168,9 +177,10 @@ elif plot_type == 'kxky_phi':
    field = int(sys.argv[2])
    theta = float(sys.argv[3])
    w     = float(sys.argv[4])
-   ftype = sys.argv[5]
+   wmax  = float(sys.argv[5])
+   ftype = sys.argv[6]
 
-   data_in.plot_kxky_phi(field=field,theta=theta,w=w)
+   data_in.plot_kxky_phi(field=field,theta=theta,w=w,wmax=wmax)
 
    outfile = 'out.cgyro.kxky_phi.'+ftype
 
@@ -179,13 +189,14 @@ elif plot_type == 'kx_phi':
    field = int(sys.argv[2])
    theta = float(sys.argv[3])
    w     = float(sys.argv[4])
-   ymin  = sys.argv[5]
-   ymax  = sys.argv[6]
-   nstr  = sys.argv[7]
-   ftype = sys.argv[8]
-   diss = int(sys.argv[9])
+   wmax  = float(sys.argv[5])
+   ymin  = sys.argv[6]
+   ymax  = sys.argv[7]
+   nstr  = sys.argv[8]
+   ftype = sys.argv[9]
+   diss = int(sys.argv[10])
 
-   data_in.plot_kx_phi(field=field,theta=theta,w=w,ymin=ymin,ymax=ymax,nstr=nstr,diss=diss)
+   data_in.plot_kx_phi(field=field,theta=theta,w=w,wmax=wmax,ymin=ymin,ymax=ymax,nstr=nstr,diss=diss)
 
    outfile = 'out.cgyro.kx_phi.'+ftype
 
@@ -215,7 +226,7 @@ elif plot_type == 'hbcut':
 
 else:
 
-   print 'ERROR: (data_plot_single) Plot type not found'
+   print('ERROR: (data_plot_single) Plot type not found')
 
 #---------------------------------------------------------------
 # Plot to screen or to image file
@@ -230,6 +241,6 @@ if doplot:
       plt.savefig(outfile)
 
    if ftype != 'screen':
-      print 'INFO: (data_plot_single) Created '+outfile
+      print('INFO: (data_plot_single) Created '+outfile)
 #---------------------------------------------------------------
 

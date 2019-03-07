@@ -1,10 +1,9 @@
-import data
 import sys
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 from gacodefuncs import *
-from cgyro.data import cgyrodata
+import data
 
 MYDIR=os.path.basename(os.getcwd())
 
@@ -43,11 +42,11 @@ class cgyrodata_plot(data.cgyrodata):
          f = self.kxky_e_abs[:,itheta,species,:,:]
          ft = ''
 
-      print 'INFO: (kxky_select) Selected theta index',itheta+1,'of',self.theta_plot
+      print('INFO: (kxky_select) Selected theta index',itheta+1,'of',self.theta_plot)
       return f,ft
        
          
-   def plot_freq(self,w=0.5,fig=None):
+   def plot_freq(self,w=0.5,wmax=0.0,fig=None):
       '''
       Plot gamma and omega vs time
 
@@ -88,7 +87,7 @@ class cgyrodata_plot(data.cgyrodata):
 
       fig.tight_layout(pad=0.3)
       
-   def plot_ky_freq(self,w=0.5,fig=None):
+   def plot_ky_freq(self,w=0.5,wmax=0.0,fig=None):
       '''
       Plot mode frequency versus ky
 
@@ -181,7 +180,7 @@ class cgyrodata_plot(data.cgyrodata):
       fig.tight_layout(pad=0.3)
 
       
-   def plot_rcorr_phi(self,field=0,theta=0.0,w=0.5,fig=None):
+   def plot_rcorr_phi(self,field=0,theta=0.0,w=0.5,wmax=0.0,fig=None):
       '''
       Plot radial correlation 
 
@@ -205,14 +204,14 @@ class cgyrodata_plot(data.cgyrodata):
       kx  = self.kx
       ave = np.zeros(self.n_radial)
 
-      imin=iwindow(self.t,w)
+      imin,imax=iwindow(self.t,w,wmax)
     
       dk = kx[1]-kx[0]
       x0 = kx[-1]+dk
 
       color = ['m','k','b','c']
       xlabel=r'$r / \rho_s$'
-      windowtxt = r'$['+str(t[imin])+' < (c_s/a) t < '+str(t[-1])+']$'
+      windowtxt = r'$['+str(t[imin])+' < (c_s/a) t < '+str(t[imax])+']$'
 
       ax = fig.add_subplot(1,1,1)
       ax.set_title(r'$\mathrm{Average~radial~correlation} \quad $'+windowtxt)
@@ -222,7 +221,7 @@ class cgyrodata_plot(data.cgyrodata):
       y = np.sum(f[:,1:,:],axis=1)
       
       for j in range(self.n_radial):
-         ave[j] = average(y[j,:],self.t,w)
+         ave[j] = average(y[j,:],self.t,w,wmax)
 
       ave = np.roll(ave,-self.n_radial/2)
       ave[0] = 0.0
@@ -250,7 +249,7 @@ class cgyrodata_plot(data.cgyrodata):
 
       fig.tight_layout(pad=0.3)
 
-      print 'INFO: (data_plot.py) l_corr = ',l_corr
+      print('INFO: (data_plot.py) l_corr = ',l_corr)
 
    def plot_phi(self,field=0,theta=0.0,fig=None):
 
@@ -294,7 +293,7 @@ class cgyrodata_plot(data.cgyrodata):
 
       return head,self.t,y0,yn
 
-   def plot_zf(self,w=0.5,field=0,fig=None):
+   def plot_zf(self,w=0.5,wmax=0.0,field=0,fig=None):
 
       if fig is None:
          fig = plt.figure(MYDIR,figsize=(self.lx,self.ly))
@@ -305,7 +304,7 @@ class cgyrodata_plot(data.cgyrodata):
       t  = self.t
       k0 = self.kx[0]
 
-      print 'INFO: (plot_zf.py) Using index theta index n_theta/3+1'
+      print('INFO: (plot_zf.py) Using index theta index n_theta/3+1')
       if field == 0:
          f = self.phib[0,self.n_theta/3,:]
       elif field == 1:
@@ -320,9 +319,9 @@ class cgyrodata_plot(data.cgyrodata):
       
       #----------------------------------------------------
       # Average calculations
-      imin = iwindow(t,w)
-      ave  = average(y[:],t,w)
-      print 'INFO: (plot_zf) Integral time-average = %.6f' % ave
+      imin,imax = iwindow(t,w,wmax)
+      ave  = average(y[:],t,w,wmax)
+      print('INFO: (plot_zf) Integral time-average = %.6f' % ave)
 
       ave_vec = ave*np.ones(len(t))
       #----------------------------------------------------
@@ -435,11 +434,6 @@ class cgyrodata_plot(data.cgyrodata):
 
       ax.plot(x,y1,'-o',color='black',markersize=2,label=r'$\mathrm{Re}$')
       ax.plot(x,y2,'-o',color='red',markersize=2,label=r'$\mathrm{Im}$')
-      #gp = 200.0*np.sqrt(2)
-      #w = 0.51*2.0*0.1*np.sqrt((1.0-0.5)*6.0)*(x*np.pi)**2
-      #pa = np.exp(-(1+1j)/np.sqrt(2)*np.sqrt(gp)*w+1j*gp/4*(x*np.pi)*2.0*6.0*0.1/np.sqrt(2))
-      #ax.plot(x,np.real(pa),'--',color='black')
-      #ax.plot(x,-np.imag(pa),'--',color='red')
       
       ax.legend()
 
@@ -447,12 +441,13 @@ class cgyrodata_plot(data.cgyrodata):
 
       return 'ang  Re(f)  Im(f)',x,y1,y2
          
-   def plot_flux(self,w=0.5,field=0,moment='e',ymin='auto',ymax='auto',fc=0,fig=None,loc=2,nscale=0):
-
+   def plot_flux(self,w=0.5,wmax=0.0,field=0,moment='e',ymin='auto',ymax='auto',
+                 fc=0,fig=None,loc=2,nscale=0,cflux='auto'):
+         
       if fig is None:
          fig = plt.figure(MYDIR,figsize=(self.lx,self.ly))
 
-      self.getflux()
+      usec = self.getflux(cflux)
 
       ns = self.n_species
       t  = self.t
@@ -494,7 +489,9 @@ class cgyrodata_plot(data.cgyrodata):
       else:
          raise ValueError('(plot_flux.py) Invalid moment.')
 
-  
+      if usec:
+         ntag = ntag+'~(central)'
+
       # Normalizations
       if nscale == 0:
          norm_vec = np.ones(ns)
@@ -504,7 +501,7 @@ class cgyrodata_plot(data.cgyrodata):
          mnorm = '^\mathrm{norm}'
 
       # Get index for average window
-      imin=iwindow(t,w)
+      imin,imax=iwindow(t,w,wmax)
 
       # Otherwise plot
       ax = fig.add_subplot(111)
@@ -514,18 +511,18 @@ class cgyrodata_plot(data.cgyrodata):
 
       color = ['k','m','b','c','g','r']
 
-      windowtxt = '['+str(t[imin])+' < (c_s/a) t < '+str(t[-1])+']'
+      windowtxt = '['+str(t[imin])+' < (c_s/a) t < '+str(t[imax])+']'
 
       ax.set_title(r'$\mathrm{'+ntag+'} \quad '+windowtxt+'\quad ['+field_tag+']$')
 
       for ispec in range(ns):
          y_norm = y[ispec,:]*norm_vec[ispec]
-         ave    = average(y_norm,t,w)
+         ave    = average(y_norm,t,w,wmax)
          y_ave  = ave*np.ones(len(t))
          u = specmap(self.mass[ispec],self.z[ispec])
          label = r'$'+mtag+mnorm+'_'+u+'/'+mtag+'_\mathrm{GB}: '+str(round(ave,3))+'$'
          # Average
-         ax.plot(t[imin:],y_ave[imin:],'--',color=color[ispec])
+         ax.plot(t[imin:imax+1],y_ave[imin:imax+1],'--',color=color[ispec])
          # Time trace
          ax.plot(self.t,y_norm,label=label,color=color[ispec])
 
@@ -536,7 +533,7 @@ class cgyrodata_plot(data.cgyrodata):
 
       fig.tight_layout(pad=0.3)
 
-   def plot_xflux(self,w=0.5,moment='e',ymin='auto',ymax='auto',fig=None,nscale=0):
+   def plot_xflux(self,w=0.5,wmax=0.0,moment='e',ymin='auto',ymax='auto',fig=None,nscale=0):
 
       if fig is None:
          fig = plt.figure(MYDIR,figsize=(self.lx,self.ly))
@@ -583,7 +580,7 @@ class cgyrodata_plot(data.cgyrodata):
          mnorm = ''
 
       # Determine tmin
-      imin=iwindow(t,w)
+      imin,imax=iwindow(t,w,wmax)
 
       #============================================================
       # Otherwise plot
@@ -594,7 +591,7 @@ class cgyrodata_plot(data.cgyrodata):
 
       color = ['k','m','b','c','g','r']
 
-      windowtxt = r'$['+str(t[imin])+' < (c_s/a) t < '+str(t[-1])+']$'
+      windowtxt = r'$['+str(t[imin])+' < (c_s/a) t < '+str(t[imax])+']$'
 
       ax.set_title(r'$\mathrm{'+ntag+'} \quad $'+windowtxt)
     
@@ -649,7 +646,8 @@ class cgyrodata_plot(data.cgyrodata):
 
       fig.tight_layout(pad=0.3)
 
-   def plot_ky_flux(self,w=0.5,field=0,moment='e',ymin='auto',ymax='auto',fc=0,diss=0,fig=None):
+   def plot_ky_flux(self,w=0.5,wmax=0.0,field=0,moment='e',ymin='auto',ymax='auto',
+                    fc=0,diss=0,fig=None,cflux='auto'):
       '''
       Plot fluxes versus ky
 
@@ -669,7 +667,7 @@ class cgyrodata_plot(data.cgyrodata):
       if fig is None:
          fig = plt.figure(MYDIR,figsize=(self.ly*ns,self.ly))
 
-      self.getflux()
+      usec = self.getflux(cflux)
 
       ky  = self.ky
       ave = np.zeros((self.n_n,ns))
@@ -707,14 +705,19 @@ class cgyrodata_plot(data.cgyrodata):
          y = ys[:,2,:,:]
       else:
          raise ValueError('(plot_ky_flux.py) Invalid moment.')
-
       
       # Determine tmin
-      imin=iwindow(t,w)
+      imin,imax=iwindow(t,w,wmax)
 
       color = ['m','k','b','c']
 
-      windowtxt = r'$['+str(t[imin])+' < (c_s/a) t < '+str(t[-1])+']$'
+      if usec:
+         cstr = '~\mathrm{(central)}'
+      else:
+         cstr = ''
+         
+      windowtxt = r'$['+str(t[imin])+' < (c_s/a) t < '+str(t[imax])+']'+cstr+'$'
+
 
       if ky[-1] < 0.0:
          ky = -ky
@@ -726,7 +729,7 @@ class cgyrodata_plot(data.cgyrodata):
     
       for ispec in range(ns):
          for j in range(self.n_n):
-            ave[j,ispec] = average(y[ispec,j,:],self.t,w)
+            ave[j,ispec] = average(y[ispec,j,:],self.t,w,wmax)
 
       # One plot per species
       for ispec in range(ns):
@@ -749,7 +752,7 @@ class cgyrodata_plot(data.cgyrodata):
 
       fig.tight_layout(pad=0.3)
 
-   def plot_kxky_phi(self,field=0,theta=0.0,w=0.5,fig=None):
+   def plot_kxky_phi(self,field=0,theta=0.0,w=0.5,wmax=0.0,fig=None):
 
       from mpl_toolkits.mplot3d import Axes3D
 
@@ -776,7 +779,7 @@ class cgyrodata_plot(data.cgyrodata):
       # Field data selector
       fx,ft = self.kxky_select(theta,field,'phi',0)
 
-      imin=iwindow(t,w)
+      imin,imax=iwindow(t,w,wmax)
       for i in np.arange(imin,self.n_time):
          f = f+fx[1:,:,i]
       
@@ -792,7 +795,7 @@ class cgyrodata_plot(data.cgyrodata):
 
       ax = fig.add_subplot(111)
 
-      windowtxt = r'$['+str(t[imin])+' < (c_s/a) t < '+str(t[-1])+']$'
+      windowtxt = r'$['+str(t[imin])+' < (c_s/a) t < '+str(t[imax])+']$'
 
       ax.set_xlabel(r'$k_x \rho_s/4$')
       ax.set_ylabel(r'$k_y \rho_s$')
@@ -802,7 +805,7 @@ class cgyrodata_plot(data.cgyrodata):
 
       fig.tight_layout(pad=0.5)
 
-   def plot_kx_phi(self,field=0,theta=0.0,w=0.5,ymin='auto',ymax='auto',nstr='null',diss=0,fig=None):
+   def plot_kx_phi(self,field=0,theta=0.0,w=0.5,wmax=0.0,ymin='auto',ymax='auto',nstr='null',diss=0,fig=None):
 
       if fig is None:
          fig = plt.figure(MYDIR,figsize=(self.lx,self.ly))
@@ -813,7 +816,7 @@ class cgyrodata_plot(data.cgyrodata):
       kx  = self.kx
       ave = np.zeros(self.n_radial)
 
-      imin=iwindow(self.t,w)
+      imin,imax=iwindow(self.t,w,wmax)
     
       dk = kx[1]-kx[0]
       x0 = kx[-1]+dk
@@ -822,7 +825,7 @@ class cgyrodata_plot(data.cgyrodata):
 
       color = ['m','k','b','c']
       xlabel=r'$k_x \rho_s$'
-      windowtxt = r'$['+str(t[imin])+' < (c_s/a) t < '+str(t[-1])+']$'
+      windowtxt = r'$['+str(t[imin])+' < (c_s/a) t < '+str(t[imax])+']$'
 
       ax.set_title(r'$\mathrm{Average~fluctuation~intensity} \quad $'+windowtxt)
       ax.set_xlabel(xlabel)
@@ -832,19 +835,19 @@ class cgyrodata_plot(data.cgyrodata):
       if nstr == 'null':
          y = np.sum(f[:,:,:],axis=1)
          for j in range(self.n_radial):
-            ave[j] = average(y[j,:],self.t,w)
+            ave[j] = average(y[j,:],self.t,w,wmax)
          ax.set_ylabel(r'$\overline{'+ft+'_\mathrm{total}}$',color='k')
          ax.step(kx+dk/2,np.sqrt(ave[:]),color=color[0])
       else:
          y = np.zeros([self.n_radial,self.n_time])
          nvec = str2list(nstr)
-         print 'INFO: (plot_kx_phi) n = '+str(nvec)
+         print('INFO: (plot_kx_phi) n = '+str(nvec))
          ax.set_ylabel(r'$\overline{'+ft+'_n}$',color='k')
          for n in nvec:
             num = r'$n='+str(n)+'$'
             y[:] = self.kxky_phi_abs[:,0,n,:]
             for j in range(self.n_radial):
-               ave[j] = average(f[j,n,:],self.t,w)
+               ave[j] = average(f[j,n,:],self.t,w,wmax)
             ax.plot(kx+dk/2,np.sqrt(ave[:]),ls='steps',label=num)
             if self.n_n > 16:
                ax.legend(loc=4, ncol=5, prop={'size':12})

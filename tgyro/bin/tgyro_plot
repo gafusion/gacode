@@ -32,8 +32,12 @@ then
   echo "          Generate plot of given type."
   echo "           <type> = note (notebook plot of quantities for r <= r_*),"
   echo "                    glob (global data from input.profiles)"
+  echo
+  echo "          -loc <Legend location: 1,2,3,4>"
   echo 
   echo " OPTIONS FOR <type>=note"
+  echo
+  echo "          -n <iteration number (default -1 = last)>"
   echo
   echo "          -dots"
   echo "          Toggle dot overlay."
@@ -45,8 +49,6 @@ then
   echo
   echo "          -r <flux-surface coordinate for plotting>"
   echo "          Choices are r,r/a,rho"
-  echo
-  echo "          -loc <Legend location: 1,2,3,4>"
   echo
   echo "Example:"
   echo
@@ -122,7 +124,7 @@ PYROOT=$GACODE_ROOT/python/tgyro
 case "$PLOT_TYPE" in
 
    note)  
-	python $PYROOT/plot_notebook.py $SIMDIR $UNITS $EXT $N ;;
+	python $PYROOT/plot_notebook.py $SIMDIR $UNITS $EXT $N $LOC ;;
 
    glob)  
 	python $PYROOT/plot_global.py $SIMDIR $F $EXT $RVAR $LOC $DOTS ;;

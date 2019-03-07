@@ -410,6 +410,7 @@ SUBROUTINE xgrid_functions_geo
   Grad_r_ave_out = Grad_r_ave_out/norm_ave
   SAT_geo_ave_out = SAT_geo_ave_out/norm_ave
   kykx_geo_ave = kykx_geo_ave/norm_ave
+  grad_r0_out = B_geo(0)/qrat_geo(0)
   !
   ! poloidal magnetic field on outboard midplane
   !
@@ -424,7 +425,7 @@ SUBROUTINE xgrid_functions_geo
   ! write(*,*)"Grad_r_ave_out =",Grad_r_ave_out
   ! write(*,*)"kykx_geo_ave = ",kykx_geo_ave
   ! write(*,*)"SAT_geo0_out=",SAT_geo0_out
-  ! write(*,*)"grad_r0= ",B_geo(0)/qrat_geo(0)
+  ! write(*,*)"grad_r0= ",grad_r0_out
   ! write(*,*)"ky_over_kx_geo = ",B_geo(0)/qrat_geo(0)**2
   ! write(*,*)"B_geo0 = ",B_geo(0)
   !

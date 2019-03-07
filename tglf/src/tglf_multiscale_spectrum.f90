@@ -27,6 +27,7 @@
       LOGICAL :: USE_X3=.FALSE.
       
       LOGICAL :: USE_SUB1=.FALSE.
+      LOGICAL :: USE_GRAD_R0=.FALSE.
       INTEGER :: i,is,k,j,j1,j2,jmax1,jmax2
       
       INTEGER :: expsub=2
@@ -50,8 +51,8 @@
       ! need to set alpha_zf_in = 1.0
       ! Miller geometry values igeo=1
       if(xnu_model_in.eq.3)USE_X3=.TRUE.
-      
-      if(alpha_zf_in.lt.0.0)USE_SUB1=.TRUE.
+      ! temporary for JET test
+      if(alpha_zf_in.lt.0.0)USE_GRAD_R0=.TRUE.
       czf = ABS(alpha_zf_in)
       bz1=0.0
       bz2=0.0
@@ -76,6 +77,7 @@
       !   write(*,*)" ax= ",ax," ay= ",ay
       do i=1,nky
          kx=spectral_shift_out(i)
+         If(USE_GRAD_R0)kx = kx/grad_r0_out
          gamma_net(i) = eigenvalue_spectrum_out(1,i,1)/(1.0 + (ax*kx)**4)
       !   write(*,*)i,"gamma_net = ",gamma_net(i)
       enddo
@@ -266,10 +268,12 @@
       enddo  
     endif      
 ! intensity model
+      If(USE_GRAD_R0)cnorm=cnorm*grad_r0_out**2
       do j=1,nky
         gamma0 = eigenvalue_spectrum_out(1,j,1)
         ky0 = ky_spectrum(j)
         kx = spectral_shift_out(j)
+        If(USE_GRAD_R0)kx = kx/grad_r0_out
         do i=1,nmodes_in
           gammaeff = 0.0
           if(gamma0.gt.small)gammaeff = &

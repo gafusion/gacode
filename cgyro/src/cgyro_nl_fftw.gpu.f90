@@ -61,7 +61,6 @@ subroutine cgyro_nl_fftw_comm2
 
   call timer_lib_in('nl_mem')
 
-
 !$acc parallel loop collapse(3) independent private(iexch,ic_loc_m) &
 !$acc&         present(psi,gpack) default(none)
   do iv_loc_m=1,nv_loc
@@ -118,8 +117,7 @@ subroutine cgyro_nl_fftw_mul(sz,uvm,uxm,vym,uym,vxm,inv_nxny)
 
 !$acc parallel loop independent present(uvm,uxm,vym,uym,vxm) private(i)
   do i=1,sz
-    uvm(i) = (uxm(i)*vym(i)- &
-                uym(i)*vxm(i))*inv_nxny
+    uvm(i) = (uxm(i)*vym(i)-uym(i)*vxm(i))*inv_nxny
   enddo
 
 end subroutine

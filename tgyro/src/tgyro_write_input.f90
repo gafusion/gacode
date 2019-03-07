@@ -21,9 +21,9 @@ subroutine tgyro_write_input
   !
   ! - Advanced iteration methods cannot do zero iterations:
   !
-  if (tgyro_iteration_method >= 4 .and. tgyro_relax_iterations == 0) then
+  if (tgyro_iteration_method /= 1 .and. tgyro_relax_iterations == 0) then
      error_flag = 1
-     error_msg = 'ERROR: (TGYRO) TGYRO_ITERATION_METHOD > 4 requires TGYRO_RELAX_ITERATIONS > 0.'
+     error_msg = 'ERROR: (TGYRO) TGYRO_ITERATION_METHOD /= 4 requires TGYRO_RELAX_ITERATIONS > 0.'
   endif
   !
   ! - Need rotation physics to evolve Er
@@ -90,6 +90,10 @@ subroutine tgyro_write_input
 
         write(1,10) 'TGYRO_ITERATION_METHOD','Local Residual Minimization (original scheme)'
 
+     case (2)
+
+        write(1,10) 'TGYRO_ITERATION_METHOD','Modified diagonal relaxation'
+
      case (4)
 
         write(1,10) 'TGYRO_ITERATION_METHOD','Block method (serial)'
@@ -100,7 +104,7 @@ subroutine tgyro_write_input
 
      case (6)
 
-        write(1,10) 'TGYRO_ITERATION_METHOD','Simple Relax (*IN DEVELOPMENT*)'
+        write(1,10) 'TGYRO_ITERATION_METHOD','Simple diagonal relaxation'
 
      case default
 
@@ -112,10 +116,6 @@ subroutine tgyro_write_input
      !--------------------------------------------------------
      select case (loc_residual_method)
 
-     case (1)
-
-        write(1,10) 'LOC_RESIDUAL_METHOD','(f-g)^2/(f^2+g^2)'
-
      case (2)
 
         write(1,10) 'LOC_RESIDUAL_METHOD','abs(f-g)'
@@ -123,10 +123,6 @@ subroutine tgyro_write_input
      case (3)
 
         write(1,10) 'LOC_RESIDUAL_METHOD','(f-g)^2'
-
-     case (4)
-
-        write(1,10) 'LOC_RESIDUAL_METHOD','(f-g)^2/MAX(1,(f^2+g^2))'
 
      case default
 

@@ -19,7 +19,6 @@ subroutine cgyro_field_v
   use cgyro_globals
 
   implicit none
-
   
   call timer_lib_in('field')
 

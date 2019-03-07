@@ -35,15 +35,6 @@ subroutine cgyro_init_h
         if (i_err == 0) then
            ! Use restart data as initial h
            restart_flag = 2
-        else
-           open(unit=io,&
-             file=trim(path)//runfile_restart_old,&
-             status='old',iostat=i_err)
-           close(io)
-           if (i_err == 0) then
-              ! Use restart data as initial h
-              restart_flag = 2
-           endif
         endif
      endif
 

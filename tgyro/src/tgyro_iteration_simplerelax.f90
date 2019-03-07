@@ -79,11 +79,9 @@ subroutine tgyro_iteration_simplerelax
         x_vec(p) = x_vec(p)*(1.0-simpledz)
      enddo
 
-     call tgyro_profile_set(x_vec,0.0,0)
-     call tgyro_profile_functions 
-
-     ! Update fluxes
+     ! Update targets/profiles
      call tgyro_target_vector(x_vec,g_vec)
+     ! Update fluxes
      call tgyro_flux_vector(x_vec,f_vec,0.0,0)
      
      ! Compute initial residual

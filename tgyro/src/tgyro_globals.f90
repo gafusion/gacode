@@ -246,7 +246,7 @@ module tgyro_globals
   real :: b_ref
   real :: r_min
   !
-  integer, dimension(:,:), allocatable :: pmap
+  integer, dimension(:,:), allocatable :: pmap,mask
   character(len=1), dimension(:), allocatable :: b_flag
   !
   ! Geometry

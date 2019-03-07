@@ -1,3 +1,12 @@
+!-----------------------------------------------------------------
+! cgyro_parallel_lib.F90
+!
+! PURPOSE:
+!  Routines to manage the two types (lib,slib) of ALLTOALL
+!  communication required by CGYRO.  This includes both GPU
+!  and non-GPU options, as well as GPUDirect MPI options.
+!-----------------------------------------------------------------
+
 module parallel_lib
 
   implicit none
@@ -25,15 +34,14 @@ module parallel_lib
   integer, private :: nsplit
   integer, private :: slib_comm
 
-  !integer, private, parameter :: default_size = 1024*1024*32
   integer, private, parameter :: default_size = 1
 
 contains
 
   !=========================================================
-
   !  parallel_lib_f -> f(ni_loc,nj) -> g(nj_loc,ni) 
   !  parallel_lib_r -> g(nj_loc,ni) -> f(ni_loc,nj)
+  !=========================================================
 
   subroutine parallel_lib_init(ni_in,nj_in,ni_loc_out,nj_loc_out,comm)
 
@@ -73,45 +81,6 @@ contains
 
   !=========================================================
 
-  subroutine parallel_lib_f(f,ft)
-
-    use mpi
-
-    implicit none
-
-    complex, intent(in), dimension(ni_loc,nj) :: f
-    complex, intent(inout), dimension(nj_loc,ni) :: ft
-    integer :: ierr,i_loc,i,j,k,i1,i2
-
-    i1 = 1+iproc*ni_loc
-    i2 = (1+iproc)*ni_loc
-
-!$omp parallel do if (size(fsendf) >= default_size) default(none) &
-!$omp& shared(nproc,i1,i2,nj_loc) &
-!$omp& private(i,i_loc,j) &
-!$omp& shared(f,fsendf)
-    do k=1,nproc
-       do i=i1,i2
-          i_loc = i-i1+1 
-          do j=1,nj_loc
-             fsendf(j,i_loc,k) = f(i_loc,j+(k-1)*nj_loc) 
-          enddo
-       enddo
-    enddo
-
-    call MPI_ALLTOALL(fsendf, &
-         nsend, &
-         MPI_DOUBLE_COMPLEX, &
-         ft, &
-         nsend, &
-         MPI_DOUBLE_COMPLEX, &
-         lib_comm, &
-         ierr)
-
-  end subroutine parallel_lib_f
-
-
-  ! inline vesion, just execute
   subroutine parallel_lib_f_i_do(ft)
 
     use mpi
@@ -131,6 +100,8 @@ contains
          ierr)
 
   end subroutine parallel_lib_f_i_do
+
+  !=========================================================
 
   subroutine parallel_lib_f_i_do_gpu(ft)
 
@@ -186,6 +157,8 @@ contains
 
   end subroutine parallel_lib_r_do
 
+  !=========================================================
+
   subroutine parallel_lib_r_do_gpu(f)
 
     use mpi
@@ -218,6 +191,8 @@ contains
 
   end subroutine parallel_lib_r_do_gpu
 
+  !=========================================================
+
   subroutine parallel_lib_r_pack(ft)
 
     use mpi
@@ -245,18 +220,7 @@ contains
 
   end subroutine parallel_lib_r_pack
 
-  subroutine parallel_lib_r(ft,f)
-
-    use mpi
-
-    implicit none
-
-    complex, intent(in), dimension(nj_loc,ni) :: ft
-    complex, intent(inout), dimension(ni_loc,nj) :: f
-
-    call parallel_lib_r_pack(ft)
-    call parallel_lib_r_do(f)
-  end subroutine parallel_lib_r
+  !=========================================================
 
   subroutine parallel_lib_rtrans_pack(fin)
 ! -----------------------------------------
@@ -287,6 +251,8 @@ contains
 
   end subroutine parallel_lib_rtrans_pack
 
+  !=========================================================
+
   subroutine parallel_lib_rtrans_pack_gpu(fin)
 ! -----------------------------------------
 ! transpose version of parallel_lib_r_pack(fin)
@@ -313,6 +279,8 @@ contains
     enddo
 
   end subroutine parallel_lib_rtrans_pack_gpu
+
+  !=========================================================
 
   subroutine parallel_lib_rtrans(fin,f)
 ! -----------------------------------------
@@ -473,33 +441,6 @@ contains
   end subroutine parallel_slib_f_nc_gpu
 #endif
 
-  subroutine parallel_slib_f(x_in,xt)
-
-    use mpi
-
-    !-------------------------------------------------------
-    implicit none
-    !
-    complex, intent(in), dimension(nkeep,nexch) :: x_in
-    complex, dimension(nkeep,nsplit*nn) :: x
-    complex, intent(inout), dimension(nkeep,nsplit,nn) :: xt
-    !
-    integer :: j
-    !-------------------------------------------------------
-
-!$omp parallel do private(j)
-    do j=1,nexch
-       x(:,j) = x_in(:,j)
-    enddo
-
-    do j=nexch+1,nsplit*nn
-       x(:,j) = (0.0,0.0)
-    enddo
-
-    call parallel_slib_f_nc(x,xt)
-
-  end subroutine parallel_slib_f
-
  !=========================================================
 
   subroutine parallel_slib_r_nc (xt,x)
@@ -525,6 +466,8 @@ contains
          ierr)
 
   end subroutine parallel_slib_r_nc
+
+ !=========================================================
 
   subroutine parallel_slib_r_nc_gpu (xt,x)
     use mpi
@@ -561,29 +504,6 @@ contains
 !$acc end data
 
   end subroutine parallel_slib_r_nc_gpu
-
-  subroutine parallel_slib_r(xt,x_out)
-
-    use mpi
-
-    !-------------------------------------------------------
-    implicit none
-    !
-    complex, intent(in), dimension(nkeep,nsplit,nn) :: xt
-    complex, intent(inout), dimension(nkeep,nexch) :: x_out
-    complex, dimension(nkeep,nsplit*nn) :: x
-    !
-    integer :: j
-    !-------------------------------------------------------
-
-    call parallel_slib_r_nc(xt,x)
-
-!$omp parallel do private(j)
-    do j=1,nexch
-       x_out(:,j) = x(:,j)
-    enddo
-
-  end subroutine parallel_slib_r
 
   subroutine parallel_lib_nj_loc(nj_loc_in)
 

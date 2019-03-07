@@ -24,7 +24,7 @@ class gyrodata_plot(data.GYROData):
       t = self.t['(c_s/a)t']
 
       # Determine tmin
-      imin = iwindow(t,w)
+      imin = iwindow(t,w,wmax)
 
       color = ['k','m','b','c']
       tor_n = self.profile['n0'] + \
@@ -158,8 +158,8 @@ class gyrodata_plot(data.GYROData):
       #----------------------------------------------------
       # Average calculations
 
-      imin = iwindow(t,w)
-      ave  = average(y[:],t,w)
+      imin,imax = iwindow(t,w,wmax)
+      ave  = average(y[:],t,w,wmax)
       print 'INFO: (plot_zf) Spatial point (nx,ntheta)=',nx,ntheta
 
       ave_vec = ave*np.ones(len(t))
@@ -278,7 +278,7 @@ class gyrodata_plot(data.GYROData):
          mnorm = '^\mathrm{norm}'
 
       # Get index for average window
-      imin=iwindow(t,w)
+      imin,imax=iwindow(t,w,wmax)
 
       # Otherwise plot
       fig = plt.figure(MYDIR,figsize=(self.lx,self.ly))
@@ -295,7 +295,7 @@ class gyrodata_plot(data.GYROData):
 
       for ispec in range(ns):
          y_norm = y[ispec,:]*norm_vec[ispec]
-         ave    = average(y_norm,t,w)
+         ave    = average(y_norm,t,w,wmax)
          y_ave  = ave*np.ones(len(t))
          u = specmap(1.0/self.profile['mu'][ispec]**2,self.profile['z'][ispec])
          label = r'$'+mtag+mnorm+'_'+u+'/'+mtag+'_\mathrm{GB}: '+str(round(ave,3))+'$'
@@ -374,7 +374,7 @@ class gyrodata_plot(data.GYROData):
          print 'ERROR: (plot_flux.py) Invalid moment.'
          sys.exit()
 
-      imin = iwindow(t,w)
+      imin,imax = iwindow(t,w,wmax)
 
       # Normalizations
       nscale = 0
@@ -404,11 +404,11 @@ class gyrodata_plot(data.GYROData):
          u = specmap(1.0/self.profile['mu'][ispec]**2,self.profile['z'][ispec])
 
          # Time-averaged flux curve
-         avei[:] = average_n(yi[ispec,:,:]*norm_vec[ispec],t,w,n_x)
+         avei[:] = average_n(yi[ispec,:,:]*norm_vec[ispec],t,w,wmax,n_x)
          ax.plot(r,avei[:],color=color[ispec])
 
          # Full average
-         ave = average(y[ispec,:]*norm_vec[ispec],t,w)
+         ave = average(y[ispec,:]*norm_vec[ispec],t,w,wmax)
          print 'INFO: (plot_gbflux_i) Full average = {:.2f}'.format(ave)
          # Partial-r average
          if aw > 0:
@@ -490,7 +490,7 @@ class gyrodata_plot(data.GYROData):
          print 'ERROR (plot_ky_flux.py) Invalid moment.'
          sys.exit()
 
-      imin = iwindow(t,w)
+      imin,imax = iwindow(t,w,wmax)
 
       color = ['k','m','b','c','g','r']
 
@@ -502,7 +502,7 @@ class gyrodata_plot(data.GYROData):
 
       for ispec in range(ns):
          for j in range(n_n):
-            ave[j,ispec] = average(y[ispec,j,:],t,w)
+            ave[j,ispec] = average(y[ispec,j,:],t,w,wmax)
 
       for ispec in range(ns):
          ax = fig.add_subplot(1,ns,ispec+1)
@@ -541,14 +541,14 @@ class gyrodata_plot(data.GYROData):
       ax.set_xlabel(TIME)
       #=====================================
 
-      imin=iwindow(t,w)
+      imin,imax=iwindow(t,w,wmax)
 
       color = ['k','m','b','c']
 
       # Loop over species
       for i in range(ns):
          for j in range(2):
-            ave   = average(flux[i,j,:],t,w)
+            ave   = average(flux[i,j,:],t,w,wmax)
             stag  = self.tagspec[i]
             label = stag+': '+str(round(ave,3))
             y     = ave*np.ones(len(t))
@@ -583,7 +583,7 @@ class gyrodata_plot(data.GYROData):
       # Manage moment
       mtag = self.tagmom[moment]
 
-      imin = iwindow(t,w)
+      imin,imax = iwindow(t,w,wmax)
 
       color = ['k','m','b','c']
 
@@ -629,7 +629,7 @@ class gyrodata_plot(data.GYROData):
          mtag = '\delta v'
          ftag = 'delta_v'
 
-      imin  = iwindow(t,w)
+      imin,imax  = iwindow(t,w,wmax)
       title = r'$'+str(t[imin])+' < (c_s/a) t < '+str(t[-1])+'$'
       
       u = specmap(1.0/self.profile['mu'][species]**2,self.profile['z'][species])
@@ -646,12 +646,12 @@ class gyrodata_plot(data.GYROData):
       ax.set_title(title)
 
       f = self.moment_zero[:,species,moment,:]
-      g = average_n(f,t,w,n_x)/self.profile['rho_s']
+      g = average_n(f,t,w,wmax,n_x)/self.profile['rho_s']
 
       ax.plot(r,g,label=r'moment',color='k')
 
       f = self.moment_zero[:,species,moment+3,:]
-      g = average_n(f,t,w,n_x)/self.profile['rho_s']
+      g = average_n(f,t,w,wmax,n_x)/self.profile['rho_s']
       
       ax.plot(r,g,label=r'source',color='m',linewidth=3,alpha=0.2)
 
@@ -684,10 +684,10 @@ class gyrodata_plot(data.GYROData):
 
       f = np.zeros([n_x,nt])
       f = self.moment_zero[:,species,0,:]
-      dn = average_n(f,t,w,n_x)
+      dn = average_n(f,t,w,wmax,n_x)
        
       f  = self.moment_zero[:,species,1,:]
-      dE = average_n(f,t,w,n_x)
+      dE = average_n(f,t,w,wmax,n_x)
       dT = ((2.0/3)*dE-T0*dn)/n0
 
       # Derivatives
@@ -709,7 +709,7 @@ class gyrodata_plot(data.GYROData):
       else:
          sys.exit()
          
-      imin  = iwindow(t,w)
+      imin,imax  = iwindow(t,w,wmax)
       title = r'$'+str(t[imin])+' < (c_s/a) t < '+str(t[-1])+'$'
       
       u = specmap(1.0/self.profile['mu'][species]**2,self.profile['z'][species])

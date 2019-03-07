@@ -189,7 +189,7 @@ subroutine tgyro_tglf_map
   !
   ! Number of modes in transport calculation;
   ! should be 2-4.
-  tglf_nmodes_in = 2
+  !tglf_nmodes_in = 4
   !----------------------------------------------------------------
 
   !----------------------------------------------------------------

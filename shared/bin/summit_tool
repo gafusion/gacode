@@ -1,0 +1,119 @@
+#!/bin/bash
+
+LOCDIR=`basename $PWD`
+cd .. ; SIMROOT=$PWD
+SIMDIR=$SIMROOT/$LOCDIR
+EXEC=${GACODE_ROOT}/cgyro/src/cgyro
+cd $SIMDIR
+
+n=$#
+
+if [ $n -eq 0 ]
+then
+  echo
+  echo "Usage:   rank [options]"
+  echo
+  echo "         -n <n>"
+  echo "         Nodes (default=1)"
+  echo
+  echo "         -t <n>"
+  echo "         Threads/core (smt level) (default=2)"
+  echo
+  echo "         -g <n>"
+  echo "         GPUs per socket (default=3)"
+  echo
+  echo "         -r <n>"
+  echo "         MPI tasks per GPU (default=1)"
+  echo
+  echo "         -c <n>"
+  echo "         Cores per socket (default=20)"
+  echo
+  echo "         -eager <n>"
+  echo "         MP_EAGER_LIMIT (default=64)"
+  echo
+  echo "         -prof"
+  echo "         Toggle MPI profiling"
+  echo
+  echo "         -w <walltime>"
+  echo
+
+  exit 1
+fi
+
+nodes=1
+threads_per_core=2
+gpus_per_socket=3
+ranks_per_gpu=1
+cores_per_socket=20
+eager=64
+w=10
+PROF=0
+
+while [ $# -gt 0 ] ; do
+  case "$1" in
+
+  -n) shift ; nodes=$1 ;;
+  -t) shift ; threads_per_core=$1 ;;
+  -g) shift ; gpus_per_socket=$1 ;;
+  -r) shift ; ranks_per_gpu=$1 ;;
+  -c) shift ; cores_per_socket=$1 ;;
+  -eager) shift ; eager=$1 ;;
+  -prof) PROF=1 ;;
+  -w) shift ; w=$1 ;;
+  *) echo "ERROR: unknown option $1." ; exit 1 ;;
+
+  esac
+  shift
+done
+
+# derived quantities:
+let ranks_per_socket=$ranks_per_gpu*$gpus_per_socket
+let cores_per_rank=$cores_per_socket/$ranks_per_socket
+let cores_per_gpu=$cores_per_rank*$ranks_per_gpu
+let nrs=2*$gpus_per_socket*$nodes
+let threads_per_rank=$threads_per_core*$cores_per_rank
+let nmpi=2*$ranks_per_socket*$nodes
+
+echo "nodes           = $nodes"
+echo "Total MPI tasks = $nmpi"
+
+if [ $PROF -eq 1 ] ; then
+   CPROF="export OMPI_LD_PRELOAD_POSTPEND=/ccs/home/walkup/mpitrace/spectrum_mpi/libmpitrace.so"
+fi
+
+
+# BATCH SCRIPT:
+
+cat > batch.src << EOF
+#BSUB -P fus127
+#BSUB -J $LOCDIR
+#BSUB -o $SIMDIR/batch.out
+#BSUB -e $SIMDIR/batch.err
+#BSUB -nnodes $nodes
+#BSUB -alloc_flags "nvme gpumps smt$threads_per_core"
+#BSUB -q batch
+#BSUB -W $w
+
+echo "smt level smt$threads_per_core"
+ulimit -s 10240
+
+export PAMI_ENABLE_STRIPING=1
+export PAMI_IBV_ENABLE_DCT=1
+export OMP_NUM_THREADS=$threads_per_rank
+export OMP_STACKSIZE=400M
+export MP_EAGER_LIMIT=$eager
+$CPROF
+
+jsrun \
+-D CUDA_VISIBLE_DEVICES \
+-E OMP_NUM_THREADS=$threads_per_rank \
+--nrs $nrs \
+--tasks_per_rs $ranks_per_gpu \
+--cpu_per_rs $cores_per_gpu \
+--gpu_per_rs 1 \
+--bind=proportional-packed:$cores_per_rank \
+-d plane:$ranks_per_gpu \
+-l gpu-cpu \
+--smpiargs="-gpu -mca osc_pami_use_tunnel_atomics 1 -mca osc_pami_tunnel_atomics_hint_commutative_operations 1" $EXEC 0
+
+EOF

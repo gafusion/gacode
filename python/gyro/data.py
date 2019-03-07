@@ -21,6 +21,8 @@ class GYROData:
        self.tagmom     = []
        self.tagmomtext = []
 
+       if not sim_directory.endswith(os.path.sep):
+           sim_directory += os.path.sep
        self.dir = sim_directory
        self.getdata()
        self.read_geometry()

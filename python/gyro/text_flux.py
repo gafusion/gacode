@@ -84,7 +84,7 @@ print line3
 print b
 
 # Determine tmin
-imin=iwindow(t,window)
+imin,imax=iwindow(t,window,0.0)
 
 print
 
@@ -94,7 +94,7 @@ else:
     print 'Average Window:',str(t[imin])+' < (c_s/a) t < '+str(t[-1])
     print
     for i in range(n_kinetic):
-        print tag[i],average(b[:,i+1],t,window)
+        print tag[i],average(b[:,i+1],t,window,0.0)
 
 if sim.profile['boundary_method'] == 2:
     print

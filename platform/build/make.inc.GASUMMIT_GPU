@@ -17,7 +17,7 @@ F77 = ${FC}
 
 # Compiler options/flags
 FACC   =-acc -Minfo=accel -ta=nvidia:cc70 -Mcudalib=cufft
-FOMP   =-mp -Mstack_arrays ${FACC}
+FOMP   =-mp -Mstack_arrays 
 FMATH  =-r8 -I${FFTW_INC}
 FOPT   =-fast
 FDEBUG =-g -Kieee -Ktrap=fp,divz -Mbounds -Mchkptr -Mchkstk -traceback -Minform=inform
