@@ -13,6 +13,7 @@ import sys
 
 def set_defaults() :
      t = SimpleInput()
+     t.add('UNITS','TGLF')
      t.add('USE_TRANSPORT_MODEL','.true.')
      t.add('GEOMETRY_FLAG','1')
      t.add('WRITE_WAVEFUNCTION_FLAG','0')

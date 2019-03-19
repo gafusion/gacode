@@ -12,9 +12,9 @@
 
 subroutine cgyro_kernel
 
+
   use timer_lib
   use mpi
-
   use cgyro_globals
   use cgyro_io
 

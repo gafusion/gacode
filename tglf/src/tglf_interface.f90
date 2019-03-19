@@ -42,8 +42,10 @@ module tglf_interface
   logical              :: tglf_quiet_flag_in = .true.
   integer              :: tglf_test_flag_in  = 0
 
-  ! INPUT PARAMETERS
+! units switch
+  character (len=4) :: tglf_units_in = 'TGLF'
 
+! INPUT PARAMETERS
   logical :: tglf_use_transport_model_in = .true.
   integer :: tglf_geometry_flag_in = 1
   integer :: tglf_write_wavefunction_flag_in=0

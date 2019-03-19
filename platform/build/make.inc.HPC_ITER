@@ -1,11 +1,6 @@
 #---------------------------------------------------
-# DROP (Intel fortran, MVAPICH)
+# HPC_ITER (Intel fortran, MPICH2)
 #---------------------------------------------------
-
-#FFTWDIR=/opt/fftw-3.3.3-intel
-#NCDIR=/opt/netcdf-4.1.3-intel
-#FFTWDIR=$(HOME)
-#NCDIR=$(HOME)
 
 # Compilers
 
@@ -21,9 +16,14 @@ FDEBUG	= -check bounds,uninit -fpe0 -ftrapuv
 LMATH=$(FFTWDIR)/lib/libfftw3_omp.a $(FFTWDIR)/lib/libfftw3.a
 
 # OPTIONAL NetCDF:
-NETCDF=-L$(NCDIR)/lib -lnetcdff -lnetcdf
+NETCDF=-L$(NCDIR)/lib -lnetcdff
 NETCDF_INC=$(NCDIR)/include
 
 # Archive 
 
 ARCH = xiar cr
+
+ifdef FANN_ROOT
+   # neural net libraries
+   NN_LIB=-L$(GACODE_ROOT)/../neural/ -I$(GACODE_ROOT)/../neural/ -lbrainfuse -L$(FANN_ROOT)/lib -lfann
+endif

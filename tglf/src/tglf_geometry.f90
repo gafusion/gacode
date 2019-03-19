@@ -246,6 +246,13 @@ SUBROUTINE xgrid_functions_geo
      !! kx0_e = -(0.36*vexb_shear_s/gamma_reference_kx0(1) + 0.29*wE*TANH((0.71*wE)**6))
      kx0_e = -(0.36*vexb_shear_kx0/gamma_reference_kx0(1) + 0.38*wE*TANH((0.69*wE)**6))
      if(sat_rule_in.eq.1)kx0_e = -(0.53*vexb_shear_kx0/gamma_reference_kx0(1) + 0.25*wE*TANH((0.69*wE)**6))
+     if(kx_isotropic_in)then
+       wE = MIN(kyi/0.3,1.0)*vexb_shear_kx0/gamma_reference_kx0(1)
+       kx0_e = -kx_geo0_out*(0.36*vexb_shear_kx0/gamma_reference_kx0(1)+ 0.38*wE*TANH((0.69*wE)**6))
+       if(sat_rule_in.eq.1) then
+        kx0_e = -kx_geo0_out*(0.53*vexb_shear_kx0/gamma_reference_kx0(1) + 0.25*wE*TANH((0.69*wE)**6))
+       endif
+     endif
 !     a0 = alpha_e_in*2.0
 !     if(alpha_e_in.ne.0.0)then
 !        kx0_e = a0*TANH(kx0_e/a0)
@@ -399,7 +406,7 @@ SUBROUTINE xgrid_functions_geo
      B_ave_out = B_ave_out + dlp*(b_geo(i-1)+b_geo(i))/2.0
      Bt_ave_out = Bt_ave_out + dlp*(f/b_geo(i-1)+f/b_geo(i))/(2.0*Rmaj_s)
      Grad_r_ave_out = Grad_r_ave_out + dlp*0.5*((R(i-1)*Bp(i-1))+(R(i)*Bp(i)))*(q_s/rmin_s)
-     SAT_geo_ave_out = SAT_geo_ave_out + dlp*0.5*(B_geo(i-1)/qrat_geo(i-1)**3+B_geo(i)/qrat_geo(i)**3)
+     SAT_geo_ave_out = SAT_geo_ave_out + dlp*0.5*(1.0/qrat_geo(i-1)**2+1.0/qrat_geo(i)**2)
      kykx_geo_ave = kykx_geo_ave + dlp*0.5*(B_geo(i-1)**2/qrat_geo(i-1)**4+B_geo(i)**2/qrat_geo(i)**4)
  enddo
   R2_ave_out = R2_ave_out/norm_ave
@@ -415,7 +422,18 @@ SUBROUTINE xgrid_functions_geo
   ! poloidal magnetic field on outboard midplane
   !
   Bp0_out = Bp(0)/B_unit
-  SAT_geo0_out = B_geo(0)/qrat_geo(0)**3
+  kx_geo0_out = 1.0
+  SAT_geo0_out = 1.0
+  if (kx_isotropic_in)then
+     kx_geo0_out = (qrat_geo(0)/grad_r0_out)/0.8482
+     SAT_geo0_out = ((grad_r0_out/B_geo(0))**2)/1.3901
+    !write(*,*)"kx_geo0 = ",kx_geo0_out
+    !write(*,*)"SAT_geo0 = ",SAT_geo0_out
+  endif
+! for GENE units need to multiply intensity by (Bref/Bunit)**2
+  if(units_in.eq.'GENE')then
+     SAT_geo0_out = SAT_geo0_out*(Bref_out)**2
+  endif
   !
   ! write(*,*)"R2_ave_out=",R2_ave_out
   ! write(*,*)"B2_ave_out=",B2_ave_out
@@ -767,8 +785,7 @@ SUBROUTINE mercier_luc
   REAL :: dffp_s1,dffp_s2
   REAL :: vprime, vpp, dvpp1,dvpp2
   REAL :: ave_M1,ave_M2,ave_M3,ave_M4
-  REAL :: p_prime_M,q_prime_M,H
-  !
+  REAL :: p_prime_M,q_prime_M,H  !
   !-----------------------
   !
   ! compute the first and second derivatives of R,Z on the s-grid
@@ -841,6 +858,15 @@ SUBROUTINE mercier_luc
   f = pi_2*q_s/f
   ! write(*,*)"f = ",f,q_s
   ! write(*,*)"ds=",ds
+  Bref_out = 1.0
+  if(units_in .eq. 'GENE')then
+! convert inputs from GENE reference magnetic field to Bunit
+    Bref_out = f/Rmaj_input ! Bref/Bunit
+    ! write(*,*)"Bref/Bunit = ",Bref_out
+    betae_in = betae_in*Bref_out**2
+    p_prime_s = p_prime_s*Bref_out**2
+    debye_in = debye_in/Bref_out
+  endif
   !
   !-----------------------------------------------------------
   !-----------------------------------------------------------

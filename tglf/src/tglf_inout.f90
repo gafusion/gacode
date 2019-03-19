@@ -1,6 +1,23 @@
 !-----------------------------------------------------------------
 !  input routines
 !-----------------------------------------------------------------
+SUBROUTINE put_units(units)
+!
+USE tglf_global
+!
+IMPLICIT NONE
+CHARACTER (len=*) :: units
+
+if(units .eq. 'TGLF' .or. units .eq. 'GENE')then
+   units_in = units
+else
+   call tglf_error(1,"Invalid units selected")
+endif
+!
+END SUBROUTINE put_units
+!
+!-----------------------------------------------------------------
+!
 SUBROUTINE put_species(nsp,zsp,msp)
   !
   USE tglf_global
@@ -333,6 +350,10 @@ SUBROUTINE put_model_parameters(adi_elec,alpha_e,alpha_p,alpha_mach,  &
   !
   ! check for changes and update flow controls
   !
+  if(sat_rule.eq.2)then
+    sat_rule = 1
+    kx_isotropic_in = .TRUE.
+  endif
   if(adi_elec .NEQV. adiabatic_elec_in)new_matrix = .TRUE.
   if(kygrid_model.lt.0.or.kygrid_model.gt.5)kygrid_model = kygrid_model_in
   if(xnu_model.lt.0.or.xnu_model.gt.3)xnu_model = xnu_model_in

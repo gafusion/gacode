@@ -98,10 +98,15 @@ echo "smt level smt$threads_per_core"
 ulimit -s 10240
 
 export PAMI_ENABLE_STRIPING=1
+# Remove now?
+export PAMI_IBV_ENABLE_DCT=1
 export OMP_NUM_THREADS=$threads_per_rank
 export OMP_STACKSIZE=400M
 export MP_EAGER_LIMIT=$eager
 $CPROF
+
+export PROFILE_RANK=1
+export PROFILE_PATH='./nvprof.prof'
 
 jsrun \
 -D CUDA_VISIBLE_DEVICES \
@@ -113,6 +118,6 @@ jsrun \
 --bind=proportional-packed:$cores_per_rank \
 -d plane:$ranks_per_gpu \
 -l gpu-cpu \
---smpiargs="-gpu -mca osc_pami_use_tunnel_atomics 1 -mca osc_pami_tunnel_atomics_hint_commutative_operations 1" $EXEC 0
+--smpiargs="-gpu -mca osc_pami_use_tunnel_atomics 1 -mca osc_pami_tunnel_atomics_hint_commutative_operations 1" ./profile_helper.sh $EXEC 0
 
 EOF

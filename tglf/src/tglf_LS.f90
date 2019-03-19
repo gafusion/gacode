@@ -424,7 +424,7 @@
          intensity = intensity/(1.0+0.56*kx0_e**2)**2
          intensity = intensity/(1.0+(1.15*kx0_e)**4)**2
        endif
-         intensity = intensity/B_unit**2
+         intensity = intensity*SAT_geo0_out
       elseif(sat_rule_in.eq.1)then
 !
 !   will be computed later by get_multiscale_spectrum

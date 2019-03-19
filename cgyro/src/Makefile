@@ -51,8 +51,8 @@ OBJECTS = cgyro_globals.o \
           cgyro_read_restart.o \
           cgyro_write_restart.o \
           cgyro_write_timedata.o \
-	cgyro_write_hosts.o \
-	cgyro_filter.o
+          cgyro_write_hosts.o \
+          cgyro_filter.o 
 
 .SUFFIXES : .o .f90 .F90
 

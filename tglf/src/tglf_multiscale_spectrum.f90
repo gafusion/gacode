@@ -283,7 +283,7 @@
           else
             if(ky0.gt.kyetg)gammaeff = gammaeff*SQRT(ky0/kyetg)
           endif
-          field_spectrum_out(2,j,i) = (cnorm*gammaeff*gammaeff/ky0**4)/(1.0+ay*kx**2)**2
+          field_spectrum_out(2,j,i) = SAT_geo0_out*(cnorm*gammaeff*gammaeff/ky0**4)/(1.0+ay*kx**2)**2
         enddo
      enddo
      ! recompute the intensity and flux spectra
