@@ -8,8 +8,9 @@ SRC=	../src/gapy_realfluct.f90 \
 	../src/gapy_torcut.f90 \
 	../src/gapy_geo.f90 \
 	../src/gapy_surfpar.f90 \
-	../src/gapy_util.f90
-#	../src/gapy_vpro.f90
+        ../src/gapy_util.f90 \
+ 	../src/gapy_vpro.f90 \
+	../src/gapy_vpro_util.f90
 
 # Remove possible compilers
 F2PYM:=$(filter-out --fcompiler=pg --fcompiler=intelem,$(F2PY))

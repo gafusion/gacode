@@ -2,6 +2,7 @@ import struct
 import sys
 import numpy as np
 import os
+import time
 from matplotlib import rc
 import matplotlib.pyplot as plt
 from gacodefuncs import *
@@ -11,7 +12,7 @@ try:
    import gapy
    hasgapy = True
 except:
-   print ' BAD: (plot_fluct) Please build gapy.so library!'
+   print('BAD: (plot_fluct) Please build gapy.so library!')
    hasgapy = False
 
 PREC='f' ; BIT=4  
@@ -139,7 +140,6 @@ def maptoreal_fft(nr,nn,nx,ny,c):
       for iy in range(1,nn):
          d[i,ny-iy] = np.conj(c[ix+nr/2,iy])
           
-
    # Sign convention negative exponent exp(-inx)
    f = np.real(np.fft.fft2(d))*0.5
     
@@ -154,14 +154,14 @@ fdata,title,isfield = tag_helper(sim.mass[species],sim.z[species],moment)
 # Check to see if data exists (try binary data first)
 if os.path.isfile('bin'+fdata):
     fdata = 'bin'+fdata
-    print 'INFO: (plot_fluct) Found binary data in '+fdata 
+    print('INFO: (plot_fluct) Found binary data in '+fdata) 
     hasbin = True
 elif os.path.isfile('out'+fdata):
     fdata = 'out'+fdata
-    print ' BAD: (plot_fluct) Using inefficient ASCII data in '+fdata 
+    print('BAD: (plot_fluct) Using inefficient ASCII data in '+fdata) 
     hasbin = False
 else:
-    print 'ERROR: (plot_fluct) No data for -moment '+moment+' exists.  Try -moment phi'
+    print('ERROR: (plot_fluct) No data for -moment '+moment+' exists.  Try -moment phi')
     sys.exit()
 
 if isfield:
@@ -219,7 +219,7 @@ def frame():
          ax.contourf(yp,xp,f,levels,cmap=plt.get_cmap(colormap))
          #plt.subplots_adjust(top=0.9,left=0.05,right=0.95)
  
-      print 'INFO: (plot_fluct '+mode+') min=%e , max=%e  (t=%e)' % (f0,f1,t)
+      print('INFO: (plot_fluct '+mode+') min=%e , max=%e  (t=%e)' % (f0,f1,t))
 
       ax.set_title(title)
       ax.set_aspect('equal')
@@ -253,7 +253,7 @@ if hasbin:
          sys.exit()
       
       i = i+1
-      print 'INFO: (plot_fluct) Time index '+str(i) 
+      print('INFO: (plot_fluct) Time index '+str(i)) 
       frame()
 
 else:
@@ -267,6 +267,6 @@ else:
       if m == n_chunk:
          i = i+1
          m = 0
-         print 'INFO: (plot_fluct) Time index '+str(i) 
+         print('INFO: (plot_fluct) Time index '+str(i)) 
          frame()
 

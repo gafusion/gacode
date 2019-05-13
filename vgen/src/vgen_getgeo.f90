@@ -44,8 +44,8 @@ subroutine vgen_getgeo
      else
         ! Call GEO with general (numerical) shape
         GEO_model_in = 1
-        GEO_fourier_in(1:4,:) = EXPRO_geo(:,:,i)/r_min
-        GEO_fourier_in(5:8,:) = EXPRO_dgeo(:,:,i)
+        GEO_fourier_in(1:4,0:geo_nfourier_in) = EXPRO_geo(:,:,i)/r_min
+        GEO_fourier_in(5:8,0:geo_nfourier_in) = EXPRO_dgeo(:,:,i)
      endif
 
      call geo_interp(n_theta,theta,.true.)

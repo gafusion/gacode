@@ -2,18 +2,22 @@
 # HPC_ITER (Intel fortran, MPICH2)
 #---------------------------------------------------
 
+IDENTITY="ITER compute cluster"
+CORES_PER_NODE=1
+NUMAS_PER_NODE=1
+
 # Compilers
 
-FC	= mpif90 -mod $(GACODE_ROOT)/modules -I $(GACODE_ROOT)/modules -I $(FFTWDIR)/include -mkl=sequential 
+FC	= mpif90 -gen-interfaces -module $(GACODE_ROOT)/modules -I $(GACODE_ROOT)/modules -I $(FFTWDIR)/include #-mkl=sequential 
 F77	= ${FC}
 
-FOMP    = -openmp
-FMATH	= -r8 
-FOPT	= -O2 -xSSE4.2
-FDEBUG	= -check bounds,uninit -fpe0 -ftrapuv
+FOMP    = -qopenmp
+FMATH	= -real-size 64
+FOPT	= -Ofast
+FDEBUG	= -check all -traceback
 
 # System math libraries
-LMATH=$(FFTWDIR)/lib/libfftw3_omp.a $(FFTWDIR)/lib/libfftw3.a
+LMATH=$(FFTWDIR)/lib/libfftw3_omp.a $(FFTWDIR)/lib/libfftw3.a -mkl
 
 # OPTIONAL NetCDF:
 NETCDF=-L$(NCDIR)/lib -lnetcdff
@@ -21,7 +25,7 @@ NETCDF_INC=$(NCDIR)/include
 
 # Archive 
 
-ARCH = xiar cr
+ARCH = ar cr
 
 ifdef FANN_ROOT
    # neural net libraries

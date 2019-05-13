@@ -10,7 +10,7 @@ from mayavi import mlab
 try:
    import gapy
 except:
-   print 'ERROR: (vis_torcut) Please build gapy.so library!'
+   print('ERROR: (vis_torcut) Please build gapy.so library!')
    sys.exit()
    
 ext      = sys.argv[1]
@@ -39,7 +39,11 @@ nth = sim.theta_plot
 ivec = time_vector(istr,nt)
 
 xp = sim.length
-yp = 2*np.pi/np.abs(sim.ky[1])
+if nn > 1:
+   yp = 2*np.pi/np.abs(sim.ky[1])
+else:
+   yp = 2*np.pi/np.abs(sim.ky[0])
+   
 aspect = yp/xp
 
 pre,ftype = mkfile(ext)
@@ -48,7 +52,7 @@ pre,ftype = mkfile(ext)
 # (r,theta)=(x,y) mesh setup 
 #
 if nth == 1:
-   print 'ERROR: (vis_wheel) This visualization requires THETA_PLOT > 1.'
+   print('ERROR: (vis_wheel) This visualization requires THETA_PLOT > 1.')
    sys.exit()
    
 if nx < 0:
@@ -124,9 +128,9 @@ fdata,title,isfield = tag_helper(sim.mass[species],sim.z[species],moment)
 # Check to see if data exists 
 if os.path.isfile('bin'+fdata):
     fdata = 'bin'+fdata
-    print 'INFO: (vis_torcut) Found binary data in '+fdata 
+    print('INFO: (vis_torcut) Found binary data in '+fdata)
 else:
-    print 'ERROR: (vis_torcut) No data for -moment '+moment+' exists.  Try -moment phi'
+    print('ERROR: (vis_torcut) No data for -moment '+moment+' exists.  Try -moment phi')
     sys.exit()
 
 if isfield:
@@ -147,11 +151,10 @@ def frame():
       c = a[0,:,:,:]+1j*a[1,:,:,:]
    else:
       c = a[0,:,:,species,:]+1j*a[1,:,:,species,:]
-
    
    # 1a
    f = np.zeros([nx,ny],order='F')
-   gapy.realfluct(c[:,nth/2,:],f)
+   gapy.realfluct(c[:,nth//2,:],f)
 
    if fmin == 'auto':
       f0=np.min(f)
@@ -160,28 +163,28 @@ def frame():
       f0=float(fmin)
       f1=float(fmax)
 
-   mlab.mesh(xp1,yp1,zp1,scalars=f,colormap=colormap,vmin=f0,vmax=f1,opacity=1.0)
+   mlab.mesh(xp1,yp1,zp1,scalars=f,colormap=colormap,vmin=f0,vmax=f1)
 
    # 1b
    f = np.zeros([nx,ny],order='F')
    gapy.realfluct(c[:,0,:],f)
-   mlab.mesh(-xp1,yp1,zp1,scalars=f,colormap=colormap,vmin=f0,vmax=f1,opacity=1.0)
+   mlab.mesh(-xp1,yp1,zp1,scalars=f,colormap=colormap,vmin=f0,vmax=f1)
 
    # 2a,b
    f = np.zeros([nx,nz],order='F')
    gapy.wheel1(c,f)
-   mlab.mesh(xp2,yp2,zp2,scalars=f,colormap=colormap,vmin=f0,vmax=f1,opacity=1.0)
-   mlab.mesh(xp2,yp2,0*zp2,scalars=f,colormap=colormap,vmin=f0,vmax=f1,opacity=1.0)
+   mlab.mesh(xp2,yp2,zp2,scalars=f,colormap=colormap,vmin=f0,vmax=f1)
+   mlab.mesh(xp2,yp2,0*zp2,scalars=f,colormap=colormap,vmin=f0,vmax=f1)
 
    # 3a,b
    f = np.zeros([ny,nz],order='F')
    gapy.wheel2(c,f)
-   mlab.mesh(xp3,yp3,zp3,scalars=f,colormap=colormap,vmin=f0,vmax=f1,opacity=1.0)
-   mlab.mesh(xp4,yp4,zp4,scalars=f,colormap=colormap,vmin=f0,vmax=f1,opacity=1.0)
+   mlab.mesh(xp3,yp3,zp3,scalars=f,colormap=colormap,vmin=f0,vmax=f1)
+   mlab.mesh(xp4,yp4,zp4,scalars=f,colormap=colormap,vmin=f0,vmax=f1)
 
    # View from positive z-axis
    mlab.view(azimuth=75, elevation=65,distance=3.2)
-   print 'INFO: (vis_wheel) min=%e , max=%e' % (f0,f1)
+   print('INFO: (vis_wheel) min=%e , max=%e' % (f0,f1))
 
    if ftype == 'screen':
       mlab.show()
@@ -205,7 +208,7 @@ while True:
       sys.exit()
 
    i += 1
-   print 'INFO: (vis_torcut) Time index '+str(i) 
+   print('INFO: (vis_torcut) Time index '+str(i))
    if i in ivec:
       frame()
    if i == max(ivec):

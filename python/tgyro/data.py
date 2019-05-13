@@ -1,6 +1,7 @@
 import os
 import sys
 import numpy as np
+import re
 
 class tgyrodata:
     """TGYRO output data class"""
@@ -180,8 +181,17 @@ class tgyrodata:
                 return 0
 
             for ir in range(nrad):
-                row = string.split(data[ib*nr+ir+ix])
-                numdata[:,ib,ir] = row[:]
+                row = string.split(data[ib * nr + ir + ix])
+                for ic in range(nc):
+                    try:
+                        numdata[ic, ib, ir] = float(row[ic])
+                    except ValueError:
+                        # parse badly formatted numbers like this 3.952525-323
+                        tmp = re.match('([\-\+]*[\.0-9]+)([\-\+])([0-9]+)', row[ic])
+                        if tmp.groups():
+                            numdata[ic, ib, ir] = float('%sE%s%s' % (tmp.groups()[0], tmp.groups()[1], tmp.groups()[2]))
+                        else:
+                            raise
 
         # Populate data list
         for ic in range(nc):

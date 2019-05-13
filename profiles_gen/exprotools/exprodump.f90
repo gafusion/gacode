@@ -14,16 +14,16 @@ program exprodump
 
   character(len=20) :: var,x
   integer :: i
-  integer :: density_method
+  integer :: qnflag
 
 
   open(unit=1,file='input.exprodump',status='old')
   read(1,*) var
   read(1,*) x
-  read(1,*) density_method
+  read(1,*) qnflag
   close(1)
 
-  EXPRO_ctrl_quasineutral_flag = density_method-1
+  EXPRO_ctrl_quasineutral_flag = qnflag
   EXPRO_ctrl_numeq_flag = 0 
 
   call EXPRO_alloc('./',1) 

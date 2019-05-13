@@ -6,7 +6,7 @@ else
    FFLAGS=${FOPT}
 endif
 
-NEO_FLAGS = -cpp
+#NEO_FLAGS = -cpp
 ifdef CUDA_DIR
    NEO_FLAGS += -DNEO_HAVE_CUDA $(CUDA_INC)
    NEO_LIBS  += $(CUDA_LIB)
@@ -34,7 +34,7 @@ exec1: $(OBJECTS)
 	$(FC) $(FFLAGS) $(NEO_FLAGS) -o $(EXEC1) $(OBJECTS) ${GACODE_ROOT}/neo/src/neo_lib.a $(EXTRA_LIBS) $(LMATH) $(NN_LIB) ${NEO_LIBS}
 
 
-exec2: $(OBJECTS) $(EXEC2).o 
+exec2: $(OBJECTS) $(EXEC2).o
 	$(FC) $(FFLAGS) $(NEO_FLAGS) -o $(EXEC2) $(EXEC2).o $(LMATH)
 
 .f90.o :

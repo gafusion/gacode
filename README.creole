@@ -73,5 +73,5 @@ BANACH
 Thu May 10 14:25:20 PDT 2012
 }}}
 
-The same applies to tgyro and neo runs.
+The same applies to tgyro and neo runs.  Added text.
 

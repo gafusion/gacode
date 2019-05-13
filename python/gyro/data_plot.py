@@ -220,7 +220,7 @@ class gyrodata_plot(data.GYROData):
       plt.tight_layout(pad=0.2)
 
       
-   def plot_gbflux(self,w=0.5,field='s',moment=0,ymin='0.0',ymax='auto',loc=2):
+   def plot_gbflux(self,w=0.5,wmax=0.0,field='s',moment=0,ymin='0.0',ymax='auto',loc=2):
       '''
       Plot the gyrobohm flux versus time.
       '''
@@ -437,7 +437,7 @@ class gyrodata_plot(data.GYROData):
       plt.tight_layout()
       
 
-   def plot_gbflux_n(self,w=0.5,field='s',moment=0,ymin='auto',ymax='auto',fig=None):
+   def plot_gbflux_n(self,w=0.5,wmax=0.0,field='s',moment=0,ymin='auto',ymax='auto',fig=None):
       '''
       Plot ky-dependent flux
       '''

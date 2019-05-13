@@ -2119,6 +2119,38 @@ SUBROUTINE write_tglf_nete_crossphase_spectrum
 END SUBROUTINE write_tglf_nete_crossphase_spectrum
 !-----------------------------------------------------------------
 !
+SUBROUTINE write_tglf_nsts_crossphase_spectrum
+  !
+  USE tglf_dimensions
+  USE tglf_global
+  USE tglf_species
+  USE tglf_kyspectrum
+  !
+  IMPLICIT NONE
+  CHARACTER(33) :: fluxfile="out.tglf.nsts_crossphase_spectrum"
+  INTEGER :: is,i,n
+  !
+  if(new_start)then
+     write(*,*)"error: tglf_TM must be called before write_tglf_nsts_crossphase_spectrum"
+     write(*,*)"       NN doesn't compute spectra -> if needed set tglf_nn_max_error_in=-1"
+  endif
+  !
+  OPEN(unit=33,file=fluxfile,status='replace')
+!
+  write(33,*)"density-temperature cross phase spectra per mode for ",ns_in," species"
+   do is=1,ns_in
+    write(33,*)"species index = ",is
+    write(33,*)"ky,(nsts_phase_spectrum_out,n=1,nmodes_in)"
+    do i=1,nky
+      write(33,*)ky_spectrum(i),(nsts_phase_spectrum_out(is,i,n),n=1,nmodes_in)
+    enddo
+  enddo
+!
+  CLOSE(33)
+!
+END SUBROUTINE write_tglf_nsts_crossphase_spectrum
+!-----------------------------------------------------------------
+!
  SUBROUTINE write_tglf_QL_weight_spectrum
 !
   USE tglf_dimensions

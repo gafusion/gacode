@@ -106,6 +106,7 @@ module prgen_globals
   integer :: onetwo_nneu
   integer :: onetwo_nbion
   integer :: onetwo_nalp
+  integer :: onetwo_ipccw
   character (len=2), dimension(n_ion_max) :: onetwo_namep
   character (len=2), dimension(n_ion_max) :: onetwo_namei
   character (len=2), dimension(n_ion_max) :: onetwo_nameb

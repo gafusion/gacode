@@ -217,6 +217,7 @@
       REAL,DIMENSION(maxmodes,nsm) :: U_QL_out=0.0,Q_QL_out=0.0
       REAL,DIMENSION(maxmodes,nsm) :: n_bar_out=0.0,t_bar_out=0.0
       REAL,DIMENSION(maxmodes,nsm) :: u_bar_out=0.0,q_bar_out=0.0
+      REAL,DIMENSION(maxmodes,nsm) :: Ns_Ts_phase_out=0.0
       REAL,DIMENSION(nsm,3) :: particle_flux_out=0.0,energy_flux_out=0.0
       REAL,DIMENSION(nsm,3) :: exchange_out=0.0
       REAL,DIMENSION(nsm,3) :: stress_par_out=0.0,stress_tor_out=0.0
@@ -224,7 +225,8 @@
       REAL,DIMENSION(maxmodes) :: phi_QL_out=0.0,a_par_QL_out=0.0,b_par_QL_out=0.0
       REAL,DIMENSION(maxmodes) :: phi_bar_out=0.0,v_bar_out=0.0
       REAL,DIMENSION(maxmodes) :: a_par_bar_out=0.0,b_par_bar_out=0.0
-      REAL,DIMENSION(maxmodes) :: wd_bar_out=0.0,b0_bar_out=0.0,ne_te_phase_out=0.0
+      REAL,DIMENSION(maxmodes) :: wd_bar_out=0.0,b0_bar_out=0.0
+      REAL,DIMENSION(maxmodes) :: ne_te_phase_out=0.0
       REAL,DIMENSION(maxmodes) :: kx_bar_out=0.0,kpar_bar_out=0.0
       REAL,DIMENSION(maxmodes) :: modB_bar_out=0.0
       REAL,DIMENSION(nsm) :: n_bar_sum_out=0.0,t_bar_sum_out=0.0
@@ -234,6 +236,7 @@
       REAL,DIMENSION(5,nsm,3,nkym,maxmodes) :: flux_spectrum_out=0.0
       REAL,DIMENSION(2,nkym,maxmodes) :: eigenvalue_spectrum_out=0.0
       REAl,DIMENSION(nkym,maxmodes) :: ne_te_phase_spectrum_out=0.0
+      REAl,DIMENSION(nsm,nkym,maxmodes) :: nsts_phase_spectrum_out=0.0
       REAL,DIMENSION(nkym) :: spectral_shift_out=0.0
       REAL :: phi_bar_sum_out=0.0
       REAL :: v_bar_sum_out=0.0
@@ -370,6 +373,7 @@
       REAl :: U_weight(nsm),Q_weight(nsm)
       REAL :: phi_weight,a_par_weight,b_par_weight
       REAL :: Ne_Te_phase,Ne_Te_cos,Ne_Te_sin
+      REAL :: Ns_Ts_phase(nsm),Ns_Ts_cos,Ns_Ts_sin
       REAL :: wd_bar,b0_bar,modB_bar,kx_bar,kpar_bar
 !      
       END MODULE tglf_weight

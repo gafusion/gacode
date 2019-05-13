@@ -214,6 +214,7 @@
               flux_spectrum_out(t,is,j,i,k) = 0.0
             enddo
           enddo ! j
+          nsts_phase_spectrum_out(is,i,k) = 0.0
         enddo ! is
         ne_te_phase_spectrum_out(i,k)=0.0
        enddo  !k
@@ -347,6 +348,12 @@
          do imax=1,nmodes_out
            ne_te_phase_spectrum_out(i,imax) = ne_te_phase_out(imax)
          enddo  !imax
+! save ns_ts crossphase
+         do is=1,ns_in
+           do imax=1,nmodes_out
+             nsts_phase_spectrum_out(is,i,imax) = Ns_Ts_phase_out(imax,is)
+           enddo  !imax
+          enddo    ! is
         endif !unstable .T.
 !
 ! reset width to maximum if used tglf_max

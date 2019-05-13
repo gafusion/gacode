@@ -82,7 +82,7 @@ subroutine cgyro_make_profiles
      ! Determine if electrons are to be included in the 
      ! simulation.  Electron profiles are read even if not 
      ! to be included in the simulation (needed to re-scale 
-     ! ion density/temp is not quasi-neutral).
+     ! ion density/temp if not quasi-neutral).
      if (ae_flag == 0 .and. z(n_species) > 0.0) then
         call cgyro_error('For exp. profiles, electron index must be n_species')
         return
@@ -434,7 +434,7 @@ subroutine set_betastar
      beta_star(0) = beta_star(0) + (dlnndr_ele + dlntdr_ele)
   endif
   beta_star(0)  = beta_star(0)*betae_unit
-  ! 8pi/Bunit^2 * scaling factor
+  ! 8*pi/Bunit^2 * scaling factor
   beta_star_fac = -betae_unit/(dens_ele*temp_ele)*beta_star_scale  
   
 end subroutine set_betastar

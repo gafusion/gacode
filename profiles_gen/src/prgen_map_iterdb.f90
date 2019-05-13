@@ -223,6 +223,9 @@ subroutine prgen_map_iterdb
      endif
   enddo
 
+  ! Use angrot as an initial approximation for omega0
+  EXPRO_w0 = -ipccw*onetwo_angrot(:)
+  
   ! Additional powers (fusion and radiation)
   ! * for iterdb, put all radiated power in pow_e_line
   EXPRO_pow_e_fus  = pow_e_fus(:)

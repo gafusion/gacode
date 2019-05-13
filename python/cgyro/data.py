@@ -228,7 +228,7 @@ class cgyrodata:
          pass 
       #-----------------------------------------------------------------
 
-   def getflux(self,cflux):
+   def getflux(self,cflux='auto'):
 
       if cflux == 'auto':
          if abs(self.gamma_e) > 0.0:
@@ -327,8 +327,8 @@ class cgyrodata:
 
       for ispec in range(ns):
          for l in range(ng):
-            self.lky_xr[ispec,l] = average(z[0,l,ispec,:],self.t,w)*sc[ispec]
-            self.lky_xi[ispec,l] = average(z[1,l,ispec,:],self.t,w)*sc[ispec]
+            self.lky_xr[ispec,l] = average(z[0,l,ispec,:],self.t,w,0.0)*sc[ispec]
+            self.lky_xi[ispec,l] = average(z[1,l,ispec,:],self.t,w,0.0)*sc[ispec]
 
          # Flux partial average over [-e,e]
          g0 = self.lky_xr[ispec,0]

@@ -34,6 +34,7 @@ then
   echo "                = freq     (frequency versus time)"
   echo "                = ky_freq  (frequency versus ky)"
   echo "                = ball     (ballooning modes OR ZF test)"
+  echo "                = hball    (ballooning distribution; use -n for l and -ie for e)"
   echo "                = hb       (2D ballooning distribution)"
   echo "                = hbcut    (1D ballooning distribution line plots)"
   echo "                = geo      (geometry arrays)"
@@ -124,13 +125,17 @@ then
   echo "         Specify values of n (toroidal mode index)"
   echo "         *Affects: ky_phi"
   echo
+  echo "         -ie <value>"
+  echo "         Specify energy index"
+  echo "         *Affects: hball"
+  echo
   echo "         -loc <loc>"
   echo "         Legend location (1-4)"  
   echo
   echo "         -diss"
   echo "         Toggle plotting of dissipation curve"  
   echo
-  echo "OPTIONS FOR -plot fluct/vis"
+  echo "OPTIONS FOR -plot fluct, -vis"
   echo
   echo "         -nomp <threads>"
   echo "         Number of OpenMP threads per MPI task."
@@ -164,6 +169,12 @@ then
   echo
   echo "         -land"
   echo "         Use landscape mode (ly,lx) for -plot fluct"  
+  echo
+  echo "         -dn"
+  echo "         Modify value of CGYRO delta n_toroidal (simulation runs with dn=1)"  
+  echo
+  echo "         -nozonal"
+  echo "         Remove zonal (n=0) component of the fluctuations (-vis torcut only)"  
   echo
   echo "OPTIONS FOR -plot vid"
   echo
@@ -226,7 +237,7 @@ FIELD=0
 FC=0
 TIME=-1
 TMAX=-1.0
-YMIN=0.0
+YMIN=auto
 YMAX=auto
 W=0.5
 WMAX=0.0
@@ -253,6 +264,10 @@ PX=800
 PY=800
 DISS=0
 CFLUX=auto
+DN=1
+LOVERA=0.5
+IE=0
+NOZONAL=0
 
 PRE=
 FRAMERATE=20
@@ -281,6 +296,7 @@ while [ $# -gt 0 ] ; do
   -diss) DISS=1 ;;
 
   -moment) shift ; MOMENT=$1 ;;
+  -ie) shift ; IE=$1 ;;
 
   -cflux) shift ; CFLUX=$1 ;;
 
@@ -323,7 +339,10 @@ while [ $# -gt 0 ] ; do
 
   -legacy) LEGACY_FLAG=1 ;;
   -land) LAND_FLAG=1 ;;
-  
+  -dn) shift ; DN=$1 ;;
+  -lovera) shift ; LOVERA=$1 ;;
+  -nozonal) NOZONAL=1 ;;
+
   -pre) shift ; PRE=$1 ;;
   -q)  shift ; QUALITY=$1 ;;
   -framerate) shift ; FRAMERATE=$1 ;;
@@ -358,7 +377,7 @@ case "$VIS_TYPE" in
 	python $PYROOT/vis_slices.py ;;
 	
    torcut)
-	export OMP_NUM_THREADS=$NOMP ; python $PYROOT/vis_torcut.py $EXT $MOMENT $SPECIES $NX $NZ $TIME $FMIN $FMAX $CMAP $FONTSIZE $LEGACY_FLAG ;;
+	export OMP_NUM_THREADS=$NOMP ; python $PYROOT/vis_torcut.py $EXT $MOMENT $SPECIES $NX $NZ $TIME $FMIN $FMAX $CMAP $FONTSIZE $LEGACY_FLAG $DN $LOVERA $NOZONAL ;;
 
    wheel)
 	export OMP_NUM_THREADS=$NOMP ; python $PYROOT/vis_wheel.py $EXT $MOMENT $SPECIES $NX $NY $NZ $TIME $FMIN $FMAX $CMAP $FONTSIZE ;;
@@ -379,6 +398,9 @@ case "$PLOT_TYPE" in
 
    hbcut)
 	python $PLT $PLOT_TYPE $TIME $SPECIES $TMAX $THETA $EXT ;;
+
+   hball)
+	python $PLT $PLOT_TYPE $TIME $SPECIES $YMIN $YMAX $TMAX $N $IE $EXT ;;
 
    freq)
 	python $PLT $PLOT_TYPE $W $WMAX $EXT ;;

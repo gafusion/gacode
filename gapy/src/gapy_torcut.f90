@@ -1,8 +1,8 @@
-subroutine torcut(m,q,nr,nth,nn,nx,nz,g1,g2,c,f)
+subroutine torcut(dn,m,q,nr,nth,nn,nx,nz,g1,g2,c,f)
 
   implicit none
 
-  integer, intent(in) :: m
+  integer, intent(in) :: dn,m
   double precision, intent(in) :: q
   integer, intent(in) :: nr,nn,nth,nx,nz
   double precision, intent(in) :: g1(0:nz-1),g2(0:nz-1)
@@ -17,7 +17,8 @@ subroutine torcut(m,q,nr,nth,nn,nx,nz,g1,g2,c,f)
   integer :: n,p,pp
   double precision :: pi,fsum,x0
   double complex :: ic
-
+  
+  ! f2py intent(in) dn
   ! f2py intent(in) m
   ! f2py intent(in) q
   ! f2py intent(in) nr
@@ -37,7 +38,7 @@ subroutine torcut(m,q,nr,nth,nn,nx,nz,g1,g2,c,f)
   allocate(th(0:nth))
   allocate(c0(0:nr-1,0:nn-1))
   allocate(cx(0:nr-1,0:nth,0:nn-1))
-
+  
   ic = (0d0,1d0)
   pi = atan(1d0)*4d0
 
@@ -46,31 +47,45 @@ subroutine torcut(m,q,nr,nth,nn,nx,nz,g1,g2,c,f)
   enddo
 
   do i=0,nx-1
-     x(i) = i*2*pi/(nx-1)
+     x(i) = i*2*pi/(nx-1)/dn
      do p=0,nr-1    
-        epx(p,i) = exp(ic*(p-nr/2)*x(i))
+        epx(p,i) = exp(dn*ic*(p-nr/2)*x(i))
      enddo
   enddo
 
-  do k=0,nz-1
-     z(k) = k*2*pi/(nz-1)-pi
-     do n=0,nn-1    
-        eny(n,k) = exp(ic*n*g1(k))
+  if (nn > 1) then
+     do k=0,nz-1
+        z(k) = k*2*pi/(nz-1)-pi
+        do n=0,nn-1    
+           eny(n,k) = exp(dn*ic*n*g1(k))
+        enddo
      enddo
-  enddo
+     ! factor of 1/2 for n=0
+     eny(0,:) = eny(0,:)/2
+  else
+     do k=0,nz-1
+        z(k) = k*2*pi/(nz-1)-pi
+        eny(0,k) = exp(dn*ic*g1(k))
+     enddo
+  endif
 
   ! Extended coefficients
   cx(:,0:nth-1,:) = c(:,:,:) 
-  do n=0,nn-1
-     do p=0,nr-1
-        pp = p+n*m
-        if (pp > nr-1) pp = pp-nr
-        cx(p,nth,n) = c(pp,0,n)*exp(-2*pi*ic*n*q)
+  if (nn > 1) then 
+     do n=0,nn-1
+        do p=0,nr-1
+           pp = p+n*m
+           if (pp > nr-1) pp = pp-nr
+           cx(p,nth,n) = c(pp,0,n)*exp(-2*pi*dn*ic*n*q)
+        enddo
      enddo
-  enddo
-
-  ! factor of 1/2 for n=0
-  eny(0,:) = eny(0,:)/2
+  else
+     do p=0,nr-1
+        pp = p+1*m
+        if (pp > nr-1) pp = pp-nr
+        cx(p,nth,0) = c(pp,0,0)*exp(-2*pi*dn*ic*q)
+     enddo
+  endif
 
 !$omp parallel do private(k,kc,c0,i,fsum,x0,n,p)
   do k=0,nz-1
@@ -82,15 +97,21 @@ subroutine torcut(m,q,nr,nth,nn,nx,nz,g1,g2,c,f)
            exit
         endif
      enddo
-     
+
      do i=0,nx-1
         fsum = 0.0
         x0 = m*x(i)*g2(k)/(2*pi)
-        do n=0,nn-1
-           do p=0,nr-1
-              fsum = fsum+real( c0(p,n)*epx(p,i)*eny(n,k)*exp(ic*n*x0) )
+        if (nn > 1) then
+           do n=0,nn-1
+              do p=0,nr-1
+                 fsum = fsum+real( c0(p,n)*epx(p,i)*eny(n,k)*exp(dn*ic*n*x0) )
+              enddo
            enddo
-        enddo
+        else
+           do p=0,nr-1
+              fsum = fsum+real( c0(p,0)*epx(p,i)*eny(0,k)*exp(dn*ic*x0) )
+           enddo
+        endif
         f(i,k) = fsum
      enddo
 

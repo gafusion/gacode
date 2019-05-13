@@ -176,6 +176,7 @@
           T_bar_out(j1,is) = 0.0
           U_bar_out(j1,is) = 0.0
           Q_bar_out(j1,is) = 0.0
+          Ns_Ts_phase_out(j1,is) = 0.0
         enddo
         ne_te_phase_out(j1) = 0.0
       enddo
@@ -306,6 +307,7 @@
             T_QL_out(imax,is)=T_weight(is)
             U_QL_out(imax,is)=U_weight(is)
             Q_QL_out(imax,is)=Q_weight(is)
+            Ns_Ts_phase_out(imax,is)=Ns_Ts_phase(is)
           enddo
           ne_te_phase_out(imax) = Ne_Te_phase
           kyi=ky
@@ -892,6 +894,17 @@
       enddo
       Ne_Te_phase = ATAN2(Ne_Te_sin,Ne_Te_cos)
 !
+! compute species density-temperature phase
+      do is=ns0,ns
+        Ns_Ts_phase(is) = 0.0
+        Ns_Ts_cos = 0.0
+        Ns_Ts_sin = 0.0
+        do i=1,nbasis
+           Ns_Ts_cos = Ns_Ts_cos + REAL(CONJG(n(is,i))*temp(is,i))
+           Ns_Ts_sin = Ns_Ts_sin + AIMAG(CONJG(n(is,i))*temp(is,i))
+        enddo
+        Ns_Ts_phase(is) = ATAN2(Ns_Ts_sin,Ns_Ts_cos)
+      enddo
 !
       END SUBROUTINE get_QL_weights
 !

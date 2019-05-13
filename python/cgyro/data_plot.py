@@ -42,7 +42,8 @@ class cgyrodata_plot(data.cgyrodata):
          f = self.kxky_e_abs[:,itheta,species,:,:]
          ft = ''
 
-      print('INFO: (kxky_select) Selected theta index',itheta+1,'of',self.theta_plot)
+      print('INFO: (kxky_select) Selected theta index {:d} of {:d} '.
+            format(itheta+1,self.theta_plot))
       return f,ft
        
          
@@ -128,15 +129,9 @@ class cgyrodata_plot(data.cgyrodata):
 
       fig.tight_layout(pad=0.3)
 
-   def plot_ky_phi(self,field=0,theta=0.0,ymin='0',ymax='auto',nstr='null',fig=None):
-      '''
-      Plot fields versus time for particular values of ky
+   def plot_ky_phi(self,field=0,theta=0.0,ymin='auto',ymax='auto',nstr='null',fig=None):
 
-      ARGUMENTS:
-      ymin: plot range (min y)
-      ymax: plot range (max y)
-      nstr: string for toroidal mode selection (example: nstr='0,1-4,6')
-      '''
+      # Plot fields versus time for particular values of ky
 
       if fig is None:
          fig = plt.figure(MYDIR,figsize=(self.lx,self.ly))
@@ -168,14 +163,15 @@ class cgyrodata_plot(data.cgyrodata):
 
       ax.set_xlim([0,max(self.t)])
 
+      if ymax != 'auto':
+         ax.set_ylim(top=float(ymax))
+      if ymin != 'auto':
+         ax.set_ylim(bottom=float(ymin))
+
       if self.n_n > 16:
          ax.legend(loc=4, ncol=5, prop={'size':12})
       else:
          ax.legend(loc=4, ncol=6, prop={'size':12})
-
-      ymin,ymax=setlimits(ax.get_ylim(),ymin,ymax)
-
-      ax.set_ylim([ymin,ymax])
 
       fig.tight_layout(pad=0.3)
 
@@ -249,7 +245,7 @@ class cgyrodata_plot(data.cgyrodata):
 
       fig.tight_layout(pad=0.3)
 
-      print('INFO: (data_plot.py) l_corr = ',l_corr)
+      print('INFO: (data_plot.py) l_corr = {:d}'.format(l_corr))
 
    def plot_phi(self,field=0,theta=0.0,fig=None):
 
@@ -529,7 +525,9 @@ class cgyrodata_plot(data.cgyrodata):
       ax.legend(loc=loc)
 
       if ymax != 'auto':
-         ax.set_ylim([float(ymin),float(ymax)])
+         ax.set_ylim(top=float(ymax))
+      if ymin != 'auto':
+         ax.set_ylim(bottom=float(ymin))
 
       fig.tight_layout(pad=0.3)
 
@@ -637,7 +635,9 @@ class cgyrodata_plot(data.cgyrodata):
                '{:.2f}/{:.2f}, {:.2f}, {:.2f}'.format(g0,gs,g1,ga)) 
 
          if ymax != 'auto':
-            ax.set_ylim([float(ymin),float(ymax)])
+            ax.set_ylim(top=float(ymax))
+         if ymin != 'auto':
+            ax.set_ylim(bottom=float(ymin))
 
          ax.axvspan(-0.25,0.25,facecolor='g',alpha=0.1)
          ax.set_xlim([-0.5,0.5])
@@ -648,15 +648,6 @@ class cgyrodata_plot(data.cgyrodata):
 
    def plot_ky_flux(self,w=0.5,wmax=0.0,field=0,moment='e',ymin='auto',ymax='auto',
                     fc=0,diss=0,fig=None,cflux='auto'):
-      '''
-      Plot fluxes versus ky
-
-      ARGUMENTS:
-      field: if fc=1, field to select 
-      ymin : plot range (min y)
-      ymax : plot range (max y)
-      fc   : select components (phi,Ap,Bp) of flux rather than total
-      '''
 
       if self.n_n == 1:
          raise ValueError('(plot_ky_flux.py) Plot not available with a single mode.')
@@ -738,17 +729,27 @@ class cgyrodata_plot(data.cgyrodata):
          u = specmap(self.mass[ispec],self.z[ispec])
          ax.set_ylabel(r'$'+mtag+'_'+u+'$',color='k')
          ax.set_title(windowtxt)
-         ax.bar(ky-dk/2.0,ave[:,ispec],width=dk/1.1,color=color[ispec],
-                alpha=0.5,edgecolor='black')
-
+         ax.bar(ky,ave[:,ispec],width=dk/1.1,color=color[ispec],
+                alpha=0.5,edgecolor='black',align='center')
+         
          # Dissipation curve             
          if diss == 1:
             ax.plot(ky,self.alphadiss*ax.get_ylim()[1]*0.5,linewidth=2,color='k',alpha=0.2)
 
+         # Maximum
+         j = np.argmax(ave[:,ispec])
+         if j < len(ky)-1:
+            xs,ys = quadratic_max(ky[j-1:j+2],ave[j-1:j+2,ispec])
+         else:
+            xs = ky[-1]
+         print('INFO: (data_plot.py) Max(flux) occurs at ky*rho = {:.3f}'.format(xs))
+         
          # Set axis ranges
          ax.set_xlim([0,ky[-1]+dk])
          if ymax != 'auto':
-            ax.set_ylim([0,float(ymax)])
+            ax.set_ylim(top=float(ymax))
+         if ymin != 'auto':
+            ax.set_ylim(bottom=float(ymin))
 
       fig.tight_layout(pad=0.3)
 
@@ -856,8 +857,14 @@ class cgyrodata_plot(data.cgyrodata):
 
       ax.set_xlim([-x0,x0])
       ax.set_yscale('log')
-      ax.set_ylim(bottom=0.5*np.sqrt(ave[-1]))
-      
+      if ymin == 'auto':
+         ax.set_ylim(bottom=0.5*np.sqrt(ave[-1]))
+      else:
+         ax.set_ylim(bottom=float(ymin))
+      if ymax != 'auto':
+         ax.set_ylim(top=float(ymax))
+         
+         
       # Dissipation curve             
       if diss == 1:
          ax.plot(kx,self.radialdiss*ax.get_ylim()[1]*0.5,linewidth=2,color='k',alpha=0.2)
@@ -1026,7 +1033,7 @@ class cgyrodata_plot(data.cgyrodata):
          ax.grid(which="majorminor",ls=":")
          ax.grid(which="major",ls=":")
 
-         ax.set_title(r'$'+u+': \\theta/\pi='+theta+' \quad \mathrm{ie}='+str(ie)+'$')
+         ax.set_title(r'$'+u+': \\theta/\pi='+str(theta)+' \quad \mathrm{ie}='+str(ie)+'$')
          ax.set_xlabel(r'$\xi = v_\parallel/v$')
 
          n0 = (self.n_radial/2)*self.n_theta+i0
@@ -1045,7 +1052,7 @@ class cgyrodata_plot(data.cgyrodata):
          ax.grid(which="majorminor",ls=":")
          ax.grid(which="major",ls=":")
 
-         ax.set_title(r'$'+u+': \\theta/\pi='+theta+' \quad \mathrm{ix}='+str(ix)+'$')
+         ax.set_title(r'$'+u+': \\theta/\pi='+str(theta)+' \quad \mathrm{ix}='+str(ix)+'$')
          ax.set_xlabel(r'$x=\sqrt{\varepsilon}$')
 
          n0 = (self.n_radial/2)*self.n_theta+i0
@@ -1071,4 +1078,64 @@ class cgyrodata_plot(data.cgyrodata):
          ax.plot(np.sqrt(self.energy),p1,'-o',color='blue',markersize=2)
          #========================================================
 
+      fig.tight_layout(pad=0.3)
+
+   def plot_hball(self,itime=-1,spec=0,tmax=-1.0,ymin='auto',ymax='auto',nstr='null',ie=0,fig=None):
+
+      if nstr == 'null':
+         nvec = range(self.n_n)
+      else:
+         nvec = str2list(nstr)
+
+      u = specmap(self.mass[spec],self.z[spec])
+
+      # Diagnostics
+      print('l    = '+nstr)
+      print('e    = '+str(ie))
+      print('spec = '+u)
+
+      if fig is None:
+         fig = plt.figure(MYDIR,figsize=(self.lx,self.ly))
+       
+      if itime > self.n_time-1:
+         itime = self.n_time-1
+
+      ax = fig.add_subplot(111)
+      ax.grid(which="majorminor",ls=":")
+      ax.grid(which="major",ls=":")
+      ax.set_xlabel(r'$\theta/\pi$')
+
+      x = self.thetab/np.pi
+      if tmax < 0.0:
+         ax.set_xlim([1-self.n_radial,-1+self.n_radial])
+      else:
+         ax.set_xlim([-tmax,tmax])
+
+      # y = y[re/im,theta,xi]
+      try:
+         y = np.array(self.hb[:,:,spec,:,ie,itime])
+      except:
+         raise ValueError('(plot_hball.py) Need to run with H_PRINT_FLAG=1')
+         
+      xp,wp = np.polynomial.legendre.leggauss(self.n_xi)
+      c = np.zeros(self.n_xi)
+      alr = np.zeros([len(x)])
+      ali = np.zeros([len(x)])
+      cvec = ['black','red','blue','green','purple','magenta']
+      for l in nvec:
+         c[:] = 0.0 ; c[l] = 1.0
+         pl = np.polynomial.legendre.legval(xp,c)
+         for j in range(len(x)):
+            alr[j] = (l+0.5)*np.sum(pl[:]*y[0,j,:])
+            ali[j] = (l+0.5)*np.sum(pl[:]*y[1,j,:])
+      
+         ax.plot(x,alr,'-',color=cvec[l%6],label=r'$\ell='+str(l)+'$')
+         ax.plot(x,ali,'--',color=cvec[l%6])
+
+      if ymax != 'auto':
+         ax.set_ylim(top=float(ymax))
+      if ymin != 'auto':
+         ax.set_ylim(bottom=float(ymin))
+
+      ax.legend(loc=1)
       fig.tight_layout(pad=0.3)

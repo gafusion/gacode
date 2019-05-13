@@ -34,20 +34,27 @@ subroutine wheel2(nr,nth,nn,ny,nz,c,f)
   do kc=0,nth
      th(kc) = kc*2*pi/nth-pi
   enddo
-  
-  do j=0,ny-1
-     y(j) = j*2*pi/(ny-1)
-     do n=0,nn-1    
-        eny(n,j) = exp(-ic*n*y(j))
+
+  if (nn > 1) then
+     do j=0,ny-1
+        y(j) = j*2*pi/(ny-1)
+        do n=0,nn-1    
+           eny(n,j) = exp(-ic*n*y(j))
+        enddo
      enddo
-  enddo
+     ! factor of 1/2 for n=0
+     eny(0,:) = eny(0,:)/2
+  else
+     do j=0,ny-1
+        y(j) = j*2*pi/(ny-1)
+        n=1    
+        eny(0,j) = exp(-ic*n*y(j))
+     enddo
+  endif
 
   do k=0,nz-1
      z(k) = k*pi/(nz-1)-pi
   enddo
-
-  ! factor of 1/2 for n=0
-  eny(0,:) = eny(0,:)/2
 
 !$omp parallel do private(k,kc,c0,j,n,p,fsum)
   do k=0,nz-1
@@ -60,11 +67,18 @@ subroutine wheel2(nr,nth,nn,ny,nz,c,f)
      enddo
      do j=0,ny-1
         fsum = 0d0
-        do n=0,nn-1
-           do p=0,nr-1
-              fsum = fsum+real(c0(p,n)*eny(n,j))
+        if (nn > 1) then
+           do n=0,nn-1
+              do p=0,nr-1
+                 fsum = fsum+real(c0(p,n)*eny(n,j))
+              enddo
            enddo
-        enddo
+        else
+           n=1
+           do p=0,nr-1
+              fsum = fsum+real(c0(p,0)*eny(0,j))
+           enddo
+        endif
         f(j,k) = fsum
      enddo
   enddo

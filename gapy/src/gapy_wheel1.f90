@@ -42,14 +42,18 @@ subroutine wheel1(nr,nth,nn,nx,nz,c,f)
   do kc=0,nth
      th(kc) = kc*2*pi/nth-pi
   enddo
-  
+
   do k=0,nz-1
      z(k) = k*pi/(nz-1)-pi
   enddo
 
-  ! factor of 1/2 for n=0
-  eny(:) = 1d0
-  eny(0) = 0.5d0 
+  if (nn > 1) then
+     ! factor of 1/2 for n=0
+     eny(:) = 1d0
+     eny(0) = 0.5d0
+  else
+     eny(0) = 1d0
+  endif
 
 !$omp parallel do private(k,kc,c0,i,n,p,fsum)
   do k=0,nz-1
@@ -62,11 +66,18 @@ subroutine wheel1(nr,nth,nn,nx,nz,c,f)
      enddo
      do i=0,nx-1
         fsum = 0d0
-        do n=0,nn-1
-           do p=0,nr-1
-              fsum = fsum+real(c0(p,n)*epx(p,i)*eny(n))
+        if (nn > 1) then
+           do n=0,nn-1
+              do p=0,nr-1
+                 fsum = fsum+real(c0(p,n)*epx(p,i)*eny(n))
+              enddo
            enddo
-        enddo
+        else
+           n=1
+           do p=0,nr-1
+              fsum = fsum+real(c0(p,0)*epx(p,i)*eny(0))
+           enddo
+        endif
         f(i,k) = fsum
      enddo
   enddo

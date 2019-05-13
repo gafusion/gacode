@@ -1,11 +1,12 @@
 # USAGE:
-# $ python peak.py <kmin> <kmax> nk
+# $ python gamma_max.py <kmin> <kmax> nk
 # EXAMPLE:
-# $ python peak.py 0.1 0.7 7
+# $ python gamma_max.py 0.1 0.7 7
 
 import sys
 import os
 import numpy as np
+from gacodefuncs import *
 
 kmin = float(sys.argv[1])
 kmax = float(sys.argv[2])
@@ -32,14 +33,6 @@ for i,k in enumerate(list):
         if d < 0:
             break
 
-# f(x) at 3 points
-f1 = g[-3] ; f2 = g[-2] ; f3 = g[-1]
-x1 = x[-3] ; x2 = x[-2] ; x3 = x[-1]
-
-# Extrema fs=f(xs) based on 3-point fit to parabola 
-xs = (f1-f3)/2.0/(f3-2*f2+f1)
-xs = x2+xs*(x3-x2)
-
-fs = f2+(f3-f1)**2/8.0/(2*f2-f3-f1)
+xs,fs = quadratic_max(x[-3:],g[-3:])
 
 print('root: {:6.4f} {:6.4f}'.format(xs,fs))

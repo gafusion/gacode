@@ -247,7 +247,7 @@ then
    echo "             -nn"
    echo "             Use the NEO neural network instead of NEO DKE solve."
    echo
-   echo "LOCAL PARAMETER MODE"
+   echo "LOCAL INPUT GENERATION MODE"
    echo 
    echo "             -loc_rad <r/a>"
    echo "             Reference radius, r/a."
@@ -257,17 +257,15 @@ then
    echo 
    echo "             -loc_psi <psi_N>"
    echo "             Reference psi_N=psi/psi(a)"
-   echo
-   echo "             -Z1 <ion1 charge>"
-   echo "             Default: 1 (Hydrogen isotope)"
-   echo "             -Z2 <ion2 charge>"
-   echo "             Default: 6 (Carbon)"
-   echo "             -Z3 <ion3 charge>"
-   echo "             Default: 2 (Helium)"
-   echo "             -Z4 <ion4 charge>"
-   echo "             Default: 1 (Hydrogen isotope)"
-   echo "             -Z5 <ion5 charge>"
-   echo "             Default: 1 (Hydrogen isotope)"
+   echo 
+   echo "             -qn"
+   echo "             Toggle quasineutrality."
+   echo 
+   echo "             -banana"
+   echo "             Include banana-width diagnostic"
+   echo 
+   echo "             -append"
+   echo "             Append to existing input.*.locpargen files"
    echo
    echo "DUMP MODE"
    echo 
@@ -282,9 +280,6 @@ then
    echo "              <arg>=r:    r/a is first column."
    echo "              <arg>=rho:  rho=sqrt[chi/chi(a)] is first column. [DEFAULT]"
    echo "              <arg>=psi:  psi_N=psi/psi(a) is first column."
-   echo
-   echo "      NOTE: control ion charges with Z1,Z2,Z3,Z4,Z5 as in LOCAL PARAMETER MODE."
-   echo
    echo
    echo "EXAMPLES:"
    echo " "
@@ -366,18 +361,15 @@ UFILETIME=null
 LOC_RAD=0
 LOC_RHO=0
 LOC_PSI=0
-Z1=1.0
-Z2=6.0
-Z3=2.0
-Z4=1.0
-Z5=1.0
 HASGEO=0
+QNFLAG=0
+BANANA=0
 
 # DUMP MODE variables
 DUMP_FLAG=0
 DUMP_VAR=null
 X=rho
-DUMP_DENS_METHOD=1
+APPENDFLAG=0
 
 # Plotting in locpargen
 PLOT_FLAG=0
@@ -442,23 +434,15 @@ while [ $# -gt 0 ] ; do
 
   -t) shift ; UFILETIME="$1" ;;
 
-  -Z1) shift ; Z1=$1 ;;
-
-  -Z2) shift ; Z2=$1 ;;
-
-  -Z3) shift ; Z3=$1 ;;
-
-  -Z4) shift ; Z4=$1 ;;
-
-  -Z5) shift ; Z5=$1 ;;
-
   -loc_rad) shift ; LOC_RAD=$1 ;;
   -loc_rho) shift ; LOC_RHO=$1 ;;
   -loc_psi) shift ; LOC_PSI=$1 ;;
-
+  -append) APPENDFLAG=1 ;;
+  
   -dump) shift ; DUMP_FLAG=1 ; DUMP_VAR=$1 ;;
   -x) shift ; X=$1 ;;
-  -dens) shift ; DUMP_DENS_METHOD=$1 ;;
+  -qn) QNFLAG=1 ;;
+  -banana) BANANA=1 ;;
 
   -plot) PLOT_FLAG=1 ;;
 
@@ -592,7 +576,7 @@ then
   fi
   echo $DUMP_VAR > input.exprodump
   echo $X >> input.exprodump
-  echo $DUMP_DENS_METHOD >> input.exprodump
+  echo $QNFLAG >> input.exprodump
   echo "INFO: (profiles_gen) Calling $EXPRODUMP"
   $EXPRODUMP
   rm input.exprodump
@@ -621,14 +605,13 @@ then
   echo $LOC_RHO >> input.locpargen
   echo $LOC_PSI >> input.locpargen
   echo $HASGEO >> input.locpargen
+  echo $QNFLAG >> input.locpargen
+  echo $APPENDFLAG >> input.locpargen
   $LOCPARGEN
-  python ${PRGEN_BIN}/banana_width.py
+  if [ $BANANA -eq 1 ] ; then
+     python ${PRGEN_BIN}/banana_width.py
+  fi
   rm input.locpargen
-  if [ $PLOT_FLAG -eq 1 ]
-  then
-     echo "WARNING: -plot deprecated.  Should remove locpargen_plot.py"
-     #python $PRGEN_BIN/locpargen_plot.py
-  fi 
   exit 0
 fi
 

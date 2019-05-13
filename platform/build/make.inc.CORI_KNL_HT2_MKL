@@ -4,7 +4,7 @@
 # - 64 cores * 4 hyperthreads (assign hypethreads to numas)
 #----------------------------------------------------------
 
-IDENTITY="NERSC Cori KNL (ifort)"
+IDENTITY="NERSC Cori KNL (MKL)"
 CORES_PER_NODE=128
 NUMAS_PER_NODE=1
 

@@ -110,6 +110,12 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
      endif
   enddo
 
+  ! Rescale gradients if needed
+  neo_dlnndr_in(1:neo_n_species_in) = neo_dlnndr_in(1:neo_n_species_in) &
+       * neo_profile_dlnndr_scale_in(1:neo_n_species_in)
+  neo_dlntdr_in(1:neo_n_species_in) = neo_dlntdr_in(1:neo_n_species_in) &
+       * neo_profile_dlntdr_scale_in(1:neo_n_species_in)
+
   nmin = (nth_min - 1)/2
   nmax = (nth_max - 1)/2
   nth = nint(nmin*sqrt(EXPRO_thetascale(i)/EXPRO_thetascale(2)))
