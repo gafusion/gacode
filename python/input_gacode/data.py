@@ -1,7 +1,7 @@
-from pygacode import expro
+from gacode import expro
 import numpy
 
-class Gapy(dict):
+class ExproData(dict):
 
     def __init__(self, filename, input_profiles_compatibility_mode=True):
         expro.expro_read(filename)
@@ -34,10 +34,3 @@ class Gapy(dict):
             del self['ze']
             del self['masse']
             print(self['IONS'])
-
-import cgyro
-import gyro
-import neo
-import tgyro
-from pygacode import geo
-

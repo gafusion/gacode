@@ -40,7 +40,7 @@ distclean:
 	cd gyro ; make distclean
 	cd tgyro ; make clean
 	cd profiles_gen ; make clean
-	cd gapy ; make clean
+	cd f2py ; make clean
 	rm -f python/*/*.pyc
 	rm -f python/*.pyc
 	rm -f modules/*genmod*

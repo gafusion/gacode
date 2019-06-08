@@ -18,14 +18,16 @@ setup(name='gacode',
                 'pygacode.cgyro',
                 'pygacode.gyro',
                 'pygacode.tgyro',
-                'pygacode.neo'
+                'pygacode.neo',
+                'pygacode.input_gacode'
       ],
       package_dir={'expro':'expro',
                    'geo':'geo',
                    'pygacode.cgyro':'pygacode/cgyro',
                    'pygacode.gyro':'pygacode/gyro',
                    'pygacode.tgyro':'pygacode/tgyro',
-                   'pygacode.neo':'pygacode/neo'
+                   'pygacode.neo':'pygacode/neo',
+                   'pygacode.input_gacode':'pygacode/input_gacode'
       },
       ext_modules=[wrapper]
 )

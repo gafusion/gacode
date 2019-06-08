@@ -12,6 +12,8 @@ pip:
 	cp -r ${GACODE_ROOT}/python/gyro pygacode
 	cp -r ${GACODE_ROOT}/python/tgyro pygacode
 	cp -r ${GACODE_ROOT}/python/neo pygacode
+	cp -r ${GACODE_ROOT}/python/input_gacode pygacode
+	cp -r ${GACODE_ROOT}/python/__init__.py pygacode
 
 	python ./setup.py build_ext
 	python ./setup.py sdist
@@ -28,4 +30,3 @@ clean:
 	rm -rf pygacode
 
 .IGNORE:
-
