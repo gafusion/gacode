@@ -1,48 +1,21 @@
 import sys
 import string
 import numpy as np
+from gacodefuncs import *
 from gyro.data import GYROData
-
-#---------------------------------------------------------------
-def average(f,t,window):
  
-    n_time = len(t)
-
-    # Manage eigenvalue case (2 time points)
-    if len(t) == 2:
-        tmin = t[n_time-1]
-        tmax = tmin
-        ave  = f[n_time-1]
-        return ave
-    
-    tmin = (1.0-window)*t[n_time-1]
-    tmax = t[n_time-1]
-
-    t_window = 0.0
-    ave      = 0.0
-    for i in range(n_time-1):
-        if t[i] > tmin: 
-            ave = ave+0.5*(f[i]+f[i+1])*(t[i+1]-t[i])
-            t_window = t_window+t[i+1]-t[i]
-
-    ave = ave/t_window
-
-    return ave
-#---------------------------------------------------------------
- 
-sim       = GYROData(sys.argv[1])
+sim       = GYROData('./')
+window    = float(sys.argv[1])
 field     = sys.argv[2]
 i_moment  = int(sys.argv[3])
-window    = float(sys.argv[4])
 
 n_field   = int(sim.profile['n_field'])
 n_kinetic = int(sim.profile['n_kinetic'])
 
-t    = sim.t['(c_s/a)t']
+t = sim.t['(c_s/a)t']
 
 # Read data in gbflux_i and make gbflux
 sim.read_gbflux_i()
-sim.make_gbflux()
 
 flux = sim.gbflux
 
@@ -111,10 +84,7 @@ print line3
 print b
 
 # Determine tmin
-imin=0
-for i in range(len(t)):
-    if t[i] < (1.0-window)*t[len(t)-1]:
-        imin = i+1
+imin,imax=iwindow(t,window,0.0)
 
 print
 
@@ -124,7 +94,7 @@ else:
     print 'Average Window:',str(t[imin])+' < (c_s/a) t < '+str(t[-1])
     print
     for i in range(n_kinetic):
-        print tag[i],average(b[:,i+1],t,window)
+        print tag[i],average(b[:,i+1],t,window,0.0)
 
 if sim.profile['boundary_method'] == 2:
     print

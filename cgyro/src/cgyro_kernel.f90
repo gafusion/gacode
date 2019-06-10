@@ -12,9 +12,9 @@
 
 subroutine cgyro_kernel
 
+
   use timer_lib
   use mpi
-
   use cgyro_globals
   use cgyro_io
 
@@ -25,9 +25,9 @@ subroutine cgyro_kernel
   character(8)  :: date
   character(10) :: time
   character(5)  :: zone
-  integer(KIND=8) :: start_time,aftermpi_time, beforetotal_time,exit_time
-  integer(KIND=8) :: count_rate, count_max
-  real :: mpi_dt, init_dt,exit_dt
+  integer(KIND=8) :: start_time,aftermpi_time,beforetotal_time,exit_time
+  integer(KIND=8) :: count_rate,count_max
+  real :: mpi_dt,init_dt,exit_dt
   integer :: statusfd
 
   ! the time_lib relies on MPI being initalized, so need to use lower level functions for this
@@ -45,10 +45,10 @@ subroutine cgyro_kernel
   if (error_status > 0) goto 100
 
   call system_clock(aftermpi_time,count_rate,count_max)
-  if (aftermpi_time.gt.start_time) then
-    mpi_dt = (aftermpi_time-start_time)/real(count_rate)
+  if (aftermpi_time > start_time) then
+     mpi_dt = (aftermpi_time-start_time)/real(count_rate)
   else
-    mpi_dt = (aftermpi_time-start_time+count_max)/real(count_rate)
+     mpi_dt = (aftermpi_time-start_time+count_max)/real(count_rate)
   endif
 
   ! 2. Profile setup

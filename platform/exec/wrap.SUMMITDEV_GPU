@@ -1,0 +1,14 @@
+#! /usr/bin/env bash
+# GACODE Parallel execution script (SUMMITDEV_GPU)
+
+# jsrun corrupts this value
+export OMP_NUM_THREADS=${GACODE_NOMP}
+
+#echo $OMPI_COMM_WORLD_RANK
+
+# propagate the info to the pgi ACC
+export ACC_DEVICE_NUM=${CUDA_VISIBLE_DEVICES}
+
+#echo $ACC_DEVICE_NUM
+
+exec  "$@"

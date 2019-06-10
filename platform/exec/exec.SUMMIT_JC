@@ -1,0 +1,27 @@
+#! /usr/bin/env bash
+# GACODE Parallel execution script (SUMMIT_JC)
+
+simdir=${1}
+nmpi=${2}
+exec=${3}
+nomp=${4}
+numa=${5}
+mpinuma=${6}
+
+# nmpi = MPI tasks
+# nomp = OpenMP threads per MPI task
+# numa = NUMAs active per node
+# mpinuma = MPI tasks per active NUMA 
+
+# . $GACODE_ROOT/shared/bin/gacode_mpi_tool
+
+export GACODE_NOMP=$nomp
+let nproc=4/$nomp
+
+let ngrp=$nmpi/$nproc
+
+cd $simdir
+
+export OMP_STACKSIZE=400M
+
+jsrun -n1 -g1 -a1 -c4 $exec 

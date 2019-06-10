@@ -35,6 +35,10 @@
       endif
       if(use_default_species)ns_in=2
       ns = ns_in
+! SAT_RULE=0 has different fits for nmodes=2 and nmodes=4
+      if(sat_rule_in.eq.0)then
+        if(nmodes_in.gt.2)nmodes_in=4
+      endif
 ! debug
 !      write(*,*)"nx=",nx
 !      write(*,*)"nbasis =",nbasis    

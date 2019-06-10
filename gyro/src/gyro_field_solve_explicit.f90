@@ -26,31 +26,17 @@ subroutine gyro_field_solve_explicit
 
   case (1)
 
-     if (sparse_method == 1) then
-        call gyro_sparse_solve_umfpack(n_poisson,n_poisson_row,1,1)
-     else
-        call gyro_sparse_solve_mumps(n_poisson,n_poisson_row,1,1)
-     endif
+     call gyro_sparse_solve_umfpack(n_poisson,n_poisson_row,1,1)
 
   case (2)
 
-     if (sparse_method == 1) then
-        call gyro_sparse_solve_umfpack(n_poisson,n_poisson_row,1,1)
-        call gyro_sparse_solve_umfpack(n_ampere,n_ampere_row,2,1)
-     else
-        call gyro_sparse_solve_mumps(n_poisson,n_poisson_row,1,1)
-        call gyro_sparse_solve_mumps(n_ampere,n_ampere_row,2,1)
-     endif
+     call gyro_sparse_solve_umfpack(n_poisson,n_poisson_row,1,1)
+     call gyro_sparse_solve_umfpack(n_ampere,n_ampere_row,2,1)
 
   case (3)
 
-     if (sparse_method == 1) then
-        call gyro_sparse_solve_umfpack(n_poissonaperp,n_poissonaperp_row,4,1)
-        call gyro_sparse_solve_umfpack(n_ampere,n_ampere_row,2,1)
-     else
-        call gyro_sparse_solve_mumps(n_poissonaperp,n_poissonaperp_row,4,1)
-        call gyro_sparse_solve_mumps(n_ampere,n_ampere_row,2,1)
-     endif
+     call gyro_sparse_solve_umfpack(n_poissonaperp,n_poissonaperp_row,4,1)
+     call gyro_sparse_solve_umfpack(n_ampere,n_ampere_row,2,1)
 
   end select
 

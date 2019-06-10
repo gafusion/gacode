@@ -18,7 +18,6 @@ subroutine gyro_banana_init(n_IN)
   !
   real, dimension(:), allocatable :: f
   real :: d_theta
-  real :: theta_0
   !-----------------------------------------------------------
 
   n = n_IN

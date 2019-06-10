@@ -155,11 +155,7 @@ subroutine gyro_make_maxwell_matrix
      call gyro_blend_ampereperp
   endif
 
-  if (sparse_method == 1) then
-     call gyro_sparse_solve_umfpack(n_maxwell,n_maxwell_row,3,0)
-  else
-     call gyro_sparse_solve_mumps(n_maxwell,n_maxwell_row,3,0)
-  endif
+  call gyro_sparse_solve_umfpack(n_maxwell,n_maxwell_row,3,0)
 
   !---------------------------------------------
   ! These are large matrices and deallocation is

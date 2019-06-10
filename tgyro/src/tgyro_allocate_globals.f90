@@ -156,5 +156,6 @@ subroutine tgyro_allocate_globals
   allocate(b_flag(p_max))
 
   allocate(pmap(2:n_r,n_evolve))
+  allocate(mask(p_max,4+loc_n_ion))
 
 end subroutine tgyro_allocate_globals

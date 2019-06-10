@@ -1,0 +1,30 @@
+#---------------------------------------------------
+# Google Cloud
+#---------------------------------------------------
+
+# FIXED Hardware parameters
+IDENTITY="Google Cloud"
+CORES_PER_NODE=1
+NUMAS_PER_NODE=1
+
+# Compilers and flags
+
+# Fortran 90/95 compiler
+FC = mpif90 -m64 -module ${GACODE_ROOT}/modules -Mpreprocess -DUSE_INLINE -fpic
+
+# Fortran 77 compiler
+F77 = mpif90 -m64 -I$(GACODE_ROOT)/modules -fpic
+
+# Compiler options/flags
+FACC   =-acc -Minfo=accel -ta=nvidia:cc70 -Mcudalib=cufft -DDISABLE_GPUDIRECT_MPI 
+FOMP   =-mp -Mstack_arrays 
+FMATH  =-r8 
+FOPT   =-fast
+FDEBUG =-g -Kieee -Ktrap=fp,divz -Mbounds -Mchkptr -Mchkstk -traceback -Minform=inform
+
+# System math libraries
+LMATH=-llapack -lblas -L/usr/local/cuda/lib64 -lnvToolsExt
+
+# Archive
+ARCH = ar cr
+

@@ -40,11 +40,8 @@ subroutine tgyro_tglf_map
 
   !----------------------------------------------------------------
   ! Number of species (max=6)
-  if (tgyro_quickfast_flag == 1) then
-     tglf_ns_in = sum(therm_flag(1:loc_n_ion))+1
-  else
-     tglf_ns_in = loc_n_ion+1
-  endif
+  tglf_ns_in = sum(calc_flag(1:loc_n_ion))+1
+
   if (tglf_ns_in > nsm) then
      call tgyro_catch_error('ERROR: (tgyro_tglf_map) Too many ions in TGLF.')
   endif
@@ -74,7 +71,7 @@ subroutine tgyro_tglf_map
 
   i0 = 1
   do i_ion=1,loc_n_ion
-     if (therm_flag(i_ion) == 0 .and. tgyro_quickfast_flag == 1) cycle
+     if (calc_flag(i_ion) == 0) cycle
      i0 = i0+1 
      tglf_zs_in(i0)   = zi_vec(i_ion)
      tglf_mass_in(i0) = mi(i_ion)/mi(1)
@@ -192,7 +189,7 @@ subroutine tgyro_tglf_map
   !
   ! Number of modes in transport calculation;
   ! should be 2-4.
-  tglf_nmodes_in = 2
+  !tglf_nmodes_in = 4
   !----------------------------------------------------------------
 
   !----------------------------------------------------------------

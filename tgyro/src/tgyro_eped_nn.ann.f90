@@ -98,11 +98,13 @@
    INPUT_PARAMETERS( 9) = r_in
    INPUT_PARAMETERS(10) = zeffped_in
 
+!   WRITE(*,*)INPUT_PARAMETERS
+
    call get_environment_variable('EPEDNN_MODEL',epednn_model)
    ierr=btf_run(TRIM(epednn_model)//NUL,INPUT_PARAMETERS, 10, OUTPUT_PARAMETERS, 18)
 
-   dmag_model=1      !0-->gamma/0.03    1-->gamma_PB*gamma/0.03   2-->gamma_PB
-   h_meta_superh=0   !0-->h-mode        1-->meta-stable           2-->super-h-mode
+   dmag_model=0      !0-->gamma_PB*gamma/0.03    1-->gamma/0.03       2-->gamma_PB
+   h_meta_superh=0   !0-->h-mode                 1-->meta-stable      2-->super-h-mode
    p_index=0+dmag_model*3+h_meta_superh+1
    w_index=9+dmag_model*3+h_meta_superh+1
 

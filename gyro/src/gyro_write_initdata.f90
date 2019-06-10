@@ -25,7 +25,6 @@ subroutine gyro_write_initdata(datafile1,datafile2,datafile3,io)
   character (len=*), intent(in) :: datafile3
   !
   real :: kt
-  real :: theta
   real :: dr
   integer :: n_wedge
   real, dimension(:), allocatable :: ttmp
@@ -55,7 +54,7 @@ subroutine gyro_write_initdata(datafile1,datafile2,datafile3,io)
   write(io,20) n_grid_exp
   write(io,20) boundary_method
 
-  ! Basic profile data (** CORRECT IN VUGYRO **)
+  ! Basic profile data
   write(io,10) r(:)
   write(io,10) q(:)
   write(io,10) r_s(:)
@@ -80,7 +79,6 @@ subroutine gyro_write_initdata(datafile1,datafile2,datafile3,io)
   write(io,10) gamma_p_s(:) 
   write(io,10) mach_s(:) 
   write(io,10) b_unit_s(:)
-  write(io,10) dr_eodr(:)
   write(io,10) z_eff_s(:)
   write(io,10) nu_s(n_spec,:)
   write(io,10) w0_s(:)
@@ -93,12 +91,10 @@ subroutine gyro_write_initdata(datafile1,datafile2,datafile3,io)
   write(io,10) krho_collect(:)
   write(io,10) rhos_norm
   write(io,10) z(:)
+  write(io,10) mu(:)
 
   ! Recent additions
   write(io,20) n_theta_plot*n_theta_mult
-
-  ! Number of flux moments
-  write(io,20) n_moment
 
   close(io)
 
@@ -188,7 +184,7 @@ subroutine gyro_write_initdata(datafile1,datafile2,datafile3,io)
 
      endif
 
-     GEO_fourier_in(:,:) = a_fourier_geo_s(:,0:n_fourier_geo,i)
+     GEO_fourier_in(:,:) = a_fourier_geo_s(:,:,i)
 
      do j=1,n_wedge
         ttmp(j) = -pi+(j-1)*pi_2/n_wedge

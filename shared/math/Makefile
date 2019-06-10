@@ -28,7 +28,7 @@ OBJECTS = math_constants.o \
           pseudospec_lib.o \
           timer_lib.o
 
-.SUFFIXES : .o .f90 .f
+.SUFFIXES : .o .f90 .F90 .f
 
 all: lib
 

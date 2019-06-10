@@ -9,7 +9,7 @@
       INTEGER, PARAMETER :: nxm=2*32-1
       INTEGER, PARAMETER :: nsm=12, nt0=40
       INTEGER, PARAMETER :: nkym=480
-      INTEGER, PARAMETER :: maxmodes=4
+      INTEGER, PARAMETER :: maxmodes=16
       INTEGER, PARAMETER :: max_ELITE=700
       INTEGER, PARAMETER :: max_fourier = 24
       INTEGER, PARAMETER :: ms = 128  ! ms needs to be divisible by 8
@@ -58,6 +58,8 @@
       INTEGER,DIMENSION(8) :: trace_path=0
       LOGICAL,EXTERNAL :: tglf_isnan
       LOGICAL,EXTERNAL :: tglf_isinf
+! input units switch
+      CHARACTER (len=4) :: units_in = 'TGLF'
 ! Input Gaussian width
       REAL :: width_in=1.65
       REAL :: width_min_in=0.3
@@ -76,6 +78,7 @@
       LOGICAL :: use_mhd_rule_in=.TRUE.
       LOGICAL :: use_bisection_in=.TRUE.
       LOGICAL :: use_inboard_detrapped_in=.FALSE.
+      LOGICAL :: kx_isotropic_in = .FALSE.
       INTEGER :: ibranch_in=-1
       INTEGER :: nmodes_in=2
       INTEGER :: nbasis_max_in=4
@@ -242,10 +245,13 @@
       REAL :: Bp0_out = 1.0
       REAL :: RBt_ave_out=1.0
       REAL :: Grad_r_ave_out=1.0
+      REAL :: grad_r0_out=1.0
       REAL :: SAT_geo_ave_out=1.0
       REAL :: SAT_geo0_out=1.0
+      REAL :: kx_geo0_out=1.0
       REAL :: DM_out = 0.25
       REAL :: DR_out = 0.0
+      REAL :: Bref_out = 1.0
       INTEGER :: nmodes_out
       INTEGER :: nfields_out
       character (len=80) :: error_msg='null' 

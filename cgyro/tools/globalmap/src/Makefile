@@ -10,7 +10,7 @@ ifdef FFTW_INC
    FFLAGS += -I${FFTW_INC}
 endif
 
-FC += ${FOMP}
+FC += ${FOMP} ${FACC}
 
 EXEC = globalmap
 

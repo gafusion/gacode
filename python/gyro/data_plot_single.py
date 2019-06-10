@@ -4,142 +4,147 @@ import matplotlib.pyplot as plt
 from matplotlib import rc
 from gyro.data_plot import gyrodata_plot
 
+data_in = gyrodata_plot('./')
+
+# Use first 3 args to define plot and font size 
 rc('text',usetex=True)
-rc('font',size=18)
+rc('font',size=int(sys.argv[1]))
+data_in.lx = int(sys.argv[2])
+data_in.ly = int(sys.argv[3])
+
+# Shift list by 3
+sys.argv = sys.argv[3:]
 
 plot_type = sys.argv[1]
 
 if plot_type == 'freq':
 
-   w      = float(sys.argv[2])
-   ftype  = sys.argv[3]
+   w   = float(sys.argv[2])
+   ext = sys.argv[3]
 
-   gyrodata_plot('./').plot_freq(w=w)
+   data_in.plot_freq(w=w)
 
-   outfile = 'freq.'+ftype
+   outfile = 'freq.'+ext
 
-elif plot_type == 'balloon':
+elif plot_type == 'ball':
 
-   simdir = sys.argv[2]
-   index  = sys.argv[3]
-   ftype  = sys.argv[4]
-   tmax   = float(sys.argv[5])
+   index = sys.argv[2]
+   ext   = sys.argv[3]
+   tmax  = float(sys.argv[4])
 
-   key = gyrodata_plot(simdir).plot_balloon(index=index,tmax=tmax)
+   key = data_in.plot_balloon(index=index,tmax=tmax)
 
-   outfile = key+'.'+ftype
+   outfile = key+'.'+ext
 
 elif plot_type == 'zf':
-
-   simdir = sys.argv[2]
-   w      = float(sys.argv[3])
-   ftype  = sys.argv[4]
    
-   gyrodata_plot(simdir).plot_zf(w=w)
-
-   outfile = 'zf.'+ftype
-
-elif plot_type == 'gbflux':
-
-   simdir   = sys.argv[2]
-   field    = sys.argv[3]
-   i_moment = int(sys.argv[4])
-   w        = float(sys.argv[5])
-   lx       = float(sys.argv[6])
-   ly       = float(sys.argv[7])
-   title    = sys.argv[8]
-   ymin     = sys.argv[9]
-   ymax     = sys.argv[10]
-   span1   = float(sys.argv[11])
-   span2   = float(sys.argv[12])
-   ftype    = sys.argv[13]
+   w   = float(sys.argv[2])
+   ext = sys.argv[3]
    
-   gyrodata_plot(simdir).plot_gbflux(field=field,i_moment=i_moment,w=w,
-                                     lx=lx,ly=ly,title=title,ymin=ymin,ymax=ymax,
-                                     span1=span1)
+   data_in.plot_zf(w=w)
 
-   outfile = 'gbflux.'+ftype
+   outfile = 'zf.'+ext
 
-elif plot_type == 'gbflux_i':
+elif plot_type == 'phi':
 
-   simdir   = sys.argv[2]
-   field    = sys.argv[3]
-   i_moment = int(sys.argv[4])
-   w        = float(sys.argv[5])
-   ymin     = sys.argv[6]
-   ymax     = sys.argv[7]
-   ftype    = sys.argv[8]
+   ymax = sys.argv[2]
+   ext  = sys.argv[3]
+
+   ax = data_in.plot_phi(ymax=ymax)
    
-   gyrodata_plot(simdir).plot_gbflux_i(field=field,i_moment=i_moment,w=w,
-                                     ymin=ymin,ymax=ymax)
+   outfile = 'phi.'+ext
 
-   outfile = 'gbflux_i.'+ftype
+elif plot_type == 'flux':
 
-elif plot_type == 'gbflux_n':
-
-   simdir   = sys.argv[2]
-   field    = sys.argv[3]
-   i_moment = int(sys.argv[4])
-   w        = float(sys.argv[5])
-   datafile = sys.argv[6]
-   ftype    = sys.argv[7]
+   w      = float(sys.argv[2])
+   field  = sys.argv[3]
+   moment = int(sys.argv[4])
+   ymin   = sys.argv[5]
+   ymax   = sys.argv[6]
+   ext    = sys.argv[7]
    
-   gyrodata_plot(simdir).plot_gbflux_n(field=field,i_moment=i_moment,w=w,datafile=datafile)
+   data_in.plot_gbflux(w=w,field=field,moment=moment,ymin=ymin,ymax=ymax)
 
-   outfile = 'gbflux_n.'+ftype
+   outfile = 'flux.'+ext
 
-elif plot_type == 'gbflux_rt':
+elif plot_type == 'flux_i':
 
-   simdir   = sys.argv[2]
-   field    = sys.argv[3]
-   i_moment = int(sys.argv[4])
-   w        = float(sys.argv[5])
-   ftype    = sys.argv[6]
+   w      = float(sys.argv[2])
+   aw     = int(sys.argv[3])
+   field  = sys.argv[4]
+   moment = int(sys.argv[5])
+   ymin   = sys.argv[6]
+   ymax   = sys.argv[7]
+   ext    = sys.argv[8]
    
-   gyrodata_plot(simdir).plot_gbflux_rt(field=field,i_moment=i_moment,w=w)
+   data_in.plot_gbflux_i(w=w,aw=aw,field=field,moment=moment,ymin=ymin,ymax=ymax)
 
-   outfile = 'gbflux_rt.'+ftype
+   outfile = 'flux_i.'+ext
 
-elif plot_type == 'gbflux_exc':
+elif plot_type == 'flux_n':
 
-   simdir   = sys.argv[2]
-   w        = float(sys.argv[3])
-   ftype    = sys.argv[4]
+   w      = float(sys.argv[2])
+   field  = sys.argv[3]
+   moment = int(sys.argv[4])
+   ymin   = sys.argv[5]
+   ymax   = sys.argv[6]
+   ext    = sys.argv[7]
    
-   gyrodata_plot(simdir).plot_gbflux_exc(w=w)
+   data_in.plot_gbflux_n(w=w,field=field,moment=moment,ymin=ymin,ymax=ymax)
 
-   outfile = 'gbflux_exc.'+ftype
+   outfile = 'flux_n.'+ext
 
-elif plot_type == 'phi_n0':
+elif plot_type == 'flux_exc':
 
-   simdir = sys.argv[2]
-   lx     = float(sys.argv[3])
-   ly     = float(sys.argv[4])
-   ymax   = sys.argv[5]
-   span1  = float(sys.argv[6])
-   span2  = float(sys.argv[7])
-   ftype  = sys.argv[8]
-
-   ax = gyrodata_plot(simdir).plot_phi_n0(lx=lx,ly=ly,ymax=ymax,span1=span1,span2=span2)
+   w      = float(sys.argv[2])
+   ext    = sys.argv[3]
    
-   outfile = 'phi_n0.'+ftype
+   data_in.plot_gbflux_exc(w=w)
+
+   outfile = 'flux_exc.'+ext
+
+elif plot_type == 'flux_rt':
+
+   w      = float(sys.argv[2])
+   field  = sys.argv[3]
+   moment = int(sys.argv[4])
+   ext    = sys.argv[5]
+   
+   data_in.plot_gbflux_rt(w=w,field=field,moment=moment)
+
+   outfile = 'flux_rt.'+ext
   
-elif plot_type == 'moment_zero':
+elif plot_type == 'hmom':
 
-   simdir   = sys.argv[2]
-   i_moment = int(sys.argv[3])
-   w        = float(sys.argv[4])
-   ftype    = sys.argv[5]
+   w       = float(sys.argv[2])
+   species = int(sys.argv[3])
+   moment  = int(sys.argv[4])
+   ext     = sys.argv[5]
 
-   ax = gyrodata_plot(simdir).plot_moment_zero(i_moment=i_moment,w=w)
+   ax = data_in.plot_moment_zero(w=w,species=species,moment=moment)
    
-   outfile = 'moment_zero.'+ftype
+   outfile = 'moment_zero.'+ext
   
+elif plot_type == 'dprof':
 
+   w       = float(sys.argv[2])
+   species = int(sys.argv[3])
+   moment  = int(sys.argv[4])
+   ymin    = sys.argv[5]
+   ymax    = sys.argv[6]
+   ext     = sys.argv[7]
+
+   ax = data_in.plot_profile_tot(w=w,species=species,moment=moment,ymin=ymin,ymax=ymax)
+   
+   outfile = 'profile_tot.'+ext
+  
 #---------------------------------------------------------------
 # Plot to screen or to image file
-if ftype == 'screen':
+if ext == 'screen':
     plt.show()
 else:
     plt.savefig(outfile)
+
+if ext != 'screen':
+       print 'INFO: (data_plot_single) Created '+outfile
 #---------------------------------------------------------------

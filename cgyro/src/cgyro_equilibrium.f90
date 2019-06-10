@@ -110,8 +110,10 @@ subroutine cgyro_equilibrium
   if (theta_plot == 1) then
      itp(it0) = 1
   else
-     do it=1,n_theta
-        if (modulo(it,m) == 1) itp(it) = it/m+1
+     is = 1
+     do it=1,n_theta,m  
+        itp(it) = is
+        is = is+1
      enddo
   endif
   !-----------------------------------------------------------------

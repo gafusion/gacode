@@ -25,7 +25,7 @@ subroutine gyro_nonlinear_flux
   !---------------------------------------------------
   implicit none
   !
-  real, dimension(n_x,n_kinetic,n_field,p_moment,2) :: moment
+  real, dimension(n_x,n_kinetic,n_field,p_moment) :: moment
   real, dimension(n_kinetic,2) :: excparts
   real, dimension(n_kinetic,3) :: momparts
   real, dimension(2) :: exctemp
@@ -36,12 +36,12 @@ subroutine gyro_nonlinear_flux
   !--------------------------------------------------  
 
 
-  moment(:,:,:,:,:) = 0.0
+  moment(:,:,:,:) = 0.0
 
   excparts(:,:)     = 0.0
   momparts(:,:)     = 0.0
 
-!$omp parallel private(exctemp,momtemp,p_nek_loc,p_nek,ie,k,ck,m,ix,is,i) &
+!$omp parallel private(exctemp,momtemp,p_nek_loc,p_nek,ie,k,m,ix,is,i) &
 !$omp reduction(+:momparts,excparts)
   exctemp(:)        = 0.0
   momtemp(:)        = 0.0
@@ -53,8 +53,6 @@ subroutine gyro_nonlinear_flux
 
      ie = nek_e(p_nek) 
      k  = nek_k(p_nek)
-
-     ck = class(k)
 
      do m=1,n_stack
 
@@ -72,11 +70,11 @@ subroutine gyro_nonlinear_flux
                  ! Keep running total of moment over p_nek_loc and m:
 
                  ! Moment 1: density
-                 moment(i,is,ix,1,ck) = moment(i,is,ix,1,ck)+real(-ikrho(i)* &
+                 moment(i,is,ix,1) = moment(i,is,ix,1)+real(-ikrho(i)* &
                       conjg(cap_h(i,is))*gyro_uv(m,i,p_nek_loc,is,ix)*w_p(ie,i,k))
 
                  ! Moment 2: energy
-                 moment(i,is,ix,2,ck) = moment(i,is,ix,2,ck)+real(-ikrho(i)* &
+                 moment(i,is,ix,2) = moment(i,is,ix,2)+real(-ikrho(i)* &
                       conjg(cap_h(i,is))*gyro_uv(m,i,p_nek_loc,is,ix)*w_p(ie,i,k))* &
                       energy(ie)*tem_s(is,i)
 
@@ -103,9 +101,9 @@ subroutine gyro_nonlinear_flux
                       mach_s(i)*bigr_t(i,k,m)/rmaj_s(i)/mu(is)**2*&
                       sqrt(tem_s(indx_e,i))
 
-                 moment(i,is,ix,3,ck) = moment(i,is,ix,3,ck)+sum(momtemp(:))
+                 moment(i,is,ix,3) = moment(i,is,ix,3)+sum(momtemp(:))
 
-                 ! Momentum breakdown (sum over i, ix, ck)
+                 ! Momentum breakdown (sum over i, ix)
 
                  momparts(is,:) = momparts(is,:)+momtemp(:)/n_x 
  
@@ -119,9 +117,9 @@ subroutine gyro_nonlinear_flux
                  exctemp(2) = -z(is)*real( &
                       conjg(h_cap_dot(m,i,p_nek_loc,is))*gyro_uv(m,i,p_nek_loc,is,ix)*w_p(ie,i,k))
 
-                 moment(i,is,ix,4,ck) = moment(i,is,ix,4,ck)+0.5*sum(exctemp(:))
+                 moment(i,is,ix,4) = moment(i,is,ix,4)+0.5*sum(exctemp(:))
 
-                 ! Exchange breakdown (sum over i, ix, ck):
+                 ! Exchange breakdown (sum over i, ix):
 
                  excparts(is,:) = excparts(is,:)+exctemp(:)/n_x 
 
@@ -139,17 +137,9 @@ subroutine gyro_nonlinear_flux
   ! ALLREDUCE to obtain full velocity-space sums.  The nonlinear
   ! fluxes will be correct on all processors.
   !
-  call MPI_ALLREDUCE(moment(:,:,:,:,1), &
-       nonlinear_flux_passing, &
-       size(nonlinear_flux_passing), &
-       MPI_DOUBLE_PRECISION, &
-       MPI_SUM, &
-       NEW_COMM_1, &
-       i_err)
-
-  call MPI_ALLREDUCE(moment(:,:,:,:,2), &
-       nonlinear_flux_trapped, &
-       size(nonlinear_flux_trapped), &
+  call MPI_ALLREDUCE(moment(:,:,:,:), &
+       nonlinear_flux, &
+       size(nonlinear_flux), &
        MPI_DOUBLE_PRECISION, &
        MPI_SUM, &
        NEW_COMM_1, &

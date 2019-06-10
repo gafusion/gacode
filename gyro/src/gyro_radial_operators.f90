@@ -55,9 +55,10 @@ subroutine gyro_radial_operators
   !---------------------------------------------------
   ! SOURCE EXPANSION COEFFICIENTS:
   !
-  if (source_flag == 1) then
+  if (source_method > 1) then
 
-     n_node = n_lump-1
+     n_node = n_lump+3
+
      allocate(r_node(n_node))
 
      ! Node points are equally-spaced in r.
@@ -66,24 +67,19 @@ subroutine gyro_radial_operators
         r_node(i) = r(1)+(r(n_x)-r(1))*(i-1)/(n_node-1.0)
      enddo
 
-     ! b_src inherits (possibly) UNEQUAL spacing in r.
-
      do i_lump=1,n_lump
         do i=1,n_x
            t0 = (r(i)-r_node(1))/(r_node(2)-r_node(1))
-           b_src(i,i_lump) = BLEND_f3(i_lump-3,t0)
+           b_src(i,i_lump) = BLEND_f3(i_lump-1,t0)
         enddo
      enddo
-
-     ! Need to account for nonuniform radial grid
-     ! in the radial overlap integral.
 
      m_src(:,:) = 0.0
      do i_lump=1,n_lump
         do j_lump=1,n_lump
            do i=1,n_x
               m_src(i_lump,j_lump) = m_src(i_lump,j_lump)+ & 
-                   b_src(i,i_lump)*b_src(i,j_lump)/dr_eodr(i)
+                   b_src(i,i_lump)*b_src(i,j_lump)
            enddo
         enddo
      enddo
@@ -133,7 +129,7 @@ subroutine gyro_radial_operators
         if (n_1(in_1) == 0) then
            if (i <= n_explicit_damp .or. i > n_x-n_explicit_damp) then
               explicit_damp_vec(:,i)      = explicit_damp
-              explicit_damp_vec(indx_e,i) = explicit_damp_elec
+              explicit_damp_vec(indx_e,i) = explicit_damp
            endif
         endif
      enddo

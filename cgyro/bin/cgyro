@@ -28,7 +28,7 @@ then
   echo "EXECUTE MODE"
   echo
   echo "         -e <simdir>"
-  echo "         Run CGYRO using INPUT data in <simdir>."
+  echo "         Use input data in <simdir>."
   echo
   echo "         -n <MPI tasks>"
   echo "         Number of MPI tasks."
@@ -41,9 +41,6 @@ then
   echo
   echo "         -mpinuma <n>"
   echo "         MPI tasks per active NUMA."
-  echo
-  echo "         -new"
-  echo "         Clean any existing data and start anew"
   echo
   echo "REGRESSION TESTING"
   echo
@@ -69,17 +66,11 @@ then
   echo "         -h"
   echo "         Version and platform information."
   echo
-  echo "         -help <input.cgyro parameter>"
-  echo "         Parameter help information."
-  echo
   echo "         -clean"
   echo "         Clean simulation directory."
   echo
-  echo "         -iclean"
-  echo "         Clean simulation directory except for out.cgyro.restart"
-  echo
   echo "         -compress"
-  echo "         Compress simulation directory."
+  echo "         Replicate directory, but without restart or nonstandard files."
   echo
   echo "         -bin"
   echo "         Map old-style ASCII data to binary files."
@@ -114,7 +105,6 @@ COMPRESS_FLAG=0
 BIN_FLAG=0
 CBIN_FLAG=0
 RESET=0
-NEW_FLAG=0
 INIT_FLAG=0
 GLOBALMAP_FLAG=0
 HELP_TAG=null
@@ -130,8 +120,6 @@ while [ $# -gt 0 ] ; do
 
   -p) shift ; SIMROOT=$1 ;;
 
-  -start) shift ; START=$1 ;;
-
   -e) shift ; LOCDIR=$1 ;;
 
   -t) shift ; LOCDIR=$1 ; TEST_FLAG=1 ;;
@@ -146,11 +134,10 @@ while [ $# -gt 0 ] ; do
 
   -mpinuma) shift ; MPINUMA=$1 ;;
 
-  -nidle) shift ; NIDLE=$1 ;;
-
   -g) shift ; LOCDIR=$1 ; GENERATE_FLAG=1 ;;
 
   -r) REGRESS_FLAG=1 ;;
+
   -rs) REGRESS_FLAG=1 ; shift ; SCASE=$1 ;;
 
   -reset) RESET=1 ;;
@@ -161,11 +148,10 @@ while [ $# -gt 0 ] ; do
 
   -clean) CLEAN_FLAG=1 ;;
 
-  -new) NEW_FLAG=1 ;;
-
   -compress) COMPRESS_FLAG=1 ;;
 
   -bin) BIN_FLAG=1 ;;
+
   -cbin) CBIN_FLAG=1 ;;
 
   -globalmap) GLOBALMAP_FLAG=1 ;;
@@ -199,7 +185,7 @@ fi
 #============================================================
 
 #============================================================
-# Compress option
+# compress option
 if [ $COMPRESS_FLAG -eq 1 ]
 then
     cgyro_compress $SIMDIR $LOCDIR
@@ -246,18 +232,6 @@ then
     $EXEC cgyro.freq
     $EXEC cgyro.geo
     exit 0
-fi
-#============================================================
-
-#============================================================
-# Help option
-HFILE=$CGYRO_DIR/tools/help.json
-
-if [ "$HELP_TAG" != "null" ]
-then
-    v=\""$HELP_TAG\""
-    jq -r ".[] | select(.tag==$v) | .text" $HFILE
-    exit 1
 fi
 #============================================================
 
@@ -326,9 +300,6 @@ if [ $CLEAN_FLAG -eq 1 ] ; then
     echo "INFO: (cgyro) Cleaned directory."
     exit 1
 fi
-if [ $NEW_FLAG -eq 1 ] ; then
-   rm -f $CFILES
-fi
 #============================================================
 
 #==========================================================
@@ -368,14 +339,6 @@ else
 fi
 #==========================================================
 
-#============================================================
-# Init mode
-if [ $INIT_FLAG -eq 1 ]
-then
-   exit 0
-fi
-#============================================================
-
 #==========================================================
 # See if we are using experimental profiles
 
@@ -384,6 +347,15 @@ then
    python $GACODE_ROOT/profiles_gen/bin/profile_parse.py input.profiles
 fi
 #==========================================================
+
+#============================================================
+# Init mode
+if [ $INIT_FLAG -eq 1 ]
+then
+   python $GACODE_ROOT/cgyro/bin/cgyro_mpi_grid.py
+   exit 0
+fi
+#============================================================
 
 #===========================================================
 # RUN CGYRO

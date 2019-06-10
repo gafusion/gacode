@@ -1,14 +1,14 @@
 import sys
 import numpy as np
 import scipy.interpolate
-from gacodeplotdefs import *
+import matplotlib.pyplot as plt
 from gyro.data import GYROData
 
 GFONTSIZE=18
 
-sim       = GYROData(sys.argv[1])
-i_moment  = int(sys.argv[2])
-ftype     = sys.argv[3]
+sim       = GYROData('./')
+i_moment  = int(sys.argv[1])
+ftype     = sys.argv[2]
 
 n_x          = sim.profile['n_x']
 n_n          = sim.profile['n_n']
@@ -24,14 +24,11 @@ if n_theta_plot == 1:
 else:
     j = n_theta_plot/2
 
-print
-print 'INFO (GYROData): Reading large datafile. Please wait.' 
-
 # Read data and store FINAL time-slice in f[n_x,n_kinetic,n_n]
 
 if i_moment > 2:
     # Fields
-    sim.read_moment_u()
+    sim.read_moment('u')
     f = np.array(sim.moment_u[j,:,:,:,-1],dtype=complex)
     title  = ''
     titlev = ['$\delta\phi$','$\delta A_\parallel$','$\delta B_\parallel$']
@@ -39,15 +36,15 @@ else:
     titlev = sim.tagspec
     # Moments
     if i_moment == 0:
-        sim.read_moment_n()
+        sim.read_moment('n')
         f = np.array(sim.moment_n[j,:,:,:,-1],dtype=complex)
         title = '$\delta n$'
     if i_moment == 1:
-        sim.read_moment_v()
+        sim.read_moment('v')
         f = np.array(sim.moment_v[j,:,:,:,-1],dtype=complex)
         title = '$\delta v$'
     if i_moment == 2:
-        sim.read_moment_e()
+        sim.read_moment('e')
         f = np.array(sim.moment_e[j,:,:,:,-1],dtype=complex)
         title = '$\delta E$'
 

@@ -20,7 +20,7 @@ subroutine cgyro_advect_wavenumber(ij)
   real :: scale
 
   if (nonlinear_flag == 0) return
-  
+
   if (profile_shear_flag == 1 .or. shear_method == 2) then
      call timer_lib_in('shear')
      allocate(he(n_theta,1-2*n_wave:n_radial+2*n_wave))
@@ -47,6 +47,8 @@ subroutine cgyro_advect_wavenumber(ij)
               do l=1,n_wave
                  ll = 2*l-1
                  do j=1,n_theta
+                    ! Sign throughout paper is incorrect (or gamma -> - gamma)
+                    ! Thus sign below has been checked and is correct
                     rhs(icc+j,in,ij) = rhs(icc+j,in,ij)+c_wave(l)*(he(j,ir+ll)-he(j,ir-ll))
                  enddo
               enddo
@@ -69,10 +71,28 @@ subroutine cgyro_advect_wavenumber(ij)
               do l=1,n_wave
                  ll = 2*l-1
                  do j=1,n_theta
-                    rhs(icc+j,in,ij) = rhs(icc+j,in,ij)+c_wave(l)*(he(j,ir+ll)-he(j,ir-ll))
+                    ! Note opposite sign to ExB shear
+                    rhs(icc+j,in,ij) = rhs(icc+j,in,ij)-c_wave(l)*(he(j,ir+ll)-he(j,ir-ll))
                  enddo
               enddo
            enddo
+
+           if (n == 0) then
+              scale = nu_global*abs(maxval(sdlnndr)+maxval(sdlntdr))
+
+              irm = -1+1+n_radial/2
+              irp = irm+2
+              irmc = (irm-1)*n_theta
+              irpc = irmc + 2*n_theta
+
+              do j=1,n_theta
+                 ! p = +1
+                 rhs(irpc+j,in,ij) = rhs(irpc+j,in,ij)-scale*h_x(irpc+j,in)
+                 ! p = -1
+                 rhs(irmc+j,in,ij) = rhs(irmc+j,in,ij)-scale*h_x(irmc+j,in)
+              enddo
+
+           endif
         endif
 
         ! Zonal damping (to reduce box-size correlation)
@@ -94,7 +114,7 @@ subroutine cgyro_advect_wavenumber(ij)
            enddo
         endif
 
-     enddo ! in=1,nv_loc
+     enddo
 
      deallocate(he)
      call timer_lib_out('shear')

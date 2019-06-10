@@ -16,7 +16,7 @@ FOMP   = -qopenmp
 FMATH  = -real-size 64
 FOPT   = -Ofast
 FDEBUG = -check all -traceback
-F2PY   = f2py
+F2PY   = f2py --fcompiler=intelem
 
 # System math libraries
 LMATH = -mkl

@@ -44,3 +44,4 @@ distclean:
 	rm -f python/*/*.pyc
 	rm -f python/*.pyc
 	rm -f modules/*genmod*
+	rm -f modules/*.mod

@@ -14,6 +14,7 @@ program tglf
 
   use tglf_pkg
   use tglf_interface
+  use tglf_global
 
   implicit none
 
@@ -23,7 +24,11 @@ program tglf
   real :: prec
 
   call tglf_read_input()
-  call tglf_run() 
+  call tglf_run()
+
+  if(units_in.eq.'GENE')print 30,'GENE units used: Bref/Bunit = ',Bref_out
+  if(kx_isotropic_in)print 30,'isotropic kx model used: kx_geo0_out = ',kx_geo0_out, &
+      ' SAT_geo0_out = ',SAT_geo0_out
 
 ! write interchange stability criteria with ELITE conventions
   Print 30,'  D(R) = ',-interchange_DR,'  D(I) = ',0.25-interchange_DM

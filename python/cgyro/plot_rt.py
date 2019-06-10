@@ -24,12 +24,15 @@ istr = sys.argv[8]
 fmin = sys.argv[9]
 fmax = sys.argv[10]
 colormap = sys.argv[11]
+font = int(sys.argv[12])
+theta = float(sys.argv[13])
 
 sim = cgyrodata('./')
 nt = sim.n_time
 nr = sim.n_radial
 nn = sim.n_n
 ns = sim.n_species
+nth = sim.theta_plot
 
 if nx < 0:
    nx = nr+1
@@ -39,6 +42,8 @@ else:
    
 epx = np.zeros([nx,nr],dtype=np.complex)
 x = np.zeros([nx])
+
+itheta = theta_indx(theta,nth)
 
 #------------------------------------------------------------------------
 # Some setup 
@@ -100,51 +105,24 @@ def maptoreal_fft(nr,nx,c):
    return f,end-start
 #------------------------------------------------------------------------
 
-u=specmap(sim.mass[species],sim.z[species])
-
-# Set filename root and title
-isfield = True
-if (moment == 'n'):
-    fdata = '.cgyro.kxky_n'
-    title = r'${\delta \mathrm{n}}_'+u+'$'
-    isfield = False
-elif (moment == 'e'):
-    fdata = '.cgyro.kxky_e'
-    title = r'${\delta \mathrm{E}}_'+u+'$'
-    isfield = False
-elif (moment == 'phi'):
-    fdata = '.cgyro.kxky_phi'
-    title = r'$\delta\phi$'
-elif (moment == 'apar'):
-    fdata = '.cgyro.kxky_apar'
-    title = r'$\delta A_\parallel$'
-elif (moment == 'bpar'):
-    fdata = '.cgyro.kxky_bpar'
-    title = r'$\delta B_\parallel$'
-
-# ERROR CHECKS
+# Get filename and tags 
+fdata,title,isfield = tag_helper(sim.mass[species],sim.z[species],moment)
 
 # Check to see if data exists (try binary data first)
 if os.path.isfile('bin'+fdata):
     fdata = 'bin'+fdata
-    print 'INFO: (plot_fluct) Found binary data in '+fdata 
+    print 'INFO: (plot_rt) Found binary data in '+fdata 
     hasbin = True
-elif os.path.isfile('out'+fdata):
-    fdata = 'out'+fdata
-    print ' BAD: (plot_fluct) Using inefficient ASCII data in '+fdata 
-    hasbin = False
 else:
-    print 'ERROR: (plot_fluct) No data for -moment '+moment+' exists.  Try -moment phi'
-    sys.exit()
-
+   raise ValueError('(plot_rt) No data for -moment '+moment+' exists.  Try -moment phi')
+    
 if usefft:
-    print 'INFO: (plot_fluct) Using FFT (fast)'
+    print 'INFO: (plot_rt) Using FFT (fast)'
 
-# **WARNING** Assumes theta_plot=1 
 if isfield:
-    n_chunk = 2*nr*nn
+    n_chunk = 2*nr*nth*nn
 else:
-    n_chunk = 2*nr*ns*nn
+    n_chunk = 2*nr*nth*ns*nn
      
 # Open binary file
 fbin = open(fdata,'rb') 
@@ -156,11 +134,11 @@ for i in range(nt):
    print 'INFO: (plot_fluct) Time index '+str(i) 
 
    if isfield:
-      a = np.reshape(aa,(2,nr,nn),order='F')
-      c = a[0,:,0]+1j*a[1,:,0]
+      a = np.reshape(aa,(2,nr,nth,nn),order='F')
+      c = a[0,:,itheta,0]+1j*a[1,:,itheta,0]
    else:
-      a = np.reshape(aa,(2,nr,ns,nn),order='F')
-      c = a[0,:,species,0]+1j*a[1,:,species,0]
+      a = np.reshape(aa,(2,nr,nth,ns,nn),order='F')
+      c = a[0,:,itheta,species,0]+1j*a[1,:,itheta,species,0]
 
    # Derivative (d/dx)**nd   
    for p in range(-nr/2,nr/2):

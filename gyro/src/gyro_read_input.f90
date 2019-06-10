@@ -56,6 +56,8 @@ subroutine gyro_read_input
   call readbc_real(s_kappa0)
   call readbc_real(drmaj0)
   call readbc_real(r_maj)
+  call readbc_real(zmag0)
+  call readbc_real(dzmag0)
   call readbc_real(r0)
   call readbc_real(box_multiplier)
   call readbc_real(rho_star)
@@ -67,7 +69,6 @@ subroutine gyro_read_input
   call readbc_int(m_gyro)
   call readbc_int(n_explicit_damp)
   call readbc_real(explicit_damp)
-  call readbc_real(explicit_damp_elec)
   call readbc_int(debug_flag)
   call readbc_int(nonlinear_flag)
   call readbc_real(amp_n)
@@ -84,17 +85,12 @@ subroutine gyro_read_input
   call readbc_real(betae_unit)
   call readbc_real(ampere_scale)
   call readbc_int(n_field)
-  call readbc_int(source_flag)
+  call readbc_int(source_method)
   call readbc_real(nu_source)
   call readbc_int(verbose_flag)
-  call readbc_int(nonuniform_grid_flag)
-  call readbc_real(s_grid)
-  call readbc_real(gamma_e)
   call readbc_real(nu_ei)
   call readbc_real(nu_ei_scale)
   call readbc_real(nu_ii_scale)
-  call readbc_real(nu_i_krook)
-  call readbc_real(plot_filter)
   call readbc_int(n_source)
   call readbc_int(flat_profile_flag)
   call readbc_int(density_method)
@@ -119,6 +115,14 @@ subroutine gyro_read_input
   call readbc_real(x) ; dlnndr_vec(5) = x
   call readbc_real(x) ; dlnndr_vec(0) = x
 
+  sdlnndr_vec = 0.0
+  call readbc_real(x) ; sdlnndr_vec(1) = x
+  call readbc_real(x) ; sdlnndr_vec(2) = x
+  call readbc_real(x) ; sdlnndr_vec(3) = x
+  call readbc_real(x) ; sdlnndr_vec(4) = x
+  call readbc_real(x) ; sdlnndr_vec(5) = x
+  call readbc_real(x) ; sdlnndr_vec(0) = x
+
   dlntdr_vec = 0.0
   call readbc_real(x) ; dlntdr_vec(1) = x
   call readbc_real(x) ; dlntdr_vec(2) = x
@@ -126,6 +130,14 @@ subroutine gyro_read_input
   call readbc_real(x) ; dlntdr_vec(4) = x
   call readbc_real(x) ; dlntdr_vec(5) = x
   call readbc_real(x) ; dlntdr_vec(0) = x
+
+  sdlntdr_vec = 0.0
+  call readbc_real(x) ; sdlntdr_vec(1) = x
+  call readbc_real(x) ; sdlntdr_vec(2) = x
+  call readbc_real(x) ; sdlntdr_vec(3) = x
+  call readbc_real(x) ; sdlntdr_vec(4) = x
+  call readbc_real(x) ; sdlntdr_vec(5) = x
+  call readbc_real(x) ; sdlntdr_vec(0) = x
 
   n_vec = 0.0
   call readbc_real(x) ; n_vec(1) = x
@@ -176,45 +188,31 @@ subroutine gyro_read_input
   call readbc_real(x) ; orbit_upwind_vec(0) = x
 
   ! More profile parameters
-  call readbc_real(pgamma0)
-  call readbc_real(pgamma0_scale)
-  call readbc_real(mach0)
-  call readbc_real(mach0_scale)
+  call readbc_real(gamma_e)
+  call readbc_real(gamma_e_scale)
+  call readbc_real(gamma_p)
+  call readbc_real(gamma_p_scale)
+  call readbc_real(mach)
+  call readbc_real(mach_scale)
   call readbc_int(lindiff_method)
-  call readbc_int(trapdiff_flag)
   call readbc_int(restart_new_flag)
   call readbc_int(restart_data_skip)
-  call readbc_int(kill_i_parallel_flag)
-  call readbc_int(kill_i_drift_flag)
-  call readbc_int(kill_e_drift_flag)
   call readbc_int(kill_coll_flag)
-  call readbc_real(doppler_scale)
   call readbc_int(nl_method)
   call readbc_int(kill_gyro_b_flag)
-  call readbc_int(velocity_output_flag)
-  call readbc_real(q_scale)
   call readbc_int(dist_print)
-  call readbc_int(nint_ORB_s)
-  call readbc_int(nint_ORB_do)
   call readbc_int(udsymmetry_flag)
   call readbc_int(gyro_method)
-  call readbc_int(sparse_method)
-  call readbc_int(n_mumps_max)
-  call readbc_int(n_study)
-  call readbc_real(amp_study)
   call readbc_real(lambda_debye_scale)
   call readbc_real(lambda_debye)
-  call readbc_int(n_x_offset)
   call readbc_int(n_theta_mult)
   call readbc_int(silent_flag)
-  call readbc_int(nonlinear_transfer_flag)
   call readbc_real(l_x)
   call readbc_real(l_y)
   call readbc_int(entropy_flag)
+  call readbc_int(extra_print_flag)
   call readbc_int(ord_rbf)
   call readbc_int(num_equil_flag)
-  call readbc_real(zmag0)
-  call readbc_real(dzmag0)
   call readbc_int(output_flag)
   call readbc_real(ipccw)
   call readbc_real(btccw)
@@ -223,8 +221,6 @@ subroutine gyro_read_input
   call readbc_real(geo_betaprime_scale)
   call readbc_int(poisson_z_eff_flag)
   call readbc_int(z_eff_method)
-  call readbc_int(truncation_method)
-  call readbc_real(fluxaverage_window)
 
   ! GK eigenvalue solver inputs
   call readbc_int(gkeigen_proc_mult)
@@ -245,10 +241,8 @@ subroutine gyro_read_input
   call readbc_real(fieldeigen_wi)
   call readbc_real(fieldeigen_tol)
 
-  call readbc_int(reintegrate_flag)
   call readbc_int(ic_method)
   call readbc_int(zf_test_flag)
-  call readbc_int(lock_ti_flag)
   ! DONE reading data.
   !--------------------------------------------------------
 

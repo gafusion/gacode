@@ -246,7 +246,7 @@ module tgyro_globals
   real :: b_ref
   real :: r_min
   !
-  integer, dimension(:,:), allocatable :: pmap
+  integer, dimension(:,:), allocatable :: pmap,mask
   character(len=1), dimension(:), allocatable :: b_flag
   !
   ! Geometry
@@ -271,11 +271,12 @@ module tgyro_globals
   integer :: loc_evolve_grad_only_flag
   integer :: loc_restart_flag
   integer :: loc_scenario
-  integer :: loc_neo_method
+  integer :: tgyro_neo_method
   integer :: loc_n_ion
   real, dimension(n_ion_max) :: zi_vec
   real, dimension(n_ion_max) :: mi_vec
   integer, dimension(n_ion_max) :: therm_flag
+  integer, dimension(n_ion_max) :: calc_flag
   integer, dimension(0:n_ion_max) :: evo_e
   real, dimension(0:n_ion_max) :: evo_c
   real :: loc_betae_scale
@@ -321,7 +322,6 @@ module tgyro_globals
   real :: tgyro_ped_ratio
   real :: tgyro_ped_scale
   real :: tgyro_tglf_nn_max_error
-  integer :: tgyro_quickfast_flag
   integer :: tgyro_zero_dens_grad_flag
   real :: tgyro_residual_tol
   real :: tgyro_input_fusion_scale

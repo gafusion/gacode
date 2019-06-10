@@ -19,7 +19,6 @@ subroutine cgyro_mpi_grid
   integer :: ie,ix,is,ir,it
   integer :: d
   integer :: splitkey
-  integer, external :: parallel_dim
 
   integer, external :: omp_get_max_threads, omp_get_thread_num
 

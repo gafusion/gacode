@@ -5,9 +5,11 @@ shared/neural
 # Object files and modules
 modules/*.mod
 modules/*genmod*
+*/*.o*y
+
 */*.o
 */*/*.a
-*/*/*.o
+*/*/*.o*
 */*/*/*.a
 */*/*/*.o
 */*/*/*/*.o

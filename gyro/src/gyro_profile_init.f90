@@ -14,9 +14,6 @@
 !  radial_profile_method = 3: 
 !    experimental profiles, model, or general geometry
 !
-!  r_e is the uniform REFERENCE grid.
-!  r is the (possibly nonuniform) PHYSICAL grid.
-!
 ! FIELD ORIENTATION NOTES:
 !  Field orientation is accomplished by giving signs to a minimal 
 !  set of quantities:
@@ -35,10 +32,9 @@ subroutine gyro_profile_init
   !---------------------------------------------------
   implicit none
   !
-  integer :: ic 
-  real :: loglam
+  integer :: ic
+  real :: loglam,x0,tri
   real :: cc
-  real :: p_total
   !---------------------------------------------------
 
   !---------------------------------------------------
@@ -93,7 +89,7 @@ subroutine gyro_profile_init
   !
   ! Location of "norm point" (index of central radius)
   !
-  ir_norm = n_x/2+1-n_x_offset
+  ir_norm = n_x/2+1
   !
   ! Set some geometry parameters not defined for 
   ! circular equilibrium.  These will also be reset 
@@ -145,11 +141,6 @@ subroutine gyro_profile_init
 
   rhosda_s(:) = rho_star
 
-  if (lock_ti_flag == 1) then
-     t_vec(1:10) = t_vec(1)
-     dlntdr_vec(1:10) = dlntdr_vec(1)
-  endif
-
   select case (radial_profile_method)
 
   case (1,5)
@@ -160,6 +151,14 @@ subroutine gyro_profile_init
 
      ! Explicit sign convention
      q0 = q0*(ipccw)*(btccw)
+
+     ! Profile shears (constant)
+     do is=1,n_ion
+        sdlnndr(is) = sdlnndr_vec(is) 
+        sdlntdr(is) = sdlntdr_vec(is)
+     enddo
+     sdlnndr(n_spec) = sdlnndr_vec(0)
+     sdlntdr(n_spec) = sdlntdr_vec(0)
 
      do i=1,n_x
 
@@ -192,9 +191,9 @@ subroutine gyro_profile_init
 
         ! Rotation with correct helicity
 
-        gamma_p_s(i) = pgamma0
+        gamma_p_s(i) = gamma_p
         gamma_e_s(i) = gamma_e
-        mach_s(i)    = mach0
+        mach_s(i)    = mach
 
         ! Total pressure not available
         dlnptotdr_s(i) = 0.0
@@ -212,7 +211,7 @@ subroutine gyro_profile_init
      ! and interpolate to simulation (_s) grid.  In general, the 
      ! _s grid is much finer than the _p grid.
      !
-     ! At this point r = r_e and dr_eodr = 1.0.
+     ! At this point r = r_e
      !
      call gyro_read_experimental_profiles
      !---------------------------------------------------------------
@@ -249,8 +248,7 @@ subroutine gyro_profile_init
            r(i) = r0-0.5*x_length+d_x*(i-1.0)
         enddo
 
-        r_e(:)     = r(:)
-        dr_eodr(:) = 1.0
+        r_e(:) = r(:)
 
      endif
      !------------------------------------------------------
@@ -279,63 +277,26 @@ subroutine gyro_profile_init
         dlntdr_s(is,:) = dlntdr_s(is,:)*(1.0-eps_dlntdr_vec(is))
         dlnndr_s(is,:) = dlnndr_s(is,:)*(1.0-eps_dlnndr_vec(is))
         if (eps_dlntdr_vec(is) /= 0.0) then
-           call send_message_real('INFO: (GYRO) Ti gradient RESCALED by: ',1.0-eps_dlntdr_vec(is))
-           if (reintegrate_flag == 1) then
-              !call logint(tem_s(is,:),dlntdr_s(is,:),r_s,n_x,ir_norm)
-              !call send_message('INFO: (GYRO) Ti profile REINTEGRATRED')
-              call catch_error('ERROR: (GYRO) REINTEGRATE_FLAG no longer supported')
-           endif
+           call send_message_real('INFO: (GYRO) Ti gradient RESCALED by: ',&
+                1.0-eps_dlntdr_vec(is))
         endif
         if (eps_dlnndr_vec(is) /= 0.0) then
-           call send_message_real('INFO: (GYRO) ni gradient RESCALED by: ',1.0-eps_dlnndr_vec(is))
-           if (reintegrate_flag == 1) then
-              !call logint(den_s(is,:),dlntdr_s(is,:),r_s,n_x,ir_norm)
-              !call send_message('INFO: (GYRO) ni profile REINTEGRATRED')
-              call catch_error('ERROR: (GYRO) REINTEGRATE_FLAG no longer supported')
-           endif
+           call send_message_real('INFO: (GYRO) ni gradient RESCALED by: ',&
+                1.0-eps_dlnndr_vec(is))
         endif
      enddo
      !
      dlntdr_s(n_spec,:) = dlntdr_s(n_spec,:)*(1.0-eps_dlntdr_vec(0))
      dlnndr_s(n_spec,:) = dlnndr_s(n_spec,:)*(1.0-eps_dlnndr_vec(0))
      if (eps_dlntdr_vec(0) /= 0.0) then
-        call send_message_real('INFO: (GYRO) Te gradient RESCALED by: ',1.0-eps_dlntdr_vec(0))
-        if (reintegrate_flag == 1) then
-           !call logint(tem_s(n_spec,:),dlntdr_s(n_spec,:),r_s,n_x,ir_norm)
-           !call send_message('INFO: (GYRO) Te profile REINTEGRATRED')
-           call catch_error('ERROR: (GYRO) REINTEGRATE_FLAG no longer supported')
-        endif
+        call send_message_real('INFO: (GYRO) Te gradient RESCALED by: ',&
+             1.0-eps_dlntdr_vec(0))
      endif
      if (eps_dlnndr_vec(0) /= 0.0) then
-        call send_message_real('INFO: (GYRO) ne gradient RESCALED by: ',1.0-eps_dlnndr_vec(0))
-        if (reintegrate_flag == 1) then
-           !call logint(den_s(n_spec,:),dlnndr_s(n_spec,:),r_s,n_x,ir_norm)
-           !call send_message('INFO: (GYRO) ne profile REINTEGRATRED')
-           call catch_error('ERROR: (GYRO) REINTEGRATE_FLAG no longer supported')
-        endif
+        call send_message_real('INFO: (GYRO) ne gradient RESCALED by: ',&
+             1.0-eps_dlnndr_vec(0))
      endif
      !
-     if ((sum(abs(eps_dlntdr_vec(:))+abs(eps_dlnndr_vec(:))) > 0.0)  .and. &
-          (reintegrate_flag == 1)) then
-        call send_message('INFO: (GYRO) profiles changed, recalculating beta_unit')
-
-        ! den_s  -> 1/m^3
-        ! tem_s  -> keV
-        ! b_unit -> T
-        !
-        ! beta calculation in CGS:
-        !
-        !         8*pi ( n[1e19/m^3]*1e-6*1e19 )( T[keV]*1.6022*1e-9 )
-        ! beta = ------------------------------------------------------
-        !                           ( 1e4*B[T] )^2
-        !
-        !      = 4.027e-3 n[1e19/m^3]*T[keV]/B[T]^2
-
-        do i=1,n_x
-           p_total = sum(den_s(:,i)*tem_s(:,i))
-           beta_unit_s(i) = 4.027e-3*p_total/b_unit_s(i)**2
-        enddo
-     endif
      !------------------------------------------------------
 
   end select ! profile_method
@@ -365,6 +326,8 @@ subroutine gyro_profile_init
      tem_s(1:n_spec,:)    = tem_s(n_spec:1:-1,:)
      dlntdr_s(1:n_spec,:) = dlntdr_s(n_spec:1:-1,:)
      dlnndr_s(1:n_spec,:) = dlnndr_s(n_spec:1:-1,:)
+     sdlntdr(1:n_spec)    = sdlntdr(n_spec:1:-1)
+     sdlnndr(1:n_spec)    = sdlnndr(n_spec:1:-1)
   endif
   !------------------------------------------------------------------
 
@@ -467,26 +430,26 @@ subroutine gyro_profile_init
   !
   if (radial_profile_method == 3) then
 
-     mach_s(:)     = mach_s(:)*mach0_scale
-     gamma_e_s(:)  = gamma_e_s(:)/csda_norm*doppler_scale
-     gamma_p_s(:)  = gamma_p_s(:)/csda_norm*pgamma0_scale
-     w0_s(:)       = w0_s(:)/csda_norm*doppler_scale
+     mach_s(:)     = mach_s(:)*mach_scale
+     gamma_e_s(:)  = gamma_e_s(:)/csda_norm*gamma_e_scale
+     gamma_p_s(:)  = gamma_p_s(:)/csda_norm*gamma_p_scale
+     w0_s(:)       = w0_s(:)/csda_norm*gamma_e_scale
 
      omega_eb_s(:) = -n_1(in_1)*w0_s(:)
 
-     if (mach0_scale /= 1.0) then
+     if (mach_scale /= 1.0) then
         call send_message_real('INFO: (GYRO) Scaling experimental Mach number by ',&
-             mach0_scale)
+             mach_scale)
      endif
 
-     if (pgamma0_scale /= 1.0) then
+     if (gamma_p_scale /= 1.0) then
         call send_message_real('INFO: (GYRO) Scaling experimental gamma_p by ',&
-             pgamma0_scale)
+             gamma_p_scale)
      endif
 
-     if (doppler_scale /= 1.0) then
+     if (gamma_e_scale /= 1.0) then
         call send_message_real('INFO: (GYRO) Scaling experimental gamma_e by ',&
-             doppler_scale)
+             gamma_e_scale)
      endif
 
      !---------------------------------------------------------
@@ -530,7 +493,7 @@ subroutine gyro_profile_init
            ! q, as always, needs a linear form here:
 
            q(i) = q_s(ir_norm)+   &
-                q_s(ir_norm)/r(ir_norm)*shat_s(ir_norm)*(r(i)-r(ir_norm))
+                q_s(ir_norm)/r_norm*shat_s(ir_norm)*(r(i)-r_norm)
 
         endif
 
@@ -554,20 +517,18 @@ subroutine gyro_profile_init
         beta_star_s(i)  = beta_star_s(ir_norm)
 
         gamma_e_s(i) = gamma_e_s(ir_norm)
-        gamma_p_s(i) =  gamma_p_s(ir_norm)
+        gamma_p_s(i) = gamma_p_s(ir_norm)
         mach_s(i)    = mach_s(ir_norm)
 
         tem_s(:,i)    = tem_s(:,ir_norm)
         den_s(:,i)    = den_s(:,ir_norm)
-        dlntdr_s(:,i) = dlntdr_s(:,ir_norm)
-        dlnndr_s(:,i) = dlnndr_s(:,ir_norm)
         dlnpdr_s(i)   = dlnpdr_s(ir_norm)
         pr_s(:,i)     = pr_s(:,ir_norm)
         alpha_s(:,i)  = alpha_s(:,ir_norm)
         krho_i(:,i)   = krho_i(:,ir_norm)
-
-        omega_eb_s(:) = gamma_e_s(ir_norm)*&
-             n_1(in_1)*q_norm/r_norm*(r(:)-r_norm)
+         
+        omega_eb_s(i) = gamma_e_s(ir_norm)*&
+             n_1(in_1)*q_norm/r_norm*(r(i)-r_norm)
 
         a_fourier_geo_s(:,:,i) = a_fourier_geo_s(:,:,ir_norm)
 
@@ -575,7 +536,7 @@ subroutine gyro_profile_init
 
   endif
   !----------------------------------------------------------
-
+  
   !------------------------------------------------------
   ! Compute true Debye length at box center if profile
   ! data is available:
@@ -677,6 +638,19 @@ subroutine gyro_profile_init
   enddo
   !-------------------------------------------------------------
 
+  ! Profile shearing
+  if (i_proc == 0) open(unit=10,file='out.gyro.star',status='replace')
+  do i=1,n_x
+
+     x0 = (r(i)-r_norm)/x_length*2*pi
+     tri = (4.0/pi)*(sin(x0)-sin(3*x0)/9.0)
+     dlntdr_s(:,i) = dlntdr_s(:,ir_norm)+tri*sdlntdr(:)*x_length/rhosda_s(ir_norm)/(2*pi)
+     dlnndr_s(:,i) = dlnndr_s(:,ir_norm)+tri*sdlnndr(:)*x_length/rhosda_s(ir_norm)/(2*pi)
+
+     if (i_proc == 0) write(10,'(2(1pe12.5,1x))') x0,dlnndr_s(1,i) 
+  enddo
+  if (i_proc == 0) close(10)
+     
   if (debug_flag == 1 .and. i_proc == 0) then
      print *,"[gyro_profile_init done]"
   endif

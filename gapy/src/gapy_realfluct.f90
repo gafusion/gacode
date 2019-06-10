@@ -40,14 +40,12 @@ subroutine realfluct(nr,nn,nx,ny,c,f)
   enddo
 
   ! factor of 1/2 for n=0
-  eny(0,:) = 0.5*eny(0,:)
+  eny(0,:) = eny(0,:)/2
  
-  f = 0.0
-  
 !$omp parallel do private(j,i,fsum,n,p)
   do j=0,ny-1
      do i=0,nx-1
-        fsum = 0.0
+        fsum = 0d0
         do n=0,nn-1
            do p=0,nr-1
               fsum = fsum+real(c(p,n)*epx(p,i)*eny(n,j))

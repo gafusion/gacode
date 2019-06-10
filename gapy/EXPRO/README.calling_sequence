@@ -1,6 +1,6 @@
 1. Prepare input.profiles.gen from input.profiles:
 
-  $ python $(GACODE_ROOT)/shared/bin/profile_parse.py input.profiles
+  $ python $(GACODE_ROOT)/profiles_gen/bin/profile_parse.py input.profiles
 
 2. Scalar calling sequence from f90 program:
 

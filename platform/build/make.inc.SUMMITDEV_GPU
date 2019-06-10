@@ -1,0 +1,88 @@
+#---------------------------------------------------
+# IBM summit-dev
+#
+#---------------------------------------------------
+
+# FIXED Hardware parameters
+IDENTITY="IBM Summit"
+# node 20/21 core for each power9, 2 power9/node, on bsub smt* give *-hw-threads
+# smt2
+CORES_PER_NODE=40
+NUMAS_PER_NODE=2
+#
+# libraries
+#
+
+FFTW_INC=${OLCF_FFTW_ROOT}/include
+NETCDF_INC =${OLCF_NETCDF_DIR}/include
+NETCDFF_INC=${OLCF_NETCDF_FORTRAN_ROOT}/include
+NETCDF =-L${OLCF_NETCDF_FORTRAN_ROOT}/lib -lnetcdff -L${OLCF_NETCDF_ROOT}/lib -lnetcdf -lz -lm
+
+# Compilers and flags
+
+# Fortran 90/95 compiler
+
+FC = mpif90 -m64 -module ${GACODE_ROOT}/modules -Mpreprocess -DUSE_INLINE \
+   -acc -fpic -I${OLCF_NETCDF_FORTRAN_ROOT}/include
+
+# CUDA_HOME=${CUDA_DIR}
+CC=mpicc -m64 -fpic -I{OLCF_CUDA_ROOT}/include
+
+# Fortran 77 compiler
+
+F77=mpif90 -m64 -acc -I${GACODE_ROOT}/modules -fpic
+
+# Compiler options/flags
+
+FACC =-acc -I${OLCF_CUDA_ROOT}/include -Minfo=accel \
+       	     -ta=nvidia:cc60 -Mcudalib=cufft \
+     	     -Mcudalib=cusolver -Mcudalib=cusparse \
+	     -Mcudalib=cublas -DDISABLE_GPUDIRECT_MPI
+
+#       -ta=tesla:cuda9.2  -ta=nvidia:cc70 -Mcudalib=cufft \
+
+FOMP   =-mp -Mstack_arrays 
+FMATH  =-r8 -I${OLCF_FFTW_ROOT}/include 
+FOPT   =-fast -fastsse -Mvect
+FDEBUG =-g -Kieee -Ktrap=fp,divz -Mbounds -Mchkptr -Mchkstk -traceback -Minform=inform
+# F2PY   = f2py --fcompiler=pg
+
+LMATH=-L${OLCF_CUDA_ROOT}/lib64 -L${OLCF_ESSL_ROOT}/lib64  \
+				-lesslsmpcuda -lesslsmp -lfftw3_essl -lessl\
+				-L${OLCF_FFTW_ROOT}/lib -lfftw3_threads -lfftw3f_threads \
+				-lfftw3f -lfftw3 \
+				-L${CUDA_DIR}/lib64 -lcusolver -lcusparse -lcudart
+
+# -lpthread -lm
+
+# -L${OLCF_XLMASS_ROOT}/lib -lmass \
+# NetCDF
+# OLCF_NETCDF_FORTRAN_ROOT
+
+# NETCDF =-L${NETCDF_DIR}/lib -lnetcdff -lnetcdf -L${NETCDF_DIR}/lib -L${NETCDF_DIR}/lib -lz -lm
+
+# Archive
+ARCH = ar cr
+
+# ifdef FANN_ROOT
+#   # neural net libraries
+#
+# NN_LIB=-L$(GACODE_ROOT)/../neural/ -I$(GACODE_ROOT)/../neural/ -lbrainfuse -L$(FANN_ROOT)/lib -lfann
+# endif
+
+# NEO platform defs
+#ifdef SUPERLU_DIR
+#  SUPERLU_LIB += -Wl,-rpath,${SUPERLU_DIR}/lib -L${SUPERLU_DIR}/lib -lsuperlu
+#  SUPERLU_INC += -I${SUPERLU_DIR}/include
+#endif
+
+# ifdef PETSC_DIR
+#  PETSC_LIB += -Wl,-rpath,$(PETSC_DIR)/lib -L$(PETSC_DIR)/lib -lpetsc -lsuperlu
+#  PETSC_INC += -I$(PETSC_DIR)/include
+# endif
+
+ifdef CUDA_DIR
+      	CUDA_LIB += -L${CUDA_DIR}/lib64 -lcusolver -lcusparse -lcudart
+# -lcusparse
+	CUDA_INC += -I${CUDA_DIR}/include
+endif

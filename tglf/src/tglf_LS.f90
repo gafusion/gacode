@@ -391,7 +391,7 @@
       ks = kp*SQRT(taus(1)*mass(2))   ! scale invariant gyroradius * poloidal wavenumber
       if(sat_rule_in.eq.0)then
        if(igeo.eq.0)then
-        if(nmodes_in.ne.4)then
+        if(nmodes_in.le.2)then
 ! this fit is for nmodes_in=2
           cnorm = 30.40*pols
           exponent1 = 1.657
@@ -403,7 +403,7 @@
         if(ks.gt.1.0)cnorm=cnorm/(ks)**etg_factor_in
         c1 = 0.0
       elseif(igeo.ge.1)then
-        if(nmodes_in.ne.4)then
+        if(nmodes_in.le.2)then
 ! this fit is for nmodes_in=2
           cnorm = 32.48*pols
           exponent1 = 1.547
@@ -424,7 +424,7 @@
          intensity = intensity/(1.0+0.56*kx0_e**2)**2
          intensity = intensity/(1.0+(1.15*kx0_e)**4)**2
        endif
-         intensity = intensity/B_unit**2
+         intensity = intensity*SAT_geo0_out
       elseif(sat_rule_in.eq.1)then
 !
 !   will be computed later by get_multiscale_spectrum

@@ -72,8 +72,8 @@ subroutine gyro_blend_poisson(i_elec)
                 inqr**2*qrat_t(i,k,m)**2* &
                 (1.0+captheta_t(i,k,m)**2)*w_d0(:)+ &
                 2.0*inqr*qrat_t(i,k,m)*captheta_t(i,k,m)* &
-                grad_r_t(i,k,m)*dr_eodr(i)*w_d1(:)+ &
-                (grad_r_t(i,k,m)*dr_eodr(i))**2*w_d2(:))
+                grad_r_t(i,k,m)*w_d1(:)+ &
+                (grad_r_t(i,k,m))**2*w_d2(:))
 
            ! Fast option for flat profiles
 
@@ -94,7 +94,7 @@ subroutine gyro_blend_poisson(i_elec)
 
                     rho_gyro = rhos_norm*mu(is)*sqrt(tem_s(is,i))/omega_c
                     !
-                    a_gyro = grad_r_t(i,k,m)/x_length*dr_eodr(i)
+                    a_gyro = grad_r_t(i,k,m)/x_length
                     v_gyro = qrat_t(i,k,m)*n_1(in_1)*q_s(i)/r_s(i)
                     u_gyro = v_gyro*captheta_t(i,k,m)
                     !---------------------------------------------------------------
@@ -122,7 +122,7 @@ subroutine gyro_blend_poisson(i_elec)
 
                     rho_gyro = rhos_norm*v_perp(m,i,p_nek_loc,is)/omega_c
                     !
-                    a_gyro = grad_r_t(i,k,m)/x_length*dr_eodr(i)
+                    a_gyro = grad_r_t(i,k,m)/x_length
                     v_gyro = qrat_t(i,k,m)*n_1(in_1)*q_s(i)/r_s(i)
                     u_gyro = v_gyro*captheta_t(i,k,m)
                     !---------------------------------------------------------------
@@ -270,7 +270,7 @@ subroutine gyro_blend_poisson(i_elec)
 
            rho_gyro = rhos_norm*mu(is)*sqrt(tem_s(is,i))/omega_c
            !
-           a_gyro = grad_r_t(i,k,m)/x_length*dr_eodr(i)
+           a_gyro = grad_r_t(i,k,m)/x_length
            v_gyro = qrat_t(i,k,m)*n_1(in_1)*q_s(i)/r_s(i)
            u_gyro = v_gyro*captheta_t(i,k,m)
            !---------------------------------------------------------------

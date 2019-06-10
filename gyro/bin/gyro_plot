@@ -14,78 +14,75 @@ n=$#
 if [ $n -eq 0 ]
 then
   echo
-  echo "Usage:    gyro_plot [options]"
+  echo "Usage:   gyro_plot [options]"
   echo
-  echo "          -p <path>"
-  echo "          Set optional path to simulation directory."
-  echo "          [The default path is the current directory]"
+  echo "         -p <path>"
+  echo "         Set optional path to simulation directory."
+  echo "         [The default path is the current directory]"
   echo
-  echo "          -e <simdir>"
-  echo "          Use data in <simdir>."
+  echo "         -e <simdir>"
+  echo "         Use data in <simdir>."
   echo
-  echo "          -ext <filetype>"
-  echo "           Output file type."
-  echo "           <filetype>=eps, pdf, png, svg, dump"
+  echo "         -ext <filetype>"
+  echo "         Output file type."
+  echo "         <filetype>=eps, pdf, png, svg, dump"
   echo 
-  echo "          -dat <datafile>"
-  echo "          Toggle data dump to <datafile>."
+  echo "         -dat <datafile>"
+  echo "         Toggle data dump to <datafile>."
   echo 
-  echo "          -field <value>"
-  echo "          Specify field to be plotted: [0,n_field-1]."
-  echo "          Alternatively, specifying 's' returns a sum of all fields (default=s)."
+  echo "         -field <value>"
+  echo "         Specify field to be plotted: [0,n_field-1]."
+  echo "         Alternatively, specifying 's' returns a sum of all fields (default=s)."
   echo
-  echo "          -kinetic <value>"
-  echo "          Specify species to be plotted: [0,n_kinetic-1]."
+  echo "         -species <value>"
+  echo "         Specify species to be plotted: [0,n_kinetic-1]."
   echo
-  echo "          -moment <value>"
-  echo "          Specify moment to be plotted: [0,3] (default=1)"
+  echo "         -moment <value>"
+  echo "         Specify moment to be plotted: [0,3] (default=1)"
   echo
-  echo "          -w <fraction>"
-  echo "          Fraction of time record to use for average (default=0.8)."
+  echo "         -w <fraction>"
+  echo "         Fraction of time record to use for average (default=0.8)."
   echo
-  echo "          -tmax <float>"
-  echo "          Maximum value of ballooning angle is applicable."
+  echo "         -aw <index>"
+  echo "         Narrow radial average window"
   echo
-  echo "          -plot <type>"
-  echo "          Generate plot of given type."
-  echo "          If this keyword is omitted, data will be listed to the screen."
-  echo "           <type> = freq,"
-  echo "                    zf,"
-  echo "                    phi_n0,"
-  echo "                    gbflux,"
-  echo "                    gbflux_i,"
-  echo "                    gbflux_n,"
-  echo "                    gbflux_exc,"
-  echo "                    gbflux_rt,"
-  echo "                    balloon [use -moment for indexing],"
-  echo "                    fluctuation2d [-moment 0 (n, all species) "
-  echo "                                   -moment 1 (v, all species) "
-  echo "                                   -moment 2 (e, all species) "
-  echo "                                   -moment 3 (all fields)],"
-  echo "                    moment_zero,"
-  echo "                    text          [ASCII GB flux],"
-  echo "                    textdiff      [ASCII GB diff]"
+  echo "         -tmax <float>"
+  echo "         Maximum value of ballooning angle is applicable."
   echo
-  echo "          -ymin <float>"
-  echo "          Minimum value of vertical axis (where applicable)."
+  echo "         -plot <type>"
+  echo "         Generate plot of given type."
+  echo "         If this keyword is omitted, data will be listed to the screen."
+  echo "         <type> = text   (text summary of fluxes)"
+  echo "                  freq   (frequency versus time)"
+  echo "                  ball   (ballooning modes ; use -moment for indexing)"
+  echo "                  zf     (zonal flow potential vs. time)"
+  echo "                  phi    (time-dependent ZF vs. finite-n intensities)"
+  echo "                  flux,"
+  echo "                  flux_i,"
+  echo "                  flux_n,"
+  echo "                  flux_exc,"
+  echo "                  flux_rt,"
+  echo "                  hmom,"
+  echo "                  dprof,"
+  echo "                  fluctuation2d [-moment 0 (n, all species) "
+  echo "                                 -moment 1 (v, all species) "
+  echo "                                 -moment 2 (e, all species) "
+  echo "                                 -moment 3 (all fields)]"
   echo
-  echo "          -ymax <float>"
-  echo "          Maximum value of vertical axis (where applicable)."
+  echo "         -ymin <float>"
+  echo "         Minimum value of vertical axis (where applicable)."
   echo
-  echo "          -lx <length>"
-  echo "          Plot width"
+  echo "         -ymax <float>"
+  echo "         Maximum value of vertical axis (where applicable)."
   echo
-  echo "          -ly <length>"
-  echo "          Plot height"
+  echo "         -lx <length>"
+  echo "         Plot width"
   echo
-  echo "          -title <mult>"
-  echo "          Plot title"
+  echo "         -ly <length>"
+  echo "         Plot height"
   echo
-  echo "          -x1 <val>"
-  echo "          Min x to shade"
-  echo
-  echo "          -x2 <val>"
-  echo "          Max x to shade"
+  echo "         -fontsize <float>"
+  echo "         Font size (default 18)."
   echo
   echo "Example:"
   echo
@@ -103,20 +100,20 @@ fi
 LOCDIR=.
 SIMROOT=$PWD
 PLOT_TYPE=gbflux
-I_KINETIC=0
-I_FIELD="s"
-I_MOMENT=0
-WINDOW=0.5
-FTYPE=screen
-DATAFILE=none
+SPECIES=0
+FIELD="s"
+MOMENT=1
+W=0.5
+EXT=screen
 TMAX=-1.0
+
+FONTSIZE=18
 LX=12
 LY=6
-TITLE=null
+AW=0
+
 YMIN=0.0
 YMAX=auto
-X1=-1.0
-X2=-1.0
 #==============================================================================
 
 #==============================================================================
@@ -131,31 +128,26 @@ while [ $# -gt 0 ] ; do
 
   -p) shift ; SIMROOT=$1 ;;
 
-  -kinetic) shift ; I_KINETIC=$1 ;;
+  -species) shift ; SPECIES=$1 ;;
 
-  -field) shift ; I_FIELD=$1 ;;
+  -field) shift ; FIELD=$1 ;;
 
-  -moment) shift ; I_MOMENT=$1 ;;
+  -moment) shift ; MOMENT=$1 ;;
 
-  -w) shift ; WINDOW=$1 ;;
+  -w) shift ; W=$1 ;;
+  -aw) shift ; AW=$1 ;;
 
   -tmax) shift ; TMAX=$1 ;;
 
-  -ext) shift ; FTYPE=$1 ;;
- 
-  -dat) shift ; DATAFILE=$1 ;;
+  -ext) shift ; EXT=$1 ;;
   
   -lx) shift ; LX=$1 ;;
   -ly) shift ; LY=$1 ;;
-
-  -title) shift ; TITLE=$1 ;;
+  -fontsize) shift ; FONTSIZE=$1 ;;
 
   -ymin) shift ; YMIN=$1 ;;
   -ymax) shift ; YMAX=$1 ;;
 
-  -x1) shift ; X1=$1 ;;
-  -x2) shift ; X2=$1 ;;
-  
   *) echo "ERROR: incorrect gyro_plot syntax." ; exit 1 ;;
 
   esac
@@ -174,50 +166,48 @@ cd $SIMDIR
 PYROOT=$GACODE_ROOT/python/gyro
 
 #==============================================================================
-PLT=$PYROOT/data_plot_single.py
+PLT="$PYROOT/data_plot_single.py $FONTSIZE $LX $LY"
 
 case "$PLOT_TYPE" in
 
    text)
-        python $PYROOT/text_flux.py $SIMDIR $I_FIELD $I_MOMENT $WINDOW ;;
-
-   textdiff)
-        python $PYROOT/text_diff.py $SIMDIR $I_FIELD $I_MOMENT $WINDOW ;;
-
-   moment_zero)
-	python $PLT $PLOT_TYPE $SIMDIR $I_MOMENT $WINDOW $FTYPE $DATAFILE ;;
-
-   fluctuation2d)
-	python $PYROOT/fluctuation2d.py $SIMDIR $I_MOMENT $FTYPE $DATAFILE ;;
+        python $PYROOT/text_flux.py $W $FIELD $MOMENT ;;
 
    freq)
-	python $PLT $PLOT_TYPE $WINDOW $FTYPE ;;
+	python $PLT $PLOT_TYPE $W $EXT ;;
+
+   ball)
+        python $PLT $PLOT_TYPE $MOMENT $EXT $TMAX ;;
 
    zf)
-	python $PLT $PLOT_TYPE $SIMDIR $WINDOW $FTYPE ;;
+	python $PLT $PLOT_TYPE $W $EXT ;;
 
-   phi_n0)
-	python $PLT  $PLOT_TYPE $SIMDIR $LX $LY $YMAX $X1 $X2 $FTYPE ;;
+   phi)
+	python $PLT $PLOT_TYPE $YMAX $EXT ;;
 
-   gbflux)
-       python $PLT $PLOT_TYPE $SIMDIR $I_FIELD $I_MOMENT $WINDOW \
-	      $LX $LY $TITLE $YMIN $YMAX $X1 $X2 $FTYPE;;
+   hmom)
+	python $PLT $PLOT_TYPE $W $SPECIES $MOMENT $EXT ;;
 
-   gbflux_i)
-        python $PLT $PLOT_TYPE $SIMDIR $I_FIELD $I_MOMENT $WINDOW \
-              $YMIN $YMAX $FTYPE ;;
+   dprof)
+	python $PLT $PLOT_TYPE $W $SPECIES $MOMENT $YMIN $YMAX $EXT ;;
 
-   gbflux_n)
-        python $PLT $PLOT_TYPE $SIMDIR $I_FIELD $I_MOMENT $WINDOW $DATAFILE $FTYPE ;;
+   flux)
+        python $PLT $PLOT_TYPE $W $FIELD $MOMENT $YMIN $YMAX $EXT ;;
 
-   gbflux_rt)
-        python $PLT $PLOT_TYPE $SIMDIR $I_FIELD $I_MOMENT $WINDOW $FTYPE ;;
+   flux_i)
+        python $PLT $PLOT_TYPE $W $AW $FIELD $MOMENT $YMIN $YMAX $EXT ;;
 
-   gbflux_exc)
-        python $PLT $PLOT_TYPE $SIMDIR $WINDOW $FTYPE ;;
+   flux_n)
+        python $PLT $PLOT_TYPE $W $FIELD $MOMENT $YMIN $YMAX $EXT ;;
 
-   balloon)
-        python $PLT $PLOT_TYPE $SIMDIR $I_MOMENT $FTYPE $TMAX ;;
+   flux_exc)
+        python $PLT $PLOT_TYPE $W $EXT ;;
+
+   flux_rt)
+        python $PLT $PLOT_TYPE $W $FIELD $MOMENT $EXT ;;
+
+   fluctuation2d)
+	python $PYROOT/fluctuation2d.py $MOMENT $EXT ;;
 
    *)
         echo 'ERROR: (gyro_plot) Unrecognized argument to -plot.' ;;

@@ -18,7 +18,7 @@ subroutine tgyro_write_data(i_print)
 
   implicit none
 
-  integer :: i
+  integer :: i,i_exp
   integer :: ip
   integer :: i_print
   integer :: is,i_ion
@@ -60,14 +60,23 @@ subroutine tgyro_write_data(i_print)
 
      call tgyro_profile_reintegrate
 
+     ! First, hose the original profiles 
+     EXPRO_ni = 0.0
+     EXPRO_ti = 0.0
+
      EXPRO_ptot = ptot_exp
      EXPRO_ne   = exp_ne*1e-13
      EXPRO_te   = exp_te*1e-3
+    
      EXPRO_ni(1:loc_n_ion,:) = exp_ni(1:loc_n_ion,:)*1e-13
      EXPRO_ti(1:loc_n_ion,:) = exp_ti(1:loc_n_ion,:)*1e-3
      EXPRO_w0   = exp_w0
      EXPRO_ptot = ptot_exp ! already in Pa
-
+     do i_exp=1,EXPRO_n_exp
+        EXPRO_z_eff(i_exp) = sum(exp_ni(1:loc_n_ion,i_exp)*zi_vec(1:loc_n_ion)**2)/&
+             sum(exp_ni(1:loc_n_ion,i_exp)*zi_vec(1:loc_n_ion))
+     enddo
+  
      if (i_proc_global == 0) then
 
         call date_and_time(DATE=date_str,TIME=time_str)
@@ -157,10 +166,8 @@ subroutine tgyro_write_data(i_print)
            close(1)
         enddo
 
-        if (tgyro_ped_model > 1) then
-           open(unit=1,file='out.tgyro.ped',status='replace')
-           close(1)
-        endif
+        open(unit=1,file='out.tgyro.ped',status='replace')
+        close(1)
 
         open(unit=1,file='out.tgyro.control',status='replace')
         write(1,*) n_r

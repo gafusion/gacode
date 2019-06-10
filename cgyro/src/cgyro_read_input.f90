@@ -61,7 +61,7 @@ subroutine cgyro_read_input
   call cgyro_readbc_real(lambda_star)
   call cgyro_readbc_int(h_print_flag)
   call cgyro_readbc_int(moment_print_flag)
-  call cgyro_readbc_int(kxkyflux_print_flag)
+  call cgyro_readbc_int(gflux_print_flag)
   call cgyro_readbc_int(field_print_flag)
   call cgyro_readbc_real(amp0)
   call cgyro_readbc_real(amp)

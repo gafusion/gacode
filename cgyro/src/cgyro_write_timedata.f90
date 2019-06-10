@@ -38,24 +38,22 @@ subroutine cgyro_write_timedata
   ! ky flux for all species with field breakdown
   call cgyro_write_distributed_breal(&
        trim(path)//binfile_ky_flux,&
-       size(fflux(:,:,:)),&
-       fflux(:,:,:))
+       size(gflux(0,:,:,:)),&
+       real(gflux(0,:,:,:)))
 
-  if (nonlinear_flag == 1 .and. kxkyflux_print_flag == 1) then
-     ! kxky energy flux for all species
-     call cgyro_write_distributed_breal(&
-          trim(path)//binfile_kxky_flux,&
-          size(flux(:,:)),&
-          flux(:,:))
-  endif
+  ! central ky flux for all species with field breakdown
+  call cgyro_write_distributed_breal(&
+       trim(path)//binfile_ky_cflux,&
+       size(cflux(:,:,:)),&
+       cflux(:,:,:))
 
-  if (n_global > 0) then
+  if (gflux_print_flag == 1) then
      ! Global (n,e,v) fluxes for all species
      do i_moment=1,3
         call cgyro_write_distributed_bcomplex(&
              trim(path)//binfile_lky_flux(i_moment),&
-             size(gflux(:,:,i_moment)),&
-             gflux(:,:,i_moment))
+             size(gflux(:,:,i_moment,:)),&
+             gflux(:,:,i_moment,:))
      enddo
   endif
 
@@ -95,7 +93,7 @@ subroutine cgyro_write_timedata
   ! Checksum for regression testing
   ! Note that checksum is a distributed real scalar
   if (zf_test_mode == 0) then
-     call write_precision(trim(path)//runfile_prec,sum(abs(fflux)))
+     call write_precision(trim(path)//runfile_prec,sum(abs(real(gflux(0,:,:,:)))))
   else
      call write_precision(trim(path)//runfile_prec,sum(abs(field)))
   endif

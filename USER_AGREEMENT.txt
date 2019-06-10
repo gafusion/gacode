@@ -1,0 +1,27 @@
+GACODE User Agreement
+ Initial version (2013.07.02) 
+ Updated version (2018.11.06)
+
+GACODE development is funded by the US Department of Energy (DoE), 
+and distribution is subject to DoE requirements and restrictions.
+
+By cloning, downloading or otherwise using the sources, the recipient
+agrees:
+
+1. The above copyright notice, this list of conditions and the
+   following disclaimer shall be included in all copies or substantial
+   portions of the Software.
+
+2. To compile/use the Software source code AS IS for publication
+   purposes; users however are welcome to request changes, to make
+   code modifications for testing purposes, or issue pull requests.
+
+3. If the authorized user’s copy of Software is made available to third
+   parties, to ensure that the user agreement is followed by the third
+   parties.
+
+4. To email a draft of any article/letter/note based on the Software
+   use to gacode@fusion.gat.com
+
+5. To include in published results or presentations the code name(s)
+   and appropriate references (gafusion.github.io/doc/download.html)

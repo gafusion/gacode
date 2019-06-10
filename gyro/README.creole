@@ -1,3 +1,0 @@
-== GYRO == 
-
-Here is where the text for the GYRO README goes.

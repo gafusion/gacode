@@ -15,6 +15,7 @@ subroutine tglf_read_input
 
   open(unit=1,file=trim(tglf_path_in)//'input.tglf.gen',status='old')
 
+  read(1,*) tglf_units_in
   read(1,*) tglf_use_transport_model_in
   read(1,*) tglf_geometry_flag_in
   read(1,*) tglf_write_wavefunction_flag_in

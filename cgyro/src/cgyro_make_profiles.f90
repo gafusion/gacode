@@ -121,10 +121,10 @@ subroutine cgyro_make_profiles
      dens(1:n_species) = dens_loc(1:n_species)     
      temp(1:n_species) = temp_loc(1:n_species)     
      dlnndr(1:n_species) = dlnndr_loc(1:n_species)     
-     dlntdr(1:n_species) = dlntdr_loc(1:n_species)     
+     dlntdr(1:n_species) = dlntdr_loc(1:n_species)
      sdlnndr(1:n_species) = sdlnndr_loc(1:n_species)     
      sdlntdr(1:n_species) = sdlntdr_loc(1:n_species)     
-
+     
      dens_ele = dens_loc(is_ele)
      temp_ele = temp_loc(is_ele)
      mass_ele = mass(is_ele)
@@ -381,7 +381,12 @@ subroutine cgyro_make_profiles
 
   if (profile_shear_flag == 1) then
      call cgyro_info('Profile shear: Continuous wavenumber advection') 
+  else
+     sdlnndr(1:n_species) = 0.0
+     sdlntdr(1:n_species) = 0.0
   endif
+
+
   !------------------------------------------------------------------------
 
   lambda_debye = lambda_star*rho

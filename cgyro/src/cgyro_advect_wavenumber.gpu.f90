@@ -34,11 +34,9 @@ subroutine cgyro_advect_wavenumber(ij)
        ! Wavenumber advection ExB shear
 
        if (shear_method == 2) then
-         !ic_c(ir,j) = j + (ir-1)*n_theta
 
 !$acc loop seq
          do ir=1,n_radial
-           !icc =ic_c(ir,1)-1
            icc = (ir-1)*n_theta
 !$acc loop vector private(j)
            do j=1,n_theta
@@ -48,7 +46,6 @@ subroutine cgyro_advect_wavenumber(ij)
 
 !$acc loop seq
          do ir=1,n_radial
-           !icc =ic_c(ir,1)-1
            icc = (ir-1)*n_theta
 !$acc loop seq
            do l=1,n_wave
@@ -64,10 +61,8 @@ subroutine cgyro_advect_wavenumber(ij)
        ! Wavenumber advection profile shear
 
        if (profile_shear_flag == 1) then
-         !ic_c(ir,j) = j + (ir-1)*n_theta
  
          do ir=1,n_radial
-           !icc =ic_c(ir,1)-1
            icc = (ir-1)*n_theta
 !$acc loop vector private(j)
            do j=1,n_theta
@@ -77,7 +72,6 @@ subroutine cgyro_advect_wavenumber(ij)
 
 !$acc loop seq
          do ir=1,n_radial
-           !icc =ic_c(ir,1)-1
            icc = (ir-1)*n_theta
 !$acc loop seq
            do l=1,n_wave
@@ -97,8 +91,6 @@ subroutine cgyro_advect_wavenumber(ij)
 
          irm = -1+1+n_radial/2
          irp = irm+2
-         !irmc = ic_c(irm,j)-1
-         !irpc = ic_c(irp,j)-1
          irmc = (irm-1)*n_theta
          irpc = irmc + 2*n_theta
 

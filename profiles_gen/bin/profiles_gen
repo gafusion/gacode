@@ -622,6 +622,7 @@ then
   echo $LOC_PSI >> input.locpargen
   echo $HASGEO >> input.locpargen
   $LOCPARGEN
+  python ${PRGEN_BIN}/banana_width.py
   rm input.locpargen
   if [ $PLOT_FLAG -eq 1 ]
   then

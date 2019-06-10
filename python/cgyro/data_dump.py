@@ -33,6 +33,8 @@ class cgyrodata_dump(data.cgyrodata):
             ttag = 'Pi'
             ftag = 'flux_v'
             y = ys[:,2,:]
+         else:
+            raise ValueError('(dump_flux.py) Invalid moment.')
 
          data  = np.column_stack((self.t,y[0,:]))
          head  = '(cs/a) t     '+ttag+'_1/'+ttag+'_GB'
@@ -41,9 +43,9 @@ class cgyrodata_dump(data.cgyrodata):
             head = head+'       '+ttag+'_'+str(ispec+1)+'/'+ttag+'_GB'
             data = np.column_stack((data,y[ispec,:]))
          np.savetxt(fname,data,fmt='%.8e',header=head)
-         print 'INFO: (dump_flux) Created '+fname
+         print('INFO: (dump_flux) Created '+fname)
 
-   def dump_ky_flux(self,w=0.5,field=0,moment='e',fc=0,fig=None):
+   def dump_ky_flux(self,w=0.5,wmax=0.0,field=0,moment='e',fc=0,fig=None):
 
       self.getflux()
       ns = self.n_species
@@ -84,11 +86,10 @@ class cgyrodata_dump(data.cgyrodata):
          ftag = 'flux_v'
          y = ys[:,2,:,:]
       else:
-         print 'ERROR (dump_ky_flux) Invalid moment.'
-         sys.exit()
+         raise ValueError('(dump_ky_flux.py) Invalid moment.')
 
       # Determine tmin
-      imin=iwindow(t,w)
+      imin,imax=iwindow(t,w,wmax)
 
       fname = 'out.cgyro.ky_flux.'+ftag
       
@@ -97,15 +98,15 @@ class cgyrodata_dump(data.cgyrodata):
       stag = '# (k_y rho_s'
       for ispec in range(ns):
          for j in range(self.n_n):
-            ave = average(y[ispec,j,:],self.t,w)
+            ave = average(y[ispec,j,:],self.t,w,wmax)
             arr[j,ispec+1] = ave
          stag = stag+' , s'+str(ispec)
             
       fid = open(fname,'w')
       fid.write('# Moment  : '+mtag+'\n')
-      fid.write('# Time    : '+str(self.t[imin])+' < (c_s/a) t < '+str(self.t[-1])+'\n')
+      fid.write('# Time    : '+str(self.t[imin])+' < (c_s/a) t < '+str(self.t[imax])+'\n')
       fid.write(stag+')\n')
       np.savetxt(fid,arr,fmt='%.5e')
       fid.close()
 
-      print 'INFO: (dump_ky_flux) Created '+fname
+      print('INFO: (dump_ky_flux) Created '+fname)

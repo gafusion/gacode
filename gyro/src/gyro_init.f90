@@ -82,6 +82,8 @@ subroutine gyro_init(path_in, mpi_comm_in)
      mu_vec(0:10)           = 0.0
      dlnndr_vec(0:10)       = 0.0
      dlntdr_vec(0:10)       = 0.0
+     sdlnndr_vec(0:10)      = 0.0
+     sdlntdr_vec(0:10)      = 0.0
      n_vec(0:10)            = 0.0
      t_vec(0:10)            = 0.0
      eps_dlnndr_vec(0:10)   = 0.0

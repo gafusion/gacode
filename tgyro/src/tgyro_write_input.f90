@@ -6,7 +6,7 @@ subroutine tgyro_write_input
   implicit none
 
   integer :: i_ion,is
-  character(len=7) :: ttext
+  character(len=20) :: ttext
   character(len=1) :: itag
 
   !----------------------------------------------------------------
@@ -21,9 +21,9 @@ subroutine tgyro_write_input
   !
   ! - Advanced iteration methods cannot do zero iterations:
   !
-  if (tgyro_iteration_method >= 4 .and. tgyro_relax_iterations == 0) then
+  if (tgyro_iteration_method /= 1 .and. tgyro_relax_iterations == 0) then
      error_flag = 1
-     error_msg = 'ERROR: (TGYRO) TGYRO_ITERATION_METHOD > 4 requires TGYRO_RELAX_ITERATIONS > 0.'
+     error_msg = 'ERROR: (TGYRO) TGYRO_ITERATION_METHOD /= 4 requires TGYRO_RELAX_ITERATIONS > 0.'
   endif
   !
   ! - Need rotation physics to evolve Er
@@ -90,6 +90,10 @@ subroutine tgyro_write_input
 
         write(1,10) 'TGYRO_ITERATION_METHOD','Local Residual Minimization (original scheme)'
 
+     case (2)
+
+        write(1,10) 'TGYRO_ITERATION_METHOD','Modified diagonal relaxation'
+
      case (4)
 
         write(1,10) 'TGYRO_ITERATION_METHOD','Block method (serial)'
@@ -100,7 +104,7 @@ subroutine tgyro_write_input
 
      case (6)
 
-        write(1,10) 'TGYRO_ITERATION_METHOD','Simple Relax (*IN DEVELOPMENT*)'
+        write(1,10) 'TGYRO_ITERATION_METHOD','Simple diagonal relaxation'
 
      case default
 
@@ -112,10 +116,6 @@ subroutine tgyro_write_input
      !--------------------------------------------------------
      select case (loc_residual_method)
 
-     case (1)
-
-        write(1,10) 'LOC_RESIDUAL_METHOD','(f-g)^2/(f^2+g^2)'
-
      case (2)
 
         write(1,10) 'LOC_RESIDUAL_METHOD','abs(f-g)'
@@ -123,10 +123,6 @@ subroutine tgyro_write_input
      case (3)
 
         write(1,10) 'LOC_RESIDUAL_METHOD','(f-g)^2'
-
-     case (4)
-
-        write(1,10) 'LOC_RESIDUAL_METHOD','(f-g)^2/MAX(1,(f^2+g^2))'
 
      case default
 
@@ -221,31 +217,27 @@ subroutine tgyro_write_input
      !--------------------------------------------------------
 
      !--------------------------------------------------------
-     select case (loc_neo_method)
+     select case (tgyro_neo_method)
+
+     case (0)
+
+        write(1,10) 'TGYRO_NEO_METHOD','(0) Zero neoclassical flux'
 
      case (1)
 
-        if (loc_chang_hinton == 1) then
-           write(1,10) 'LOC_NEO_METHOD','Hinton-Hazeltine theory with Chang-Hinton Qi (ignores impurities)'
-        else
-           write(1,10) 'LOC_NEO_METHOD','Hinton-Hazeltine theory (ignores impurities)'
-        endif
+        write(1,10) 'TGYRO_NEO_METHOD','(1) Hirshman-Sigmar theory for all species'
 
      case (2)
 
-        write(1,10) 'LOC_NEO_METHOD','NEO code'
+        write(1,10) 'TGYRO_NEO_METHOD','(2) NEO code'
         if (loc_n_ion >= 4) then
-           write(1,10) 'INFO: (tgyro) Using reduced energy resolution to cope with so many ions.'
+           write(1,10) 'INFO: (tgyro) Using reduced energy resolution to cope with so many ions'
         endif
-
-     case (3)
-
-        write(1,10) 'LOC_NEO_METHOD','Hirshman-Sigmar theory for all species.'
 
      case default
 
         error_flag = 1
-        error_msg = 'Error: LOC_NEO_METHOD'
+        error_msg = 'Error: TGYRO_NEO_METHOD'
 
      end select
      !--------------------------------------------------------
@@ -511,11 +503,10 @@ subroutine tgyro_write_input
         else
            ttext = 'fast'
         endif
-        if (i_ion == 1) then
-           write(1,40) 'ion 1 [mass,charge,type]',mi_vec(i_ion),zi_vec(i_ion),ttext
-        else
-           write(1,40) 'ion '//trim(ion_tag(i_ion))//' [mass,charge,type]',mi_vec(i_ion),zi_vec(i_ion),ttext
+        if (calc_flag(i_ion) == 0) then
+           ttext = trim(ttext)//' passthrough'
         endif
+        write(1,40) 'ion '//trim(ion_tag(i_ion))//' [mass,charge,type]',mi_vec(i_ion),zi_vec(i_ion),ttext
      enddo
      write(1,*) 
      write(1,10) 'INFO: (tgyro)','GyroBohm factors defined by ion 1 mass.'

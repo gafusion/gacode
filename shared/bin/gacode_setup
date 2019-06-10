@@ -32,6 +32,7 @@ fi
 if [ -d $NEURAL_ROOT ]; then
     export NN_LIB='-L$(NEURAL_ROOT) -I$(NEURAL_ROOT) -lbrainfusetf'
     export EPEDNN_MODEL=$NEURAL_ROOT/eped1nn/models/EPED_mb_128_pow_norm_common_30x10.pb
-    export TGLFNN_MODEL=$NEURAL_ROOT/tglfnn/models/nn_SAT0_mb_1024_abs_reg_common_stair2x2x6.pb
+    export TGLFNN_MODEL_2IONS=$NEURAL_ROOT/tglfnn/models/2IONS.pb
+    export TGLFNN_MODEL_3IONS=$NEURAL_ROOT/tglfnn/models/3IONS.pb
     export NEONN_MODEL=$NEURAL_ROOT/neonn/models/NEO_mb_64_common_30.pb
 fi

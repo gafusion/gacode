@@ -167,7 +167,7 @@ class profiles_genData:
     # ---------------------------------------------------------------------------#
     # Methods
 
-    def __init__(self, infile):
+    def __init__(self, infile,verbose=True):
         """
         Constructor reads in data from directory and creates new object.
         """
@@ -186,7 +186,8 @@ class profiles_genData:
             tmp = profiles_gen(infile)
             self.data.update(tmp.data)
             self.n_exp = tmp.n_exp
-            print('(INFO): (profiles_genData) ' + infile + ' found.')
+            if verbose:
+                print('(INFO): (profiles_genData) ' + infile + ' found.')
         except Exception as E:
             #raise (IOError('(ERROR): (profiles_genData) ' + infile + ' not found: ' + str(E)))
            pass

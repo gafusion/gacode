@@ -352,8 +352,15 @@ subroutine tgyro_init_profiles
   call cub_spline(EXPRO_rmin(:)/r_min,EXPRO_pow_i_aux(:)*1e13,n_exp,r,p_i_aux_in,n_r)
 
   ! Apply auxiliary power rescale
-  p_e_in = tgyro_input_paux_scale*p_e_aux_in + (p_e_in-p_e_aux_in)
-  p_i_in = tgyro_input_paux_scale*p_i_aux_in + (p_i_in-p_i_aux_in)
+  ! 1. subtract off
+  p_e_in = p_e_in-p_e_aux_in
+  p_i_in = p_i_in-p_i_aux_in
+  ! 2. Rescale
+  p_e_aux_in = tgyro_input_paux_scale*p_e_aux_in
+  p_i_aux_in = tgyro_input_paux_scale*p_i_aux_in 
+  ! 3. Add back in
+  p_e_in = p_e_in + p_e_aux_in 
+  p_i_in = p_i_in + p_i_aux_in
   !
   ! (2) Particle flow -- convert to 1/s from MW/keV
   !
@@ -468,9 +475,9 @@ subroutine tgyro_init_profiles
      ! betan [%] = betat/In*100 where In = Ip/(a Bt) 
      betan_in = abs(( p_ave/(0.5*bt_in**2/mu_0) ) / ( ip_in/(a_in*bt_in) ) * 100.0)
      ! Triangularity [-]
-     delta_in = EXPRO_delta(n_exp-3)  
+     delta_in = EXPRO_delta(n_exp)
      ! Elongation [-]
-     kappa_in = EXPRO_kappa(n_exp-3) 
+     kappa_in = EXPRO_kappa(n_exp)
      ! Main ion mass [mp]
      m_in = mi_vec(1)
      ! R0(a) [m]

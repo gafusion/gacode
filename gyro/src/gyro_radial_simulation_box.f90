@@ -31,8 +31,6 @@ subroutine gyro_radial_simulation_box
   endif
   !------------------------------------------------------
 
-  if (s_grid == 0.0) s_grid = s0
-
   !---------------------------------------------------------
   ! If box_multiplier < 0, recompute d_n and box_multiplier
   ! based on values set by l_x and l_y.
@@ -44,7 +42,7 @@ subroutine gyro_radial_simulation_box
         ! NONLINEAR: use l_x,l_y
 
         rho_star = abs(2*pi*r0/(n_ref*q0*l_y))*(-btccw)
-        box_multiplier = abs(2*pi*s_grid*l_x/l_y)
+        box_multiplier = abs(2*pi*s0*l_x/l_y)
 
      else
 
@@ -61,7 +59,7 @@ subroutine gyro_radial_simulation_box
   !------------------------------------------------------
   ! Set box length (might be reset later)
   !
-  x_length = abs(box_multiplier*r0/(n_ref*q0*s_grid))
+  x_length = abs(box_multiplier*r0/(n_ref*q0*s0))
   !------------------------------------------------------
 
   !------------------------------------------------------
@@ -105,7 +103,7 @@ subroutine gyro_radial_simulation_box
   i2_dx = n_x+m_dx-i_dx
   !
   do i=1,n_x
-     r(i) = r0-0.5*x_length+d_x*(i-1.0+n_x_offset)
+     r(i) = r0-0.5*x_length+d_x*(i-1.0)
   enddo
   !
   ! Check for legal box size
@@ -115,7 +113,7 @@ subroutine gyro_radial_simulation_box
         x_length = x_length/10.0
         d_x = x_length/n_x
         do i=1,n_x
-           r(i) = r0-0.5*x_length+d_x*(i-1.0+n_x_offset)
+           r(i) = r0-0.5*x_length+d_x*(i-1.0)
         enddo
         call send_message('INFO: (GYRO) Shrinking domain by factor 10 avoid domain-size error.')
      else
@@ -128,8 +126,7 @@ subroutine gyro_radial_simulation_box
   ! Initialize r to the uniform grid.  This will 
   ! change if nonuniform_grid_flag > 0
   !
-  r_e(:)     = r(:)
-  dr_eodr(:) = 1.0
+  r_e(:) = r(:)
   !----------------------------------------------
 
   if (debug_flag == 1 .and. i_proc == 0) then

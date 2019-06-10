@@ -25,14 +25,13 @@ subroutine cgyro_write_initdata
 
      open(unit=io,file=trim(path)//runfile_info,status='old',position='append')
 
-
      write(io,*)
      write(io,'(a)') ' n_theta | n_species | n_energy | n_xi '
      write(io,'(t4,i3,t16,i1,t26,i2,t36,i2)') n_theta,n_species,n_energy,n_xi
      if (test_flag == 0) then
         write(io,*) 
         write(io,'(a)') ' nc_loc | nv_loc | nsplit | n_MPI | n_OMP'
-        write(io,'(t3,i4,t12,i4,t21,i4,t29,i4,t36,i4)') nc_loc,nv_loc,nsplit,n_proc,n_omp
+        write(io,'(t3,i4,t12,i4,t21,i4,t29,i5,t36,i3)') nc_loc,nv_loc,nsplit,n_proc,n_omp
      endif
 
      if (zf_test_mode == 0) then
@@ -115,7 +114,7 @@ subroutine cgyro_write_initdata
 
      if (profile_model == 2) then
         write(io,*)
-        write(io,10) '           a[m]:',a_meters, '  b_unit[T]:',b_unit
+        write(io,10) '           a[m]:',a_meters, '  b_unit[T]:',b_unit,  '     rhos/a:', rhos/a_meters
         write(io,10) 'n_norm[e19/m^3]:',dens_norm,'v_norm[m/s]:',vth_norm,'T_norm[keV]:',temp_norm
      endif
      write(io,*)

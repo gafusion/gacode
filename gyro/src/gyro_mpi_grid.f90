@@ -15,7 +15,6 @@ subroutine gyro_mpi_grid
   implicit none
   !
   integer, external :: parallel_dim
-  integer :: i_group_mumps
   integer :: splitkey
   !----------------------------------------
 
@@ -93,22 +92,6 @@ subroutine gyro_mpi_grid
      print '(t2,a,2(i3,1x))','i_proc,i_group_1 : ',i_proc,i_group_1
      print *,'----------------------------------------'
   endif
-
-  !--------------------------------------------------------------
-  ! Create MUMPS_COMM if using MUMPS:
-  !
-  if (sparse_method == 2) then
-     i_group_mumps = i_group_2/(min(n_proc_1,n_mumps_max))
-     call MPI_COMM_SPLIT(NEW_COMM_1,&
-          i_group_mumps,& 
-          i_proc_1,&
-          MUMPS_COMM, &
-          i_err)
-     if (i_err /= 0) then
-        call CATCH_ERROR('ERROR: (GYRO) MUMPS_COMM not created')
-     endif
-  endif
-  !--------------------------------------------------------------  
 
   if (debug_flag == 1 .and. i_proc == 0) then
      print *,'[gyro_mpi_grid done]'

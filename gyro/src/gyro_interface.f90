@@ -49,7 +49,6 @@ module gyro_interface
   integer :: gyro_radial_gyro_band_in = 3
   integer :: gyro_explicit_damp_grid_in = 8
   real    :: gyro_explicit_damp_in = 1.0
-  real    :: gyro_explicit_damp_elec_in = 1.0
   integer :: gyro_debug_flag_in = 0
   integer :: gyro_nonlinear_flag_in = 0
   real    :: gyro_amp_phi_n_in = 1.0e-4
@@ -66,17 +65,12 @@ module gyro_interface
   real    :: gyro_betae_unit_in = 0.0
   real    :: gyro_ampere_scale_in = 1.0
   integer :: gyro_n_field_in = 1
-  integer :: gyro_source_flag_in = 0
+  integer :: gyro_source_method_in = 1
   real    :: gyro_nu_source_in = 0.1
   integer :: gyro_verbose_flag_in = 0
-  integer :: gyro_nonuniform_grid_flag_in = 0
-  real    :: gyro_s_grid_in = 0.0
-  real    :: gyro_gamma_e_in = 0.0
   real    :: gyro_nu_ei_in = 0.0
   real    :: gyro_nu_ei_scale_in = 1.0
   real    :: gyro_nu_ii_scale_in = 0.0
-  real    :: gyro_nu_i_krook_in = 0.0
-  real    :: gyro_plot_filter_in = 1.0
   integer :: gyro_n_source_in = 1
   integer :: gyro_flat_profile_flag_in = 0
   integer :: gyro_density_method_in = 1
@@ -133,41 +127,29 @@ module gyro_interface
   real    :: gyro_orbit_upwind_4_in = 1.0
   real    :: gyro_orbit_upwind_5_in = 1.0
   real    :: gyro_orbit_upwind_electron_in = 1.0
-  real    :: gyro_pgamma_in = 0.0
-  real    :: gyro_pgamma_scale_in = 1.0
+  real    :: gyro_gamma_e_in = 0.0
+  real    :: gyro_gamma_e_scale_in = 1.0
+  real    :: gyro_gamma_p_in = 0.0
+  real    :: gyro_gamma_p_scale_in = 1.0
   real    :: gyro_mach_in = 0.0
   real    :: gyro_mach_scale_in = 1.0
   integer :: gyro_lindiff_method_in = 1
-  integer :: gyro_trapdiff_flag_in = 0
   integer :: gyro_restart_new_flag_in = 1
   integer :: gyro_restart_data_skip_in = 10
-  integer :: gyro_kill_i_parallel_flag_in = 0
-  integer :: gyro_kill_i_drift_flag_in = 0
-  integer :: gyro_kill_e_drift_flag_in = 0
   integer :: gyro_kill_coll_flag_in = 1
-  real    :: gyro_doppler_scale_in = 1.0
   integer :: gyro_nl_method_in = 1
   integer :: gyro_kill_gyro_b_flag_in = 0
-  integer :: gyro_velocity_output_flag_in = 0
-  real    :: gyro_q_scale_in = 1.0
   integer :: gyro_dist_print_flag_in = 0
-  integer :: gyro_nint_orb_s_in = 64
-  integer :: gyro_nint_orb_do_in = 10
   integer :: gyro_udsymmetry_flag_in = 1
   integer :: gyro_gyro_method_in = 1
-  integer :: gyro_sparse_method_in = 1
-  integer :: gyro_n_mumps_max_in = 1
-  integer :: gyro_n_study_in = 0
-  real    :: gyro_amp_phi_study_in = 0.0
   real    :: gyro_lambda_debye_scale_in = 0.0
   real    :: gyro_lambda_debye_in = 0.0
-  integer :: gyro_radial_grid_offset_in = 0
   integer :: gyro_theta_mult_in = 1
   integer :: gyro_silent_flag_in = 0
-  integer :: gyro_nonlinear_transfer_flag_in = 0
   real    :: gyro_l_x_in = 64.0
   real    :: gyro_l_y_in = 64.0
   integer :: gyro_entropy_flag_in = 0
+  integer :: gyro_extra_print_flag_in = 0
   integer :: gyro_ord_rbf_in = 3
   integer :: gyro_num_equil_flag_in = 0
   real    :: gyro_zmag_in = 0.0
@@ -180,8 +162,6 @@ module gyro_interface
   real    :: gyro_geo_betaprime_scale_in = 1.0
   integer :: gyro_poisson_z_eff_flag_in = 1
   integer :: gyro_z_eff_method_in = 1
-  integer :: gyro_truncation_method_in = 1
-  real    :: gyro_fluxaverage_window_in = 0.9
   integer :: gyro_gkeigen_proc_mult_in = 1
   integer :: gyro_gkeigen_method_in = 1
   integer :: gyro_gkeigen_matrixonly_in = 0
@@ -197,10 +177,8 @@ module gyro_interface
   real    :: gyro_fieldeigen_wr_in = -0.3
   real    :: gyro_fieldeigen_wi_in = 0.2
   real    :: gyro_fieldeigen_tol_in = 1e-6
-  integer :: gyro_reintegrate_flag_in = 0
   integer :: gyro_ic_method_in = 1
   integer :: gyro_zf_test_flag_in = 0
-  integer :: gyro_lock_ti_flag_in = 0
 
   ! Inputs available via interface but not by INPUT
   integer :: gyro_n_fourier_geo_in = 0
@@ -267,7 +245,6 @@ contains
     gyro_radial_gyro_band_in = m_gyro
     gyro_explicit_damp_grid_in = n_explicit_damp
     gyro_explicit_damp_in = explicit_damp
-    gyro_explicit_damp_elec_in = explicit_damp_elec
     gyro_debug_flag_in = debug_flag
     gyro_nonlinear_flag_in = nonlinear_flag
     gyro_amp_phi_n_in = amp_n
@@ -284,17 +261,12 @@ contains
     gyro_betae_unit_in = betae_unit
     gyro_ampere_scale_in = ampere_scale
     gyro_n_field_in = n_field
-    gyro_source_flag_in = source_flag
+    gyro_source_method_in = source_method
     gyro_nu_source_in = nu_source
     gyro_verbose_flag_in = verbose_flag
-    gyro_nonuniform_grid_flag_in = nonuniform_grid_flag
-    gyro_s_grid_in = s_grid
-    gyro_gamma_e_in = gamma_e
     gyro_nu_ei_in = nu_ei
     gyro_nu_ei_scale_in = nu_ei_scale
     gyro_nu_ii_scale_in = nu_ii_scale
-    gyro_nu_i_krook_in = nu_i_krook
-    gyro_plot_filter_in = plot_filter
     gyro_n_source_in = n_source
     gyro_flat_profile_flag_in = flat_profile_flag
     gyro_density_method_in = density_method
@@ -351,41 +323,29 @@ contains
     gyro_orbit_upwind_4_in = orbit_upwind_vec(4)
     gyro_orbit_upwind_5_in = orbit_upwind_vec(5)
     gyro_orbit_upwind_electron_in = orbit_upwind_vec(0)
-    gyro_pgamma_in = pgamma0
-    gyro_pgamma_scale_in = pgamma0_scale
-    gyro_mach_in = mach0
-    gyro_mach_scale_in = mach0_scale
+    gyro_gamma_e_in = gamma_e
+    gyro_gamma_e_scale_in = gamma_e_scale
+    gyro_gamma_p_in = gamma_p
+    gyro_gamma_p_scale_in = gamma_p_scale
+    gyro_mach_in = mach
+    gyro_mach_scale_in = mach_scale
     gyro_lindiff_method_in = lindiff_method
-    gyro_trapdiff_flag_in = trapdiff_flag
     gyro_restart_new_flag_in = restart_new_flag
     gyro_restart_data_skip_in = restart_data_skip
-    gyro_kill_i_parallel_flag_in = kill_i_parallel_flag
-    gyro_kill_i_drift_flag_in = kill_i_drift_flag
-    gyro_kill_e_drift_flag_in = kill_e_drift_flag
     gyro_kill_coll_flag_in = kill_coll_flag
-    gyro_doppler_scale_in = doppler_scale
     gyro_nl_method_in = nl_method
     gyro_kill_gyro_b_flag_in = kill_gyro_b_flag
-    gyro_velocity_output_flag_in = velocity_output_flag
-    gyro_q_scale_in = q_scale
     gyro_dist_print_flag_in = dist_print
-    gyro_nint_orb_s_in = nint_ORB_s
-    gyro_nint_orb_do_in = nint_ORB_do
     gyro_udsymmetry_flag_in = udsymmetry_flag
     gyro_gyro_method_in = gyro_method
-    gyro_sparse_method_in = sparse_method
-    gyro_n_mumps_max_in = n_mumps_max
-    gyro_n_study_in = n_study
-    gyro_amp_phi_study_in = amp_study
     gyro_lambda_debye_scale_in = lambda_debye_scale
     gyro_lambda_debye_in = lambda_debye
-    gyro_radial_grid_offset_in = n_x_offset
     gyro_theta_mult_in = n_theta_mult
     gyro_silent_flag_in = silent_flag
-    gyro_nonlinear_transfer_flag_in = nonlinear_transfer_flag
     gyro_l_x_in = l_x
     gyro_l_y_in = l_y
     gyro_entropy_flag_in = entropy_flag
+    gyro_extra_print_flag_in = extra_print_flag
     gyro_ord_rbf_in = ord_rbf
     gyro_num_equil_flag_in = num_equil_flag
     gyro_zmag_in = zmag0
@@ -398,8 +358,6 @@ contains
     gyro_geo_betaprime_scale_in = geo_betaprime_scale
     gyro_poisson_z_eff_flag_in = poisson_z_eff_flag
     gyro_z_eff_method_in = z_eff_method
-    gyro_truncation_method_in = truncation_method
-    gyro_fluxaverage_window_in = fluxaverage_window
     gyro_gkeigen_proc_mult_in = gkeigen_proc_mult
     gyro_gkeigen_method_in = gkeigen_method
     gyro_gkeigen_matrixonly_in = gkeigen_matrixonly
@@ -415,10 +373,8 @@ contains
     gyro_fieldeigen_wr_in = fieldeigen_wr
     gyro_fieldeigen_wi_in = fieldeigen_wi
     gyro_fieldeigen_tol_in = fieldeigen_tol
-    gyro_reintegrate_flag_in = reintegrate_flag
     gyro_ic_method_in = ic_method
     gyro_zf_test_flag_in = zf_test_flag
-    gyro_lock_ti_flag_in = lock_ti_flag
 
     gyro_n_fourier_geo_in = n_fourier_geo
     gyro_a_fourier_geo_in(:,:) = a_fourier_geo(:,:)
@@ -480,7 +436,6 @@ contains
     m_gyro = gyro_radial_gyro_band_in
     n_explicit_damp = gyro_explicit_damp_grid_in
     explicit_damp = gyro_explicit_damp_in
-    explicit_damp_elec = gyro_explicit_damp_elec_in
     debug_flag = gyro_debug_flag_in
     nonlinear_flag = gyro_nonlinear_flag_in
     amp_n = gyro_amp_phi_n_in
@@ -497,17 +452,12 @@ contains
     betae_unit = gyro_betae_unit_in
     ampere_scale = gyro_ampere_scale_in
     n_field = gyro_n_field_in
-    source_flag = gyro_source_flag_in
+    source_method = gyro_source_method_in
     nu_source = gyro_nu_source_in
     verbose_flag = gyro_verbose_flag_in
-    nonuniform_grid_flag = gyro_nonuniform_grid_flag_in
-    s_grid = gyro_s_grid_in
-    gamma_e = gyro_gamma_e_in
     nu_ei = gyro_nu_ei_in
     nu_ei_scale = gyro_nu_ei_scale_in
     nu_ii_scale = gyro_nu_ii_scale_in
-    nu_i_krook = gyro_nu_i_krook_in
-    plot_filter = gyro_plot_filter_in
     n_source = gyro_n_source_in
     flat_profile_flag = gyro_flat_profile_flag_in
     density_method = gyro_density_method_in
@@ -564,41 +514,29 @@ contains
     orbit_upwind_vec(4) = gyro_orbit_upwind_4_in
     orbit_upwind_vec(5) = gyro_orbit_upwind_5_in
     orbit_upwind_vec(0) = gyro_orbit_upwind_electron_in
-    pgamma0 = gyro_pgamma_in
-    pgamma0_scale = gyro_pgamma_scale_in
-    mach0 = gyro_mach_in
-    mach0_scale = gyro_mach_scale_in
+    gamma_e = gyro_gamma_e_in
+    gamma_e_scale = gyro_gamma_e_scale_in
+    gamma_p = gyro_gamma_p_in
+    gamma_p_scale = gyro_gamma_p_scale_in
+    mach = gyro_mach_in
+    mach_scale = gyro_mach_scale_in
     lindiff_method = gyro_lindiff_method_in
-    trapdiff_flag = gyro_trapdiff_flag_in
     restart_new_flag = gyro_restart_new_flag_in
     restart_data_skip = gyro_restart_data_skip_in
-    kill_i_parallel_flag = gyro_kill_i_parallel_flag_in
-    kill_i_drift_flag = gyro_kill_i_drift_flag_in
-    kill_e_drift_flag = gyro_kill_e_drift_flag_in
     kill_coll_flag = gyro_kill_coll_flag_in
-    doppler_scale = gyro_doppler_scale_in
     nl_method = gyro_nl_method_in
     kill_gyro_b_flag = gyro_kill_gyro_b_flag_in
-    velocity_output_flag = gyro_velocity_output_flag_in
-    q_scale = gyro_q_scale_in
     dist_print = gyro_dist_print_flag_in
-    nint_ORB_s = gyro_nint_orb_s_in
-    nint_ORB_do = gyro_nint_orb_do_in
     udsymmetry_flag = gyro_udsymmetry_flag_in
     gyro_method = gyro_gyro_method_in
-    sparse_method = gyro_sparse_method_in
-    n_mumps_max = gyro_n_mumps_max_in
-    n_study = gyro_n_study_in
-    amp_study = gyro_amp_phi_study_in
     lambda_debye_scale = gyro_lambda_debye_scale_in
     lambda_debye = gyro_lambda_debye_in
-    n_x_offset = gyro_radial_grid_offset_in
     n_theta_mult = gyro_theta_mult_in
     silent_flag = gyro_silent_flag_in
-    nonlinear_transfer_flag = gyro_nonlinear_transfer_flag_in
     l_x = gyro_l_x_in
     l_y = gyro_l_y_in
     entropy_flag = gyro_entropy_flag_in
+    extra_print_flag = gyro_extra_print_flag_in
     ord_rbf = gyro_ord_rbf_in
     num_equil_flag = gyro_num_equil_flag_in
     zmag0 = gyro_zmag_in
@@ -611,8 +549,6 @@ contains
     geo_betaprime_scale = gyro_geo_betaprime_scale_in
     poisson_z_eff_flag = gyro_poisson_z_eff_flag_in
     z_eff_method = gyro_z_eff_method_in
-    truncation_method = gyro_truncation_method_in
-    fluxaverage_window = gyro_fluxaverage_window_in
     gkeigen_proc_mult = gyro_gkeigen_proc_mult_in
     gkeigen_method = gyro_gkeigen_method_in
     gkeigen_matrixonly = gyro_gkeigen_matrixonly_in
@@ -628,10 +564,8 @@ contains
     fieldeigen_wr = gyro_fieldeigen_wr_in
     fieldeigen_wi = gyro_fieldeigen_wi_in
     fieldeigen_tol = gyro_fieldeigen_tol_in
-    reintegrate_flag = gyro_reintegrate_flag_in
     ic_method = gyro_ic_method_in
     zf_test_flag = gyro_zf_test_flag_in
-    lock_ti_flag = gyro_lock_ti_flag_in
 
     n_fourier_geo = gyro_n_fourier_geo_in
     a_fourier_geo(:,:) = gyro_a_fourier_geo_in(:,:)
@@ -684,7 +618,6 @@ contains
     write(1,20) 'RADIAL_GYRO_BAND',gyro_radial_gyro_band_in
     write(1,20) 'EXPLICIT_DAMP_GRID',gyro_explicit_damp_grid_in
     write(1,30) 'EXPLICIT_DAMP',gyro_explicit_damp_in
-    write(1,30) 'EXPLICIT_DAMP_ELEC',gyro_explicit_damp_elec_in
     write(1,20) 'DEBUG_FLAG',gyro_debug_flag_in
     write(1,20) 'NONLINEAR_FLAG',gyro_nonlinear_flag_in
     write(1,30) 'AMP_PHI_N',gyro_amp_phi_n_in
@@ -701,17 +634,12 @@ contains
     write(1,30) 'BETAE_UNIT',gyro_betae_unit_in
     write(1,30) 'AMPERE_SCALE',gyro_ampere_scale_in
     write(1,20) 'N_FIELD',gyro_n_field_in
-    write(1,20) 'SOURCE_FLAG',gyro_source_flag_in
+    write(1,20) 'SOURCE_METHOD',gyro_source_method_in
     write(1,30) 'NU_SOURCE',gyro_nu_source_in
     write(1,20) 'VERBOSE_FLAG',gyro_verbose_flag_in
-    write(1,20) 'NONUNIFORM_GRID_FLAG',gyro_nonuniform_grid_flag_in
-    write(1,30) 'S_GRID',gyro_s_grid_in
-    write(1,30) 'GAMMA_E',gyro_gamma_e_in
     write(1,30) 'NU_EI',gyro_nu_ei_in
     write(1,30) 'NU_EI_SCALE',gyro_nu_ei_scale_in
     write(1,30) 'NU_II_SCALE',gyro_nu_ii_scale_in
-    write(1,30) 'NU_I_KROOK',gyro_nu_i_krook_in
-    write(1,30) 'PLOT_FILTER',gyro_plot_filter_in
     write(1,20) 'N_SOURCE',gyro_n_source_in
     write(1,20) 'FLAT_PROFILE_FLAG',gyro_flat_profile_flag_in
     write(1,20) 'DENSITY_METHOD',gyro_density_method_in
@@ -768,41 +696,29 @@ contains
     write(1,30) 'ORBIT_UPWIND_4',gyro_orbit_upwind_4_in
     write(1,30) 'ORBIT_UPWIND_5',gyro_orbit_upwind_5_in
     write(1,30) 'ORBIT_UPWIND_ELECTRON',gyro_orbit_upwind_electron_in
-    write(1,30) 'PGAMMA',gyro_pgamma_in
-    write(1,30) 'PGAMMA_SCALE',gyro_pgamma_scale_in
+    write(1,30) 'GAMMA_E',gyro_gamma_e_in
+    write(1,30) 'GAMMA_E_SCALE',gyro_gamma_e_scale_in
+    write(1,30) 'GAMMA_P',gyro_gamma_p_in
+    write(1,30) 'GAMMA_P_SCALE',gyro_gamma_p_scale_in
     write(1,30) 'MACH',gyro_mach_in
     write(1,30) 'MACH_SCALE',gyro_mach_scale_in
     write(1,20) 'LINDIFF_METHOD',gyro_lindiff_method_in
-    write(1,20) 'TRAPDIFF_FLAG',gyro_trapdiff_flag_in
     write(1,20) 'RESTART_NEW_FLAG',gyro_restart_new_flag_in
     write(1,20) 'RESTART_DATA_SKIP',gyro_restart_data_skip_in
-    write(1,20) 'KILL_I_PARALLEL_FLAG',gyro_kill_i_parallel_flag_in
-    write(1,20) 'KILL_I_DRIFT_FLAG',gyro_kill_i_drift_flag_in
-    write(1,20) 'KILL_E_DRIFT_FLAG',gyro_kill_e_drift_flag_in
     write(1,20) 'KILL_COLL_FLAG',gyro_kill_coll_flag_in
-    write(1,30) 'DOPPLER_SCALE',gyro_doppler_scale_in
     write(1,20) 'NL_METHOD',gyro_nl_method_in
     write(1,20) 'KILL_GYRO_B_FLAG',gyro_kill_gyro_b_flag_in
-    write(1,20) 'VELOCITY_OUTPUT_FLAG',gyro_velocity_output_flag_in
-    write(1,30) 'Q_SCALE',gyro_q_scale_in
     write(1,20) 'DIST_PRINT_FLAG',gyro_dist_print_flag_in
-    write(1,20) 'NINT_ORB_S',gyro_nint_orb_s_in
-    write(1,20) 'NINT_ORB_DO',gyro_nint_orb_do_in
     write(1,20) 'UDSYMMETRY_FLAG',gyro_udsymmetry_flag_in
     write(1,20) 'GYRO_METHOD',gyro_gyro_method_in
-    write(1,20) 'SPARSE_METHOD',gyro_sparse_method_in
-    write(1,20) 'N_MUMPS_MAX',gyro_n_mumps_max_in
-    write(1,20) 'N_STUDY',gyro_n_study_in
-    write(1,30) 'AMP_PHI_STUDY',gyro_amp_phi_study_in
     write(1,30) 'LAMBDA_DEBYE_SCALE',gyro_lambda_debye_scale_in
     write(1,30) 'LAMBDA_DEBYE',gyro_lambda_debye_in
-    write(1,20) 'RADIAL_GRID_OFFSET',gyro_radial_grid_offset_in
     write(1,20) 'THETA_MULT',gyro_theta_mult_in
     write(1,20) 'SILENT_FLAG',gyro_silent_flag_in
-    write(1,20) 'NONLINEAR_TRANSFER_FLAG',gyro_nonlinear_transfer_flag_in
     write(1,30) 'L_X',gyro_l_x_in
     write(1,30) 'L_Y',gyro_l_y_in
     write(1,20) 'ENTROPY_FLAG',gyro_entropy_flag_in
+    write(1,20) 'EXTRA_PRINT_FLAG',gyro_extra_print_flag_in
     write(1,20) 'ORD_RBF',gyro_ord_rbf_in
     write(1,20) 'NUM_EQUIL_FLAG',gyro_num_equil_flag_in
     write(1,30) 'ZMAG',gyro_zmag_in
@@ -815,17 +731,13 @@ contains
     write(1,30) 'GEO_BETAPRIME_SCALE',gyro_geo_betaprime_scale_in
     write(1,20) 'POISSON_Z_EFF_FLAG',gyro_poisson_z_eff_flag_in
     write(1,20) 'Z_EFF_METHOD',gyro_z_eff_method_in
-    write(1,20) 'TRUNCATION_METHOD',gyro_truncation_method_in
-    write(1,30) 'FLUXAVE_WINDOW',gyro_fluxaverage_window_in
     write(1,20) 'LINSOLVE_METHOD',gyro_linsolve_method_in
     write(1,20) 'FIELDEIGEN_ROOT_METHOD',gyro_fieldeigen_root_method_in
     write(1,30) 'FIELDEIGEN_WR',gyro_fieldeigen_wr_in
     write(1,30) 'FIELDEIGEN_WI',gyro_fieldeigen_wi_in
     write(1,30) 'FIELDEIGEN_TOL',gyro_fieldeigen_tol_in
-    write(1,20) 'REINTEGRATE_FLAG',gyro_reintegrate_flag_in
     write(1,20) 'IC_METHOD',gyro_ic_method_in
     write(1,20) 'ZF_TEST_FLAG',gyro_zf_test_flag_in
-    write(1,20) 'LOCK_TI_FLAG',gyro_lock_ti_flag_in
     close(1)
 
 20  format(a,'=',i3)
