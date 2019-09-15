@@ -47,4 +47,4 @@ if imgfile == 'screen':
     plt.show()
 else:
     plt.savefig(imgfile)
-    print "INFO: () Wrote plot to "+imgfile+"."
+    print("INFO: () Wrote plot to "+imgfile+".")

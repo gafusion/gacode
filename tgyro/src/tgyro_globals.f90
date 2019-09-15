@@ -314,6 +314,8 @@ module tgyro_globals
   integer :: tgyro_gyro_restart_flag
   integer :: tgyro_write_profiles_flag
   integer :: tgyro_neo_n_theta
+  integer :: tgyro_neo_n_xi
+  integer :: tgyro_neo_n_energy
   integer :: tgyro_ptot_flag
   integer :: tgyro_ped_model
   real :: tgyro_rped

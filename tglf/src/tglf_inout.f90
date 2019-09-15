@@ -350,10 +350,6 @@ SUBROUTINE put_model_parameters(adi_elec,alpha_e,alpha_p,alpha_mach,  &
   !
   ! check for changes and update flow controls
   !
-  if(sat_rule.eq.2)then
-    sat_rule = 1
-    kx_isotropic_in = .TRUE.
-  endif
   if(adi_elec .NEQV. adiabatic_elec_in)new_matrix = .TRUE.
   if(kygrid_model.lt.0.or.kygrid_model.gt.5)kygrid_model = kygrid_model_in
   if(xnu_model.lt.0.or.xnu_model.gt.3)xnu_model = xnu_model_in

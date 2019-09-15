@@ -32,24 +32,24 @@ ntime=len(data.t)
 tmin=math.ceil(ntime*(1-frac)) 
 tlength=len(data.t[tmin:ntime])
 
-rephiaver=math.fsum(map(math.fsum, data.phib[0,:,tmin:ntime-1]))/(ntheta*tlength)
-reapaver=math.fsum(map(math.fsum, data.aparb[0,:,tmin:ntime-1]))/(ntheta*tlength)
-rebpaver=math.fsum(map(math.fsum, data.bparb[0,:,tmin:ntime-1]))/(ntheta*tlength)
+rephiaver=math.fsum(list(map(math.fsum, data.phib[0,:,tmin:ntime-1])))/(ntheta*tlength)
+reapaver=math.fsum(list(map(math.fsum, data.aparb[0,:,tmin:ntime-1])))/(ntheta*tlength)
+rebpaver=math.fsum(list(map(math.fsum, data.bparb[0,:,tmin:ntime-1])))/(ntheta*tlength)
 
-imphiaver=math.fsum(map(math.fsum, data.phib[1,:,tmin:ntime-1]))/(ntheta*tlength)
-imapaver=math.fsum(map(math.fsum, data.aparb[1,:,tmin:ntime-1]))/(ntheta*tlength)
-imbpaver=math.fsum(map(math.fsum, data.bparb[1,:,tmin:ntime-1]))/(ntheta*tlength)
+imphiaver=math.fsum(list(map(math.fsum, data.phib[1,:,tmin:ntime-1])))/(ntheta*tlength)
+imapaver=math.fsum(list(map(math.fsum, data.aparb[1,:,tmin:ntime-1])))/(ntheta*tlength)
+imbpaver=math.fsum(list(map(math.fsum, data.bparb[1,:,tmin:ntime-1])))/(ntheta*tlength)
 
 
-print "Average Re[delta phi] and Im[delta phi] during time interval"
-print rephiaver
-print imphiaver
-print "Average Re[delta A||] and Im[delta A||] during time interval"
-print reapaver
-print imapaver
-print "Average Re[delta B||] and Im[delta B||] during time interval"
-print rebpaver
-print imbpaver
+print("Average Re[delta phi] and Im[delta phi] during time interval")
+print(rephiaver)
+print(imphiaver)
+print("Average Re[delta A||] and Im[delta A||] during time interval")
+print(reapaver)
+print(imapaver)
+print("Average Re[delta B||] and Im[delta B||] during time interval")
+print(rebpaver)
+print(imbpaver)
 
 # writing time traces of poloidal averages into files 
 # Time 
@@ -94,8 +94,8 @@ for i in range(ntime):
      if i >= tmin:
          rebpcosaver=rebpcosaver+rebpacos/tlength
 
-print "Average cos component of Re[delta B||] during time interval"
-print rebpcosaver
+print("Average cos component of Re[delta B||] during time interval")
+print(rebpcosaver)
       
 fphi.close() 
 fapa.close() 

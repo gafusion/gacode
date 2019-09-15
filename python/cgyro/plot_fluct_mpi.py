@@ -11,7 +11,7 @@ from mpi4py import MPI
 iproc = MPI.COMM_WORLD.Get_rank()
 nproc = MPI.COMM_WORLD.Get_size()
 
-print nproc
+print(nproc)
 
 PREC='f' ; BIT=4  
 
@@ -106,10 +106,10 @@ fdata,title,isfield = tag_helper(sim.mass[species],sim.z[species],moment)
 # Check to see if data exists (try binary data first)
 if os.path.isfile('bin'+fdata):
     fdata = 'bin'+fdata
-    print 'INFO: (plot_fluct_mpi) Found binary data in '+fdata 
+    print('INFO: (plot_fluct_mpi) Found binary data in '+fdata) 
     hasbin = True
 else:
-    print 'ERROR: (plot_fluct_mpi) No data for -moment '+moment+' exists.  Try -moment phi'
+    print('ERROR: (plot_fluct_mpi) No data for -moment '+moment+' exists.  Try -moment phi')
     sys.exit()
 
 if isfield:
@@ -158,7 +158,7 @@ def frame():
       ax.set_ylabel(r'$x/\rho_s$')
       ax.contourf(yp,xp,f,levels,cmap=plt.get_cmap(colormap),extend='both')
  
-   print 'INFO: (plot_fluct_mpi '+mode+') min=%2.4f , max=%2.4f  (t=%3.3f)' % (f0,f1,t)
+   print('INFO: (plot_fluct_mpi '+mode+') min=%2.4f , max=%2.4f  (t=%3.3f)' % (f0,f1,t))
 
    ax.set_title(title)
    ax.set_aspect('equal')
@@ -187,7 +187,7 @@ while work:
       
    i = i+1
    if np.mod(i,nproc) == iproc:
-      print 'INFO: (plot_fluct_mpi) Time index '+str(i),'[',iproc,']' 
+      print('INFO: (plot_fluct_mpi) Time index '+str(i),'[',iproc,']') 
       if i in ivec:
          frame() 
    if i == max(ivec):

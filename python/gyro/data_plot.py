@@ -1,4 +1,4 @@
-import data
+from . import data
 import sys
 import os
 import numpy as np
@@ -10,7 +10,7 @@ MYDIR=os.path.basename(os.getcwd())
 
 class gyrodata_plot(data.GYROData):
 
-   def plot_freq(self,w=0.5,fig=None):
+   def plot_freq(self,w=0.5,wmax=0.0,fig=None):
       '''
       Plot gamma and omega vs time
 
@@ -18,14 +18,17 @@ class gyrodata_plot(data.GYROData):
       w: fractional width of time window
       '''
 
+      if self.profile['nonlinear_flag'] == 1:
+         raise IOError("ERROR (data_plot): Not available for nonlinear run")
+
       if fig is None:
          fig = plt.figure(MYDIR,figsize=(self.lx*1.2,self.ly))
 
       t = self.t['(c_s/a)t']
 
       # Determine tmin
-      imin = iwindow(t,w,wmax)
-
+      imin,imax = iwindow(t,w,wmax)
+      
       color = ['k','m','b','c']
       tor_n = self.profile['n0'] + \
               self.profile['d_n']*np.arange(0,self.profile['n_n'])
@@ -37,6 +40,8 @@ class gyrodata_plot(data.GYROData):
       ax.set_xlabel(TIME)
       ax.set_ylabel(r'$(a/c_s)\gamma$',color='k')
       #=====================================
+
+      print(self.freq['(a/c_s)gamma'])
 
       # Gamma
       for i in range(self.profile['n_n']):
@@ -75,17 +80,17 @@ class gyrodata_plot(data.GYROData):
 
       if index == 'phi':
          key = 'balloon_phi'
-         index = self.balloon.keys().index(key)
+         index = list(self.balloon.keys()).index(key)
       elif index == 'a':
          key = 'balloon_a'
-         index = self.balloon.keys().index(key)
+         index = list(self.balloon.keys()).index(key)
       elif index == 'aperp':
          key = 'balloon_aperp'
-         index = self.balloon.keys().index(key)
+         index = list(self.balloon.keys()).index(key)
       else:
          index = int(index)
 
-      key = self.balloon.keys()[index]
+      key = list(self.balloon)[index]
 
       ytitle = '\\begin{verbatim}'+key+'\\end{verbatim}'
 
@@ -160,7 +165,7 @@ class gyrodata_plot(data.GYROData):
 
       imin,imax = iwindow(t,w,wmax)
       ave  = average(y[:],t,w,wmax)
-      print 'INFO: (plot_zf) Spatial point (nx,ntheta)=',nx,ntheta
+      print('INFO: (plot_zf) Spatial point (nx,ntheta)=',nx,ntheta)
 
       ave_vec = ave*np.ones(len(t))
       #----------------------------------------------------
@@ -179,7 +184,7 @@ class gyrodata_plot(data.GYROData):
                  label=r'$\mathrm{RH \; theory}$',alpha=0.3,linewidth=4)
          ax.plot(t[imin:],ave_vec[imin:],color='b',
                  label=r'$\mathrm{Average}$',linewidth=1)
-         print 'INFO: (plot_zf) Integral time-average = %.6f' % ave
+         print('INFO: (plot_zf) Integral time-average = %.6f' % ave)
 
       ax.legend()
       plt.tight_layout(pad=0.2)
@@ -265,7 +270,7 @@ class gyrodata_plot(data.GYROData):
          ftag = 'flux_v'
          y = flux0[:,2,:]
       else:
-         print 'ERROR: (plot_flux.py) Invalid moment.'
+         print('ERROR: (plot_flux.py) Invalid moment.')
          sys.exit()
        
       # Normalizations
@@ -371,7 +376,7 @@ class gyrodata_plot(data.GYROData):
          yi = fluxi0[:,2,:,:]
          y  = flux0[:,2,:]
       else:
-         print 'ERROR: (plot_flux.py) Invalid moment.'
+         print('ERROR: (plot_flux.py) Invalid moment.')
          sys.exit()
 
       imin,imax = iwindow(t,w,wmax)
@@ -409,7 +414,7 @@ class gyrodata_plot(data.GYROData):
 
          # Full average
          ave = average(y[ispec,:]*norm_vec[ispec],t,w,wmax)
-         print 'INFO: (plot_gbflux_i) Full average = {:.2f}'.format(ave)
+         print('INFO: (plot_gbflux_i) Full average = {:.2f}'.format(ave))
          # Partial-r average
          if aw > 0:
             ave = np.average(avei[aw:-(aw+1)])
@@ -445,7 +450,7 @@ class gyrodata_plot(data.GYROData):
       n_n     = int(self.profile['n_n'])
 
       if n_n == 1:
-         print 'ERROR (plot_gbflux_n.py) Plot not available with a single mode.'
+         print('ERROR (plot_gbflux_n.py) Plot not available with a single mode.')
          sys.exit()
 
       if fig is None:
@@ -487,7 +492,7 @@ class gyrodata_plot(data.GYROData):
          ftag = 'flux_v'
          y = ys[:,2,:,:]
       else:
-         print 'ERROR (plot_ky_flux.py) Invalid moment.'
+         print('ERROR (plot_ky_flux.py) Invalid moment.')
          sys.exit()
 
       imin,imax = iwindow(t,w,wmax)
@@ -558,7 +563,7 @@ class gyrodata_plot(data.GYROData):
       ax.legend()
       plt.tight_layout()
         
-   def plot_gbflux_rt(self,w=0.5,field='s',moment=0,fig=None):
+   def plot_gbflux_rt(self,w=0.5,wmax=0.0,field='s',moment=0,fig=None):
 
       ns = int(self.profile['n_kinetic'])
 

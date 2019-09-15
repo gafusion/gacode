@@ -46,6 +46,7 @@ program prgen
   read(1,*) nfourier
   read(1,*) n_null
   read(1,*) lump_fast_flag
+  read(1,*) true_aux_flag
   read(1,*) reorder_vec(:)
   read(1,*) n_lump
   allocate(lump_vec(n_lump))

@@ -1,4 +1,4 @@
-import data
+from . import data
 import sys
 import numpy as np
 from gacodefuncs import *

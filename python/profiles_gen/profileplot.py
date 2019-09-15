@@ -1,7 +1,6 @@
 """Generate a plot of a profile function"""
 
 import sys
-import string
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import rc
@@ -20,8 +19,8 @@ title   = sys.argv[7]
 rmin    = sys.argv[8]
 rmax    = sys.argv[9]
 
-plotvec = string.splitfields(plots,',')
-filevec = string.splitfields(infiles,',')
+plotvec = plots.split(',')
+filevec = infiles.split(',')
 
 n = len(plotvec)
 
@@ -53,7 +52,7 @@ for j in range(n):
             fulltag = keys[i]
 
     if success == 0:
-        print "ERROR: (profiles_gen_plot) Bad profile = "+tag
+        print("ERROR: (profiles_gen_plot) Bad profile = "+tag)
         sys.exit()
 
     if j==0:
@@ -103,6 +102,6 @@ ax.legend(loc=loc)
 if ftype == 'screen':
     plt.show()
 else:
-    print "Saving plot to "+ftype
+    print("Saving plot to "+ftype)
     outfile = ftype
     plt.savefig(outfile)

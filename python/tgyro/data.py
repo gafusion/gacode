@@ -26,11 +26,11 @@ class tgyrodata:
 
         # Manage new (or old) data output formats
         if os.path.isfile(self.dir+'/out.tgyro.profile_i1'):
-            if self.verbose: print "INFO: (data.py) Detected new multi-ion version of TGYRO [GOOD]."
+            if self.verbose: print("INFO: (data.py) Detected new multi-ion version of TGYRO [GOOD].")
             self.getdata()
         else:
-            if self.verbose: print "INFO: (data.py) Detected old static ion version of TGYRO."
-            if self.verbose: print "      --------> Using getolddata function ..."
+            if self.verbose: print("INFO: (data.py) Detected old static ion version of TGYRO.")
+            if self.verbose: print("      --------> Using getolddata function ...")
             self.getolddata() 
         
     #---------------------------------------------------------------------------#
@@ -103,7 +103,7 @@ class tgyrodata:
             for root in ['evo_n','flux_i','profile_i']:
                 self.fileparser('out.tgyro.'+root+str(i+1))
 
-        if self.verbose: print self.data.keys()
+        if self.verbose: print(list(self.data.keys()))
 
     #---------------------------------------------------------------------------#
 
@@ -113,14 +113,14 @@ class tgyrodata:
         tag = input.tgyro tag
         """
 
-        datafile = file(self.dir+'/input.tgyro.gen','r')
+        datafile = open(self.dir+'/input.tgyro.gen','r').readlines()
 
         for line in datafile:
             try:
                 if line.split()[1] == tag:
                     return float(line.split()[0])
             except IndexError:
-                print "WARNING: Cannot find specified input parameter: ", tag
+                print("WARNING: Cannot find specified input parameter: ", tag)
                 return 0
 
     #---------------------------------------------------------------------------#
@@ -144,17 +144,16 @@ class tgyrodata:
         """Generic parser for standard TGYRO iteration-based file format"""
 
         import os
-        import string
         import numpy as np
 
         if not os.path.exists(self.dir+'/'+file) :
-            print "WARNING: (data.py) "+file+" does not exist."
+            print("WARNING: (data.py) "+file+" does not exist.")
             return 0
 
         data = open(self.dir+'/'+file,'r').readlines()
 
         if not len(''.join(data).strip()):
-            print "WARNING: (data.py) "+file+" is empty."
+            print("WARNING: (data.py) "+file+" is empty.")
             return 0
 
         # Data dimensions
@@ -169,19 +168,19 @@ class tgyrodata:
             nrad = 1
 
         nr = nrad+ix
-        nc = len(string.split(data[0]))
+        nc = len(data[0].split())
         nb = self.n_iterations+1
 
         numdata = np.zeros((nc,nb,nrad))
         for ib in range(nb):
             try:
-                tags = string.split(data[ib*nr])
+                tags = data[ib*nr].split()
             except:
-                print "WARNING: (data.py) "+file+" shorter than expected."
+                print("WARNING: (data.py) "+file+" shorter than expected.")
                 return 0
 
             for ir in range(nrad):
-                row = string.split(data[ib * nr + ir + ix])
+                row = data[ib * nr + ir + ix].split()
                 for ic in range(nc):
                     try:
                         numdata[ic, ib, ir] = float(row[ic])
@@ -197,5 +196,5 @@ class tgyrodata:
         for ic in range(nc):
             self.data[tags[ic]] = numdata[ic,:,:]
         
-        if self.verbose: print 'INFO: (data.py) Read data in '+file
+        if self.verbose: print('INFO: (data.py) Read data in '+file)
         return 1

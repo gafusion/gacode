@@ -35,7 +35,7 @@ def main():
       inputFile=args[0]
     else:
       if options.input == '':
-        print "Must specify an input file"
+        print("Must specify an input file")
         return
       else:
         inputFile=options.input

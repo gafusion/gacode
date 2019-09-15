@@ -127,18 +127,18 @@ def maptoreal_fft(nr,nn,nx,ny,c):
 
    start = time.time()
 
-   for ix in range(-nr/2+1,nr/2):
+   for ix in range(-nr//2+1,nr//2):
       i = ix
       if ix < 0:
          i = ix+nx
-      d[i,0:nn] = c[-ix+nr/2,0:nn]
+      d[i,0:nn] = c[-ix+nr//2,0:nn]
 
-   for ix in range(-nr/2,nr/2-1):
+   for ix in range(-nr//2,nr//2-1):
       i = ix
       if ix < 0:
          i = ix+nx
       for iy in range(1,nn):
-         d[i,ny-iy] = np.conj(c[ix+nr/2,iy])
+         d[i,ny-iy] = np.conj(c[ix+nr//2,iy])
           
    # Sign convention negative exponent exp(-inx)
    f = np.real(np.fft.fft2(d))*0.5

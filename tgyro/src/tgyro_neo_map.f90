@@ -23,9 +23,9 @@ subroutine tgyro_neo_map
   endif
 
   ! Resolution 
-  neo_n_energy_in = 5
-  neo_n_xi_in = 11
-  neo_n_theta_in = tgyro_neo_n_theta
+  neo_n_energy_in = tgyro_neo_n_energy
+  neo_n_xi_in     = tgyro_neo_n_xi
+  neo_n_theta_in  = tgyro_neo_n_theta
 
   ! Geometry
   neo_equilibrium_model_in = 2

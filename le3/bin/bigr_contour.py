@@ -16,10 +16,10 @@ x=np.arange(nphi)*1.0/(nphi-2)
 y=np.arange(ntheta)*1.0/(ntheta-1)
 
 f=data[:]
-print len(f)
+print(len(f))
 
 z=f.reshape((ntheta,nphi),order='F')
-print z
+print(z)
 
 fig = plt.figure(figsize=(10,10))
 ax = fig.add_subplot(111)

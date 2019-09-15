@@ -111,13 +111,13 @@ fdata,title,isfield = tag_helper(sim.mass[species],sim.z[species],moment)
 # Check to see if data exists (try binary data first)
 if os.path.isfile('bin'+fdata):
     fdata = 'bin'+fdata
-    print 'INFO: (plot_rt) Found binary data in '+fdata 
+    print('INFO: (plot_rt) Found binary data in '+fdata) 
     hasbin = True
 else:
    raise ValueError('(plot_rt) No data for -moment '+moment+' exists.  Try -moment phi')
     
 if usefft:
-    print 'INFO: (plot_rt) Using FFT (fast)'
+    print('INFO: (plot_rt) Using FFT (fast)')
 
 if isfield:
     n_chunk = 2*nr*nth*nn
@@ -131,7 +131,7 @@ f = np.zeros([nt,nx])
 
 for i in range(nt):
    aa = struct.unpack(PREC*n_chunk,fbin.read(BIT*n_chunk))
-   print 'INFO: (plot_fluct) Time index '+str(i) 
+   print('INFO: (plot_fluct) Time index '+str(i)) 
 
    if isfield:
       a = np.reshape(aa,(2,nr,nth,nn),order='F')

@@ -1,13 +1,46 @@
 #!/bin/bash
 
-bfile=$SIMDIR/batch.src
-echo "#!/bin/bash -l" > $bfile
-echo "#BSUB -J $LOCDIR" >> $bfile
-echo "#BSUB -P $REPO" >> $bfile
-echo "#BSUB -o $SIMDIR/batch.out" >> $bfile
-echo "#BSUB -e $SIMDIR/batch.err" >> $bfile
-echo "#BSUB -W $WALLTIME" >> $bfile
-echo "#BSUB -nnodes $nodes" >> $bfile
-echo "#BSUB -alloc_flags gpumps" >> $bfile
+if [ $mpinuma -eq 0 ] ; then
+    echo "Need to set:"
+    echo "       -n       to number of nodes"
+    echo "       -mpinuma to MPI tasks per GPU (6 is good)"
+    exit 1
+fi
 
-echo "$CODE -e $LOCDIR -n $nmpi -nomp $nomp -numa $numa -mpinuma $mpinuma -p $SIMROOT" >> $bfile
+nodes=$nmpi
+threads_per_core=2
+gpus_per_socket=3
+ranks_per_gpu=$mpinuma
+cores_per_socket=20
+eager=64
+w=$WALLTIME
+
+# derived quantities:
+let ranks_per_socket=$ranks_per_gpu*$gpus_per_socket
+let cores_per_rank=$cores_per_socket/$ranks_per_socket
+let cores_per_gpu=$cores_per_rank*$ranks_per_gpu
+let nrs=2*$gpus_per_socket*$nodes
+let threads_per_rank=$threads_per_core*$cores_per_rank
+let snmpi=2*$ranks_per_socket*$nodes
+
+echo "nodes               = $nodes"
+echo "MPI tasks per GPU   = $mpinuma"
+echo "OMP threads (-nomp) = $threads_per_rank"
+echo "Total MPI tasks     = $snmpi"
+echo "--"
+
+# BATCH SCRIPT:
+
+cat > $SIMDIR/batch.src << EOF
+#BSUB -P fus127
+#BSUB -J $LOCDIR
+#BSUB -o $SIMDIR/batch.out
+#BSUB -e $SIMDIR/batch.err
+#BSUB -nnodes $nodes
+#BSUB -alloc_flags "nvme gpumps smt$threads_per_core"
+#BSUB -step_cgroup n
+#BSUB -q batch
+#BSUB -W $w
+$CODE -e $LOCDIR -n $nmpi -nomp $threads_per_rank -mpinuma $mpinuma -p $SIMROOT
+
+EOF

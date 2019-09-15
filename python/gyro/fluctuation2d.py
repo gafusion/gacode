@@ -48,7 +48,7 @@ else:
         f = np.array(sim.moment_e[j,:,:,:,-1],dtype=complex)
         title = '$\delta E$'
 
-print 'INFO (GYROData): Processing data.' 
+print('INFO (GYROData): Processing data.') 
 
 #--------------------------------------------------------
 # Plot resolution

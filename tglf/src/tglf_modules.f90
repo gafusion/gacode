@@ -78,7 +78,6 @@
       LOGICAL :: use_mhd_rule_in=.TRUE.
       LOGICAL :: use_bisection_in=.TRUE.
       LOGICAL :: use_inboard_detrapped_in=.FALSE.
-      LOGICAL :: kx_isotropic_in = .FALSE.
       INTEGER :: ibranch_in=-1
       INTEGER :: nmodes_in=2
       INTEGER :: nbasis_max_in=4

@@ -139,6 +139,8 @@ subroutine tgyro_read_input
   call tgyro_readbc_int(tgyro_gyro_restart_flag)
   call tgyro_readbc_int(tgyro_write_profiles_flag)
   call tgyro_readbc_int(tgyro_neo_n_theta)
+  call tgyro_readbc_int(tgyro_neo_n_xi)
+  call tgyro_readbc_int(tgyro_neo_n_energy)
   call tgyro_readbc_int(tgyro_ptot_flag)
   call tgyro_readbc_int(tgyro_ped_model)
   call tgyro_readbc_real(tgyro_rped)

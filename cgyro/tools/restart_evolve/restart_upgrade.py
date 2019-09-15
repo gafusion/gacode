@@ -9,7 +9,6 @@
 # Currently limited to v1 -> v2 upgrade
 #
 
-import string
 import sys,os
 
 import cgyro_restart_resize
@@ -24,7 +23,7 @@ class CgyroInput:
         inputfile=os.path.join(fdir,self.def_fname)
         for line in open(inputfile,'r').readlines():
             # Remove leading and trailing whitespace from line
-            line = string.strip(line)
+            line = line.strip()
 
             # Skip blank lines
             if len(line) > 0 and line[0] != '#':

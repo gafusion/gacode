@@ -421,7 +421,7 @@ case "$PLOT_TYPE" in
 	python $PLT $PLOT_TYPE $W $WMAX $FIELD $MOMENT $YMIN $YMAX $FC $EXT $DISS $CFLUX ;;
 
    phi)
-	python $PLT $PLOT_TYPE $FIELD $EXT ;;
+	python $PLT $PLOT_TYPE $W $WMAX $FIELD $EXT ;;
 
    ky_phi)
 	python $PLT $PLOT_TYPE $FIELD $THETA $YMIN $YMAX $N $EXT ;;

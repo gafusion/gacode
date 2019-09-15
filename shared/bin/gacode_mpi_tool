@@ -10,56 +10,49 @@
 export `grep PER_NODE $GACODE_ROOT/platform/build/make.inc.$GACODE_PLATFORM`
 
 # Default to densely-packed pure-MPI.
-if [ $numa -eq 0 ]
-then
+if [[ $numa -eq 0 ]]; then
    numa=$NUMAS_PER_NODE
 fi
-if [ $mpinuma -eq 0 ]
-then
-   mpinuma=$(($CORES_PER_NODE/$NUMAS_PER_NODE))
-   mpinuma=$(($mpinuma/$nomp))
+if [[ $mpinuma -eq 0 ]]; then
+   mpinuma=$((CORES_PER_NODE / NUMAS_PER_NODE))
+   mpinuma=$((mpinuma / nomp))
 fi
 
 # See if we are asking for too many NUMAs
-if [ $numa -gt $NUMAS_PER_NODE ] 
-then
+if [[ $numa -gt $NUMAS_PER_NODE ]]; then
   echo 'ERROR: (gacode_mpi_tool) Too many NUMAs per node requested'
   exit 1
 fi
 
 # See if we are asking for too many OpenMP tasks
-i1=$(($nomp*$mpinuma))
-i2=$(($CORES_PER_NODE/$NUMAS_PER_NODE)) 
-if [ $i1 -gt $i2 ] 
-then
+i1=$((nomp * mpinuma))
+i2=$((CORES_PER_NODE / NUMAS_PER_NODE)) 
+if [[ $i1 -gt $i2 ]]; then
    echo 'ERROR: (gacode_mpi_tool) Too many OpenMP tasks per MPI process'
 fi
 
 # MPI tasks per node
-mpinode=$(($mpinuma*$numa))
+mpinode=$((mpinuma * numa))
 # Not enought MPI tasks to fill node?
-if [ $nmpi -lt $mpinode ]
-then
+if [[ $nmpi -lt $mpinode ]]; then
    mpinode=$nmpi
 fi
 # Not enought MPI tasks to fill numa?
-if [ $nmpi -lt $mpinuma ]
-then
+if [[ $nmpi -lt $mpinuma ]]; then
    mpinuma=$nmpi
    numa=1
 fi
 
 # Nodes requested 
-nodes=$(($nmpi/$mpinode))
+nodes=$((nmpi / mpinode))
 
 # If we need part of a node, then add a node
-if [ $nmpi -gt $(($nodes*$mpinode)) ] 
-then
-   nodes=$(($nodes+1))
+if [[ $nmpi -gt $((nodes * mpinode)) ]]; then
+   nodes=$((nodes + 1))
    echo "WARNING: Using partial node"
 fi
 
 # Final core counts
-cores_requested=$(($nodes*$CORES_PER_NODE))
-cores_used=$(($nomp*$nmpi))
+cores_requested=$((nodes * CORES_PER_NODE))
+cores_used=$((nomp * nmpi))
 nodes_requested=$nodes

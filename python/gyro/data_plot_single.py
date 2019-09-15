@@ -21,8 +21,9 @@ if plot_type == 'freq':
 
    w   = float(sys.argv[2])
    ext = sys.argv[3]
+   wmax = 0.0
 
-   data_in.plot_freq(w=w)
+   data_in.plot_freq(w=w,wmax=wmax)
 
    outfile = 'freq.'+ext
 
@@ -120,8 +121,9 @@ elif plot_type == 'hmom':
    species = int(sys.argv[3])
    moment  = int(sys.argv[4])
    ext     = sys.argv[5]
+   wmax = 0.0
 
-   ax = data_in.plot_moment_zero(w=w,species=species,moment=moment)
+   ax = data_in.plot_moment_zero(w=w,wmax=wmax,species=species,moment=moment)
    
    outfile = 'moment_zero.'+ext
   
@@ -146,5 +148,5 @@ else:
     plt.savefig(outfile)
 
 if ext != 'screen':
-       print 'INFO: (data_plot_single) Created '+outfile
+       print('INFO: (data_plot_single) Created '+outfile)
 #---------------------------------------------------------------

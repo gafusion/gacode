@@ -49,6 +49,7 @@ end subroutine cgyro_read_restart
 
 
 subroutine cgyro_read_restart_verify
+
   use cgyro_globals
   use cgyro_io
 
@@ -133,7 +134,7 @@ subroutine cgyro_read_restart_one
 
   character(8)  :: sdate
   character(10) :: stime
-  character(5)  :: szone
+  character(len=64) :: platform
   integer(KIND=8) :: start_time,cp_time
   integer(KIND=8) :: count_rate, count_max
   real :: cp_dt
@@ -197,17 +198,20 @@ subroutine cgyro_read_restart_one
   call MPI_INFO_FREE(finfo,i_err)
 
   call system_clock(cp_time,count_rate,count_max)
-  if (cp_time.gt.start_time) then
+  if (cp_time > start_time) then
     cp_dt = (cp_time-start_time)/real(count_rate)
   else
     cp_dt = (cp_time-start_time+count_max)/real(count_rate)
   endif
 
   if (i_proc == 0) then
-    call date_and_time(sdate,stime,szone);
-    open(NEWUNIT=statusfd,FILE=trim(path)//runfile_startups,action="write",status="unknown",position='append')
-    write(statusfd, '(a,a,a,a,a,a,a,a,a,a,a,a,a,1pe10.3)') sdate(1:4),"/",sdate(5:6),"/",sdate(7:8)," ", &
-                    stime(1:2),":",stime(3:4),":",stime(5:10), szone, ' [READ CHECKPOINT] Restart checkpoint read time: ', cp_dt
+    call date_and_time(sdate,stime);
+    call get_environment_variable('GACODE_PLATFORM',platform)
+    open(NEWUNIT=statusfd,FILE=trim(path)//runfile_startups,action='write',status='unknown',position='append')
+    write(statusfd,'(14(a),f7.3)') &
+         sdate(1:4),'/',sdate(5:6),'/',sdate(7:8),' ', &
+         stime(1:2),':',stime(3:4),':',stime(5:6),' ', &
+         trim(platform),' [ CHECKPOINT READ] Time =',cp_dt
     close(statusfd)
   endif
 

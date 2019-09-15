@@ -81,7 +81,7 @@ if genein['dpdx_term'] == 'gradB_eq_curv' :
 if genein['collision_op'] != 'pitch-angle' :
     print('warning: TGLF only has pitch-angle collisions')
 # pprint(species[2]['name'])
-tg['ZEFF'] = genein['zeff']
+print('ZEFF in GENE file is ',genein['zeff'])
 tg['VEXB_SHEAR'] = genein['exbrate']
 # MILLER GEOMETRY
 tg['RMIN_LOC'] = genein['trpeps']*genein['major_r']
@@ -147,6 +147,7 @@ for i in range(0, nspecies) :
              tg['AS_2'] = species[i]['dens']
              tg['VPAR_2'] = 0.0
              tg['VPAR_SHEAR_2'] = genein['pfsrate']
+             tg['ZEFF'] = tg['AS_2']*tg['ZS_2']**2
            if nions == 2 :
              tg['ZS_3'] = species[i]['charge']
              tg['MASS_3'] = species[i]['mass']
@@ -156,6 +157,7 @@ for i in range(0, nspecies) :
              tg['AS_3'] = species[i]['dens']
              tg['VPAR_3'] = 0.0
              tg['VPAR_SHEAR_3'] = genein['pfsrate']
+             tg['ZEFF'] = tg['ZEFF']+tg['AS_3']*tg['ZS_3']**2
            if nions == 3 :
              tg['ZS_4'] = species[i]['charge']
              tg['MASS_4'] = species[i]['mass']
@@ -165,6 +167,7 @@ for i in range(0, nspecies) :
              tg['AS_4'] = species[i]['dens']
              tg['VPAR_4'] = 0.0
              tg['VPAR_SHEAR_4'] = genein['pfsrate']
+             tg['ZEFF'] = tg['ZEFF']+tg['AS_4']*tg['ZS_4']**2
            if nions == 4 :
              tg['ZS_5'] = species[i]['charge']
              tg['MASS_5'] = species[i]['mass']
@@ -174,6 +177,7 @@ for i in range(0, nspecies) :
              tg['AS_5'] = species[i]['dens']
              tg['VPAR_5'] = '0.0'
              tg['VPAR_SHEAR_5'] = genein['pfsrate']
+             tg['ZEFF'] = tg['ZEFF']+tg['AS_5']*tg['ZS_5']**2
            if nions == 5 :
              tg['ZS_6'] = species[i]['charge']
              tg['MASS_6'] = species[i]['mass']
@@ -183,11 +187,13 @@ for i in range(0, nspecies) :
              tg['AS_6'] = species[i]['dens']
              tg['VPAR_6'] = '0.0'
              tg['VPAR_SHEAR_6'] = genein['pfsrate']
+             tg['ZEFF'] = tg['ZEFF']+tg['AS_6']*tg['ZS_6']**2
            if nions > 5 :
                print('warning: TGLF stand alone version can only have 5 kinetic ion species')
                nions = 5
 tg['NS'] = nions + 1
 print('number of kinetic ions = ',nions)
+print('ZEFF in TGLF file is : ',tg['ZEFF'])
 # set TGLF parameters that need electron units
 # note beta,debye2 and amhd are wrt Bref so TGLF will convert to B_unit internally
 tg['BETAE'] = genein['beta']*tg['TAUS_1']*tg['AS_1']

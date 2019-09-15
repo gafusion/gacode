@@ -105,11 +105,13 @@ elif plot_type == 'zf':
 
 elif plot_type == 'phi':
 
-   field = int(sys.argv[2])
-   ftype = sys.argv[3]
+   w     = float(sys.argv[2])
+   wmax  = float(sys.argv[3])
+   field = int(sys.argv[4])
+   ftype = sys.argv[5]
    theta = 0.0
 
-   head,x,y1,y2 = data_in.plot_phi(field=field,theta=theta)
+   head,x,y1,y2 = data_in.plot_phi(w=w,wmax=wmax,field=field,theta=theta)
 
    outfile = 'out.cgyro.phi.'+ftype
 

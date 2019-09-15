@@ -106,4 +106,4 @@ if imgfile == 'screen':
     plt.show()
 else:
     plt.savefig(imgfile)
-    print "INFO: (le3_plot_fieldline) Wrote plot to "+imgfile+"."
+    print("INFO: (le3_plot_fieldline) Wrote plot to "+imgfile+".")

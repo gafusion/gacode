@@ -264,55 +264,6 @@ subroutine neo_check
         return
      end select
 
-     if (n_species >= 1) then
-        if(abs(profile_dlnndr_scale(1)-1.0) > epsilon(0.) ) then
-           write(io_neoout,30) 'profile_equilibrium_model','DLNNDR_1 IS RE-SCALED'
-        endif
-        if(abs(profile_dlntdr_scale(1)-1.0) > epsilon(0.) ) then
-           write(io_neoout,30) 'profile_equilibrium_model','DLNTDR_1 IS RE-SCALED'
-        endif
-     endif
-     if (n_species >= 2) then
-        if(abs(profile_dlnndr_scale(2)-1.0) > epsilon(0.) ) then
-           write(io_neoout,30) 'profile_equilibrium_model','DLNNDR_2 IS RE-SCALED'
-        endif
-        if(abs(profile_dlntdr_scale(2)-1.0) > epsilon(0.) ) then
-           write(io_neoout,30) 'profile_equilibrium_model','DLNTDR_2 IS RE-SCALED'
-        endif
-     endif
-     if (n_species >= 3) then
-        if(abs(profile_dlnndr_scale(3)-1.0) > epsilon(0.) ) then
-           write(io_neoout,30) 'profile_equilibrium_model','DLNNDR_3 IS RE-SCALED'
-        endif
-        if(abs(profile_dlntdr_scale(3)-1.0) > epsilon(0.) ) then
-           write(io_neoout,30) 'profile_equilibrium_model','DLNTDR_3 IS RE-SCALED'
-        endif
-     endif
-     if (n_species >= 4) then
-        if(abs(profile_dlnndr_scale(4)-1.0) > epsilon(0.) ) then
-           write(io_neoout,30) 'profile_equilibrium_model','DLNNDR_4 IS RE-SCALED'
-        endif
-        if(abs(profile_dlntdr_scale(4)-1.0) > epsilon(0.) ) then
-           write(io_neoout,30) 'profile_equilibrium_model','DLNTDR_4 IS RE-SCALED'
-        endif
-     endif
-     if (n_species >= 5) then
-        if(abs(profile_dlnndr_scale(5)-1.0) > epsilon(0.) ) then
-           write(io_neoout,30) 'profile_equilibrium_model','DLNNDR_5 IS RE-SCALED'
-        endif
-        if(abs(profile_dlntdr_scale(5)-1.0) > epsilon(0.) ) then
-           write(io_neoout,30) 'profile_equilibrium_model','DLNTDR_5 IS RE-SCALED'
-        endif
-     endif
-     if (n_species >= 6) then
-        if(abs(profile_dlnndr_scale(6)-1.0) > epsilon(0.) ) then
-           write(io_neoout,30) 'profile_equilibrium_model','DLNNDR_6 IS RE-SCALED'
-        endif
-        if(abs(profile_dlntdr_scale(6)-1.0) > epsilon(0.) ) then
-           write(io_neoout,30) 'profile_equilibrium_model','DLNTDR_6 IS RE-SCALED'
-        endif
-     endif
-
   case default
 
      call neo_error('ERROR: (NEO) invalid profile_model')

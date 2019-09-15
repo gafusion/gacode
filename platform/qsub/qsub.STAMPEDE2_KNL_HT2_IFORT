@@ -1,10 +1,10 @@
 #!/bin/bash
 
-echo "-queue: debug, normal"
+echo "-queue: development, normal, large, long"
 
 # Default queue
 if [ "$QUEUE" == "null_queue" ] ; then
-   QUEUE=debug
+   QUEUE=normal
 fi
 
 bfile=$SIMDIR/batch.src

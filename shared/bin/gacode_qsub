@@ -11,7 +11,7 @@
 #
 n=$#
 
-if [ $n -eq 0 ]
+if [[ $n -eq 0 ]]
 then
    echo
   echo "Usage:   gacode_qsub [options]"
@@ -90,13 +90,11 @@ nmpi=1
 nomp=1
 numa=0
 mpinuma=0
-nidle=0
-START=new
 
 #=============================================================
 # Parse command line options
 #
-while [ $# -gt 0 ] ; do
+while [[ $# -gt 0 ]] ; do
   case "$1" in
 
   -s) SUB_FLAG=1 ;;
@@ -114,8 +112,6 @@ while [ $# -gt 0 ] ; do
   -numa) shift ; numa=$1 ;;
 
   -mpinuma) shift ; mpinuma=$1 ;;
-
-  -start) shift ; START=$1 ;;
 
   -queue) shift ; QUEUE=$1 ;;
 
@@ -141,6 +137,15 @@ fi
 SIMDIR=$SIMROOT/$LOCDIR
 #=============================================================
 
+# Manage execution on ORNL SUMMIT
+if [ "$GACODE_PLATFORM" = "SUMMIT_JC" ]; then
+    . $GACODE_ROOT/platform/qsub/qsub.$GACODE_PLATFORM
+    cat $SIMDIR/batch.src
+    $GACODE_ROOT/platform/exec/exec.$GACODE_PLATFORM $SIMDIR $nmpi $CODE 0 1 $mpinuma 
+    exit 0
+fi
+
+echo $SIMDIR
 # Extract CORES_PER_NODE and NUMAS_PER_NODE
 export `grep _NODE $GACODE_ROOT/platform/build/make.inc.$GACODE_PLATFORM`
 export "`grep IDENT $GACODE_ROOT/platform/build/make.inc.$GACODE_PLATFORM`"
@@ -160,7 +165,7 @@ echo " MPI tasks per numa node : $mpinuma"
 echo
 . $GACODE_ROOT/platform/qsub/qsub.$GACODE_PLATFORM
 
-if [ $SUB_FLAG -eq 0 ] ; then
+if [[ $SUB_FLAG -eq 0 ]] ; then
     # Query NERSC/ORNL repositories
     if hash getnim 2> /dev/null; then
        echo

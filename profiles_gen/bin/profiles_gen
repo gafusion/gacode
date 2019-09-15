@@ -130,6 +130,9 @@ then
    echo "             -lf"
    echo "             Lump fast ions into a single species."
    echo
+   echo "             -sub_aux"
+   echo "             Toggles subtractive auxiliary power (rather than true sum of RF and NBI)"
+   echo
    echo "CORSICA Options"
    echo
    echo "             -i <data.corsica>"
@@ -319,6 +322,7 @@ VERBOSE_FLAG=0
 ORDER_FLAG=0
 LUMP_FLAG=0
 LUMP_FAST_FLAG=0
+TRUE_AUX_FLAG=1
 
 # Number of points for -i null option
 N_NULL=40
@@ -406,6 +410,8 @@ while [ $# -gt 0 ] ; do
   -omfit) OMFIT_FLAG=1 ;;
   -omfitres) shift ; OMFIT_RES=$1 ;;
 
+  -sub_aux) TRUE_AUX_FLAG=0 ;;
+  
   -V) VERBOSE_FLAG=1 ;;
 
   -nop) NOP_FLAG=1 ;;
@@ -786,6 +792,7 @@ echo $BTCCW >> $CONFIG
 echo $NFOURIER >> $CONFIG
 echo $N_NULL >> $CONFIG
 echo $LUMP_FAST_FLAG >> $CONFIG
+echo $TRUE_AUX_FLAG >> $CONFIG
 
 # NOTE: reorder flags will be appended later.
 #=============================================================

@@ -11,12 +11,12 @@ def dataAtTorAngle(modeData,n0,n_n,nu,omega,phi):
       particular toroidal angle
 
      """
-     firstkey=modeData.keys()[0]
+     firstkey=list(modeData.keys())[0]
      # Shape will 
      modeShape=modeData[firstkey].shape
      nuShape=modeData[firstkey].shape
      
-     for key in modeData.keys():
+     for key in list(modeData.keys()):
        if (n0==0):
            istart=2
            for iphi in range(1,nphi+1):
@@ -55,7 +55,7 @@ def main():
       inputFile=args[0]
     else:
       if options.input == '':
-        print "Must specify an input file"
+        print("Must specify an input file")
         return
       else:
         inputFile=options.input

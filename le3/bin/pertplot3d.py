@@ -1,5 +1,4 @@
 import sys
-import string
 import numpy as np
 from gacodeplotdefs import *
 
@@ -12,7 +11,7 @@ n_p = int(data[1])+1
 n = len(data)-2
 vec = data[2:len(data)]
 
-print 'Sanity check: ',n-n_t*n_p*4*4
+print('Sanity check: ',n-n_t*n_p*4*4)
 
 vec = np.reshape(vec,(4,4,n_p,n_t),order='F')
 

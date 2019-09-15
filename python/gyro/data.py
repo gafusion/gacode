@@ -86,13 +86,13 @@ class GYROData:
       # Read time vector.
       #
       data = np.fromfile(self.dir+'out.gyro.t',dtype='float',sep=' ')
-      nt = len(data)/2
+      nt = len(data)//2
       data = np.reshape(data,(2,nt),'F')
       self.t['n_time']    = nt
       self.t['data_step'] = data[0,:]
       self.t['(c_s/a)t']  = data[1,:]
       self.n = nt
-      print "INFO: (data.py) Read time vector in out.gyro.t."
+      print('INFO: (data.py) Read time vector in out.gyro.t.')
       #-----------------------------------------------------------------
 
       #-----------------------------------------------------------------
@@ -182,7 +182,7 @@ class GYROData:
           n_theta = self.profile['n_theta_plot']
           self.profile['theta_plot'] = -np.pi+2*np.pi*np.arange(n_theta)/float(n_theta)
 
-      print "INFO: (data.py) Read grid data in out.gyro.profile."
+      print('INFO: (data.py) Read grid data in out.gyro.profile.')
       #-----------------------------------------------------------------
 
       #-----------------------------------------------------------------
@@ -196,7 +196,7 @@ class GYROData:
          self.freq['(a/c_s)gamma']    = temp[1,:,:]
          self.freq['err(a/c_s)w']     = temp[2,:,:]
          self.freq['err(a/c_s)gamma'] = temp[3,:,:]
-         print "INFO: (data.py) Read data in "+fmt+".gyro.freq. "+t 
+         print('INFO: (data.py) Read data in '+fmt+'.gyro.freq. '+t) 
       #-----------------------------------------------------------------
 
       #-----------------------------------------------------------------
@@ -206,7 +206,7 @@ class GYROData:
       t,fmt,data = self.extract('.gyro.field_rms')
       if fmt != 'null':
          self.field_rms = np.reshape(data[0:nd],(2,nt),'F')
-         print "INFO: (data.py) Read data in "+fmt+".gyro.field_rms. "+t 
+         print('INFO: (data.py) Read data in '+fmt+'.gyro.field_rms. '+t) 
       #-----------------------------------------------------------------
    
 
@@ -264,7 +264,7 @@ class GYROData:
       t,fmt,data = self.extract('.gyro.gbflux_i')
       if fmt != 'null':
          self.gbflux_i = np.reshape(data[0:nd],(n_kinetic,n_field,4,n_x,nt),'F')
-         print "INFO: (data.py) Read data in "+fmt+".gyro.gbflux_i. "+t
+         print('INFO: (data.py) Read data in '+fmt+'.gyro.gbflux_i. '+t)
          # NOTE: The average below used to occur in GYRO, but not it's done here.
          if self.profile['boundary_method'] == 1:
             # Periodic simulation
@@ -289,7 +289,7 @@ class GYROData:
       t,fmt,data = self.extract('.gyro.gbflux_n')
       if fmt != 'null':
          self.gbflux_n = np.reshape(data[0:nd],(n_kinetic,n_field,4,n_n,nt),'F')
-         print "INFO: (data.py) Read data in "+fmt+".gyro.gbflux_n. "+t
+         print('INFO: (data.py) Read data in '+fmt+'.gyro.gbflux_n. '+t)
       #---------------------------------------------------------------------------#
 
    def read_gbflux_exc(self):
@@ -304,7 +304,7 @@ class GYROData:
       t,fmt,data = self.extract('.gyro.gbflux_exc')
       if fmt != 'null':
          self.gbflux_exc = np.reshape(data[0:nd],(n_kinetic,2,nt),'F')
-         print "INFO: (data.py) Read data in "+fmt+".gyro.gbflux_exc. "+t
+         print('INFO: (data.py) Read data in '+fmt+'.gyro.gbflux_exc. '+t)
       #---------------------------------------------------------------------------#
 
    def read_kxkyspec(self):
@@ -344,24 +344,24 @@ class GYROData:
       if fmt != 'null' and indx == 'u':
          nd = 2*n_theta_plot*n_x*n_field*n_n*nt
          self.moment_u = np.reshape(data[0:nd],(2,n_theta_plot,n_x,n_field,n_n,nt),'F')
-         print "INFO: (data.py) Read data in "+fmt+".gyro.moment_u. "+t
+         print("INFO: (data.py) Read data in "+fmt+".gyro.moment_u. "+t)
          self.moment_u = self.moment_u[0] + 1j*self.moment_u[1]
 
       nd = 2*n_theta_plot*n_x*n_kinetic*n_n*nt
 
       if fmt != 'null' and indx == 'n':
          self.moment_n = np.reshape(data[0:nd],(2,n_theta_plot,n_x,n_kinetic,n_n,nt),'F')
-         print "INFO: (data.py) Read data in "+fmt+".gyro.moment_n. "+t
+         print("INFO: (data.py) Read data in "+fmt+".gyro.moment_n. "+t)
          self.moment_n = self.moment_n[0] + 1j*self.moment_n[1]
 
       if fmt != 'null' and indx == 'e':
          self.moment_e = np.reshape(data[0:nd],(2,n_theta_plot,n_x,n_kinetic,n_n,nt),'F')
-         print "INFO: (data.py) Read data in "+fmt+".gyro.moment_e. "+t
+         print("INFO: (data.py) Read data in "+fmt+".gyro.moment_e. "+t)
          self.moment_e = self.moment_e[0] + 1j*self.moment_e[1]
 
       if fmt != 'null' and indx == 'v':
          self.moment_v = np.reshape(data[0:nd],(2,n_theta_plot,n_x,n_kinetic,n_n,nt),'F')
-         print "INFO: (data.py) Read data in "+fmt+".gyro.moment_v. "+t
+         print("INFO: (data.py) Read data in "+fmt+".gyro.moment_v. "+t)
          self.moment_v = self.moment_v[0] + 1j*self.moment_v[1]
 
 
@@ -375,20 +375,19 @@ class GYROData:
       t,fmt,data = self.extract('.gyro.moment_zero')
       if fmt == 'bin':
          self.moment_zero = np.reshape(data[0:2*nd],(n_x,ns,6,nt),'F')
-         print "INFO: (data.py) Read data in "+fmt+".gyro.moment_zero. "+t
+         print("INFO: (data.py) Read data in "+fmt+".gyro.moment_zero. "+t)
       if fmt == 'out':
          self.moment_zero = np.reshape(data[0:nd],(n_x,ns,3,nt),'F')
-         print "INFO: (data.py) Read data in "+fmt+".gyro.moment_zero. "+t
+         print("INFO: (data.py) Read data in "+fmt+".gyro.moment_zero. "+t)
       
    def read_balloon(self):
         """Reads out.gyro.balloon*.  Data is stored in self.balloon"""
 
         import glob
-        import string
 
         m     = int(self.profile['box_multiplier'])
         n_x   = int(self.profile['n_x'])
-        n_ang = int(self.profile['n_theta_plot']*n_x/m)
+        n_ang = int(self.profile['n_theta_plot']*n_x//m)
 
         list = glob.glob(self.dir+'/out.gyro.balloon*')
 
@@ -399,7 +398,7 @@ class GYROData:
         for filename in list:
             data = np.fromfile(filename,dtype=float,sep=" ")
             u = data.reshape((2,n_ang,m,self.t['n_time']),order='F')
-            ext = string.splitfields(filename,'.')[-1]
+            ext = filename.split('.')[-1]
             self.balloon[ext] = u[0,...]+1j*u[1,...]
             
 
