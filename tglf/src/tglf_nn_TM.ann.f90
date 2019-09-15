@@ -28,7 +28,7 @@
      real :: OUT_PARTICLE_FLUX_1_RNG, OUT_STRESS_TOR_i_RNG
      real :: INPUT_PARAMETERS_2IONS(24)
      real :: OUTPUT_PARAMETERS_2IONS(6)
-     real :: INPUT_PARAMETERS_3IONS(24)
+     real :: INPUT_PARAMETERS_3IONS(26)
      real :: OUTPUT_PARAMETERS_3IONS(7)
 
 !     real :: start, finish
@@ -153,8 +153,10 @@
        INPUT_PARAMETERS_3IONS(20)=tglf_s_kappa_loc_in   ! S_KAPPA_LOC
        INPUT_PARAMETERS_3IONS(21)=tglf_taus_in(2)       ! TAUS_2
        INPUT_PARAMETERS_3IONS(22)=tglf_vexb_shear_in    ! VEXB_SHEAR
-       INPUT_PARAMETERS_3IONS(23)=tglf_xnue_in          ! XNUE
-       INPUT_PARAMETERS_3IONS(24)=tglf_zeff_in          ! ZEFF
+       INPUT_PARAMETERS_3IONS(23)=tglf_vpar_in(1)       ! VPAR_1
+       INPUT_PARAMETERS_3IONS(24)=tglf_vpar_shear_in(1) ! VPAR_SHEAR_1
+       INPUT_PARAMETERS_3IONS(25)=tglf_xnue_in          ! XNUE
+       INPUT_PARAMETERS_3IONS(26)=tglf_zeff_in          ! ZEFF
 
        call get_environment_variable('TGLFNN_MODEL_3IONS',tglfnn_model)
        ierr=btf_run(TRIM(tglfnn_model)//NUL, &
