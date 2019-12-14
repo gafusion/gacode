@@ -90,7 +90,8 @@ subroutine tglf_run()
        tglf_kygrid_model_in, &
        tglf_xnu_model_in, &
        tglf_vpar_model_in, &
-       tglf_vpar_shear_model_in)
+       tglf_vpar_shear_model_in, &
+       tglf_write_wavefunction_flag_in)
 
   if (tglf_geometry_flag_in == 1 ) then
 

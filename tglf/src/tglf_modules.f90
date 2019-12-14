@@ -111,7 +111,8 @@
       INTEGER :: kygrid_model_in=1
       INTEGER :: xnu_model_in=2
       INTEGER :: vpar_model_in=0
-      INTEGER :: vpar_shear_model_in=1    
+      INTEGER :: vpar_shear_model_in=1  
+      INTEGER :: write_wavefunction_flag_in=0
       REAL :: alpha_n_in =0.0  !not used
       REAL :: alpha_t_in =0.0  !not used
 ! Input signs
@@ -753,6 +754,7 @@
       INTEGER :: sat_rule_tg = 0
       INTEGER :: vpar_model_tg=0
       INTEGER :: vpar_shear_model_tg=0
+      INTEGER :: write_wavefunction_flag_tg = 0
       REAL :: ky_tg=0.3
       REAL :: width_max_tg=1.65
       REAL :: width_min_tg=0.3
@@ -847,7 +849,7 @@
         p_prime_tg, filter_tg, Linsker_factor_tg, gradB_factor_tg,  &
         b_model_tg, ft_model_tg, xnu_factor_tg, debye_factor_tg, &
         nky_tg,etg_factor_tg,use_TM_tg,kygrid_model_tg,xnu_model_tg, &
-        sat_rule_tg,alpha_kx_e_tg,alpha_kx_p_tg,alpha_kx_n_tg, alpha_kx_t_tg, &
+        sat_rule_tg,write_wavefunction_flag_tg,alpha_kx_e_tg,alpha_kx_p_tg,alpha_kx_n_tg, alpha_kx_t_tg, &
         vpar_shear_model_tg, j_surface_tg,vpar_model_tg,sign_Bt_tg,sign_It_tg, &
         vns_shear_tg,vts_shear_tg, nfourier_tg,fourier_tg,vexb_tg,kx0_tg, &
         use_inboard_detrapped_tg

@@ -27,13 +27,14 @@
       REAL :: nsum1(nsm),tsum1(nsm)
 !
       CALL tglf_startup
-
-      open(unit=44,file="tglf_get_intensity",status="unknown")
-      write(44,*) "ky , gamma, ave_p0, B_unit, R_unit, kx0_e, intensity"
-      open(unit=45,file="tglf_weights",status="unknown")
-      write(45,*) "ky"
-      write(45,*)"reduce, phi_bar"
-      write(45,*)"particle_weight, energy_weight, stress_tor_weight, stress_par_weight, exchange_weight"
+      if (write_wavefunction_flag_in == 1) then
+         open(unit=44,file="tglf_get_intensity",status="unknown")
+         write(44,*) "ky , gamma, ave_p0, B_unit, R_unit, kx0_e, intensity"
+         open(unit=45,file="tglf_weights",status="unknown")
+         write(45,*) "ky"
+         write(45,*)"reduce, phi_bar"
+         write(45,*)"particle_weight, energy_weight, stress_tor_weight, stress_par_weight, exchange_weight"
+      endif
 !   
 ! initialize fluxes
 !
@@ -194,6 +195,7 @@
       REAL :: pflux1,eflux1
       REAL :: stress_tor1,stress_par1
       REAL :: exch1, gamma_max
+
 !
 !
 ! setup the ky-spectrum
@@ -235,13 +237,15 @@
       fmax=0.0
       do i=1,nky
         ky_in = ky_spectrum(i)
-        write(45,*)
-        if(i.le.9)then
-          write(45,"(A,I1)") "ky",i
-        else
-          write(45,"(A,I2)") "ky",i
+        if (write_wavefunction_flag_in == 1) then
+           write(45,*)
+           if(i.le.9)then
+              write(45,"(A,I1)") "ky",i
+           else
+              write(45,"(A,I2)") "ky",i
+           endif
+           write(45,*) ky_spectrum(i)
         endif
-        write(45,*) ky_spectrum(i)
 !
         new_width=.TRUE.
 !
@@ -309,8 +313,7 @@
 !            write(*,*)"phi reduced",ky_in,gamma_nb_min_out,gamma_out(1)
           endif
         endif
-        if(sat_rule_in.eq.1)reduce=1.0
-        
+        if(sat_rule_in.eq.1)reduce=1.0       
 !
         if(unstable)then
 ! save the spectral shift of the radial wavenumber due to VEXB_SHEAR
@@ -330,9 +333,7 @@
 !          write(*,*)ky_in,width_in
 !          write(*,*)"modes",imax,phi_QL_out(imax)
 !          write(*,*)gamma_out(imax),freq_out(imax)
-                   
-           write(45,*)reduce,phi_QL_out(imax)
-           
+           if (write_wavefunction_flag_in == 1) write(45,*)reduce,phi_QL_out(imax)           
          enddo
 ! save intensity_spectrum_out
          do is=ns0,ns
@@ -358,7 +359,7 @@
               flux_spectrum_out(3,is,j,i,imax) = stress_tor1
               flux_spectrum_out(4,is,j,i,imax) = stress_par1
               flux_spectrum_out(5,is,j,i,imax) = exch1
-              write(45,*) particle_QL_out(imax,is,j), energy_QL_out(imax,is,j), &
+              if (write_wavefunction_flag_in == 1) write(45,*) particle_QL_out(imax,is,j), energy_QL_out(imax,is,j), &
               stress_tor_QL_out(imax,is,j), stress_par_QL_out(imax,is,j), exchange_QL_out(imax,is,j)
             enddo !imax
            enddo ! j

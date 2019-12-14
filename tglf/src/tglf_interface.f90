@@ -46,7 +46,7 @@ module tglf_interface
 
   logical :: tglf_use_transport_model_in = .true.
   integer :: tglf_geometry_flag_in = 1
-  integer :: tglf_write_wavefunction_flag_in=0
+  integer :: tglf_write_wavefunction_flag_in = 0
 
   ! Data passed to: put_signs
   real    :: tglf_sign_bt_in        = 1.0
@@ -238,6 +238,7 @@ contains
     write(1,20) 'NS',tglf_ns_in
     write(1,10) 'USE_TRANSPORT_MODEL',tglf_use_transport_model_in
     write(1,20) 'GEOMETRY_FLAG',tglf_geometry_flag_in
+    write(1,20) 'WRITE_WAVEFUNCTION_FLAG', tglf_write_wavefunction_flag_in
     write(1,10) 'USE_BPER',tglf_use_bper_in
     write(1,10) 'USE_BPAR',tglf_use_bpar_in
     write(1,10) 'USE_MHD_RULE',tglf_use_mhd_rule_in
@@ -438,7 +439,8 @@ contains
     write(1,30) 'XNU_FACTOR',xnu_factor_in
     write(1,30) 'DEBYE_FACTOR',debye_factor_in
     write(1,30) 'ETG_FACTOR',etg_factor_in
-    write(1,20) 'WRITE_WAVEFUNCTION_FLAG',.FALSE.
+    write(1,20) 'WRITE_WAVEFUNCTION_FLAG',write_wavefunction_flag_in
+!   write(1,20) 'WRITE_WAVEFUNCTION_FLAG',.FALSE.
     write(1,*) ' '
     write(1,*) '#---------------------------------------------------'
     write(1,*) '# Species vectors:'

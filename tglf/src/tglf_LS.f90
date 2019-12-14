@@ -433,7 +433,7 @@
       endif
 !     
       get_intensity = intensity
-      write(44,*) kp, gp, ave_p0(1,1),B_unit, R_unit, kx0_e, intensity
+      if (write_wavefunction_flag_in == 1) write(44,*) kp, gp, ave_p0(1,1),B_unit, R_unit, kx0_e, intensity
       
 !
       END FUNCTION get_intensity

@@ -320,13 +320,14 @@ END SUBROUTINE put_rare_switches
 !
 SUBROUTINE put_model_parameters(adi_elec,alpha_e,alpha_p,alpha_mach,  &
      alpha_quench,alpha_zf,xnu_fac,debye_fac,etg_fac, &
-     sat_rule,kygrid_model,xnu_model,vpar_model,vpar_shear_model)
+     sat_rule,kygrid_model,xnu_model,vpar_model,vpar_shear_model,write_wavefunction_flag)
   !
   USE tglf_global
   !
   IMPLICIT NONE
   LOGICAL,INTENT(IN) :: adi_elec
   INTEGER :: sat_rule,xnu_model,kygrid_model
+  INTEGER :: write_wavefunction_flag
   INTEGER :: vpar_model,vpar_shear_model
   REAL,INTENT(IN) :: alpha_e,alpha_p,alpha_mach,alpha_zf
   REAL,INTENT(IN) :: alpha_quench,xnu_fac,debye_fac,etg_fac
@@ -337,6 +338,7 @@ SUBROUTINE put_model_parameters(adi_elec,alpha_e,alpha_p,alpha_mach,  &
   if(kygrid_model.lt.0.or.kygrid_model.gt.5)kygrid_model = kygrid_model_in
   if(xnu_model.lt.0.or.xnu_model.gt.3)xnu_model = xnu_model_in
   if(sat_rule.lt.0.or.sat_rule.gt.1)sat_rule=sat_rule_in
+  if(write_wavefunction_flag.lt.0.or.write_wavefunction_flag.gt.1)write_wavefunction_flag=write_wavefunction_flag_in
   !if(vpar_model.lt.-1.or.vpar_model.gt.1)vpar_model=vpar_model_in
   if(vpar_shear_model.lt.0.or.vpar_shear_model.gt.1)vpar_shear_model=vpar_shear_model_in
   !
@@ -352,6 +354,7 @@ SUBROUTINE put_model_parameters(adi_elec,alpha_e,alpha_p,alpha_mach,  &
   debye_factor_in = debye_fac
   etg_factor_in = etg_fac
   sat_rule_in = sat_rule
+  write_wavefunction_flag_in = write_wavefunction_flag
   xnu_model_in = xnu_model
   kygrid_model_in = kygrid_model
   !vpar_model_in = vpar_model      depreciated input switch
@@ -368,9 +371,9 @@ END SUBROUTINE put_model_parameters
 !
 SUBROUTINE put_s_alpha_geometry(rmin,rmaj,q,shat,alpha,xwell, &
      theta0,b_model,ft_model)
-  !
+!
   USE tglf_global
-  !
+!
   IMPLICIT NONE
   INTEGER:: b_model,ft_model
   REAL,INTENT(IN) :: rmin,rmaj,q,shat,alpha,theta0,xwell
@@ -1460,6 +1463,7 @@ SUBROUTINE write_tglf_input
   write(11,*)"      kygrid_model_tg = ",kygrid_model_in
   write(11,*)"      xnu_model_tg= ",xnu_model_in
   write(11,*)"      sat_rule_tg= ",sat_rule_in
+  write(11,*)"      write_wavefunction_flag_tg= ",write_wavefunction_flag_in
   write(11,*)"      vpar_model_tg= ",vpar_model_in
   write(11,*)"      vpar_shear_model_tg= ",vpar_shear_model_in
   write(11,*)"      nbasis_max_tg= ",nbasis_max_in

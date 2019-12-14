@@ -146,7 +146,7 @@
       CALL put_model_parameters(adiabatic_elec_tg,alpha_e_tg,alpha_p_tg    &
       ,alpha_quench_tg,xnu_factor_tg,debye_factor_tg                       &
       ,etg_factor_tg,sat_rule_tg,kygrid_model_tg,xnu_model_tg              &
-      ,vpar_model_tg,vpar_shear_model_tg)
+      ,vpar_model_tg,vpar_shear_model_tg,write_wavefunction_flag_tg)
 !
       RETURN
       END SUBROUTINE tglf_startup
