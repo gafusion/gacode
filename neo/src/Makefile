@@ -44,7 +44,7 @@ OBJECTS = neo_globals.o \
           neo_spitzer.o \
           matconv.o
 
-NEO_FLAGS = -cpp
+#NEO_FLAGS = -cpp
 ifdef CUDA_DIR
    OBJECTS   += neo_cusolve.o cusolve.o
    NEO_FLAGS += -DNEO_HAVE_CUDA $(CUDA_INC)
@@ -70,12 +70,12 @@ neo_lib.a: $(OBJECTS)
 	$(ARCH) neo_lib.a $(OBJECTS)
 
 .f90.o .F90.o :
-	$(FC) $(FMATH) $(FFLAGS) $(NN_LIB) $(NEO_FLAGS) -c $< 
+	$(FC) $(FMATH) $(FFLAGS) $(NN_LIB) $(NEO_FLAGS) -c $<
 
 .c.o:
 	$(CC) $(CFLAGS) $(CDEFS) $(NEO_FLAGS) -c $< $(VERBOSE)
 
-clean:  
+clean:
 	rm -rf *.o neo_lib.a $(EXEC) *~
 	cd ${GACODE_ROOT}/modules ; rm -f neo*.mod
 

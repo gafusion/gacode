@@ -42,6 +42,8 @@
 !  real :: rho_norm_loc
 !  real :: psi_norm_loc
 !  real :: psi_a_loc
+!  real :: cs_loc
+!  real :: beta_star_loc
 !
 !  real, dimension(9) :: dens_loc
 !  real, dimension(9) :: temp_loc
@@ -76,9 +78,11 @@ subroutine EXPRO_locsim_profiles(&
   integer, intent(in) :: n_species_in
   real, intent(in) :: rmin
   real, intent(inout) :: btccw,ipccw,a_meters
-
+  real, parameter :: pi=3.14159265358979323846
   integer :: i,j,i_ion
 
+  rmin_loc = rmin
+  
   n_species_exp = n_species_in
 
   !--------------------------------------------------------------
@@ -187,9 +191,11 @@ subroutine EXPRO_locsim_profiles(&
   call cub_spline(rmin_exp,EXPRO_bunit,EXPRO_n_exp,rmin,b_unit_loc,1)
   call cub_spline(rmin_exp,EXPRO_rho,EXPRO_n_exp,rmin,rho_norm_loc,1)
   call cub_spline(rmin_exp,EXPRO_polflux,EXPRO_n_exp,rmin,psi_norm_loc,1)
-  psi_norm_loc  = psi_norm_loc/EXPRO_polflux(EXPRO_n_exp)
+  psi_norm_loc = psi_norm_loc/EXPRO_polflux(EXPRO_n_exp)
   psi_a_loc = EXPRO_polflux(EXPRO_n_exp)
-  
+
+
+  beta_star_loc = 0.0  
   do i=1,n_species_exp
      ! Note: mapping is only done for n_species (not n_species_exp)
      call cub_spline(rmin_exp,dens_exp(i,:),EXPRO_n_exp,rmin,dens_loc(i),1)
@@ -198,12 +204,16 @@ subroutine EXPRO_locsim_profiles(&
      call cub_spline(rmin_exp,dlnndr_exp(i,:),EXPRO_n_exp,rmin,dlnndr_loc(i),1)
      call cub_spline(rmin_exp,sdlntdr_exp(i,:),EXPRO_n_exp,rmin,sdlntdr_loc(i),1)
      call cub_spline(rmin_exp,sdlnndr_exp(i,:),EXPRO_n_exp,rmin,sdlnndr_loc(i),1)
+     beta_star_loc = beta_star_loc+dens_loc(i)*temp_loc(i)*(dlnndr_loc(i)+dlntdr_loc(i))
   enddo
+  ! CGS beta calculation
+  betae_loc = 4.027e-3*dens_loc(n_species_exp)*temp_loc(n_species_exp)/b_unit_loc**2
+
+  beta_star_loc = beta_star_loc*betae_loc/(dens_loc(n_species_exp)*temp_loc(n_species_exp))
 
   if (numeq_flag == 1) then
 
      if (EXPRO_nfourier <= 0) then
-        !call cgyro_error('Geometry coefficients missing')
         return
      endif
 

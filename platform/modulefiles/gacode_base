@@ -34,6 +34,7 @@ prepend-path PATH ${GACODE_ROOT}/shared/bin
 
 prepend-path PYTHONPATH ${GACODE_ROOT}/python
 prepend-path PYTHONPATH ${GACODE_ROOT}/cgyro/bin
+prepend-path PYTHONPATH ${GACODE_ROOT}/gapy/f2py
 
 append-path IDL_PATH ${GACODE_ROOT}/gyro/vugyro
 

@@ -2,310 +2,234 @@ import os
 import numpy as np
 import sys
 
+BYTE='float32'
+
 class GYROData:
-    """GYRO output data class.
 
-    Data:
+   """GYRO output data class."""
 
-    dirname = ""
-    profile  = {}
-    geometry = {}
-    t        = {}
-    freq     = {}
-    balloon  = []
-    diff     = []
-    diff_i   = []
-    diff_n   = []
-    gbflux   = []
-    gbflux_i = []
-    gbflux_n = []
-    moment_u = []
-    moment_n = []
-    moment_e = []
-    moment_v = []
-    moment_zero    = []
-    flux_velocity  = []
-    k_perp_squared = []
+   def __init__(self, sim_directory):
 
-    Example Usage:
-        >>> from gyro.data import GYROData
-        >>> sim = GYROData('example_directory')
-        >>> sim.make_gbflux()
-    """
+       """Constructor reads basic (not all) simulation data."""
 
-    #---------------------------------------------------------------------------#
-    # Methods
+       self.profile  = {}
+       self.geometry = {}
+       self.t        = {}
+       self.freq     = {}
+       self.balloon  = {}
+       self.tagspec    = []
+       self.tagmom     = []
+       self.tagmomtext = []
 
-    def __init__(self, sim_directory):
-        """Constructor reads in data from sim_directory and creates new object.
-        """
+       if not sim_directory.endswith(os.path.sep):
+           sim_directory += os.path.sep
+       self.dir = sim_directory
+       self.getdata()
+       self.read_geometry()
+       self.read_units()
+       self.make_tags()
 
-        self.init_data()
-        self.set_directory(sim_directory)
-        self.read_profile()
-        self.read_geometry()
-        self.read_t()
-        self.read_units()
-        #self.read_input_profiles()
-        self.make_tags()
+       # The rest of the possible read routines should NOT be done automatically.
 
-        # The rest of the possible read routines should NOT be done automatically.
+       """
+       self.read_freq()
+       self.read_balloon()
+       self.read_gbflux_i()
+       self.read_gbflux_n()
+       self.read_gbflux_exc()
+       self.read_moment_u()
+       self.read_moment_n()
+       self.read_moment_e()
+       self.read_moment_v()
+       self.read_moment_zero()
+       self.read_flux_velocity()
+       self.read_k_perp_squared()
 
-        """
-        self.read_freq()
-        self.read_balloon()
-        self.read_gbflux_i()
-        self.read_gbflux_n()
-        self.read_gbflux_exc()
-        self.read_moment_u()
-        self.read_moment_n()
-        self.read_moment_e()
-        self.read_moment_v()
-        self.read_moment_zero()
-        self.read_flux_velocity()
-        self.read_k_perp_squared()
+       There are also routines to make "optional fluxes"
 
-        There are also routines to make "optional fluxes"
+       self.make_diff()
+       self.make_diff_i()
+       """
 
-        self.make_gbflux()
-        self.make_diff()
-        self.make_diff_i()
-        """
+   def extract(self,f):
 
-        import sys
-        from os.path import expanduser, expandvars
-        import sys
-        path = '$GACODE_ROOT/python'
-        sys.path.append(expanduser(expandvars(path)))
+      import sys
+      import os
+      import numpy as np
+      import time
 
-    #---------------------------------------------------------------------------#
+      start = time.time()
+      if os.path.isfile(self.dir+'bin'+f):
+         fmt = 'bin'
+         data = np.fromfile(self.dir+'bin'+f,dtype=BYTE)
+      elif os.path.isfile(self.dir+'out'+f):
+         fmt = 'out'
+         data = np.fromfile(self.dir+'out'+f,dtype='float',sep=' ')
+      else:
+         fmt  = 'null'
+         data = []
+         
+      if int(sys.version_info[2]) > 6:
+         t = 'TIME = '+"{:.3e}".format(time.time()-start)+' s.'
+      else:        
+         t = 'TIME = '+str(time.time()-start)
+ 
+      return t,fmt,data
 
-    def init_data(self):
-        """Initialize object data."""
+   def getdata(self):
 
-        self.dirname = ""
+      """Initialize smaller data objects (don't load larger ones)"""
 
-        self.profile  = {}
-        self.geometry = {}
-        self.t        = {}
-        self.freq     = {}
-        self.balloon  = {}
+      import numpy as np
 
-        self.diff           = []
-        self.diff_i         = []
-        self.diff_n         = []
-        self.gbflux         = []
-        self.gbflux_i       = []
-        self.gbflux_n       = []
-        self.gbflux_exc     = []
-        self.moment_u       = []
-        self.moment_n       = []
-        self.moment_e       = []
-        self.moment_v       = []
-        self.moment_zero    = []
-        self.flux_velocity  = []
-        self.k_perp_squared = []
-        self.loaded         = []
+      #-----------------------------------------------------------------
+      # Read time vector.
+      #
+      data = np.fromfile(self.dir+'out.gyro.t',dtype='float',sep=' ')
+      nt = len(data)//2
+      data = np.reshape(data,(2,nt),'F')
+      self.t['n_time']    = nt
+      self.t['data_step'] = data[0,:]
+      self.t['(c_s/a)t']  = data[1,:]
+      self.n = nt
+      print('INFO: (data.py) Read time vector in out.gyro.t.')
+      #-----------------------------------------------------------------
 
-        self.tagspec    = []
-        self.tagmom     = []
-        self.tagmomtext = []
-        self.units = []
+      #-----------------------------------------------------------------
+      # Read grid data, then unpack
+      # 
+      data = np.fromfile(self.dir+'out.gyro.profile',dtype='float32',sep=' ')
 
-    #---------------------------------------------------------------------------#
+      n_x    = int(data[0])
+      n_spec = int(data[15])
 
-    def set_directory(self, path):
-        """Set the simulation directory."""
+      self.profile['n_x']             = int(data[0])
+      self.profile['n_theta_section'] = int(data[1])
+      self.profile['n_pass']          = int(data[2])
+      self.profile['n_trap']          = int(data[3])
+      self.profile['n_lambda']        = int(data[2]+data[3])
+      self.profile['n_energy']        = int(data[4])
+      self.profile['n_theta_plot']    = int(data[5])
+      self.profile['n0']              = int(data[6])
+      self.profile['n_n']             = int(data[7])
+      self.profile['d_n']             = int(data[8])
+      self.profile['n_explicit_damp'] = int(data[9])
+      self.profile['nonlinear_flag']  = int(data[10])
+      self.profile['electron_method'] = int(data[11])
+      self.profile['n_field']         = int(data[12])
+      self.profile['n_ion']           = int(data[13])
+      self.profile['n_kinetic']       = int(data[14])
+      self.profile['n_spec']          = int(data[15])
+      self.profile['n_grid_exp']      = int(data[16])
+      self.profile['boundary_method'] = int(data[17])
+      self.profile['r']               = data[18:(18+n_x)]
+      self.profile['q']               = data[(18+n_x):(18+2*n_x)]
+      self.profile['r_s']             = data[(18+2*n_x):(18+3*n_x)]
+      self.profile['q_s']             = data[(18+3*n_x):(18+4*n_x)]
+      # The parameter "mark" is used to keep track of where in the file the
+      # program is so that the indices don't get too complicated.
+      mark = 18 + 4*n_x
+      temp = data[mark:(mark+n_spec*n_x)]
+      self.profile['dlntdr_s'] = temp.reshape((n_spec,n_x),order='F')
+      mark = mark + n_spec*n_x
+      temp = data[mark:(mark+n_spec*n_x)]
+      self.profile['dlnndr_s'] = temp.reshape((n_spec,n_x),order='F')
+      mark = mark + n_spec*n_x
+      temp = data[mark:(mark+n_spec*n_x)]
+      self.profile['tem_s'] = temp.reshape((n_spec,n_x),order='F')
+      mark = mark + n_spec*n_x
+      temp = data[mark:(mark+n_spec*n_x)]
+      self.profile['den_s'] = temp.reshape((n_spec,n_x),order='F')
+      mark = mark + n_spec*n_x
+      self.profile['rmaj_s/r_s'] = data[mark:(mark+n_x)]
+      self.profile['delta_s']    = data[(mark+n_x):(mark+2*n_x)]
+      self.profile['zeta_s']     = data[(mark+2*n_x):(mark+3*n_x)]
+      self.profile['kappa_s']    = data[(mark+3*n_x):(mark+4*n_x)]
+      self.profile['drmaj_s']    = data[(mark+4*n_x):(mark+5*n_x)]
+      self.profile['shat_s']     = data[(mark+5*n_x):(mark+6*n_x)]
+      self.profile['s_delta_s']  = data[(mark+6*n_x):(mark+7*n_x)]
+      self.profile['s_zeta_s']   = data[(mark+7*n_x):(mark+8*n_x)]
+      self.profile['s_kappa_s']  = data[(mark+8*n_x):(mark+9*n_x)]
+      self.profile['zmag_s']     = data[(mark+9*n_x):(mark+10*n_x)]
+      self.profile['dzmag_s']    = data[(mark+10*n_x):(mark+11*n_x)]
+      self.profile['beta_unit_s'] = data[(mark+11*n_x):(mark+12*n_x)]
+      self.profile['gamma_e_s']  = data[(mark+12*n_x):(mark+13*n_x)]
+      self.profile['gamma_p_s']  = data[(mark+13*n_x):(mark+14*n_x)]
+      self.profile['mach_s']     = data[(mark+14*n_x):(mark+15*n_x)]
+      self.profile['b_unit_s']   = data[(mark+15*n_x):(mark+16*n_x)]
+      self.profile['z_eff_s']    = data[(mark+16*n_x):(mark+17*n_x)]
+      self.profile['nu_s']       = data[(mark+17*n_x):(mark+18*n_x)]
+      self.profile['w0_s']       = data[(mark+18*n_x):(mark+19*n_x)]
+      mark = mark + 19*n_x
+      self.profile['box_multiplier'] = data[mark]
+      self.profile['lambda']     = data[(mark+1):(mark+1+self.profile['n_lambda'])]
+      mark = mark + 1 + self.profile['n_lambda']
+      self.profile['energy']     = data[mark:(mark+self.profile['n_energy'])]
+      self.profile['lambda_tp']  = data[mark + self.profile['n_energy']]
+      mark = mark + self.profile['n_energy'] + 1
+      self.profile['kt_rho']     = data[mark:(mark+self.profile['n_n'])]
+      self.profile['rho_s']      = data[mark+self.profile['n_n']]
+      mark = mark + self.profile['n_n'] + 1
+      self.profile['z']          = data[mark:(mark+n_spec)]
+      mark = mark + n_spec 
+      self.profile['mu']         = data[mark:(mark+n_spec)]
+      self.profile['n_fine']     = int(data[mark+n_spec])
+      # Done
+      
+      if self.profile['n_theta_plot'] == 1:
+          self.profile['theta_plot'] = 0.0
+      else:
+          n_theta = self.profile['n_theta_plot']
+          self.profile['theta_plot'] = -np.pi+2*np.pi*np.arange(n_theta)/float(n_theta)
 
-        import os
+      print('INFO: (data.py) Read grid data in out.gyro.profile.')
+      #-----------------------------------------------------------------
 
-        from os.path import expanduser, expandvars
-        self.dirname = os.path.realpath(expanduser(expandvars(path)))
+      #-----------------------------------------------------------------
+      # Linear frequency
+      #
+      nd = 4*self.profile['n_n']*nt
+      t,fmt,data = self.extract('.gyro.freq')
+      if fmt != 'null':
+         temp = np.reshape(data[0:nd],(4,self.profile['n_n'],nt),'F')
+         self.freq['(a/c_s)w']        = temp[0,:,:]
+         self.freq['(a/c_s)gamma']    = temp[1,:,:]
+         self.freq['err(a/c_s)w']     = temp[2,:,:]
+         self.freq['err(a/c_s)gamma'] = temp[3,:,:]
+         print('INFO: (data.py) Read data in '+fmt+'.gyro.freq. '+t) 
+      #-----------------------------------------------------------------
 
-    #---------------------------------------------------------------------------#
+      #-----------------------------------------------------------------
+      # RMS field
+      #
+      nd = 2*nt
+      t,fmt,data = self.extract('.gyro.field_rms')
+      if fmt != 'null':
+         self.field_rms = np.reshape(data[0:nd],(2,nt),'F')
+         print('INFO: (data.py) Read data in '+fmt+'.gyro.field_rms. '+t) 
+      #-----------------------------------------------------------------
+   
 
-    def read_t(self):
-        """Read out.gyro.t to get time data."""
+   def read_units(self):
+      """Read out.gyro.units ."""
 
-        import sys
-        import numpy as np
-
-        try:
-            t = np.loadtxt(self.dirname + '/out.gyro.t')
-        except IOError:
-            raise IOError("ERROR (GYROData): Fatal error!  Missing out.gyro.t.")
-
-        self.t['n_time']    = len(t[:,0])
-        self.t['data_step'] = t[:,0]
-        self.t['(c_s/a)t']  = t[:,1]
-        self.loaded.append('t')
-        self.n = len(t[:,0])
-
-    #---------------------------------------------------------------------------#
-
-    def read_units(self):
-        """Read out.gyro.units ."""
-
-        try:
-          f = open(self.dirname+'/out.gyro.units')
-        except IOError:
+      try:
+          f = open(self.dir+'/out.gyro.units')
+      except IOError:
           raise IOError('ERROR (GYROData): Fatal error!  Missing out.gyro.units.')
 
-        fl = f.readlines()
-        f.close()
-        units=[]
-        for fi in fl[0:13]:
-            units.append(float(fi.strip().split()[0]))
-        self.units=units
-        self.loaded.append('units')
+      fl = f.readlines()
+      f.close()
+      units=[]
+      for fi in fl[0:13]:
+          units.append(float(fi.strip().split()[0]))
+      self.units=units
 
-    #---------------------------------------------------------------------------#
 
-    def read_input_profiles(self):
-        """
-        Read input.profiles, input.profiles.extra if they exist.
-        Initializes self.input_profiles and self.exp_derived, respectively.
-        """
-
-        fn = self.dirname+'/input.profiles'
-        if os.path.exists(fn):
-            import profiles_gen.data
-            self.input_profile = profiles_gen.data.profiles_genData(fn)
-            self.loaded.append('input.profiles')
-            fn = fn+'.extra'
-            if os.path.exists(fn):
-                num = 25*self.input_profile.n_exp
-                f = open(fn)
-                fl=f.read()
-                f.close()
-                extra=np.array(fl.split()[0:num],dtype='Float64')
-                self.exp_derived = extra.reshape(25,-1)
-                self.loaded.append('input.profiles.extra')
-
-    #---------------------------------------------------------------------------#
-
-    def read_freq(self):
-        """Reads frequency data.  Output is dictionary of numpy arrays with
-        dimensions: n_n x n_time"""
+   def read_geometry(self):
 
         try:
-            freq = np.loadtxt(self.dirname+'/out.gyro.freq').transpose()
-        except IOError:
-            raise IOError("ERROR (GYROData): Missing out.gyro.freq.")
-
-        temp = freq.reshape((4,self.profile['n_n'],self.t['n_time']), order='F')
-
-        self.freq['(a/c_s)w']        = temp[0,:,:]
-        self.freq['(a/c_s)gamma']    = temp[1,:,:]
-        self.freq['err(a/c_s)w']     = temp[2,:,:]
-        self.freq['err(a/c_s)gamma'] = temp[3,:,:]
-
-        self.loaded.append('freq')
-
-    #---------------------------------------------------------------------------#
-
-    def read_profile(self):
-        """Read out.gyro.profile to get control data.  Output is dictionary
-        containing necessary information.
-        """
-
-
-        try:
-            profile = np.loadtxt(self.dirname+'/out.gyro.profile')
-        except IOError:
-            raise IOError("ERROR (GYROData): Fatal error!  Missing out.gyro.profile.")
-
-        n_x    = int(profile[0])
-        n_spec = int(profile[15])
-
-        self.profile['n_x']             = int(profile[0])
-        self.profile['n_theta_section'] = int(profile[1])
-        self.profile['n_pass']          = int(profile[2])
-        self.profile['n_trap']          = int(profile[3])
-        self.profile['n_lambda']        = int(profile[2]+profile[3])
-        self.profile['n_energy']        = int(profile[4])
-        self.profile['n_theta_plot']    = int(profile[5])
-        self.profile['n0']              = int(profile[6])
-        self.profile['n_n']             = int(profile[7])
-        self.profile['d_n']             = int(profile[8])
-        self.profile['n_explicit_damp'] = int(profile[9])
-        self.profile['nonlinear_flag']  = int(profile[10])
-        self.profile['electron_method'] = int(profile[11])
-        self.profile['n_field']         = int(profile[12])
-        self.profile['n_ion']           = int(profile[13])
-        self.profile['n_kinetic']       = int(profile[14])
-        self.profile['n_spec']          = int(profile[15])
-        self.profile['n_grid_exp']      = int(profile[16])
-        self.profile['boundary_method'] = int(profile[17])
-        self.profile['r']               = profile[18:(18+n_x)]
-        self.profile['q']               = profile[(18+n_x):(18+2*n_x)]
-        self.profile['r_s']             = profile[(18+2*n_x):(18+3*n_x)]
-        self.profile['q_s']             = profile[(18+3*n_x):(18+4*n_x)]
-        # The parameter "mark" is used to keep track of where in the file the
-        # program is so that the indices don't get too complicated.
-        mark = 18 + 4*n_x
-        temp = profile[mark:(mark+n_spec*n_x)]
-        self.profile['dlntdr_s'] = temp.reshape((n_spec,n_x),order='F')
-        mark = mark + n_spec*n_x
-        temp = profile[mark:(mark+n_spec*n_x)]
-        self.profile['dlnndr_s'] = temp.reshape((n_spec,n_x),order='F')
-        mark = mark + n_spec*n_x
-        temp = profile[mark:(mark+n_spec*n_x)]
-        self.profile['tem_s'] = temp.reshape((n_spec,n_x),order='F')
-        mark = mark + n_spec*n_x
-        temp = profile[mark:(mark+n_spec*n_x)]
-        self.profile['den_s'] = temp.reshape((n_spec,n_x),order='F')
-        mark = mark + n_spec*n_x
-        self.profile['rmaj_s/r_s'] = profile[mark:(mark+n_x)]
-        self.profile['delta_s']    = profile[(mark+n_x):(mark+2*n_x)]
-        self.profile['zeta_s']     = profile[(mark+2*n_x):(mark+3*n_x)]
-        self.profile['kappa_s']    = profile[(mark+3*n_x):(mark+4*n_x)]
-        self.profile['drmaj_s']    = profile[(mark+4*n_x):(mark+5*n_x)]
-        self.profile['shat_s']     = profile[(mark+5*n_x):(mark+6*n_x)]
-        self.profile['s_delta_s']  = profile[(mark+6*n_x):(mark+7*n_x)]
-        self.profile['s_zeta_s']   = profile[(mark+7*n_x):(mark+8*n_x)]
-        self.profile['s_kappa_s']  = profile[(mark+8*n_x):(mark+9*n_x)]
-        self.profile['zmag_s']     = profile[(mark+9*n_x):(mark+10*n_x)]
-        self.profile['dzmag_s']    = profile[(mark+10*n_x):(mark+11*n_x)]
-        self.profile['beta_unit_s'] = profile[(mark+11*n_x):(mark+12*n_x)]
-        self.profile['gamma_e_s']  = profile[(mark+12*n_x):(mark+13*n_x)]
-        self.profile['gamma_p_s']  = profile[(mark+13*n_x):(mark+14*n_x)]
-        self.profile['mach_s']     = profile[(mark+14*n_x):(mark+15*n_x)]
-        self.profile['b_unit_s']   = profile[(mark+15*n_x):(mark+16*n_x)]
-        self.profile['dr_eodr']    = profile[(mark+16*n_x):(mark+17*n_x)]
-        self.profile['z_eff_s']    = profile[(mark+17*n_x):(mark+18*n_x)]
-        self.profile['nu_s']       = profile[(mark+18*n_x):(mark+19*n_x)]
-        self.profile['w0_s']       = profile[(mark+19*n_x):(mark+20*n_x)]
-        mark = mark + 20*n_x
-        self.profile['box_multiplier'] = profile[mark]
-        self.profile['lambda']     = profile[(mark+1):(mark+1+self.profile['n_lambda'])]
-        mark = mark + 1 + self.profile['n_lambda']
-        self.profile['energy']     = profile[mark:(mark+self.profile['n_energy'])]
-        self.profile['lambda_tp']  = profile[mark + self.profile['n_energy']]
-        mark = mark + self.profile['n_energy'] + 1
-        self.profile['kt_rho']     = profile[mark:(mark+self.profile['n_n'])]
-        self.profile['rho_s']      = profile[mark+self.profile['n_n']]
-        mark = mark + self.profile['n_n'] + 1
-        self.profile['z']          = profile[mark:(mark+n_spec)]
-        self.profile['n_fine']     = int(profile[mark+n_spec])
-        self.profile['n_moment']   = int(profile[mark+n_spec+1])
-
-        if self.profile['n_theta_plot'] == 1:
-            self.profile['theta_plot'] = 0.0
-        else:
-            n_theta = self.profile['n_theta_plot']
-            self.profile['theta_plot'] = -np.pi+2*np.pi*np.arange(n_theta)/float(n_theta)
-
-
-    #---------------------------------------------------------------------------#
-
-    def read_geometry(self):
-        """Reads in geometry_array data.  Output is dictionary of numpy arrays
-        with dimensions: n_fine x n_x."""
-
-
-        try:
-            geometry = np.fromfile(self.dirname+'/out.gyro.geometry_arrays',dtype=float,sep=" ")
+            geometry = np.fromfile(self.dir+'/out.gyro.geometry_arrays',dtype=float,sep=" ")
         except IOError:
             raise IOError("ERROR (GYROData): out.gyro.geometry_arrays not found.")
 
@@ -324,88 +248,69 @@ class GYROData:
         self.geometry['THETA']   = temp[10,:,:]
         self.geometry['theta_nc'] = temp[11,:,:]
 
-        self.loaded.append('geometry')
-
     #---------------------------------------------------------------------------#
 
-    def read_gbflux_i(self):
-        """Reads in gbflux_i data.  Output is numpy array with dimensions:
-        n_kinetic x n_field x 4 x n_x x n_time"""
+   def read_gbflux_i(self):
 
-        n_kinetic = self.profile['n_kinetic']
-        n_field   = self.profile['n_field']
-        n_x       = self.profile['n_x']
+      #-----------------------------------------------------------------
+      # Radial profiles of fluxes
+      #
+      nt        = self.n
+      n_kinetic = self.profile['n_kinetic']
+      n_field   = self.profile['n_field']
+      n_x       = self.profile['n_x']
+      nd        = n_kinetic*n_field*4*n_x*nt
 
-        try:
-            gbflux_i = np.fromfile(self.dirname+'/out.gyro.gbflux_i',dtype=float,sep=" ")
-        except IOError:
-            raise IOError("ERROR (GYROData): out.gyro.gbflux_i not found.")
+      t,fmt,data = self.extract('.gyro.gbflux_i')
+      if fmt != 'null':
+         self.gbflux_i = np.reshape(data[0:nd],(n_kinetic,n_field,4,n_x,nt),'F')
+         print('INFO: (data.py) Read data in '+fmt+'.gyro.gbflux_i. '+t)
+         # NOTE: The average below used to occur in GYRO, but not it's done here.
+         if self.profile['boundary_method'] == 1:
+            # Periodic simulation
+            self.gbflux = np.mean(self.gbflux_i,axis=3)
+         else:
+            # Nonperiodic simulation: don't include buffers in average
+            n = self.profile['n_explicit_damp']
+            self.gbflux = np.mean(self.gbflux_i[:,:,:,n:-n,:],axis=3)
+      #---------------------------------------------------------------------------#
 
-        nt = len(gbflux_i)/(n_kinetic*n_field*4*n_x)
+   def read_gbflux_n(self):
 
-        if self.n > nt:
-            raise IOError('ERROR (GYROData): '+self.dirname+
-                          '/out.gyro.gbflux_i too small. ')
+      #-----------------------------------------------------------------
+      # ky-dependent fluxes
+      #
+      nt        = self.n
+      n_kinetic = self.profile['n_kinetic']
+      n_field   = self.profile['n_field']
+      n_n       = self.profile['n_n']
+      nd        = n_kinetic*n_field*4*n_n*nt
 
-        self.gbflux_i = gbflux_i.reshape((n_kinetic,n_field,4,n_x,nt),order='F')
+      t,fmt,data = self.extract('.gyro.gbflux_n')
+      if fmt != 'null':
+         self.gbflux_n = np.reshape(data[0:nd],(n_kinetic,n_field,4,n_n,nt),'F')
+         print('INFO: (data.py) Read data in '+fmt+'.gyro.gbflux_n. '+t)
+      #---------------------------------------------------------------------------#
 
-        self.loaded.append('gbflux_i')
+   def read_gbflux_exc(self):
 
-    #---------------------------------------------------------------------------#
+      #-----------------------------------------------------------------
+      # exchanges
+      #
+      nt        = self.n
+      n_kinetic = self.profile['n_kinetic']
+      nd        = n_kinetic*2*nt
 
-    def read_gbflux_n(self):
-        """Reads gbflux_n data.  Output is numpy array with dimensions:
-        n_kinetic x n_field x 4 x n_n x n_time"""
+      t,fmt,data = self.extract('.gyro.gbflux_exc')
+      if fmt != 'null':
+         self.gbflux_exc = np.reshape(data[0:nd],(n_kinetic,2,nt),'F')
+         print('INFO: (data.py) Read data in '+fmt+'.gyro.gbflux_exc. '+t)
+      #---------------------------------------------------------------------------#
 
-        n_kinetic = self.profile['n_kinetic']
-        n_field   = self.profile['n_field']
-        n_n       = self.profile['n_n']
-
-
-        try:
-            gbflux_n = np.fromfile(self.dirname+'/out.gyro.gbflux_n',dtype=float,sep=" ")
-        except IOError:
-            raise IOError("ERROR (GYROData): out.gyro.gbflux_n not found.")
-
-        nt = len(gbflux_n)/(n_kinetic*n_field*4*n_n)
-
-        if self.n > nt:
-            raise IOError('ERROR (GYROData): '+self.dirname+
-                          '/out.gyro.gbflux_n too small. ')
-
-        self.gbflux_n = gbflux_n.reshape((n_kinetic,n_field,4,n_n,nt),order='F')
-
-        self.loaded.append('gbflux_n')
-
-     #---------------------------------------------------------------------------#
-
-    def read_gbflux_exc(self):
-        """Reads gbflux_exc data.  Output is numpy array with dimensions:
-        n_kinetic x 4 x n_time"""
-
-        n_kinetic = self.profile['n_kinetic']
-
-        try:
-            gbflux_exc = np.fromfile(self.dirname+'/out.gyro.gbflux_exc',dtype=float,sep=" ")
-        except:
-            raise IOError("ERROR (GYROData): out.gyro.gbflux_exc not found.")
-
-        nt = len(gbflux_exc)/(n_kinetic*2)
-
-        if self.n > nt:
-            raise IOError('ERROR (GYROData): '+self.dirname+
-              '/out.gyro.gbflux_exc too small. ')
-
-
-        self.gbflux_exc = gbflux_exc.reshape((n_kinetic,2,nt),order='F')
-        self.loaded.append('gbflux_exc')
-
-        #---------------------------------------------------------------------------#
-
-    def read_kxkyspec(self):
+   def read_kxkyspec(self):
 
         try:
-            kxkyspec = np.fromfile(self.dirname+'/out.gyro.kxkyspec',dtype=float,sep=" ")
+            kxkyspec = np.fromfile(self.dir+'/out.gyro.kxkyspec',dtype=float,sep=" ")
         except:
             raise IOError("ERROR (GYROData): out.gyro.kxkyspec not found.")
 
@@ -414,207 +319,77 @@ class GYROData:
         nt  = len(kxkyspec)/(n_x*n_n)
 
         if self.n > nt:
-            raise IOError('ERROR (GYROData): '+self.dirname+
+            raise IOError('ERROR (GYROData): '+self.dir+
               '/out.gyro.kxkyspec too small. ')
 
         self.kxkyspec = kxkyspec.reshape((n_x,n_n,nt),order='F')
-        self.loaded.append('kxkyspec')
 
-    #---------------------------------------------------------------------------#
-    def read_field_rms(self):
-
-        nt = self.n
-
-        try:
-            field_rms = np.fromfile(self.dirname+'/out.gyro.field_rms',dtype=float,sep=" ")
-        except:
-            raise IOError("ERROR (GYROData): out.gyro.field_rms not found.")
-
-        self.field_rms = field_rms.reshape((2,nt),order='F')
-        self.loaded.append('field_rms')
 
     #---------------------------------------------------------------------------#
 
-    def read_moment_u(self):
-        """Reads in moment_u data.  Output is numpy array with dimensions:
-        n_theta_plot x n_x x n_field x n_n x n_time"""
+   def read_moment(self,indx):
 
-        n_theta_plot = self.profile['n_theta_plot']
-        n_x          = self.profile['n_x']
-        n_field      = self.profile['n_field']
-        n_n          = self.profile['n_n']
+      """Read moment_u (field) data"""
 
-        try:
-            data = np.fromfile(self.dirname+'/out.gyro.moment_u',dtype=float,sep=" ")
-        except IOError:
-            raise IOError("ERROR (GYROData): out.gyro.moment_u not found.")
+      nt           = self.n
+      n_theta_plot = self.profile['n_theta_plot']
+      n_x          = self.profile['n_x']
+      n_field      = self.profile['n_field']
+      n_n          = self.profile['n_n']
+      n_kinetic    = self.profile['n_kinetic']
 
-        nt = len(data)/(2*n_theta_plot*n_x*n_field*n_n)
+        
+      t,fmt,data = self.extract('.gyro.moment_'+indx)
 
-        if self.n > nt:
-            raise IOError('ERROR (GYROData): '+self.dirname+
-                          '/out.gyro.moment_u too small. ')
+      if fmt != 'null' and indx == 'u':
+         nd = 2*n_theta_plot*n_x*n_field*n_n*nt
+         self.moment_u = np.reshape(data[0:nd],(2,n_theta_plot,n_x,n_field,n_n,nt),'F')
+         print("INFO: (data.py) Read data in "+fmt+".gyro.moment_u. "+t)
+         self.moment_u = self.moment_u[0] + 1j*self.moment_u[1]
 
-        self.moment_u = data.reshape((2,n_theta_plot,n_x,n_field,n_n,nt),order='F')
-        self.moment_u = self.moment_u[0] + 1j*self.moment_u[1]
+      nd = 2*n_theta_plot*n_x*n_kinetic*n_n*nt
 
-        self.loaded.append('moment_u')
+      if fmt != 'null' and indx == 'n':
+         self.moment_n = np.reshape(data[0:nd],(2,n_theta_plot,n_x,n_kinetic,n_n,nt),'F')
+         print("INFO: (data.py) Read data in "+fmt+".gyro.moment_n. "+t)
+         self.moment_n = self.moment_n[0] + 1j*self.moment_n[1]
 
-    #---------------------------------------------------------------------------#
+      if fmt != 'null' and indx == 'e':
+         self.moment_e = np.reshape(data[0:nd],(2,n_theta_plot,n_x,n_kinetic,n_n,nt),'F')
+         print("INFO: (data.py) Read data in "+fmt+".gyro.moment_e. "+t)
+         self.moment_e = self.moment_e[0] + 1j*self.moment_e[1]
 
-    def read_moment_n(self):
-        """Reads in moment_n data.  Output is numpy array with dimensions:
-        n_theta_plot x n_x x n_kinetic x n_n x n_time"""
-
-        n_theta_plot = self.profile['n_theta_plot']
-        n_x          = self.profile['n_x']
-        n_kinetic    = self.profile['n_kinetic']
-        n_n          = self.profile['n_n']
-
-        try:
-            data = np.fromfile(self.dirname+'/out.gyro.moment_n',dtype=float,sep=" ")
-        except:
-            raise IOError("ERROR (GYROData): out.gyro.moment_n not found.")
-
-        nt = len(data)/(2*n_theta_plot*n_x*n_kinetic*n_n)
-
-        if self.n > nt:
-            raise IOError('ERROR (GYROData): '+self.dirname+
-                          '/out.gyro.moment_n too small. ')
-
-        self.moment_n = data.reshape((2,n_theta_plot,n_x,n_kinetic,n_n,nt),order='F')
-        self.moment_n = self.moment_n[0] + 1j*self.moment_n[1]
-
-        self.loaded.append('moment_n')
-
-    #---------------------------------------------------------------------------#
-
-    def read_moment_e(self):
-        """Reads in moment_e data.  Output is numpy array with dimensions:
-        n_theta_plot x n_x x n_field x n_n x n_time"""
-
-        n_theta_plot = self.profile['n_theta_plot']
-        n_x          = self.profile['n_x']
-        n_kinetic    = self.profile['n_kinetic']
-        n_n          = self.profile['n_n']
-
-        try:
-            data = np.fromfile(self.dirname+'/out.gyro.moment_e',dtype=float,sep=" ")
-        except:
-            raise IOError("ERROR (GYROData): out.gyro.moment_e not found.")
-
-        nt = len(data)/(2*n_theta_plot*n_x*n_kinetic*n_n)
-
-        if self.n > nt:
-            raise IOError('ERROR (GYROData): '+self.dirname+
-                          '/out.gyro.moment_e too small. ')
+      if fmt != 'null' and indx == 'v':
+         self.moment_v = np.reshape(data[0:nd],(2,n_theta_plot,n_x,n_kinetic,n_n,nt),'F')
+         print("INFO: (data.py) Read data in "+fmt+".gyro.moment_v. "+t)
+         self.moment_v = self.moment_v[0] + 1j*self.moment_v[1]
 
 
-        self.moment_e = data.reshape((2,n_theta_plot,n_x,n_kinetic,n_n,nt),order='F')
-        self.moment_e = self.moment_e[0] + 1j*self.moment_e[1]
+   def read_moment_zero(self):
 
-        self.loaded.append('moment_e')
-
-    #---------------------------------------------------------------------------#
-
-    def read_moment_v(self):
-        """Reads in moment_v data.  Output is numpy array with dimensions:
-        n_theta_plot x n_x x n_kinetic x n_n x n_time"""
-
-        n_theta_plot = self.profile['n_theta_plot']
-        n_x          = self.profile['n_x']
-        n_kinetic    = self.profile['n_kinetic']
-        n_n          = self.profile['n_n']
-
-        try:
-            data = np.fromfile(self.dirname+'/out.gyro.moment_v',dtype=float,sep=" ")
-        except:
-            raise IOError("ERROR (GYROData): out.gyro.moment_v not found.")
-
-        nt = len(data)/(2*n_theta_plot*n_x*n_kinetic*n_n)
-
-        if self.n > nt:
-            raise IOError('ERROR (GYROData): '+self.dirname+
-                          '/out.gyro.moment_e too small. ')
-
-        self.moment_v = data.reshape((2,n_theta_plot,n_x,n_kinetic,n_n,nt),order='F')
-        self.moment_v = self.moment_v[0] + 1j*self.moment_v[1]
-
-        self.loaded.append('moment_v')
-
-    #---------------------------------------------------------------------------#
-
-    def read_moment_zero(self):
-        """Read data in out.gyro.moment_zero, store in self.moment_zero.
-        Dimensions: (n_x,n_kinetic,n_moment,n_time)"""
-
-        n_x          = self.profile['n_x']
-        n_kinetic    = self.profile['n_kinetic']
-        n_moment     = self.profile['n_moment']
-
-        try:
-            data = np.fromfile(self.dirname+'/out.gyro.moment_zero',dtype=float,sep=" ")
-        except:
-            raise IOError("ERROR (GYROData): out.gyro.moment_zero not found.")
-
-        t = len(data)/(n_x*n_kinetic*n_moment)
-        self.moment_zero = data.reshape((n_x,n_kinetic,n_moment,t),order='F')
-
-        self.loaded.append('moment_zero')
-
-    #---------------------------------------------------------------------------#
-
-    def read_flux_velocity(self):
-        """Reads out.gyro.flux_velocity.
-        Output is numpy array with dimensions:
-          (n_energy,n_lambda,n_kinetic,n_field,2,n_n,n_time)"""
-
-        n_energy  = self.profile['n_energy']
-        n_lambda  = self.profile['n_lambda']
-        n_kinetic = self.profile['n_kinetic']
-        n_field   = self.profile['n_field']
-        n_n       = self.profile['n_n']
-
-        try:
-            data = np.fromfile(self.dirname+'/out.gyro.flux_velocity',dtype=float,sep=" ")
-        except:
-            raise IOError("ERROR (GYROData): out.gyro.flux_velocity not found.")
-
-        t = len(data)/(n_energy*n_lambda*n_kinetic*n_field*2*n_n)
-        self.flux_velocity = data.reshape(
-            (n_energy,n_lambda,n_kinetic,n_field,2,n_n,t),order='F')
-
-        self.loaded.append('flux_velocity')
-
-    #---------------------------------------------------------------------------#
-
-    def read_k_perp_squared(self):
-        """Reads out.gyro.k_perp_squared.
-           Output is numpy array with dimensions: (n_n,n_time)"""
-
-        try:
-            data = np.fromfile(self.dirname+'/out.gyro.k_perp_squared',dtype=float,sep=" ")
-        except:
-            raise IOError("ERROR (GYROData): out.gyro.kperp_squared not found.")
-
-        t = len(data)/self.profile['n_n']
-        self.k_perp_squared = data.reshape((self.profile['n_n'],t),order='F')
-
-        self.loaded.append('k_perp_squared')
-
-    #---------------------------------------------------------------------------#
-
-    def read_balloon(self):
+      nt   = self.n
+      n_x  = self.profile['n_x']
+      ns   = self.profile['n_kinetic']
+      nd   = n_x*ns*3*nt
+      
+      t,fmt,data = self.extract('.gyro.moment_zero')
+      if fmt == 'bin':
+         self.moment_zero = np.reshape(data[0:2*nd],(n_x,ns,6,nt),'F')
+         print("INFO: (data.py) Read data in "+fmt+".gyro.moment_zero. "+t)
+      if fmt == 'out':
+         self.moment_zero = np.reshape(data[0:nd],(n_x,ns,3,nt),'F')
+         print("INFO: (data.py) Read data in "+fmt+".gyro.moment_zero. "+t)
+      
+   def read_balloon(self):
         """Reads out.gyro.balloon*.  Data is stored in self.balloon"""
 
         import glob
-        import string
 
         m     = int(self.profile['box_multiplier'])
         n_x   = int(self.profile['n_x'])
-        n_ang = int(self.profile['n_theta_plot']*n_x/m)
+        n_ang = int(self.profile['n_theta_plot']*n_x//m)
 
-        list = glob.glob(self.dirname+'/out.gyro.balloon*')
+        list = glob.glob(self.dir+'/out.gyro.balloon*')
 
         # If list is empty, then exit with error message.
         if len(list) == 0:
@@ -623,88 +398,11 @@ class GYROData:
         for filename in list:
             data = np.fromfile(filename,dtype=float,sep=" ")
             u = data.reshape((2,n_ang,m,self.t['n_time']),order='F')
-            ext = string.splitfields(filename,'.')[-1]
+            ext = filename.split('.')[-1]
             self.balloon[ext] = u[0,...]+1j*u[1,...]
+            
 
-    #------------------------------------------------------------
-    # Create data from other previously imported data
-
-    def make_gbflux(self):
-        """Makes gbflux (omitting buffers properly). Output is numpy array
-           with dimensions: n_kinetic x n_field x 4 x n_time"""
-
-        if len(self.gbflux_i)==0:
-            self.read_gbflux_i()
-        if self.profile['boundary_method'] == 1:
-            # Periodic simulation
-            self.gbflux = np.mean(self.gbflux_i, axis=3)
-        else:
-            # Nonperiodic simulation: don't include buffers in average
-            n = self.profile['n_explicit_damp']
-            self.gbflux = np.mean(self.gbflux_i[:,:,:,n:-n,:],axis=3)
-
-    #---------------------------------------------------------------------------#
-
-    def make_diff(self):
-        """Makes diff.  Output is dictionary of numpy arrays with
-        dimensions: n_kinetic x n_field x n_time"""
-
-        # NOTE: deprecate n_x_offset in GYRO.
-
-        if self.gbflux == []:
-            self.make_gbflux()
-
-        ir_norm = int(self.profile['n_x']/2+1)
-
-        n_kinetic = self.profile['n_kinetic']
-        n_field   = self.profile['n_field']
-        n_time    = self.t['n_time']
-
-        self.diff = np.zeros((n_kinetic,n_field,2,n_time))
-        for i in range(n_kinetic):
-            # Density diffusivity
-            self.diff[i,:,0,:] = self.gbflux[i,:,0,:]/(
-                self.profile['dlnndr_s'][i,ir_norm]*
-                self.profile['den_s'][i,ir_norm])
-            # Energy diffusivity
-            self.diff[i,:,1,:] = self.gbflux[i,:,1,:]/(
-                self.profile['dlntdr_s'][i,ir_norm]*
-                self.profile['tem_s'][i,ir_norm]*
-                self.profile['den_s'][i,ir_norm])
-
-
-    #---------------------------------------------------------------------------#
-
-    def make_diff_i(self):
-        """Makes diff_i.  Output is dictionary of numpy arrays with
-        dimensions: n_kinetic x n_field x n_x x n_time"""
-
-        if self.gbflux_i == []:
-            self.read_gbflux_i()
-
-        ir_norm = int(self.profile['n_x']/2+1)
-
-        n_kinetic = self.profile['n_kinetic']
-        n_field   = self.profile['n_field']
-        n_x       = self.profile['n_x']
-        n_time    = self.t['n_time']
-
-        self.diff_i = np.zeros((n_kinetic,n_field,2,n_x,n_time))
-        for i in range(n_kinetic):
-            # Density diffusivity
-            self.diff_i[i,:,0,:,:] = self.gbflux_i[i,:,0,:,:]/(
-                self.profile['dlnndr_s'][i,ir_norm]*
-                self.profile['den_s'][i,ir_norm])
-            # Energy diffusivity
-            self.diff_i[i,:,1,:,:] = self.gbflux_i[i,:,1,:,:]/(
-                self.profile['dlntdr_s'][i,ir_norm]*
-                self.profile['tem_s'][i,ir_norm]*
-                self.profile['den_s'][i,ir_norm])
-
-
-    #---------------------------------------------------------------------------#
-
-    def make_tags(self):
+   def make_tags(self):
         """Generate tags for fields, moments and species"""
 
         n_kinetic = self.profile['n_kinetic']
@@ -746,7 +444,7 @@ class GYROData:
                          '\mathrm{compression}',
                          '\mathrm{total}']
 
-    def get_sim_exp_flux(self,field_num=None,ft1=.5,ft2=1.,moment=1,
+   def get_sim_exp_flux(self,field_num=None,ft1=.5,ft2=1.,moment=1,
           GB_norm=0):
         """
         Return the radially averaged, time averaged simulated flux and
@@ -770,8 +468,7 @@ class GYROData:
                     2 - Flow [unit] # Not implemented, need input.profiles.extra
         """
         import math
-        if self.gbflux == []:
-          self.make_gbflux()
+        
         gbflux = self.gbflux
         if field_num==None:
           gbflux = np.sum(gbflux,axis=1)

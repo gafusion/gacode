@@ -16,7 +16,6 @@ NUMAS_PER_NODE=1
 
 FC  = mpif90 -std=f2008 -fall-intrinsics -I$(GACODE_ROOT)/modules -J $(GACODE_ROOT)/modules -fPIC
 F77 = mpif77 -I$(GACODE_ROOT)/modules
-F2PY = f2py2.7
 CC  = gcc
 
 FOMP   = -fopenmp

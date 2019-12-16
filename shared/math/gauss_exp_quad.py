@@ -102,7 +102,7 @@ for i in range(nplot):
         k = k+1 
         
 if k < n-1:
-    print 'ERROR: (gauss_exp_quad) Not all roots bracketed!  Need higher precision.'
+    print('ERROR: (gauss_exp_quad) Not all roots bracketed!  Need higher precision.')
     sys.exit()
     
 # Solve for roots using Newton's method

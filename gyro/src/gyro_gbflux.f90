@@ -22,11 +22,9 @@ subroutine gyro_gbflux
   implicit none
   !
   real, dimension(n_kinetic,n_field,p_moment,n_x) :: gbflux_i_loc
-  real, dimension(n_kinetic,n_field,p_moment,n_x) :: gbflux_i_loc_trapped
   real, dimension(n_kinetic,3) :: gbflux_mom_loc
   real, dimension(n_kinetic,2) :: gbflux_exc_loc
   real, dimension(n_kinetic,n_field,p_moment) :: gbflux_loc
-  real, dimension(n_kinetic,n_field,p_moment) :: gbflux_loc_trapped
   real :: gbflux_norm
   !-------------------------------------------------------------
 
@@ -47,11 +45,7 @@ subroutine gyro_gbflux
      do is=1,n_kinetic
         do i=1,n_x
 
-           gbflux_i_loc(is,ix,:,i) = j*(nonlinear_flux_passing(i,is,ix,:)+ &
-                nonlinear_flux_trapped(i,is,ix,:))/rhos_norm**2
-
-           gbflux_i_loc_trapped(is,ix,:,i) = j*nonlinear_flux_trapped(i,is,ix,:)/ &
-                rhos_norm**2
+           gbflux_i_loc(is,ix,:,i) = j*nonlinear_flux(i,is,ix,:)/rhos_norm**2
 
         enddo ! i
      enddo ! is
@@ -83,11 +77,7 @@ subroutine gyro_gbflux
 
         do i=1,n_x
 
-           gbflux_i_loc(:,:,:,i) = (nonlinear_flux_passing(i,:,:,:)+ &
-                nonlinear_flux_trapped(i,:,:,:))/sum(phi_squared(:)/n_x)
-
-           gbflux_i_loc_trapped(:,:,:,i) = nonlinear_flux_trapped(i,:,:,:)/ &
-                sum(phi_squared(:)/n_x)
+           gbflux_i_loc(:,:,:,i) = nonlinear_flux(i,:,:,:)/sum(phi_squared(:)/n_x)
 
         enddo ! i
 
@@ -103,15 +93,12 @@ subroutine gyro_gbflux
   ! Get (crude) averages over radius.  Do not include the 
   ! region inside the explicit damper.
   !
-  gbflux_loc(:,:,:)         = 0.0
-  gbflux_loc_trapped(:,:,:) = 0.0
+  gbflux_loc(:,:,:) = 0.0
   !
   do i=1+n_explicit_damp,n_x-n_explicit_damp
      gbflux_loc(:,:,:) = gbflux_loc(:,:,:)+gbflux_i_loc(:,:,:,i)
-     gbflux_loc_trapped(:,:,:) = gbflux_loc_trapped(:,:,:)+gbflux_i_loc_trapped(:,:,:,i)
   enddo ! i
   gbflux_loc(:,:,:) = gbflux_loc(:,:,:)/(n_x-2*n_explicit_damp)
-  gbflux_loc_trapped(:,:,:) = gbflux_loc_trapped(:,:,:)/(n_x-2*n_explicit_damp)
   !----------------------------------------------------------
 
   !----------------------------------------------------------
@@ -149,25 +136,9 @@ subroutine gyro_gbflux
        NEW_COMM_2, &
        i_err)
 
-  call MPI_ALLREDUCE(gbflux_loc_trapped, &
-       gbflux_trapped, &
-       size(gbflux_trapped), &
-       MPI_DOUBLE_PRECISION, &
-       MPI_SUM, &
-       NEW_COMM_2, &
-       i_err)
-
   call MPI_ALLREDUCE(gbflux_i_loc, &
        gbflux_i, &
        size(gbflux_i), &
-       MPI_DOUBLE_PRECISION, &
-       MPI_SUM, &
-       NEW_COMM_2, &
-       i_err)
-
-  call MPI_ALLREDUCE(gbflux_i_loc_trapped, &
-       gbflux_i_trapped, &
-       size(gbflux_i_trapped), &
        MPI_DOUBLE_PRECISION, &
        MPI_SUM, &
        NEW_COMM_2, &
@@ -183,15 +154,13 @@ subroutine gyro_gbflux
 
         gbflux_mom(:,:)           = gbflux_mom(:,:)/gbflux_norm
         gbflux(:,:,:)             = gbflux(:,:,:)/gbflux_norm
-        gbflux_trapped(:,:,:)     = gbflux_trapped(:,:,:)/gbflux_norm
         gbflux_i(:,:,:,:)         = gbflux_i(:,:,:,:)/gbflux_norm
-        gbflux_i_trapped(:,:,:,:) = gbflux_i_trapped(:,:,:,:)/gbflux_norm
 
      endif
   endif
 
-  ! Compute running time-average of radially-dependent fluxes
-  if (step > int((1.0-fluxaverage_window)*nstep)) then
+  ! Compute running time-average (factor 0.9) of radially-dependent fluxes
+  if (step > int((1.0-0.9)*nstep)) then
      p_ave = p_ave+1
      gbflux_vec(:,:,:,:) = ((p_ave-1)*gbflux_vec(:,:,:,:)+gbflux_i(:,:,:,:))/p_ave
   else

@@ -1,0 +1,22 @@
+#%Module
+#
+# Module file for setting the GACODE machine-dependent environmental variables
+#
+
+setenv GACODE_PLATFORM [lrange [file split ${ModulesCurrentModulefile}]	end end]
+set GACODE_PLATFORM $::env(GACODE_PLATFORM)
+puts stderr "Use GACODE_PLATFORM: ${GACODE_PLATFORM}"
+echo "Use GACODE_PLATFORM: ${GACODE_PLATFORM}"
+
+module load pgi/19.1
+module load fftw
+module load hdf5
+module load netcdf
+module load netcdf-fortran
+module load essl                                                                               
+module load cuda/9.2.148
+module load python
+module load nano
+
+setenv OMP_STACKSIZE 400M
+setenv OMP_DYNAMIC FALSE

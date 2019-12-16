@@ -16,6 +16,7 @@ module tgyro_iteration_variables
   !
   integer, dimension(:), allocatable :: ipiv
   real, dimension(:,:), allocatable :: jf
+  real, dimension(:,:), allocatable :: jf0
   real, dimension(:,:), allocatable :: jg
   real, dimension(:,:), allocatable :: jfg
   real, dimension(:), allocatable :: x_vec
@@ -58,6 +59,10 @@ module tgyro_iteration_variables
   real, dimension(:,:), allocatable :: x_vec_vec
   real, dimension(:,:), allocatable :: f_vec_vec
   real, dimension(:,:), allocatable :: g_vec_vec
+  !
+  ! To be further allocated in tgyro_iteration_diagonal:
+  !
+  real, dimension(:), allocatable :: fn,fn0
   !------------------------------------------------------
 
 end module tgyro_iteration_variables

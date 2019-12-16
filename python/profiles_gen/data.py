@@ -167,7 +167,7 @@ class profiles_genData:
     # ---------------------------------------------------------------------------#
     # Methods
 
-    def __init__(self, infile):
+    def __init__(self, infile,verbose=True):
         """
         Constructor reads in data from directory and creates new object.
         """
@@ -186,7 +186,8 @@ class profiles_genData:
             tmp = profiles_gen(infile)
             self.data.update(tmp.data)
             self.n_exp = tmp.n_exp
-            print('(INFO): (profiles_genData) ' + infile + ' found.')
+            if verbose:
+                print(('(INFO): (profiles_genData) ' + infile + ' found.'))
         except Exception as E:
             #raise (IOError('(ERROR): (profiles_genData) ' + infile + ' not found: ' + str(E)))
            pass
@@ -194,7 +195,7 @@ class profiles_genData:
         # OPTIONAL: Read input.profiles.extra if it exists
         try:
             self.data.update(profiles_gen_extra(infile + '.extra').data)
-            print('(INFO): (profiles_genData) ' + infile + '.extra found.')
+            print(('(INFO): (profiles_genData) ' + infile + '.extra found.'))
         except Exception as E:
             #print('(INFO): (profiles_genData) ' + infile + '.extra NOT loaded: ' + str(E))
            pass
@@ -204,7 +205,7 @@ class profiles_genData:
             tmp = profiles_gen_geo(infile + '.geo')
             self.geo.update(tmp.geo)
             self.nfourier = tmp.nfourier
-            print('(INFO): (profiles_genData) ' + infile + '.geo found.')
+            print(('(INFO): (profiles_genData) ' + infile + '.geo found.'))
         except Exception as E:
             #print('(INFO): (profiles_genData) ' + infile + '.geo NOT loaded: ' + str(E))
            pass
@@ -212,7 +213,7 @@ class profiles_genData:
         # OPTIONAL: Read input.profiles.jbs if it exists
         try:
             self.data.update(profiles_gen_jbs(infile + '.jbs').data)
-            print('(INFO): (profiles_genData) ' + infile + '.jbs found.')
+            print(('(INFO): (profiles_genData) ' + infile + '.jbs found.'))
         except Exception as E:
             #print('(INFO): (profiles_genData) ' + infile + '.jbs NOT loaded: ' + str(E))
            pass
@@ -314,5 +315,5 @@ if __name__ == '__main__':
     tmp = set(numpy.array(vars_input_profiles).flatten())
     tmp = tmp.union(set(vars_input_profiles_jbs))
     tmp = tmp.union(set(vars_input_profiles_extra))
-    print tmp.difference(set(fancyNames.keys()))
+    print(tmp.difference(set(fancyNames.keys())))
 

@@ -190,6 +190,7 @@
       REAL :: exch1, gamma_max
       ! mpi 
       REAL :: ne_te_phase_spectrum_save(nkym,maxmodes)
+      REAL :: nsts_phase_spectrum_save(nsm,nkym,maxmodes)
       REAL :: eigenvalue_spectrum_save(2,nkym,maxmodes)
       REAL :: field_spectrum_save(4,nkym,maxmodes)
       REAL :: intensity_spectrum_save(4,nsm,nkym,maxmodes)
@@ -222,6 +223,7 @@
               flux_spectrum_save(t,is,j,i,k) = 0.0
             enddo
           enddo ! j
+          nsts_phase_spectrum_save(is,i,k)=0.0
         enddo ! is
         ne_te_phase_spectrum_save(i,k)=0.0
        enddo  !k
@@ -353,6 +355,13 @@
          do imax=1,nmodes_out
            ne_te_phase_spectrum_save(i,imax) = ne_te_phase_out(imax)
          enddo  !imax
+! save ns_ts crossphase
+         do is=1,ns_in
+           do imax=1,nmodes_out
+             nsts_phase_spectrum_save(is,i,imax) = Ns_Ts_phase_out(imax,is)
+           enddo  !imax
+          enddo    ! is
+
         endif !unstable .T.
 !
 ! reset width to maximum if used tglf_max
@@ -370,7 +379,14 @@
                         ,MPI_SUM                     &
                         ,iCommTglf                   &
                         ,ierr)
-      call MPI_ALLREDUCE(eigenvalue_spectrum_save    &
+       call MPI_ALLREDUCE(nsts_phase_spectrum_save     &
+                        ,nsts_phase_spectrum_out          &
+                        ,nsm*nkym*maxmodes                      &
+                        ,MPI_DOUBLE_PRECISION        &
+                        ,MPI_SUM                     &
+                        ,iCommTglf                   &
+                        ,ierr)
+     call MPI_ALLREDUCE(eigenvalue_spectrum_save    &
                         ,eigenvalue_spectrum_out     &
                         ,2*nkym*maxmodes             &
                         ,MPI_DOUBLE_PRECISION        &

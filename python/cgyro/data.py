@@ -1,6 +1,8 @@
 import os
 import numpy as np
 import sys
+import time
+from gacodefuncs import *
 
 BYTE='float32'
 
@@ -8,19 +10,15 @@ class cgyrodata:
 
    """CGYRO output data class."""
 
-   def __init__(self, sim_directory):
+   def __init__(self,sim_directory,silent=False):
 
       """Constructor reads in basic (not all) simulation data."""
 
+      self.silent = silent
       self.dir = sim_directory
       self.getdata()
         
    def extract(self,f):
-
-      import sys
-      import os
-      import numpy as np
-      import time
 
       start = time.time()
       if os.path.isfile(self.dir+'bin'+f):
@@ -33,26 +31,20 @@ class cgyrodata:
          fmt  = 'null'
          data = []
          
-      if int(sys.version_info[2]) > 6:
-         t = 'TIME = '+"{:.3e}".format(time.time()-start)+' s.'
-      else:        
-         t = 'TIME = '+str(time.time()-start)
+      t = 'TIME = '+'{:.3e}'.format(time.time()-start)+' s.'
  
-
       return t,fmt,data
        
           
    def getdata(self):
 
       """Initialize smaller data objects (don't load larger ones)"""
-
-      import numpy as np
       
       #-----------------------------------------------------------------
       # Read time vector.
       #
       data = np.fromfile(self.dir+'out.cgyro.time',dtype='float',sep=' ')
-      nt = len(data)/3
+      nt = len(data)//3
       data = np.reshape(data,(3,nt),'F')
       self.t    = data[0,:]
       self.err1 = data[1,:]
@@ -61,7 +53,8 @@ class cgyrodata:
       except:
          self.err2 = data[1,:]
       self.n_time = nt   
-      print "INFO: (data.py) Read time vector in out.cgyro.time."
+      if not self.silent:
+         print('INFO: (data.py) Read time vector in out.cgyro.time.')
       #-----------------------------------------------------------------
 
       #-----------------------------------------------------------------
@@ -98,9 +91,9 @@ class cgyrodata:
       self.xi   = np.array(data[mark:mark+self.n_xi])
 
       mark = mark+self.n_xi
-      self.thetab = np.array(data[mark:mark+self.n_theta*self.n_radial/self.m_box])  
+      self.thetab = np.array(data[mark:mark+self.n_theta*self.n_radial//self.m_box])  
          
-      mark = mark+self.n_theta*(self.n_radial/self.m_box)
+      mark = mark+self.n_theta*(self.n_radial//self.m_box)
       self.ky = np.array(data[mark:mark+self.n_n])
 
       mark = mark+self.n_n
@@ -109,7 +102,19 @@ class cgyrodata:
       mark = mark+self.n_n
       self.radialdiss = np.array(data[mark:mark+self.n_radial])
 
-      print "INFO: (data.py) Read grid data in out.cgyro.grids."
+      if not self.silent:
+         print('INFO: (data.py) Read grid data in out.cgyro.grids.')
+      #-----------------------------------------------------------------
+
+      #--------------------------------------------------------
+      # Construct theta_plot values (self.thetap[:])
+      self.thetap = np.zeros(self.theta_plot)
+      if self.theta_plot == 1:
+         self.thetap[0] = 0.0
+      else:
+         m = self.n_theta//self.theta_plot
+         for i in range(self.theta_plot):
+            self.thetap[i] = self.theta[m*i] 
       #-----------------------------------------------------------------
 
       #-----------------------------------------------------------------
@@ -119,7 +124,8 @@ class cgyrodata:
       t,fmt,data = self.extract('.cgyro.freq')
       if fmt != 'null':  
          self.freq = np.reshape(data[0:nd],(2,self.n_n,nt),'F')
-         print "INFO: (data.py) Read data in "+fmt+".cgyro.freq. "+t 
+         if not self.silent:
+            print('INFO: (data.py) Read data in '+fmt+'.cgyro.freq. '+t) 
       #-----------------------------------------------------------------
 
       #-----------------------------------------------------------------
@@ -174,9 +180,10 @@ class cgyrodata:
             self.dlnndr[i] = data[35+7*i]
             self.dlntdr[i] = data[36+7*i]
             self.nu[i]     = data[37+7*i]
-         print "INFO: (data.py) Read data in out.cgyro.equilibrium."
+         if not self.silent:
+            print('INFO: (data.py) Read data in out.cgyro.equilibrium.')
       except:
-         print "WARNING: (data.py) Could not read out.cgyro.equilibrium."
+         print('WARNING: (data.py) Could not read out.cgyro.equilibrium.')
          pass
 
       #-----------------------------------------------------------------
@@ -189,19 +196,19 @@ class cgyrodata:
       t,fmt,data = self.extract(f)
       if fmt != 'null':
          self.phib = np.reshape(data[0:nd],(2,self.n_theta*self.n_radial,nt),'F')
-         print 'INFO: (data.py) Read data in '+fmt+f+'  '+t 
+         print('INFO: (data.py) Read data in '+fmt+f+'  '+t) 
 
       f='.cgyro.aparb'
       t,fmt,data = self.extract(f)
       if fmt != 'null':
          self.aparb = np.reshape(data[0:nd],(2,self.n_theta*self.n_radial,nt),'F')
-         print 'INFO: (data.py) Read data in '+fmt+f+' '+t 
+         print('INFO: (data.py) Read data in '+fmt+f+' '+t)
 
       f='.cgyro.bparb'
       t,fmt,data = self.extract(f)
       if fmt != 'null':
          self.bparb = np.reshape(data[0:nd],(2,self.n_theta*self.n_radial,nt),'F')
-         print 'INFO: (data.py) Read data in '+fmt+f+' '+t 
+         print('INFO: (data.py) Read data in '+fmt+f+' '+t)
       #-----------------------------------------------------------------
 
       #-----------------------------------------------------------------
@@ -211,72 +218,67 @@ class cgyrodata:
       if fmt != 'null':
          self.hb = np.reshape(data,(2,self.n_radial*self.n_theta,
                                     self.n_species,self.n_xi,self.n_energy,nt),'F')
-         print "INFO: (data.py) Read data in "+fmt+".cgyro.hb. "+t 
+         print('INFO: (data.py) Read data in '+fmt+'.cgyro.hb. '+t) 
          self.hb = self.hb/np.max(self.hb)
       #-----------------------------------------------------------------
 
       #-----------------------------------------------------------------
-      # Compressed particle and energy fluxes
+      # Compressed particle and energy fluxes (deprecated)
       #
       nd = self.n_species*nt
       try:
          data = np.loadtxt(self.dir+'out.cgyro.flux_n',dtype='float')
          self.flux_n = np.transpose(data[:,1:])
-         print "INFO: (data.py) Read data in out.cgyro.flux_n."
+         print('INFO: (data.py) Read data in out.cgyro.flux_n.')
       except:
          pass
 
       try:
          data = np.loadtxt(self.dir+'out.cgyro.flux_e',dtype='float')
          self.flux_e = np.transpose(data[:,1:])
-         print "INFO: (data.py) Read data in out.cgyro.flux_e."
+         print('INFO: (data.py) Read data in out.cgyro.flux_e.')
       except:
          pass 
       #-----------------------------------------------------------------
 
-   def getflux(self):
+   def getflux(self,cflux='auto'):
 
-      import numpy as np
-
+      if cflux == 'auto':
+         if abs(self.gamma_e) > 0.0:
+            usec = True
+         else:
+            usec = False
+      elif cflux == 'on':
+         usec = True
+      else:
+         usec = False
+  
       #-----------------------------------------------------------------
       # Particle, momentum and energy fluxes
       #
       nt = self.n_time
       nd = self.n_species*3*self.n_field*self.n_n*nt
-      t,fmt,data = self.extract('.cgyro.ky_flux')
-      if fmt != 'null':  
-         self.ky_flux = np.reshape(data[0:nd],(self.n_species,3,self.n_field,self.n_n,nt),'F')
-         print "INFO: (data.py) Read data in "+fmt+".cgyro.ky_flux. "+t 
+
+      if usec:
+         t,fmt,data = self.extract('.cgyro.ky_cflux')
+         if fmt != 'null':  
+            self.ky_flux = np.reshape(data[0:nd],(self.n_species,3,self.n_field,self.n_n,nt),'F')
+            if not self.silent:
+               print('INFO: (data.py) Read data in '+fmt+'.cgyro.ky_cflux. '+t) 
+
+      if not usec or fmt == 'null':      
+         t,fmt,data = self.extract('.cgyro.ky_flux')
+         if fmt != 'null':  
+            self.ky_flux = np.reshape(data[0:nd],(self.n_species,3,self.n_field,self.n_n,nt),'F')
+            if not self.silent:
+               print('INFO: (data.py) Read data in '+fmt+'.cgyro.ky_flux. '+t) 
       #-----------------------------------------------------------------
 
-   def getbigflux(self):
-
-      """Larger flux files (hopefully binary)"""
-
-      import numpy as np
-
-      #-----------------------------------------------------------------
-      # Particle and energy fluxes
-      #
-      nt = self.n_time
-      nd = self.n_radial*self.n_species*self.n_n*nt
-      t,fmt,data = self.extract('.cgyro.kxky_flux_e')
-      if fmt != 'null':  
-         self.kxky_flux_e = np.reshape(data[0:nd],(self.n_radial,self.n_species,self.n_n,nt),'F')
-         print "INFO: (data.py) Read data in "+fmt+".cgyro.kxky_flux_e. "+t
-      #
-      nd = self.n_radial*self.n_species*self.n_n*nt
-      t,fmt,data = self.extract('.cgyro.kxky_flux_n')
-      if fmt != 'null':  
-         self.kxky_flux_n = np.reshape(data[0:nd],(self.n_radial,self.n_species,self.n_n,nt),'F')
-         print "INFO: (data.py) Read data in "+fmt+".cgyro.kxky_flux_n. "+t
-      #-----------------------------------------------------------------
-
+      return usec
+   
    def getxflux(self):
 
-      """Global-spectral flux files"""
-
-      import numpy as np
+      """Global-spectral flux files (optional)"""
 
       #-----------------------------------------------------------------
       # Particle and energy fluxes
@@ -288,17 +290,17 @@ class cgyrodata:
       t,fmt,data = self.extract('.cgyro.lky_flux_n')
       if fmt != 'null':  
          self.lky_flux_n = np.reshape(data[0:nd],(2,ng,self.n_species,self.n_n,nt),'F')
-         print "INFO: (data.py) Read data in "+fmt+".cgyro.lky_flux_n. "+t
+         print('INFO: (data.py) Read data in '+fmt+'.cgyro.lky_flux_n. '+t)
 
       t,fmt,data = self.extract('.cgyro.lky_flux_e')
       if fmt != 'null':  
          self.lky_flux_e = np.reshape(data[0:nd],(2,ng,self.n_species,self.n_n,nt),'F')
-         print "INFO: (data.py) Read data in "+fmt+".cgyro.lky_flux_e. "+t
+         print('INFO: (data.py) Read data in '+fmt+'.cgyro.lky_flux_e. '+t)
 
       t,fmt,data = self.extract('.cgyro.lky_flux_v')
       if fmt != 'null':  
          self.lky_flux_v = np.reshape(data[0:nd],(2,ng,self.n_species,self.n_n,nt),'F')
-         print "INFO: (data.py) Read data in "+fmt+".cgyro.lky_flux_v. "+t      
+         print('INFO: (data.py) Read data in '+fmt+'.cgyro.lky_flux_v. '+t)      
       #-----------------------------------------------------------------
 
    def xfluxave(self,w,moment,e=0.2,nscale=0):
@@ -307,9 +309,6 @@ class cgyrodata:
       Do complicated spatial averages for xflux
       RESULT: self.lky_flux_ave
       """
-
-      import numpy as np
-      from gacodefuncs import *
 
       ns = self.n_species
       ng = self.n_global+1
@@ -331,8 +330,7 @@ class cgyrodata:
       elif moment == 'v':
          z = np.sum(self.lky_flux_v,axis=3)
       else:
-         print 'ERROR (xfluxave) Invalid moment.'
-         sys.exit()
+         raise ValueError('(xfluxave) Invalid moment.')
 
 
       #--------------------------------------------
@@ -344,8 +342,8 @@ class cgyrodata:
 
       for ispec in range(ns):
          for l in range(ng):
-            self.lky_xr[ispec,l] = average(z[0,l,ispec,:],self.t,w)*sc[ispec]
-            self.lky_xi[ispec,l] = average(z[1,l,ispec,:],self.t,w)*sc[ispec]
+            self.lky_xr[ispec,l] = average(z[0,l,ispec,:],self.t,w,0.0)*sc[ispec]
+            self.lky_xi[ispec,l] = average(z[1,l,ispec,:],self.t,w,0.0)*sc[ispec]
 
          # Flux partial average over [-e,e]
          g0 = self.lky_xr[ispec,0]
@@ -355,14 +353,14 @@ class cgyrodata:
             g0 = g0+2*np.sin(u)*self.lky_xr[ispec,l]/u
             g1 = g1+2*np.sin(u)*self.lky_xr[ispec,l]/u*(-1)**l
 
+         # Average over true (positive) interval
          self.lky_flux_ave[ispec,0] = g0
+         # Average over negative interval
          self.lky_flux_ave[ispec,1] = g1
       
    def getbigfield(self):
 
       """Larger field files"""
-
-      import numpy as np
 
       #-----------------------------------------------------------------
       # Read complex fields
@@ -374,32 +372,32 @@ class cgyrodata:
       nd = 2*self.n_radial*self.theta_plot*self.n_n*nt
       t,fmt,data = self.extract('.cgyro.kxky_phi')
       if fmt != 'null':
-         print 'INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_phi. '+t
-         self.kxky_phi = np.reshape(data[0:nd],(2,self.n_radial,self.theta_plot,self.n_n,nt),'F')
-         self.kxky_phi_abs = np.sqrt(self.kxky_phi[0,:,:,:,:]**2+self.kxky_phi[1,:,:,:,:]**2)
+         print('INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_phi. '+t)
+         tmp = np.reshape(data[0:nd],(2,self.n_radial,self.theta_plot,self.n_n,nt),'F')
+         self.kxky_phi_abs = np.sqrt(tmp[0,:,:,:,:]**2+tmp[1,:,:,:,:]**2)
 
       # 1b. kxky_apar
       nd = 2*self.n_radial*self.theta_plot*self.n_n*nt
       t,fmt,data = self.extract('.cgyro.kxky_apar')
       if fmt != 'null':
-         print 'INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_apar. '+t
-         self.kxky_apar = np.reshape(data[0:nd],(2,self.n_radial,self.theta_plot,self.n_n,nt),'F')
-         self.kxky_apar_abs = np.sqrt(self.kxky_apar[0,:,:,:,:]**2+self.kxky_apar[1,:,:,:,:]**2)
+         print('INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_apar. '+t)
+         tmp = np.reshape(data[0:nd],(2,self.n_radial,self.theta_plot,self.n_n,nt),'F')
+         self.kxky_apar_abs = np.sqrt(tmp[0,:,:,:,:]**2+tmp[1,:,:,:,:]**2)
 
       # 1c. kxky_bpar
       nd = 2*self.n_radial*self.theta_plot*self.n_n*nt
       t,fmt,data = self.extract('.cgyro.kxky_bpar')
       if fmt != 'null':
-         print 'INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_bpar. '+t
-         self.kxky_bpar = np.reshape(data[0:nd],(2,self.n_radial,self.theta_plot,self.n_n,nt),'F')
-         self.kxky_bpar_abs = np.sqrt(self.kxky_bpar[0,:,:,:,:]**2+self.kxky_bpar[1,:,:,:,:]**2)
+         print('INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_bpar. '+t)
+         tmp = np.reshape(data[0:nd],(2,self.n_radial,self.theta_plot,self.n_n,nt),'F')
+         self.kxky_bpar_abs = np.sqrt(tmp[0,:,:,:,:]**2+tmp[1,:,:,:,:]**2)
 
       # 2. kxky_n
       nd = 2*self.n_radial*self.theta_plot*self.n_species*self.n_n*nt
       t,fmt,data = self.extract('.cgyro.kxky_n')
 
       if fmt != 'null':
-         print 'INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_n.   '+t
+         print('INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_n.   '+t)
          self.kxky_n = np.reshape(data[0:nd],(2,self.n_radial,self.theta_plot,self.n_species,self.n_n,nt),'F')
 
       # 3. kxky_e
@@ -407,7 +405,7 @@ class cgyrodata:
       t,fmt,data = self.extract('.cgyro.kxky_e')
 
       if fmt != 'null':
-         print 'INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_e.   '+t
+         print('INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_e.   '+t)
          self.kxky_e = np.reshape(data[0:nd],(2,self.n_radial,self.theta_plot,self.n_species,self.n_n,nt),'F')
       #-----------------------------------------------------------------
 
@@ -415,11 +413,9 @@ class cgyrodata:
 
       """Read theta-dependent geometry functions"""
 
-      import numpy as np
-
       t,fmt,data = self.extract('.cgyro.geo')
       if fmt != 'null':
-         print 'INFO: (data.py) Read data in '+fmt+'.cgyro.geo   '+t
+         print('INFO: (data.py) Read data in '+fmt+'.cgyro.geo   '+t)
          self.geo = np.reshape(data,(self.n_theta,12),'F')
 
          self.geotag = []

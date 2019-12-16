@@ -565,7 +565,7 @@ contains
     real :: A1, A2, omega_fac, HS_I_div_psip, &
          L11, L12, L21, L22, L_a, L_b, sum_nm, eii_val
     integer :: Nx=100
-    integer, parameter :: integ_order = 64
+    integer, parameter :: integ_order = 8
     integer :: js
 
     omega_fac = 1.0 / Bmag2_avg
@@ -732,7 +732,7 @@ contains
 
     ft_star = (3.0*pi/16.0) * eps**2 * vth(is_global,ir_global) &
          * sqrt(2.0) * ene**1.5 &
-         / (rmaj(ir_global) * q(ir_global) * nu_d_tot)
+         / (rmaj(ir_global) * abs(q(ir_global)) * nu_d_tot)
     ft_fac  = 1.0 / (1.0 + ftrap / ft_star)
 
     ! interpolated

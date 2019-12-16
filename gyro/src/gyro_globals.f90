@@ -16,6 +16,7 @@ module gyro_globals
   integer, parameter :: fmtstr_len = 12
   ! Complex
   character(len=14) :: fmtstr2='(2(es11.4,1x))'
+  integer, parameter :: BYTE=4 ! Change to 8 for double precision
   !----------------------------------------------------
 
   !----------------------------------------------------
@@ -156,41 +157,32 @@ module gyro_globals
   integer :: electron_method
   integer :: radial_profile_method
   integer :: geometry_method
-  integer :: nonuniform_grid_flag
-  integer :: nonlinear_transfer_flag
   integer :: density_method
   integer :: integrator_method
   integer :: nl_method
   integer :: lindiff_method
   integer :: gyro_method
-  integer :: sparse_method
+  integer :: source_method
   integer :: linsolve_method 
   integer :: fieldeigen_root_method
   integer :: gkeigen_method
-  integer :: truncation_method
   !
   ! (b) flags (0 or 1)
   !
   integer :: nonlinear_flag 
   integer :: collision_flag
-  integer :: krook_flag
   integer :: verbose_flag
   integer :: debug_flag
   integer :: flat_profile_flag
-  integer :: trapdiff_flag
-  integer :: kill_i_parallel_flag
-  integer :: kill_i_drift_flag
-  integer :: kill_e_drift_flag
   integer :: kill_coll_flag
   integer :: kill_gyro_b_flag
-  integer :: velocity_output_flag
   integer :: geo_array_print_flag
-  integer :: source_flag
   integer :: dist_print
   integer :: udsymmetry_flag
   integer :: silent_flag
   integer :: eparallel_plot_flag
   integer :: entropy_flag
+  integer :: extra_print_flag
   integer :: num_equil_flag
   integer :: gkeigen_matrixonly
   integer :: gkeigen_mwrite_flag
@@ -204,10 +196,8 @@ module gyro_globals
   integer :: geo_gradbcurv_flag
   integer :: geo_fastionbeta_flag
   integer :: fakefield_flag
-  integer :: reintegrate_flag
   integer :: ic_method
   integer :: zf_test_flag
-  integer :: lock_ti_flag
   !---------------------------------------------------------
 
   !-----------------------------------------------------------------------------------
@@ -262,7 +252,6 @@ module gyro_globals
   ! Grid dimensions:
   !
   integer :: n_x
-  integer :: n_x_offset
   integer :: n_theta_section
   integer :: n_blend
   integer :: n_interval
@@ -272,10 +261,8 @@ module gyro_globals
   integer :: blend_fit_order
   integer :: n_stack 
   integer :: n_field
-  integer :: nint_ORB_s
-  integer :: nint_ORB_do
-  integer :: n_mumps_max
-  integer :: n_study
+  integer :: nint_ORB_s=64
+  integer :: nint_ORB_do=10
   !
   real :: energy_max
   real :: box_multiplier
@@ -292,7 +279,6 @@ module gyro_globals
   integer :: n0
   integer :: d_n
   integer :: n_max
-  integer :: n_moment
   integer :: p_moment
   integer :: n_substep
   !
@@ -430,20 +416,15 @@ module gyro_globals
   integer :: nstep
   integer :: data_step
   integer :: time_skip
-  integer :: alltime_index
   integer :: output_flag
   integer :: p_ave
   !
   real :: time_max
   real :: freq_tol
   real :: freq_err
-  real :: fluxaverage_window
   !
-  real :: plot_filter
   real :: dt
   real :: t_current
-  !
-  real, dimension(:), allocatable :: w_time
   !
   complex, dimension(:,:), allocatable :: omega_linear
   ! 
@@ -465,7 +446,6 @@ module gyro_globals
   integer :: n_explicit_damp
   !
   real :: explicit_damp
-  real :: explicit_damp_elec
   real, dimension(:,:), allocatable :: explicit_damp_vec
   !---------------------------------------------------------
 
@@ -629,8 +609,12 @@ module gyro_globals
   real :: zmag0
   real :: dzmag0
   real :: alpha_mhd0
-  real :: pgamma0
-  real :: mach0
+  real :: gamma_e
+  real :: gamma_e_scale
+  real :: gamma_p
+  real :: gamma_p_scale
+  real :: mach
+  real :: mach_scale
   real :: r_maj
   real :: r0
   real :: x_length
@@ -639,7 +623,6 @@ module gyro_globals
   real :: betae_unit
   real :: ampere_scale
   real :: geo_betaprime_scale
-  real :: gamma_e
   real :: lambda_debye_scale
   real :: lambda_debye
   !---------------------------------------------------------
@@ -659,6 +642,8 @@ module gyro_globals
   !
   real :: dlnndr_vec(0:10)
   real :: dlntdr_vec(0:10)
+  real :: sdlnndr_vec(0:10)
+  real :: sdlntdr_vec(0:10)
   real :: eps_dlnndr_vec(0:10)
   real :: eps_dlntdr_vec(0:10)
   real :: n_vec(0:10)
@@ -677,21 +662,6 @@ module gyro_globals
   real :: nu_ei
   real :: nu_ei_scale
   real :: nu_ii_scale
-  real :: nu_i_krook
-  !
-  real :: s_grid
-  !
-  ! Scales experimental ExB
-  real :: doppler_scale
-  ! 
-  ! Scales experimental q-profile but preserves s
-  real :: q_scale 
-  !
-  ! Scales experimental pgamma  
-  real :: pgamma0_scale
-  !
-  ! Scales experimental  mach 
-  real :: mach0_scale
   !
   ! Geometry Fourier coefficients
   integer :: n_fourier_geo
@@ -746,6 +716,8 @@ module gyro_globals
   real, dimension(:,:), allocatable :: tem_s
   real, dimension(:,:), allocatable :: dlnndr_s 
   real, dimension(:,:), allocatable :: dlntdr_s 
+  real, dimension(:), allocatable :: sdlnndr
+  real, dimension(:), allocatable :: sdlntdr 
   real, dimension(:,:), allocatable :: alpha_s
   real, dimension(:,:), allocatable :: nu_s   
   real, dimension(:,:), allocatable :: pr_s
@@ -757,7 +729,6 @@ module gyro_globals
   ! nonuniform_grid_flag variables:
   !
   real, dimension(:), allocatable :: r_e
-  real, dimension(:), allocatable :: dr_eodr
   !
   ! General geometry Fourier coefficients
   !
@@ -798,7 +769,6 @@ module gyro_globals
   !
   real :: amp_n
   real :: amp_0
-  real :: amp_study
   !---------------------------------------------------------
 
   !---------------------------------------------------------
@@ -819,11 +789,8 @@ module gyro_globals
   complex, dimension(:,:,:,:), allocatable :: h_cap_old
   complex, dimension(:,:,:,:), allocatable :: h_cap_old2
   complex, dimension(:,:,:,:), allocatable :: h_cap_dot
+  complex, dimension(:,:,:,:), allocatable :: h_source
   complex, dimension(:,:,:,:), allocatable :: rhs
-
-  complex, dimension(:,:,:,:), allocatable :: f_store
-  complex, dimension(:,:,:,:), allocatable :: p_store
-  !
   complex, dimension(:,:,:,:), allocatable :: h_tran
   complex, dimension(:,:,:), allocatable :: h_c
   complex, dimension(:,:,:), allocatable :: f_coll
@@ -838,8 +805,6 @@ module gyro_globals
   complex, dimension(:,:,:,:,:), allocatable :: gyro_uv_dot
   complex, dimension(:,:,:,:), allocatable :: gyro_u
   complex, dimension(:,:,:,:), allocatable :: gyro_u_tran
-  !
-  complex, dimension(:,:,:), allocatable :: rhs_krook
   !
   ! Collision operator
   !
@@ -891,26 +856,17 @@ module gyro_globals
   !------------------------------------------------
   ! Primitive fluxes:
   !
-  real, dimension(:,:,:,:,:), allocatable :: nonlinear_flux_velocity
-  real, dimension(:,:,:,:), allocatable :: nonlinear_flux_passing
-  real, dimension(:,:,:,:), allocatable :: nonlinear_flux_trapped
+  real, dimension(:,:,:,:), allocatable :: nonlinear_flux
   real, dimension(:,:), allocatable :: nonlinear_flux_momparts
   real, dimension(:,:), allocatable :: nonlinear_flux_excparts
   !
   ! gyroBohm fluxes:
   !
   real, dimension(:,:,:,:), allocatable :: gbflux_i
-  real, dimension(:,:,:,:), allocatable :: gbflux_i_trapped
   real, dimension(:,:,:), allocatable :: gbflux
   real, dimension(:,:), allocatable :: gbflux_mom
   real, dimension(:,:), allocatable :: gbflux_exc
-  real, dimension(:,:,:), allocatable :: gbflux_trapped
   real, dimension(:,:,:), allocatable :: gbflux_n
-  !
-  ! Nonlinear transfer and turbulent energy spectra
-  !
-  real, dimension(:,:), allocatable :: nl_transfer
-  !
   real, dimension(:,:,:,:), allocatable :: gbflux_vec
   !------------------------------------------------
 
@@ -920,12 +876,6 @@ module gyro_globals
   real :: nu_source
   !
   real, dimension(:,:,:), allocatable :: h0_eq
-  real, dimension(:,:,:), allocatable :: h0_mod
-  !
-  real, dimension(:,:), allocatable :: h0_n
-  real, dimension(:,:), allocatable :: h0_e
-  real, dimension(:,:), allocatable :: source_n
-  real, dimension(:,:), allocatable :: source_e
   !
   real :: total_memory
   real, dimension(:), allocatable :: krho_collect

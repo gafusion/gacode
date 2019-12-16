@@ -12,12 +12,12 @@ verbose = bool(int(sys.argv[5]))
 try:
     n1 = int(sys.argv[2])
 except ValueError:
-    print sys.argv[2] + " is not a vaild dimension."
+    print(sys.argv[2] + " is not a vaild dimension.")
     sys.exit()
 try:
     n2 = int(sys.argv[3])
 except ValueError:
-    print sys.argv[3] + " is not a vaild dimension."
+    print(sys.argv[3] + " is not a vaild dimension.")
     sys.exit()
 
 if len(sys.argv) < 7:

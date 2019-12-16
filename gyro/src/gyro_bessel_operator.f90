@@ -42,7 +42,7 @@
 
 subroutine gyro_bessel_operator(rho,a,u,v,g,itype)
 
-  use gyro_globals, only : z_gyro, i_gyro, m_gyro, n_x, truncation_method
+  use gyro_globals, only : z_gyro, i_gyro, m_gyro, n_x
   use math_constants
 
   !-----------------------------------------
@@ -62,7 +62,6 @@ subroutine gyro_bessel_operator(rho,a,u,v,g,itype)
   real :: x
   real :: func(-n_x/2:n_x/2-1)
   complex :: g0
-  complex :: gp
   !
   real, external :: besei0
   !-----------------------------------------
@@ -172,61 +171,18 @@ subroutine gyro_bessel_operator(rho,a,u,v,g,itype)
   if (itype == 8) g = i_c*g
   !-----------------------------------------------------------
 
+  ! ORIGINAL TRUNCATION METHOD
 
-  if (truncation_method == 1) then
+  ! Enforce reality if n=0:
+  if (abs(u) <= epsilon(0.0)) then
+     if (i_gyro /= 1) then
 
-     ! ORIGINAL METHOD
+        ! Correct truncated gyroaverage
+        g0 = sum(g(:))-1.0
+        g(0) = g(0)-g0
 
-     ! Enforce reality if n=0:
-     if (abs(u) <= epsilon(0.0)) then
-        if (i_gyro /= 1) then
-
-           ! Correct truncated gyroaverage
-           g0 = sum(g(:))-1.0
-           g(0) = g(0)-g0
-
-        endif
-        g = real(g)
      endif
-
-  else
-
-     ! ALTERNATIVE METHOD
-
-     !-----------------------------------------------------------
-     ! Make end-coefficients equal to sum of neglected ones.
-     ! This is equivalent to assuming that functions are
-     ! constant over the truncated region.
-     !
-     if (m_gyro < p0) then
-        do m=-p0,-m_gyro-1
-           g0 = (0.0,0.0)
-           do p=-p0,p0-1
-              g0 = g0 + z_gyro(m,p)*func(p)
-           enddo
-           ! Periodic point (give 1/2 this bit to other end)
-           if (m == -p0) then
-              gp = g0/2.0
-              g(-m_gyro) = g(-m_gyro)+gp
-           else
-              g(-m_gyro) = g(-m_gyro)+g0
-           endif
-        enddo
-        do m=m_gyro+1,p0-1
-           g0 = (0.0,0.0)
-           do p=-p0,p0-1
-              g0 = g0 + z_gyro(m,p)*func(p)
-           enddo
-           g(m_gyro) = g(m_gyro)+g0
-        enddo
-        ! Ficticious m=p0 gets half the contribution from m=-p0:
-        g(m_gyro) = g(m_gyro)+gp
-     endif
-     !-----------------------------------------------------------
-
-     ! Enforce reality if n=0:
-     if (abs(u) <= epsilon(0.0)) g = real(g)
-
+     g = real(g)
   endif
 
 end subroutine gyro_bessel_operator

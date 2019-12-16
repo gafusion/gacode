@@ -10,7 +10,6 @@
 
 import sys
 import os
-import string
 
 n=len(sys.argv)
 
@@ -56,9 +55,9 @@ tag = f.readlines()
 f.close()
 
 f = open('head.tex','w')
-f.write('\\rhead{{\\tt '+string.strip(line[0])+'}}\n')
-f.write('\\lfoot{GYRO '+string.strip(tag[0])+'}\n')
-f.write('\\rfoot{'+string.strip(tag[1])+'}\n')
+f.write('\\rhead{{\\tt '+line[0].strip()+'}}\n')
+f.write('\\lfoot{GYRO '+tag[0].strip()+'}\n')
+f.write('\\rfoot{'+tag[1].strip()+'}\n')
 f.close()
 
 # Genrate body
@@ -72,7 +71,7 @@ print "---------------------------------------------------"
 n=0 
 for line in open('list','r').readlines():
     n = 1-n;
-    line = string.strip(line)
+    line = line.strip()
     
     if os.path.isfile(line) == 1:
         print "ADDING "+line
@@ -94,7 +93,7 @@ f.write('{\small')
 f.write('\\begin{verbatim}')
 
 for line in open('out.gyro.run','r').readlines():
-    line = string.strip(line)
+    line = line.strip()
     f.write(line+'\n')
 
 f.write('\\end{verbatim}')

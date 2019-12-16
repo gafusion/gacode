@@ -43,18 +43,6 @@ subroutine gyro_initial_condition
   !
   as_0 = amp_0*scale
   as_n = amp_n*scale
-  !
-  ! Next, we need to correct for possible n_study reset
-  !
-  if (n_study /= 0) then
-     if (n_1(in_1) == n(n_study)) then
-        if (n_1(in_1) == 0) then
-           as_0 = amp_study*scale
-        else
-           as_n = amp_study*scale
-        endif
-     endif
-  endif
   !-------------------------------------------------------------------
 
   !-------------------------------------------------------------------

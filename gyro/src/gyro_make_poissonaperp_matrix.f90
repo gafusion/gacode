@@ -84,11 +84,7 @@ subroutine gyro_make_poissonaperp_matrix
   call gyro_blend_ampereperp
   call gyro_make_jperp_elec
 
-  if (sparse_method == 1) then
-     call gyro_sparse_solve_umfpack(n_poissonaperp,n_poissonaperp_row,4,0)
-  else
-     call gyro_sparse_solve_mumps(n_poissonaperp,n_poissonaperp_row,4,0)
-  endif
+  call gyro_sparse_solve_umfpack(n_poissonaperp,n_poissonaperp_row,4,0)
 
   !---------------------------------------------
   ! These are large matrices and deallocation is

@@ -4,15 +4,14 @@
 # PURPOSE:
 #  Collection of classes for parsing of GACODE free-format input files.
 #
-# NOTES: 
+# NOTES:
 #  SimpleInput  : input.gyro, input.neo, input.tglf input.glf23
 #  ProfileInput : input.profiles
 #  ManagerInput : input.tgyro [see tgyro/bin/tgyro_parse.py]
 #----------------------------------------------------------------------
 
-import string
 import os
- 
+
 #--------------------------------------------------------------------
 # PARSER FOR input.cgyro, etc.
 #--------------------------------------------------------------------
@@ -37,18 +36,18 @@ class SimpleInput:
         self.dep_orderlist.append(param)
 
     def printdebug(self):
-        print self.data_dict
-        print self.data_orderlist
-        print self.dep_dict
-        print self.dep_orderlist
-        print self.user_dict
+        print(self.data_dict)
+        print(self.data_orderlist)
+        print(self.dep_dict)
+        print(self.dep_orderlist)
+        print(self.user_dict)
         if self.error == 1:
-            print self.error_msg
+            print(self.error_msg)
 
     def printmsg(self):
         if self.error == 1:
-            print self.error_msg
-        
+            print(self.error_msg)
+
     def set_extension(self,text):
         self.extension = text
 
@@ -57,23 +56,22 @@ class SimpleInput:
         for line in open(inputfile,'r').readlines():
 
             # Remove leading and trailing whitespace from line
-            line = string.strip(line)
+            line = line.strip()
 
             # Skip blank lines
             if len(line) > 0 and line[0] != '#':
-                x = string.splitfields(line,'=')
-                y = string.splitfields(x[1],'#')
-                #y = string.splitfields(y[0],' ')
-                arg = string.strip(x[0])
-                val = string.strip(y[0])
+                x = line.split('=')
+                y = x[1].split('#')
+                arg = x[0].strip()
+                val = y[0].strip()
 
                 self.user_dict[arg] = val
 
         # 2. build complete input file, looking for errors
-        for x in self.user_dict.keys():
-            if self.data_dict.has_key(x) == 1:
+        for x in list(self.user_dict.keys()):
+            if x in self.data_dict:
                 self.data_dict[x] = self.user_dict[x]
-            elif self.dep_dict.has_key(x) == 1:
+            elif x in self.dep_dict:
                 self.error=1
                 self.error_msg=self.error_msg+'ERROR: (gacodeinput) Deprecated parameter '+x+'\n'
                 self.error_msg=self.error_msg+'       '+self.dep_dict[x]+'\n'
@@ -106,7 +104,7 @@ class ProfileInput:
 
     def printmsg(self):
         if self.error == 1:
-            print self.error_msg
+            print(self.error_msg)
 
     def set_extension(self,text):
         self.extension = text
@@ -118,20 +116,20 @@ class ProfileInput:
         for line in open(inputfile,'r').readlines():
 
             # Remove leading and trailing whitespace from line
-            line = string.strip(line)
+            line = line.strip()
                 
             # Skip blank lines
             if len(line) > 0 and line[0] != '#':
-                x = string.splitfields(line,'=')
-                y = string.splitfields(x[1],'#')
-                arg = string.strip(x[0])
-                val = string.strip(y[0])
+                x = line.split('=')
+                y = x[1].split('#')
+                arg = x[0].strip()
+                val = y[0].strip()
 
                 self.user_dict[arg] = val
 
         # 2. build complete input file, looking for errors
-        for x in self.user_dict.keys():
-            if self.data_dict.has_key(x) == 1:
+        for x in list(self.user_dict.keys()):
+            if x in self.data_dict:
                 self.data_dict[x] = self.user_dict[x]
             else:
                 self.error=1
@@ -149,25 +147,23 @@ class ProfileInput:
 
         for line in open(inputfile,'r').readlines():
 
-            line = string.strip(line)
+            line = line.strip()
 
             # Split inputfile (input.profiles) into scalar and 
             # vector data:
             if 'SHOT' in line:
-                x = string.splitfields(line,':')[1]
-                x = string.strip(x) 
+                x = line.split(':')[1]
+                x = x.strip() 
                 if len(x) == 0:
                     x = '0'
                 file_temp.write('SHOT='+x+'\n')
 
             if (len(line) > 0) and (line[0] != '#'):                
-                if string.find(line,'=') > -1:
+                if line.find('=') > -1:
                     # Write scalar data into temp file
                     file_temp.write(line+'\n')
                 else:
-                    # Originally '  ' was the pattern:       
-                    #  data = string.splitfields(line,'   ')
-                    data = string.split(line)
+                    data = line.split()
                     ncol = len(data)
                     for j in range (0,ncol):
                         # Save vector data in variable v.
@@ -181,7 +177,7 @@ class ProfileInput:
         # Compute number of rows for profile data
         ncol = 5
         nrow = int(self.data_dict['N_EXP'])
-        nblock = len(profile_data)/(nrow*ncol)
+        nblock = len(profile_data)//(nrow*ncol)
 
         for x in self.data_orderlist:
             file_out.write(self.data_dict[x]+'  '+x+'\n')
@@ -202,7 +198,7 @@ class ProfileInput:
         for line in open(inputfile,'r').readlines():
            if index > 0:
               index = index+1
-              line = string.strip(line)
+              line = line.strip()
               if len(line) > 1:
                  x = line.split()
                  headerfile.write(x[2]+' '+x[3]+' '+x[4]+'\n')
@@ -244,7 +240,7 @@ class ManagerInput:
 
     def printmsg(self):
         if self.error == 1:
-            print self.error_msg
+            print(self.error_msg)
 
     def write_proc(self,datafile):
         f = open(datafile,'w')
@@ -261,12 +257,12 @@ class ManagerInput:
 
         n = 0
         for line in open(datafile,'r').readlines():
-            line_s = string.strip(line)
+            line_s = line.strip()
 
             # Look for occurence of tag and put item in list.
             if (line_s[0:3] == 'DIR'):   
                 n = n+1
-                data = string.splitfields(line_s,' ')
+                data = line_s.split(' ')
 
                 # data[0] -> DIR
                 # data[1] -> directory1, etc
@@ -283,7 +279,7 @@ class ManagerInput:
                     # Overlay or optional radius
                     if data[3][0:1] == 'X':
                         # This is the special option X=<xmin> for min(r/a) or min(rho)
-                        self.slaveradius.append(string.splitfields(data[3],'=')[1])
+                        self.slaveradius.append(data[3].split('=')[1])
                         # Need to subtract 4 because X is not an overlay
                         nover = len(data)-4
                         nj    = 4
@@ -353,7 +349,7 @@ class ManagerInput:
         file_outfile.write(str(n_path)+'\n')
 
         # Logging
-        print 'INFO: (gacodeinput) Number of code instances: '+str(n_path)
+        print('INFO: (gacodeinput) Number of code instances: '+str(n_path))
 
         for p in range(len(self.slavepath)):
             self.sum_proc = self.sum_proc + int(self.slaveproc[p])
@@ -370,6 +366,8 @@ class ManagerInput:
                 code='ifs'
             elif os.path.isfile(basedir+'/input.glf23'):
                 code='glf23'
+            elif os.path.isfile(basedir+'/input.etg'):
+                code='etg'
             else:
                 code='unknown'
                 self.error=1
@@ -378,25 +376,25 @@ class ManagerInput:
             file_outfile.write(basedir+' '+self.slaveproc[p]+' '+self.slaveradius[p]+' '+code+'\n') 
 
             if code == 'unknown':
-                print 'ERROR: (gacodeinput.py) No code found in '+basedir
+                print('ERROR: (gacodeinput.py) No code found in '+basedir)
                 continue
             if code == 'ifs':
-                print 'INFO: (gacodeinput.py) Found ifs input in '+basedir
+                print('INFO: (gacodeinput.py) Found ifs input in '+basedir)
                 continue
             else:
-                print 'INFO: (gacodeinput.py) Found '+code+' input in '+basedir
+                print('INFO: (gacodeinput.py) Found '+code+' input in '+basedir)
 
             if os.path.isfile(basedir+'/input.profiles'):
-               os.system('python $GACODE_ROOT/shared/bin/profile_parse.py '+basedir+'/input.profiles')
- 
-            basefile = basedir+'/input.'+code 
-            tempfile = basefile+'.temp' 
+               os.system('python $GACODE_ROOT/profiles_gen/bin/profile_parse.py '+basedir+'/input.profiles')
+
+            basefile = basedir+'/input.'+code
+            tempfile = basefile+'.temp'
 
             file_base = open(basefile,'r')
             file_temp = open(tempfile,'w')
 
             for line in file_base.readlines():
-                if line[0:18] <> "# -- Begin overlay":
+                if line[0:18] != "# -- Begin overlay":
                     file_temp.write(line)
                 else:
                     break
@@ -414,5 +412,5 @@ class ManagerInput:
                   
             os.system('rm '+self.overlayfile[p])
 
-        print 'INFO: (gacodeinput) Required MPI tasks in TGYRO: '+str(self.sum_proc)
+        print('INFO: (gacodeinput) Required MPI tasks in TGYRO: '+str(self.sum_proc))
 

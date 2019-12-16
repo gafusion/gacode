@@ -51,7 +51,6 @@ subroutine gyro_do
   ! Early initializations:
   !
   total_memory  = 0.0
-  alltime_index = 0
   cpu_maxindx   = 0
   cpu           = -1.0
   cpu_in        = 0.0

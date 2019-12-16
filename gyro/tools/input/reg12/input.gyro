@@ -2,7 +2,7 @@
 # Rotation-specific parameters
 #
 GAMMA_E=0.0
-PGAMMA=5.0
+GAMMA_P=5.0
 MACH=0.5
 #==============================================
 

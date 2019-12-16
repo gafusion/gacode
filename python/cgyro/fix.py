@@ -18,7 +18,7 @@ os.system('cgyro -t')
 data = np.loadtxt('out.cgyro.time')
 nt = data.shape[0]
 if (data.shape[1] == 2):
-   print 'INFO: (fix) Found old 2-column time array'
+   print('INFO: (fix) Found old 2-column time array')
    f=open('out.cgyro.time','w')
    for i in range(data.shape[0]):
       f.write('{0:.5e} {1:.5e} {1:.5e}\n'.format(data[i,0],data[i,1],data[i,1]))
@@ -34,16 +34,16 @@ data = 0
 sim.getbigflux()          
 ys = np.zeros([ns,3,sim.n_field,sim.n_n,sim.n_time])
 if hasattr(sim,'kxky_flux_n'):
-    print 'INFO: (fix.py) Found out.cgyro.kxky_flux_n' 
+    print('INFO: (fix.py) Found out.cgyro.kxky_flux_n') 
     ys[:,0,0,:,:] = np.sum(sim.kxky_flux_n,axis=0)
     data=1
 if hasattr(sim,'kxky_flux_e'):       
-    print 'INFO: (fix.py) Found out.cgyro.kxky_flux_e' 
+    print('INFO: (fix.py) Found out.cgyro.kxky_flux_e') 
     ys[:,1,0,:,:] = np.sum(sim.kxky_flux_e,axis=0)
     data=1
 
 if data==0:
-    print 'Error: (fix.py) No flux data found.'   
+    print('Error: (fix.py) No flux data found.')   
 
 f = open('out.cgyro.ky_flux','w') 
 for n in range(sim.n_time):

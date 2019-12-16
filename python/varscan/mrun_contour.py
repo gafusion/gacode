@@ -38,11 +38,11 @@ if norm > 0:
         gb = x.data['Gamma_GB'][0][norm]
     else:
         gb = x.data['Q_GB'][0][norm]
-    print 'INFO: (mrun_contour) Using flux units from r/a='+str(x.data['r/a'][0][norm])
+    print('INFO: (mrun_contour) Using flux units from r/a='+str(x.data['r/a'][0][norm]))
     unit = ['10^{19}/m^2/s','MW/m^2','10^{19}/m^2/s','MW/m^2']
 else:
     gb = 1.0
-    print 'INFO: (mrun_contour) Using GyroBohm units'
+    print('INFO: (mrun_contour) Using GyroBohm units')
     unit = ['\Gamma_\mathrm{GB}','Q_\mathrm{GB}','\Gamma_\mathrm{GB}','Q_\mathrm{GB}']
 
 x = xm
@@ -76,7 +76,7 @@ if imgfile == 'screen':
     plt.show()
 else:
     plt.savefig(imgfile)
-    print "INFO: (mrun_contour) Wrote plot to "+imgfile+"."
+    print("INFO: (mrun_contour) Wrote plot to "+imgfile+".")
 
 #-------------------------------------------------------------------
 

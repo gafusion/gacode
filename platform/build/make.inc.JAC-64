@@ -1,0 +1,31 @@
+#-------------------------------------------------------
+# Freia / Heimdall - 64 bit JAC {Portland Group compiler}  
+# requres modules pgi/14.4 openmpi, hdf5, hdf5-devel, netcdf, netcdf-devel to be loaded
+# Compiles TGLF and NEO which pass regression tests
+#-------------------------------------------------------
+
+# Compilers and flags
+
+FC	= mpif90 -module $(GACODE_ROOT)/modules
+F77	= mpif90
+
+FOMP    = -mp
+FMATH	= -r8 
+FOPT	= -O2 -fastsse -tp=sandybridge-64,haswell-64
+FDEBUG	= -g -Ktrap=fp -Mbounds -Minform=warn
+
+# System math libraries
+
+LMATH = /usr/local/depot/PGI/pgi-14.4/linux86-64/14.4/lib/liblapack.a \
+        /usr/local/depot/PGI/pgi-14.4/linux86-64/14.4/lib/libblas.a -lm 
+
+# netCDF (not optional any more)
+
+NETCDF_DIR = /usr/local/depot/netcdf-4.4.1-pgi-14.4/
+NETCDF_DIR2 = /usr/local/depot/netcdf-4.3.2-C/
+NETCDF = -L$(NETCDF_DIR)/lib -L$(NETCDF_DIR2)/lib -lnetcdff -lnetcdf -Wl,-rpath,$(NETCDF_DIR)/lib
+NETCDF_INC = $(NETCDF_DIR)/include
+
+# Archive 
+
+ARCH = ar cr

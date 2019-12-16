@@ -177,10 +177,6 @@ subroutine gyro_read_experimental_profiles
      r_p(i_exp) = rmin_exp(i_exp)/rmin_exp(n_grid_exp)
      q_p(i_exp) = q_exp(i_exp)
 
-     if (q_scale /= 1.0) then
-        q_p(i_exp) = q_exp(i_exp)*q_scale
-     endif
-
      !-------------------------------------------------------------
      ! Specification of beta_unit (beta in terms of b_unit).
      !

@@ -69,8 +69,8 @@ subroutine gyro_phi_kp_squared
               k2phi = k2phi-(inqr**2*qrat_t(i,k,m)**2* &
                    (1.0+captheta_t(i,k,m)**2)*w_d0(i_diff)+ &
                    2.0*inqr*qrat_t(i,k,m)*captheta_t(i,k,m)* &
-                   grad_r_t(i,k,m)*dr_eodr(i)*w_d1(i_diff)+ &
-                   (grad_r_t(i,k,m)*dr_eodr(i))**2*w_d2(i_diff))*&
+                   grad_r_t(i,k,m)*w_d1(i_diff)+ &
+                   (grad_r_t(i,k,m))**2*w_d2(i_diff))*&
                    k0phi(i_loop(ip),m)
            enddo
 

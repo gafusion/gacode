@@ -21,25 +21,7 @@ subroutine gyro_omegas
   real :: e_temp
   real :: e_temp_mach
   real :: e_temp_p
-  !
-  real, dimension(n_kinetic) :: dkill
   !-------------------------------------
-
-  do is=1,n_kinetic
-
-     if (kill_i_drift_flag == 1 .and. is /= indx_e) then
-        dkill(is) = 0.0
-     else
-        dkill(is) = 1.0
-     endif
-
-     if (kill_e_drift_flag == 1 .and. is == indx_e) then
-        dkill(is) = 0.0
-     else
-        dkill(is) = 1.0
-     endif
-
-  enddo ! is
 
   ! v_theta: note that 1/g_theta factor inside omega(i,k)
 
@@ -91,12 +73,12 @@ subroutine gyro_omegas
 
               omega_d1(m,i,p_nek_loc,is) = krho_i(in_1,i)*qrat_t(i,k,m0)* &
                    ( e_temp*(cos_t(i,k,m0)+captheta_t(i,k,m0)*sin_t(i,k,m0)) + &
-                   e_temp_p*cos_p_t(i,k,m0) )*dkill(is)
+                   e_temp_p*cos_p_t(i,k,m0) )
 
               ! omega_dr with nonuniform grid effect:
 
               omega_dr(m,i,p_nek_loc,is) = rhos_norm/b_unit_s(i)*  &
-                   grad_r_t(i,k,m0)*e_temp*sin_t(i,k,m0)*dr_eodr(i)*dkill(is)
+                   grad_r_t(i,k,m0)*e_temp*sin_t(i,k,m0)
 
            enddo ! is
 
@@ -167,11 +149,11 @@ subroutine gyro_omegas
 
               omega_d1(m,i,p_nek_loc,is) = omega_d1(m,i,p_nek_loc,is)+ &
                    krho_i(in_1,i)*qrat_t(i,k,m0)*e_temp_mach* &
-                   (ucos_t(i,k,m0)+captheta_t(i,k,m0)*usin_t(i,k,m0))*dkill(is)
+                   (ucos_t(i,k,m0)+captheta_t(i,k,m0)*usin_t(i,k,m0))
 
               omega_dr(m,i,p_nek_loc,is) = omega_dr(m,i,p_nek_loc,is) + &
                    rhos_norm/b_unit_s(i)*grad_r_t(i,k,m0)*&
-                   e_temp_mach*usin_t(i,k,m0)*dr_eodr(i)*dkill(is)
+                   e_temp_mach*usin_t(i,k,m0)
 
            enddo ! is
 

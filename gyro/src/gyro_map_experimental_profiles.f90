@@ -23,8 +23,6 @@ subroutine gyro_map_experimental_profiles
 
   !-------------------------------------------------
   implicit none
-  ! 
-  real :: inter_fac
   !
   integer :: j1
   integer :: j2
@@ -33,77 +31,8 @@ subroutine gyro_map_experimental_profiles
   !-------------------------------------------------
   ! Grid mapping:
   !
-  select case (nonuniform_grid_flag)
-
-  case (0)
-
-     ! UNIFORM
-
-     r_s(:) = r_e(:)
-
-     dr_eodr(:) = 1.0
-
-  case (1)
-
-     ! NONUNIFORM - changed endpoints
-
-     r_s(ir_norm) = r_e(ir_norm)
-
-     !   shoot outward r_s(i) to r_s(i+1)
-
-     j1 = 0
-     j2 = 0
-
-     do i=ir_norm,n_x-1
-        do i_exp=1,n_grid_exp-1
-           if (r_s(i) >= r_p(i_exp) .and. r_s(i) < r_p(i_exp+1)) then
-              j1 = i_exp
-              j2 = i_exp+1
-           endif
-        enddo
-        if (j1 == 0) then
-           call catch_error("Error in map_experimental_profiles")
-        endif
-
-        inter_fac = (r_s(i)-r_p(j1))/(r_p(j2)-r_p(j1))
-
-        rhosda_s(i) = rhosda_p(j1)+(rhosda_p(j2)-rhosda_p(j1))*inter_fac
-
-        r_s(i+1) = r_s(i)+(r_e(i+1)-r_e(i))*(rhosda_s(i)/rhosda_s(ir_norm))
-
-     enddo
-
-     !   shoot inward r_s(i) to r_s(i-1)
-
-     do i=ir_norm,2,-1
-        do i_exp=1,n_grid_exp-1
-           if (r_s(i) >= r_p(i_exp) .and. r_s(i) < r_p(i_exp+1)) then
-              j1 = i_exp
-              j2 = i_exp+1
-           endif
-        enddo
-        inter_fac = (r_s(i)-r_p(j1))/(r_p(j2)-r_p(j1))
-
-        rhosda_s(i) = rhosda_p(j1)+(rhosda_p(j2)-rhosda_p(j1))*inter_fac
-
-        r_s(i-1) = r_s(i)+(r_e(i-1)-r_e(i))*(rhosda_s(i)/rhosda_s(ir_norm))
-
-     enddo
-
-     ! r_s unequal spaced grid found
-
-     ! now reset r to r_s and compute dr_eodr
-
-     r(:) = r_s(:)
-
-     do i=1,n_x-1
-        dr_eodr(i)=(r_e(i+1)-r_e(i))/(r(i+1)-r(i))
-     enddo
-     dr_eodr(n_x) = dr_eodr(n_x-1)
-
-  end select
-  !------------------------------------------------------------------
-
+  r_s(:) = r_e(:)
+  !
   !------------------------------------------------------------------
   ! Use local cubic spline interpolation to get the GYRO slice 
   ! profiles (_s) from experimental (_p) profiles.

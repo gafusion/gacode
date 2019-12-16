@@ -20,11 +20,10 @@ F77 = ${FC}
 
 # Compiler options/flags
 FACC   =-acc -Minfo=accel -ta=nvidia:cc35 -Mcudalib=cufft -DDISABLE_GPUDIRECT_MPI
-FOMP   =-mp -Mstack_arrays ${FACC}
+FOMP   =-mp -Mstack_arrays
 FMATH  =-r8
 FOPT   =-fast -fastsse -Mvect
 FDEBUG =-g -Kieee -Ktrap=fp,divz -Mbounds -Mchkptr -Mchkstk -traceback -Minform=inform
-F2PY   = f2py --fcompiler=pg
 
 # System math libraries
 LMATH=-lfftw3_threads -lfftw3f_threads -lfftw3f -lfftw3

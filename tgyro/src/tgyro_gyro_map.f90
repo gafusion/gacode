@@ -115,13 +115,13 @@ subroutine tgyro_gyro_map
      gamma_eb0 = gamma_p0*r(i_r)/(q(i_r)*r_maj(i_r)) 
 
      gyro_gamma_e_in = gamma_eb0*r_min/c_s(i_r)
-     gyro_pgamma_in  = gamma_p0*r_min/c_s(i_r)
+     gyro_gamma_p_in = gamma_p0*r_min/c_s(i_r)
      gyro_mach_in    = u000/c_s(i_r)
 
   else
 
      gyro_gamma_e_in = 0.0
-     gyro_pgamma_in = 0.0
+     gyro_gamma_p_in = 0.0
      gyro_mach_in = 0.0
 
   endif

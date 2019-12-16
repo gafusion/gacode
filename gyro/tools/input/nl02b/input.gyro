@@ -2,8 +2,8 @@
 #===============================================
 # Rotation-specific parameters
 #
-DOPPLER_SCALE=0.0
-PGAMMA_SCALE=0.0
+GAMMA_E_SCALE=0.0
+GAMMA_P_SCALE=0.0
 MACH_SCALE=0.0
 #==============================================
 

@@ -87,6 +87,14 @@ subroutine prgen_read_iterdb_nc
   err = nf90_inq_varid(ncid,trim('tot_cur'),varid)
   err = nf90_get_var(ncid,varid,ip_tot)
 
+  err = nf90_inq_varid(ncid,trim('Ipsign'),varid)
+  if(err == 0) then
+     err = nf90_get_var(ncid,varid,onetwo_ipccw)
+     if(ipccw == 0) then
+        ipccw = onetwo_ipccw
+     endif
+  endif
+  
   nx = nx
 
   call allocate_internals

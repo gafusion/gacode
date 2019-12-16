@@ -20,7 +20,7 @@ F77 = ${FC}
 
 # Compiler options/flags
 FACC   =-acc -ta=tesla:cc60 -Minfo=accel -Mcudalib=cufft -Mnorpath -DDISABLE_GPUDIRECT_MPI
-FOMP   =-mp=nonuma -Mstack_arrays ${FACC}
+FOMP   =-mp=nonuma -Mstack_arrays
 FMATH  =-r8
 FOPT   =-O3 -fast
 FDEBUG =-g -Kieee -Ktrap=fp,divz -Mbounds -Mchkptr -Mchkstk -traceback -Minform=inform

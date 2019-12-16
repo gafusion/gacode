@@ -2,7 +2,9 @@ import sys
 import os
 import numpy as np
 import matplotlib.cm as cm
-from gacodeplotdefs import *
+import matplotlib.pyplot as plt
+#from gacodeplotdefs import *
+from gacodefuncs import *
 
 simdir = sys.argv[1]
 imgfile = sys.argv[2]
@@ -45,4 +47,4 @@ if imgfile == 'screen':
     plt.show()
 else:
     plt.savefig(imgfile)
-    print "INFO: () Wrote plot to "+imgfile+"."
+    print("INFO: () Wrote plot to "+imgfile+".")

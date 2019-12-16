@@ -4,8 +4,8 @@
 #---------------------------------------------------
 
 MAKE = make
-PREFIX = /atom
-NETCDF_PATH=/atom
+PREFIX = ${CONDA_PREFIX}
+NETCDF_PATH=${PREFIX}
 MF90 = mpif90
 
 # Compilers and flags
@@ -24,9 +24,9 @@ FOMP	= -fopenmp
 
 # System math libraries
 
-LMATH = -L/${PREFIX}/lib -lfftw3 -llapack
+LMATH = -L${PREFIX}/lib -lfftw3 -llapack -lblas
 
-NETCDF = -L/${PREFIX}/lib -lnetcdff -lnetcdf 
+NETCDF = -L${PREFIX}/lib -lnetcdff -lnetcdf 
 NETCDF_INC =${PREFIX}/include
 
 # Archive
@@ -35,5 +35,5 @@ ARCH = ar cr
 
 ifdef FANN_ROOT
    # neural net libraries
-   NN_LIB=-L$(GACODE_ROOT)/../neural/ -I$(GACODE_ROOT)/../neural/ -lbrainfuse -lfann
+   NN_LIB=-L$(GACODE_ROOT)/../neural/ -I$(GACODE_ROOT)/../neural/ -lbrainfuse -L${PREFIX}/lib -lfann
 endif

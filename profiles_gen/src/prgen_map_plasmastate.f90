@@ -250,7 +250,7 @@ subroutine prgen_map_plasmastate
 
   plst_zeff(:) = (f2_therm(:)+f2_fast(:))/(f1_therm(:)+f1_fast(:))
 
-  ! Compute the quasineutrality error with max 5 ions:
+  ! Compute the quasineutrality error with max 9 ions:
 
   quasi_err = 0.0
   ix = min(plst_dp1_nspec_th+1,n_ion_max+1)

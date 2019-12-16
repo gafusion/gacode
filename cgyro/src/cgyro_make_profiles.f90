@@ -82,7 +82,7 @@ subroutine cgyro_make_profiles
      ! Determine if electrons are to be included in the 
      ! simulation.  Electron profiles are read even if not 
      ! to be included in the simulation (needed to re-scale 
-     ! ion density/temp is not quasi-neutral).
+     ! ion density/temp if not quasi-neutral).
      if (ae_flag == 0 .and. z(n_species) > 0.0) then
         call cgyro_error('For exp. profiles, electron index must be n_species')
         return
@@ -121,10 +121,10 @@ subroutine cgyro_make_profiles
      dens(1:n_species) = dens_loc(1:n_species)     
      temp(1:n_species) = temp_loc(1:n_species)     
      dlnndr(1:n_species) = dlnndr_loc(1:n_species)     
-     dlntdr(1:n_species) = dlntdr_loc(1:n_species)     
+     dlntdr(1:n_species) = dlntdr_loc(1:n_species)
      sdlnndr(1:n_species) = sdlnndr_loc(1:n_species)     
      sdlntdr(1:n_species) = sdlntdr_loc(1:n_species)     
-
+     
      dens_ele = dens_loc(is_ele)
      temp_ele = temp_loc(is_ele)
      mass_ele = mass(is_ele)
@@ -381,7 +381,12 @@ subroutine cgyro_make_profiles
 
   if (profile_shear_flag == 1) then
      call cgyro_info('Profile shear: Continuous wavenumber advection') 
+  else
+     sdlnndr(1:n_species) = 0.0
+     sdlntdr(1:n_species) = 0.0
   endif
+
+
   !------------------------------------------------------------------------
 
   lambda_debye = lambda_star*rho
@@ -429,7 +434,7 @@ subroutine set_betastar
      beta_star(0) = beta_star(0) + (dlnndr_ele + dlntdr_ele)
   endif
   beta_star(0)  = beta_star(0)*betae_unit
-  ! 8pi/Bunit^2 * scaling factor
+  ! 8*pi/Bunit^2 * scaling factor
   beta_star_fac = -betae_unit/(dens_ele*temp_ele)*beta_star_scale  
   
 end subroutine set_betastar

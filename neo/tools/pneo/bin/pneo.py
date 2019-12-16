@@ -73,7 +73,7 @@ for i in range(6):
 
 for key in sorted(d.keys()):
 #   print key,d[key][0]
-   print key
+   print(key)
    
 in_mins = np.zeros(6)
 in_maxs = np.zeros(6)
@@ -86,8 +86,8 @@ for i in range(6):
    else:
       dscale[tag_in[i]] =  d[tag_in[i]]   
       
-print 'in_mins: ', in_mins
-print 'in_maxs: ', in_maxs
+print('in_mins: ', in_mins)
+print('in_maxs: ', in_maxs)
 
 # Test point
 eps=0.3391239
@@ -112,8 +112,8 @@ for i in range(6):
    else:
       myinscale[i] = myin[i]
 
-print 'myin: ', myin      
-print 'myinscale: ', myinscale
+print('myin: ', myin)      
+print('myinscale: ', myinscale)
 
 for x in tag_out:
    rbf = Rbf(dscale['in1_eps']*n1,dscale['in2_q']*n2,dscale['in3_nu']*n3,
@@ -122,6 +122,6 @@ for x in tag_out:
 
    np.savetxt('node_'+x,rbf.nodes,fmt='%.12e',newline=os.linesep)
  
-   print x,rbf(myinscale[0]*n1,myinscale[1]*n2,myinscale[2]*n3,
-               myinscale[3]*n4,myinscale[4]*n5,myinscale[5]*n6)
+   print(x,rbf(myinscale[0]*n1,myinscale[1]*n2,myinscale[2]*n3,
+               myinscale[3]*n4,myinscale[4]*n5,myinscale[5]*n6))
 

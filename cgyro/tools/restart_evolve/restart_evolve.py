@@ -9,7 +9,6 @@
 # Currently limited to adding an additional species
 #
 
-import string
 import sys,os
 
 import cgyro_restart_resize
@@ -24,7 +23,7 @@ class CgyroInput:
         inputfile=os.path.join(fdir,self.def_fname)
         for line in open(inputfile,'r').readlines():
             # Remove leading and trailing whitespace from line
-            line = string.strip(line)
+            line = line.strip()
 
             # Skip blank lines
             if len(line) > 0 and line[0] != '#':
@@ -43,14 +42,14 @@ class CgyroInput:
 
         myarg="Z_%i"%(myi+1)
         otherarg="Z_%i"%(otheri+1)
-        if (self.user_dict.has_key(myarg) and other.user_dict.has_key(otherarg)):
+        if (myarg in self.user_dict and otherarg in other.user_dict):
             isSame = isSame and (self.user_dict[myarg]==other.user_dict[otherarg])
         else:
             isSame=False
 
         myarg="MASS_%i"%(myi+1)
         otherarg="MASS_%i"%(otheri+1)
-        if (self.user_dict.has_key(myarg) and other.user_dict.has_key(otherarg)):
+        if (myarg in self.user_dict and otherarg in other.user_dict):
             isSame = isSame and (self.user_dict[myarg]==other.user_dict[otherarg])
         else:
             isSame=False

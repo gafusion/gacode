@@ -8,7 +8,6 @@
 import os
 import wx
 import matplotlib
-import string
 import sys
 import re
 import numpy as np
@@ -19,6 +18,7 @@ from matplotlib import rc
 from gacodefuncs import *
 from tgyro.data import tgyrodata
 from profiles_gen.data import profiles_genData
+from matplotlib.colors import LogNorm
 
 rc('text',usetex=True)
 rc('font',size=18)
@@ -27,20 +27,24 @@ simdir = sys.argv[1]
 units  = int(sys.argv[2])
 ext    = sys.argv[3]
 nstr   = sys.argv[4]
+loc    = int(sys.argv[5])
 
 n = int(nstr)
 
-sim = tgyrodata(simdir)
+sim = tgyrodata(simdir,verbose=True)
 
-print 'Number of ions  : ',sim.n_ion
-print 'Number of radii : ',sim.n_r
-print 'Evolution eqns  : ',sim.n_evolve
-print 'Completed iter  : ',sim.n_iterations
+print('Number of ions  : ',sim.n_ion)
+print('Number of radii : ',sim.n_r)
+print('Evolution eqns  : ',sim.n_evolve)
+print('Completed iter  : ',sim.n_iterations)
 
 x   = sim.data['r/a'][0]
 ggb = sim.data['Gamma_GB'][n]
 qgb = sim.data['Q_GB'][n]
 pgb = sim.data['Pi_GB'][n]
+
+nit = sim.n_iterations+1
+nx  = sim.n_r-1
 
 n_ion = sim.n_ion
 
@@ -56,8 +60,10 @@ init=r'$\mathtt{iter=0}$'
 def plot_select(ax,tag):
    if 'flux' in tag:
       plot_flux(ax,tag)
-   if 'z' in tag:
+   elif 'z' in tag:
       plot_z(ax,tag)
+   elif 'res_' in tag:
+      plot_residual(ax,tag)
    else:
       plot_smooth(ax,tag)
   
@@ -71,9 +77,9 @@ def plot_input_profiles(ax,tag,scale=0):
    color='black' ; width=5 ; alpha = 0.2 ; label='input.profiles'
 
    if os.path.isfile(f0):
-      prof = profiles_genData(f0)
+      prof = profiles_genData(f0,verbose=False)
    else:
-      prof = profiles_genData('input.profiles')
+      prof = profiles_genData('input.profiles',verbose=False)
       
    xp = prof.data['rmin']
    
@@ -85,7 +91,7 @@ def plot_input_profiles(ax,tag,scale=0):
       ax.plot(xp,prof.data[tag]*snorm,color=color,alpha=alpha,linewidth=width,
               label=r'$\mathbf{'+label+'}$')
    except:
-      print 'WARNING: input.profiles.extra missing'
+      print('WARNING: input.profiles.extra missing')
       
    if os.path.isfile(fn):
       prof = profiles_genData(fn)
@@ -117,7 +123,43 @@ def plot_z(ax,tag):
       plot_input_profiles(ax,'dlnnedr',1)
 
    ax.set_ylim([0.0,10.0])
-   ax.legend(loc=2)
+   ax.legend(loc=loc)
+   plt.tight_layout
+
+def plot_residual(ax,tag):
+
+   if tag == 'res_tot':
+      ax.grid(which="major",ls="-",alpha=0.1,linewidth=2)
+      ax.grid(which="minor",ls=":",alpha=0.1,linewidth=2)
+      ax.set_yscale('log')
+      ze = np.sum(sim.data['E(eflux_e)'][:,1:],axis=1)/nx
+      ax.plot(ze,label=r'$R(T_e)$')
+      zi = np.sum(sim.data['E(eflux_i)'][:,1:],axis=1)/nx
+      ax.plot(zi,label=r'$R(T_i)$')
+      ne = np.sum(sim.data['E(pflux_e)'][:,1:],axis=1)/nx
+      ax.plot(ne,label=r'$R(n_e)$')
+      ax.set_ylabel('$\mathbf{residual}$')
+      ax.set_xlabel('$\mathbf{iteration}$')
+      ax.set_xlim([0,nit])
+      ax.set_ylim([1e-3,5e0])
+      ax.legend(loc=loc)
+   else:
+      if tag == 'res_te':
+         z = sim.data['E(eflux_e)'][:,1:]
+         ax.set_ylabel('$\mathrm{Residual}(T_e)$',color='k')
+      elif tag == 'res_ti':
+         z = sim.data['E(eflux_i)'][:,1:]
+         ax.set_ylabel('$\mathrm{Residual}(T_i)$',color='k')
+      elif tag == 'res_ne':
+         z = sim.data['E(pflux_e)'][:,1:]
+         ax.set_ylabel('$\mathrm{Residual}(n_e)$',color='k')
+
+      c=ax.pcolor(z,edgecolors='w',linewidths=1,
+                  norm=LogNorm(vmin=1e-3,vmax=1.0),cmap='rainbow')
+      plt.colorbar(c,ax=ax)
+      ax.set_xlabel('$r/a$')
+      ax.set_ylabel('$\mathbf{iteration}$')
+
    plt.tight_layout
 
 def plot_flux(ax,tag):
@@ -130,7 +172,7 @@ def plot_flux(ax,tag):
  
    tot=r'$\mathbf{total}$'
    tar=r'$\mathbf{target}$'
-
+   
    if tag == 'eflux_e_target':
       if units == 0:
          ax.plot(x,sim.data['eflux_e_tot'][n],label=tot)
@@ -154,10 +196,16 @@ def plot_flux(ax,tag):
          ax.plot(x,sim.data['pflux_e_tot'][n],label=tot)
          ax.plot(x,sim.data['pflux_e_target'][n],label=tar)
          ax.set_ylabel('$\Gamma_e/\Gamma_{GB}$',color='k')
+         if max(abs(sim.data['pflux_e_tot'][n])) < 0.1:
+            ax.set_ylim([-0.1,0.1])
       else:
          ax.plot(x,sim.data['pflux_e_tot'][n]*ggb,label=tot)
          ax.plot(x,sim.data['pflux_e_target'][n]*ggb,label=tar)
          ax.set_ylabel('$\Gamma_e~[10^{19}/m^2/s]$',color='k')
+   elif tag == 'mflux_target':
+      ax.plot(x,sim.data['mflux_tot'][n],label=tot)
+      ax.plot(x,sim.data['mflux_target'][n],label=tar)
+      ax.set_ylabel('$\Pi/\Pi_{GB}$',color='k')
             
    for i in range(n_ion):
       pstr = 'pflux_i'+str(i+1)
@@ -172,7 +220,7 @@ def plot_flux(ax,tag):
             ax.set_ylabel('$\Gamma_{i'+str(i+1)+'}~[10^{19}/m^2/s]$',color='k')
          break
 
-   ax.legend(loc=2)
+   ax.legend(loc=loc)
    plt.tight_layout
 
 def plot_smooth(ax,tag):
@@ -227,7 +275,7 @@ def plot_smooth(ax,tag):
          plot_input_profiles(ax,'ni_'+str(i+1))
          break
     
-   ax.legend(loc=1)
+   ax.legend(loc=loc)
    plt.tight_layout
         
 #-------------------------------------------------------------------------------------
@@ -272,6 +320,10 @@ class DemoFrame(wx.Frame):
         tab.draw('pflux_e_target')
         notebook.AddPage(tab,'*pflux_e')
 
+        tab = TabPanel(notebook)
+        tab.draw('mflux_target')
+        notebook.AddPage(tab,'*mflux')
+
         for i in range(n_ion):
             tab = TabPanel(notebook)
             tab.draw('pflux_i'+str(i+1)+'_target')
@@ -306,6 +358,22 @@ class DemoFrame(wx.Frame):
         tab.draw('zne')
         notebook.AddPage(tab,'zne')
 
+        tab = TabPanel(notebook)
+        tab.draw('res_te')
+        notebook.AddPage(tab,'R(Te)')
+
+        tab = TabPanel(notebook)
+        tab.draw('res_ti')
+        notebook.AddPage(tab,'R(Ti)')
+
+        tab = TabPanel(notebook)
+        tab.draw('res_ne')
+        notebook.AddPage(tab,'R(ne)')
+
+        tab = TabPanel(notebook)
+        tab.draw('res_tot')
+        notebook.AddPage(tab,'Rtot')
+
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(notebook, 1, wx.ALL|wx.EXPAND, 5)
         panel.SetSizer(sizer)
@@ -337,11 +405,11 @@ if __name__ == "__main__":
         list.append('ni'+str(i+1)+'_target')
     list=list+['zte','zti','zne']
 
-    for x in list:
+    for xlist in list:
         figure = plt.figure(figsize=(9,6))
         figure.subplots_adjust(left=0.12,right=0.95,bottom=0.16)
         ax = figure.add_subplot(111) 
-        plot_select(ax,x)
-        pfile = 'out.'+x+'.'+ext
+        plot_select(ax,xlist)
+        pfile = 'out.'+xlist+'.'+ext
         plt.savefig(pfile)
-        print 'INFO: (notebook.py) Wrote '+pfile
+        print('INFO: (notebook.py) Wrote '+pfile)

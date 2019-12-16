@@ -35,10 +35,6 @@ subroutine gyro_nl_setup
   ! Nonlinear coupling coefficient:
   !
   c_nl_i(:) = -rhos_norm*q_s(:)/(r_s(:)*b_unit_s(:))
-  !
-  ! ... and add the nonuniform grid effect:
-  !
-  c_nl_i(:) = dr_eodr(:)*c_nl_i(:)
   !----------------------------------------------------
 
   !----------------------------------------------------

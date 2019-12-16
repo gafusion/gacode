@@ -9,7 +9,7 @@
       INTEGER, PARAMETER :: nxm=2*32-1
       INTEGER, PARAMETER :: nsm=12, nt0=40
       INTEGER, PARAMETER :: nkym=480
-      INTEGER, PARAMETER :: maxmodes=4
+      INTEGER, PARAMETER :: maxmodes=16
       INTEGER, PARAMETER :: max_ELITE=700
       INTEGER, PARAMETER :: max_fourier = 24
       INTEGER, PARAMETER :: ms = 128  ! ms needs to be divisible by 8
@@ -58,6 +58,8 @@
       INTEGER,DIMENSION(8) :: trace_path=0
       LOGICAL,EXTERNAL :: tglf_isnan
       LOGICAL,EXTERNAL :: tglf_isinf
+! input units switch
+      CHARACTER (len=4) :: units_in = 'TGLF'
 ! Input Gaussian width
       REAL :: width_in=1.65
       REAL :: width_min_in=0.3
@@ -215,6 +217,7 @@
       REAL,DIMENSION(maxmodes,nsm) :: U_QL_out=0.0,Q_QL_out=0.0
       REAL,DIMENSION(maxmodes,nsm) :: n_bar_out=0.0,t_bar_out=0.0
       REAL,DIMENSION(maxmodes,nsm) :: u_bar_out=0.0,q_bar_out=0.0
+      REAL,DIMENSION(maxmodes,nsm) :: Ns_Ts_phase_out=0.0
       REAL,DIMENSION(nsm,3) :: particle_flux_out=0.0,energy_flux_out=0.0
       REAL,DIMENSION(nsm,3) :: exchange_out=0.0
       REAL,DIMENSION(nsm,3) :: stress_par_out=0.0,stress_tor_out=0.0
@@ -222,7 +225,8 @@
       REAL,DIMENSION(maxmodes) :: phi_QL_out=0.0,a_par_QL_out=0.0,b_par_QL_out=0.0
       REAL,DIMENSION(maxmodes) :: phi_bar_out=0.0,v_bar_out=0.0
       REAL,DIMENSION(maxmodes) :: a_par_bar_out=0.0,b_par_bar_out=0.0
-      REAL,DIMENSION(maxmodes) :: wd_bar_out=0.0,b0_bar_out=0.0,ne_te_phase_out=0.0
+      REAL,DIMENSION(maxmodes) :: wd_bar_out=0.0,b0_bar_out=0.0
+      REAL,DIMENSION(maxmodes) :: ne_te_phase_out=0.0
       REAL,DIMENSION(maxmodes) :: kx_bar_out=0.0,kpar_bar_out=0.0
       REAL,DIMENSION(maxmodes) :: modB_bar_out=0.0
       REAL,DIMENSION(nsm) :: n_bar_sum_out=0.0,t_bar_sum_out=0.0
@@ -232,6 +236,7 @@
       REAL,DIMENSION(5,nsm,3,nkym,maxmodes) :: flux_spectrum_out=0.0
       REAL,DIMENSION(2,nkym,maxmodes) :: eigenvalue_spectrum_out=0.0
       REAl,DIMENSION(nkym,maxmodes) :: ne_te_phase_spectrum_out=0.0
+      REAl,DIMENSION(nsm,nkym,maxmodes) :: nsts_phase_spectrum_out=0.0
       REAL,DIMENSION(nkym) :: spectral_shift_out=0.0
       REAL :: phi_bar_sum_out=0.0
       REAL :: v_bar_sum_out=0.0
@@ -243,10 +248,13 @@
       REAL :: Bp0_out = 1.0
       REAL :: RBt_ave_out=1.0
       REAL :: Grad_r_ave_out=1.0
+      REAL :: grad_r0_out=1.0
       REAL :: SAT_geo_ave_out=1.0
       REAL :: SAT_geo0_out=1.0
+      REAL :: kx_geo0_out=1.0
       REAL :: DM_out = 0.25
       REAL :: DR_out = 0.0
+      REAL :: Bref_out = 1.0
       INTEGER :: nmodes_out
       INTEGER :: nfields_out
       character (len=80) :: error_msg='null' 
@@ -365,6 +373,7 @@
       REAl :: U_weight(nsm),Q_weight(nsm)
       REAL :: phi_weight,a_par_weight,b_par_weight
       REAL :: Ne_Te_phase,Ne_Te_cos,Ne_Te_sin
+      REAL :: Ns_Ts_phase(nsm),Ns_Ts_cos,Ns_Ts_sin
       REAL :: wd_bar,b0_bar,modB_bar,kx_bar,kpar_bar
 !      
       END MODULE tglf_weight

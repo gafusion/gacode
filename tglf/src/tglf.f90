@@ -14,6 +14,7 @@ program tglf
 
   use tglf_pkg
   use tglf_interface
+  use tglf_global
 
   implicit none
 
@@ -23,7 +24,20 @@ program tglf
   real :: prec
 
   call tglf_read_input()
-  call tglf_run() 
+  call tglf_run()
+
+  if(units_in.eq.'GENE')then
+     print 30,'GENE reference units used'
+     print 30,'Conversion to TGLF units:'
+     print 30,'Bunit/Bref = ',1.0/Bref_out
+     print 30,'Te/Tref = ',taus_in(1)
+     print 30,'mi/mref = ',mass_in(2)
+     print 30,'a/Lref = ',1.0
+     print 30,'cs/cref = ',SQRT(taus_in(1)/mass_in(2))
+     print 30,'rhos/rhoref = ',SQRT(mass_in(2)*taus_in(1))*Bref_out
+  endif
+  if(alpha_zf_in.lt.0.0)print 30,' kx_geo0_out = ',kx_geo0_out, &
+      ' SAT_geo0_out = ',SAT_geo0_out
 
 ! write interchange stability criteria with ELITE conventions
   Print 30,'  D(R) = ',-interchange_DR,'  D(I) = ',0.25-interchange_DM
@@ -95,6 +109,9 @@ program tglf
 
      ! write ne-te crossphase spectrum to file out.tglf.nete_crossphase_spectrum
      CALL write_tglf_nete_crossphase_spectrum
+
+     ! write ns-ts crossphase spectrum to file out.tglf.nsts_crossphase_spectrum
+     CALL write_tglf_nsts_crossphase_spectrum
 
      ! write QL weights spectrum to file out.tglf.QL_weight_spectrum
      CALL write_tglf_QL_weight_spectrum

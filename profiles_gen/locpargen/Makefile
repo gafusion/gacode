@@ -12,7 +12,12 @@ EXTRA_LIBS = ${GACODE_ROOT}/gapy/EXPRO/EXPRO_lib.a \
              ${GACODE_ROOT}/gapy/src/geo_lib.a \
              ${GACODE_ROOT}/shared/math/math_lib.a
 
-OBJECTS = $(EXEC).o locpargen_geo.o
+OBJECTS = locpargen_globals.o \
+          locpargen_geo.o \
+          locpargen_neo.o \
+          locpargen_tglf.o \
+          locpargen_cgyro.o \
+          $(EXEC).o 
 
 .SUFFIXES : .o .f90
 
@@ -23,5 +28,5 @@ exec: $(OBJECTS) $(EXTRA_LIBS)
 	$(FC) $(FMATH) $(FFLAGS) -c $<
 
 clean:
-	rm -f *.o $(EXEC)
+	rm -f *.o $(EXEC) *~
 	rm -f ${GACODE_ROOT}/modules/locpargen*.mod

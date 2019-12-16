@@ -10,7 +10,6 @@
 
 import sys
 import os
-import string
 
 n=len(sys.argv)
 
@@ -41,15 +40,15 @@ if n > 1:
 
 for line in file.readlines():
 
-    line = string.strip(line)
+    line = line.strip()
 
     # Skip blank lines
 
     if len(line) > 0:
         if (line[0] == '.'):
-            data = string.splitfields(line,':')
-            tag=string.strip(data[0])
-            num=string.strip(data[1])
+            data = line.split(':')
+            tag=data[0].strip()
+            num=data[1].strip()
             text=tag[1:len(tag)]+'='+num
             if append == 0:
                 print text

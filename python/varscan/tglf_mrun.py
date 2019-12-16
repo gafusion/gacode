@@ -1,6 +1,5 @@
 import numpy as np
 import os
-import string
 import sys
 
 
@@ -32,8 +31,8 @@ vec1 = min1+(max1-min1)*np.arange(n1)/float(n1-1)
 vec2 = min2+(max2-min2)*np.arange(n2)/float(n2-1)
 
 if run == 0:
-    print var1,vec1
-    print var2,vec2
+    print(var1,vec1)
+    print(var2,vec2)
     sys.exit()
 
 # IMPORTANT: Set working directory
@@ -54,7 +53,7 @@ for i2 in vec2:
         os.system('python '+root+'/tglf/bin/tglf_parse.py')
         os.system('tglf -p '+dir+' -e . > out')
 
-        print 'INFO: (tglf_mrun) '+a+' ; '+b
+        print('INFO: (tglf_mrun) '+a+' ; '+b)
 
         data = np.loadtxt('out.tglf.gbflux')
         ns   = np.loadtxt('out.tglf.grid')

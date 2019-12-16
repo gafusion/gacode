@@ -34,7 +34,7 @@ then
 fi
 
 # Large files (but no restart)
-cp -p $1/bin.cgyro.* $SDIR
+cp -p $1/bin.cgyro.*flux* $SDIR
 
 # We will have a version if NOT run through TGYRO
 if [ -f $1/out.cgyro.version ]

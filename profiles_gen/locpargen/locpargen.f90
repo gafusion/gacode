@@ -8,43 +8,33 @@
 
 program locpargen
 
+  use locpargen_globals
   use EXPRO_interface
   use EXPRO_locsim_interface
 
   implicit none
-
-  integer :: j1,j2
-  integer :: is,ise
-  real :: r0
-  real :: rho0
-  real :: psi0
-  real :: a
-  real, dimension(1) :: x,y
-  integer :: hasgeo
-  real :: btccw,ipccw
-  real :: cc,loglam,nu_ee,pi,betae_unit
-  
-  character(len=1) :: tag(5)
 
   open(unit=1,file='input.locpargen',status='old')
   read(1,*) r0
   read(1,*) rho0
   read(1,*) psi0
   read(1,*) hasgeo
+  read(1,*) qnflag
+  read(1,*) appendflag
   close(1)
 
-  EXPRO_ctrl_quasineutral_flag = 0
+  EXPRO_ctrl_quasineutral_flag = qnflag
   ! We don't need the numerical eq. flag set for this routine.
   EXPRO_ctrl_numeq_flag = hasgeo
 
   call EXPRO_alloc('./',1) 
   call EXPRO_read
 
-  print '(a)','INFO: (locpargen) Local input parameters:'
-  print *
-
   ! Minor radius
   a = EXPRO_rmin(EXPRO_n_exp)
+
+  ! Electron index
+  ise = EXPRO_n_ion+1
 
   if (rho0 > 0.0) then
 
@@ -58,11 +48,24 @@ program locpargen
 
      ! Use local psi_N
 
-     x(1) = psi0*EXPRO_polflux(EXPRO_n_exp)
-     call cub_spline(EXPRO_polflux,EXPRO_rmin/a,EXPRO_n_exp,x,y,1)
+     x(1) = psi0*abs(EXPRO_polflux(EXPRO_n_exp))
+     call cub_spline(abs(EXPRO_polflux),EXPRO_rmin/a,EXPRO_n_exp,x,y,1)
      r0 = y(1)
 
   endif
+
+  call EXPRO_alloc('./',0) 
+
+  call EXPRO_locsim_profiles('./',&
+       -1,&
+       hasgeo,&
+       0,&
+       qnflag,&
+       EXPRO_n_ion+1,&
+       r0,&
+       btccw,&
+       ipccw,&
+       a)
 
   !------------------------------------------------------------
   ! Create input.geo with local parameters for general geometry
@@ -70,55 +73,18 @@ program locpargen
   if (hasgeo == 1) call locpargen_geo
   !------------------------------------------------------------
 
-  call EXPRO_alloc('./',0) 
+  if (qnflag == 0) then 
+     print 10,'INFO: (locpargen) Quasineutrality NOT enforced.'
+  else
+     print 10,'INFO: (locpargen) Quasineutrality enforced.'
+  endif
 
-  call EXPRO_locsim_profiles('./',&
-       -1,&
-       0,&
-       0,&
-       0,&
-       EXPRO_n_ion+1,&
-       r0,&
-       btccw,&
-       ipccw,&
-       a)
-
-  print 10,'RMIN=',r0
-  print 10,'RMAJ=',rmaj_loc
-
-  print *
-  print 10,'SHIFT=',shift_loc
-  print 10,'ZMAG=',zmag_loc
-  print 10,'DZMAG=',dzmag_loc
-  print 10,'Q=',q_loc
-  print 10,'S=',s_loc
-  print 10,'KAPPA=',kappa_loc
-  print 10,'S_KAPPA=',s_kappa_loc
-  print 10,'DELTA=',delta_loc
-  print 10,'S_DELTA=',s_delta_loc
-  print 10,'ZETA=',zeta_loc
-  print 10,'S_ZETA=',s_zeta_loc
-
-  print *
-  print 10,'GAMMA_E=',gamma_e_loc*a/cs_loc
-  print 10,'GAMMA_P=',gamma_p_loc*a/cs_loc
-  print 10,'MACH=',mach_loc/cs_loc
-
-  print *
-  ise = EXPRO_n_ion+1
-  print 11,'N_SPECIES=',ise
-
-  tag(:) = (/'1','2','3','4','5'/)
-  do is=1,ise
-     print *
-     print 11,'Z_'//tag(is)//'=',int(z_loc(is))
-     ! Deuteron mass normalization
-     print 10,'MASS_'//tag(is)//'=',mass_loc(is)/2.0
-     print 10,'DENS_'//tag(is)//'=',dens_loc(is)/dens_loc(ise)
-     print 10,'TEMP_'//tag(is)//'=',temp_loc(is)/temp_loc(ise)
-     print 10,'DLNNDR_'//tag(is)//'=',dlnndr_loc(is)
-     print 10,'DLNTDR_'//tag(is)//'=',dlntdr_loc(is)
-  enddo
+  print 10,'INFO: (locpargen) rhos/a   =',rhos_loc/a
+  !print 10,'rhoi/a   =',rhos_loc/a*sqrt(temp_loc(ise)/temp_loc(1))
+  print 10,'INFO: (locpargen) Te [keV] =',temp_loc(ise)
+  print 10,'INFO: (locpargen) Ti [keV] =',temp_loc(1)
+  print 10,'INFO: (locpargen) Bunit    =',b_unit_loc
+  print 10,'INFO: (locpargen) beta_*   =',beta_star_loc
 
   ! Compute collision frequency
   !
@@ -133,13 +99,41 @@ program locpargen
   loglam = 24.0-log(sqrt(dens_loc(ise)*1e13)/(temp_loc(ise)*1e3))
   nu_ee  = cc*loglam*dens_loc(ise)/(sqrt(mass_loc(ise)/2.0)*temp_loc(ise)**1.5)
 
-  print *
-  print 10,'NU_EE=',nu_ee*a/cs_loc
-
   betae_unit = 4.027e-3*dens_loc(ise)*temp_loc(ise)/b_unit_loc**2
-  print 10,'BETAE_UNIT=',betae_unit
+
+  tag(:) = (/'1','2','3','4','5'/)
+
+  open(unit=1,file='out.locpargen',status='replace')
+  write(1,*) q_loc
+  write(1,*) r0
+  write(1,*) rmaj_loc
+  write(1,*) shift_loc
+  write(1,*) kappa_loc
+  write(1,*) q_loc*rhos_loc*sqrt(temp_loc(ise)/temp_loc(1))/a
+  close(1)
+
+  call fileopen('input.cgyro.locpargen') ; call locpargen_cgyro
+  call fileopen('input.tglf.locpargen')  ; call locpargen_tglf
+  call fileopen('input.neo.locpargen')   ; call locpargen_neo
+  print 10,'INFO: (locpargen) Wrote input.*.locpargen'
 
 10 format(a,sp,1pe12.5)
-11 format(a,i0)
 
 end program locpargen
+
+subroutine fileopen(fname)
+
+  use locpargen_globals
+
+  implicit none
+
+  character(len=*) :: fname
+
+  if (appendflag == 0) then
+     open(unit=1,file=trim(fname),status='replace')
+  else
+     open(unit=1,file=trim(fname),position='append')
+     write(1,*) '# **************** CUT HERE **********************'
+  endif
+
+end subroutine fileopen

@@ -12,10 +12,10 @@ def readProfile(h5file,nodeName=""):
   """
 
   hf=tables.openFile(h5file,'r')
-  dataNames=hf.root._v_children.keys()
+  dataNames=list(hf.root._v_children.keys())
   # Idiot check done by seeing if n_kinetic is there
   if dataNames.count("n_kinetic") == 0:
-     print h5file+" does not seem to contain the gyro profile data"
+     print(h5file+" does not seem to contain the gyro profile data")
      return
   data={}
   for dName in dataNames:
@@ -23,7 +23,7 @@ def readProfile(h5file,nodeName=""):
     try:
       data[dName]=eval(getNode)
     except:
-      print "Problems getting data: "+dName
+      print("Problems getting data: "+dName)
   hf.close()
   return data
 
@@ -36,7 +36,7 @@ def printData(dataDict,outfile=""):
   else:
     of=sys.stdout
 
-  for dName in dataDict.keys():
+  for dName in list(dataDict.keys()):
     of.write(dName+'\n')
     of.write(dataDict[dName])
     sys.stdout.write(dataDict[dName])
@@ -52,18 +52,18 @@ def readToroidal(h5file,nodeName=""):
 
   hf=tables.openFile(h5file,'r')
   torlist=[]
-  for  hfnode in hf.root._v_children.keys():
+  for  hfnode in list(hf.root._v_children.keys()):
     if hfnode.endswith("_toroidal"):
       torlist.append(hfnode)
   if len(torlist) == 0:
-    print h5file+" has no mode data."
+    print(h5file+" has no mode data.")
     return
   torData={}
   if nodeName:
     if torlist.count(nodeName) > 0:
       torlist=[nodeName]
     else:
-      print nodeName +" not found in file."
+      print(nodeName +" not found in file.")
       return
   for hfnode in torlist:
     childNodes="hf.root."+hfnode+"._v_children"
@@ -84,24 +84,24 @@ def readModes(h5file,nodeName=""):
 
   hf=tables.openFile(h5file,'r')
   modelist=[]
-  for  hfnode in hf.root._v_children.keys():
+  for  hfnode in list(hf.root._v_children.keys()):
     if hfnode.endswith("_modes"):
       modelist.append(hfnode)
   if len(modelist) == 0:
-    print h5file+" has no mode data."
+    print(h5file+" has no mode data.")
     return
   modeData={}
   if nodeName:
     if modelist.count(nodeName) > 0:
       modelist=[nodeName]
     else:
-      print nodeName +" not found in file."
+      print(nodeName +" not found in file.")
       return
   for hfnode in modelist:
     childNodes="hf.root."+hfnode+"._v_children"
-    real_imag=eval(childNodes).keys()
+    real_imag=list(eval(childNodes).keys())
     if not real_imag[0].endswith("real") or not real_imag[1].endswith("imag"):
-        print "Problems finding real and imaginary components of "+hfnode
+        print("Problems finding real and imaginary components of "+hfnode)
         continue
     getNode="hf.root."+hfnode+"."+real_imag[0]+".read()"
     realData=eval(getNode)
@@ -119,17 +119,17 @@ def readAllButModesAndTor(h5file,nodeName=""):
   """
   hf=tables.openFile(h5file,'r')
   datalist=[]
-  for  hfnode in hf.root._v_children.keys():
+  for  hfnode in list(hf.root._v_children.keys()):
     if not hfnode.endswith("_modes") or not hfnode.endswith("_toroidal"):
       datalist.append(hfnode)
   if len(hfnode) == 0:
-    print h5file+" has no non-mode data."
+    print(h5file+" has no non-mode data.")
     return
   if nodeName:
     if datalist.count(nodeName) > 0:
       datalist=[nodeName]
     else:
-      print nodeName +" not found in file."
+      print(nodeName +" not found in file.")
       return
   allData={}
   for dName in datalist:
@@ -137,7 +137,7 @@ def readAllButModesAndTor(h5file,nodeName=""):
     try:
       allData[dName]=eval(getNode)
     except:
-      print "Problems getting data: "+dName
+      print("Problems getting data: "+dName)
   hf.close()
   return allData
 
@@ -149,17 +149,17 @@ def readAllButModes(h5file,nodeName=""):
   """
   hf=tables.openFile(h5file,'r')
   datalist=[]
-  for  hfnode in hf.root._v_children.keys():
+  for  hfnode in list(hf.root._v_children.keys()):
     if not hfnode.endswith("_modes"):
       datalist.append(hfnode)
   if len(hfnode) == 0:
-    print h5file+" has no non-mode data."
+    print(h5file+" has no non-mode data.")
     return
   if nodeName:
     if datalist.count(nodeName) > 0:
       datalist=[nodeName]
     else:
-      print nodeName +" not found in file."
+      print(nodeName +" not found in file.")
       return
   allData={}
   for dName in datalist:
@@ -167,7 +167,7 @@ def readAllButModes(h5file,nodeName=""):
     try:
       allData[dName]=eval(getNode)
     except:
-      print "Problems getting data: "+dName
+      print("Problems getting data: "+dName)
   hf.close()
   return allData
 
@@ -190,7 +190,7 @@ def main():
       inputFile=args[0]
     else:
       if options.input == '':
-        print "Must specify an input file"
+        print("Must specify an input file")
         return
       else:
         inputFile=options.input

@@ -81,13 +81,14 @@ subroutine gyro_alloc_profile_sim(flag)
      allocate(alpha_s(n_spec,n_x))
      allocate(dlnndr_s(n_spec,n_x))
      allocate(dlntdr_s(n_spec,n_x))
+     allocate(sdlnndr(n_spec))
+     allocate(sdlntdr(n_spec))
      allocate(pr_s(n_spec,n_x))
 
      allocate(phase(n_n_1,n_x))
      allocate(angp(n_x))
 
      allocate(r_e(n_x))
-     allocate(dr_eodr(n_x))
 
      allocate(n(n_n))
      allocate(n_1(n_n_1))
@@ -116,8 +117,9 @@ subroutine gyro_alloc_profile_sim(flag)
      allocate(i_loop(1-n_x:2*n_x))
      allocate(explicit_damp_vec(n_kinetic,n_x))
 
-     if (source_flag == 1) then
+     if (source_method > 1) then
         ! Source arrays
+        n_lump = n_source
         allocate(b_src(n_x,n_lump))
         allocate(m_src(n_lump,n_lump))
         allocate(src_piv(n_lump))
@@ -172,13 +174,14 @@ subroutine gyro_alloc_profile_sim(flag)
      deallocate(alpha_s)
      deallocate(dlnndr_s)
      deallocate(dlntdr_s)
+     deallocate(sdlnndr)
+     deallocate(sdlntdr)
      deallocate(pr_s)
 
      deallocate(phase)
      deallocate(angp)
 
      deallocate(r_e)
-     deallocate(dr_eodr)
 
      deallocate(n)
      deallocate(n_1)

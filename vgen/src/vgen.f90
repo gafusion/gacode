@@ -158,8 +158,6 @@ program vgen
 
         ! Er calculation first
 
-        open(unit=1,file='out.vgen.ercomp'//tag(i_proc+1),status='replace')
-        close(1)
         do i_loc=1,n_loc
            i = i_glob(i_loc)
            if (erspecies_indx == 1) then
@@ -174,15 +172,6 @@ program vgen
                 + EXPRO_vtor(erspecies_indx,i) * EXPRO_bp0(i) &
                 - EXPRO_vpol(erspecies_indx,i) * EXPRO_bt0(i)) &
                 / 1000
-           open(unit=1,file='out.vgen.ercomp'//tag(i_proc+1),status='old',position='append')
-           write(1,'(e16.8)',advance='no') EXPRO_rho(i)
-           write(1,'(e16.8)',advance='no') grad_p * EXPRO_grad_r0(i) &
-                * EXPRO_ti(erspecies_indx,i)*temp_norm_fac &
-                / (EXPRO_z(erspecies_indx) * charge_norm_fac) / 1000
-           write(1,'(e16.8)',advance='no') EXPRO_vtor(erspecies_indx,i) * EXPRO_bp0(i)/1000
-           write(1,'(e16.8)',advance='no') -EXPRO_vpol(erspecies_indx,i) * EXPRO_bt0(i)/1000
-           write(1,*) 
-           close(1)
         enddo
 
         call vgen_reduce(er_exp(2:EXPRO_n_exp-1),EXPRO_n_exp-2)
@@ -414,7 +403,29 @@ program vgen
         write(1,*)
      enddo
      close(1)
-
+     
+     open(unit=1,file='out.vgen.ercomp',status='replace')
+     do i=1,EXPRO_n_exp
+        write(1,'(e16.8)',advance='no') EXPRO_rho(i)
+        write(1,'(e16.8)',advance='no') EXPRO_w0(i)
+        do j=1,n_ions
+           if(j == 1) then
+              grad_p = -(EXPRO_dlnnidr_new(i) + EXPRO_dlntidr(j,i))
+           else
+              grad_p = -(EXPRO_dlnnidr(j,i) + EXPRO_dlntidr(j,i))
+           endif
+           write(1,'(e16.8)',advance='no') grad_p * EXPRO_grad_r0(i) &
+                * EXPRO_ti(j,i)*temp_norm_fac &
+                / (EXPRO_z(j) * charge_norm_fac) / (EXPRO_rmaj(i) + EXPRO_rmin(i)) &
+                / EXPRO_bp0(i)
+           write(1,'(e16.8)',advance='no') EXPRO_vtor(j,i) / (EXPRO_rmaj(i) + EXPRO_rmin(i))
+           write(1,'(e16.8)',advance='no') -EXPRO_vpol(j,i) * EXPRO_bt0(i)/EXPRO_bp0(i) &
+                / (EXPRO_rmaj(i) + EXPRO_rmin(i))
+        enddo
+        write(1,*)
+     enddo
+     close(1)
+     
      !----------------------------------------------------------------------
      ! Generate new input.profiles.* files
 

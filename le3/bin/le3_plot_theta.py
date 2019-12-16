@@ -87,4 +87,4 @@ if imgfile == 'screen':
     plt.show()
 else:
     plt.savefig(imgfile)
-    print "INFO: (le3_plot_theta) Wrote plot to "+imgfile+"."
+    print("INFO: (le3_plot_theta) Wrote plot to "+imgfile+".")

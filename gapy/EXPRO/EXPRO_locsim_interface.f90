@@ -37,6 +37,7 @@ module EXPRO_locsim_interface
   real :: gamma_e_loc
   real :: gamma_p_loc
   real :: mach_loc
+  real :: rmin_loc
   real :: rmaj_loc
   real :: rhos_loc
   real :: z_eff_loc
@@ -45,6 +46,8 @@ module EXPRO_locsim_interface
   real :: psi_norm_loc
   real :: psi_a_loc
   real :: cs_loc
+  real :: betae_loc
+  real :: beta_star_loc
 
   real, dimension(9) :: mass_loc
   real, dimension(9) :: z_loc

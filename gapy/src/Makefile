@@ -10,13 +10,13 @@ FC += ${FOMP}
 
 .SUFFIXES : .o .f90
 
-all: geo_lib.a vpro_lib.a util_lib.a
+all: geo_lib.a util_lib.a 
 
 geo_lib.a: gapy_geo.o
 	$(ARCH) geo_lib.a gapy_geo.o
 
-vpro_lib.a: gapy_vpro.o
-	$(ARCH) vpro_lib.a gapy_vpro.o
+#vpro_lib.a: gapy_vpro.o
+#	$(ARCH) vpro_lib.a gapy_vpro.o
 
 util_lib.a: gapy_util.o
 	$(ARCH) util_lib.a gapy_util.o

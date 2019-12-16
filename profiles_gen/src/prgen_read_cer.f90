@@ -91,14 +91,14 @@ subroutine prgen_read_cer
   !-------------------------------------------------------
   ! Spline interpolation from CER grid to ITERDB rho grid.
   !
-  ! COORDINATES: convert vpolc to m/s (- sign for CER phi to GACODE varphi)
-  call cub_spline(rho_in,-f_in(:,1)*1e3,n_in,rho,vpolc_exp,nx)
+  ! COORDINATES: convert vpolc to m/s (-ipccw sign for CER phi to GACODE varphi)
+  call cub_spline(rho_in,-ipccw*f_in(:,1)*1e3,n_in,rho,vpolc_exp,nx)
   !
   ! COORDINATES: convert vtorc to m/s (- sign for CER phi to GACODE varphi)
   call cub_spline(rho_in,-f_in(:,2)*1e3,n_in,rho,vtorc_exp,nx)
   !
-  ! COORDINATES: convert omega to (1/s) (- sign for CER phi to GACODE varphi)
-  call cub_spline(rho_in,-f_in(:,3)*1e3,n_in,rho,omega0,nx)
+  ! COORDINATES: convert omega to (1/s) (-ipccw sign for CER phi to GACODE varphi)
+  call cub_spline(rho_in,-ipccw*f_in(:,3)*1e3,n_in,rho,omega0,nx)
   !-------------------------------------------------------
 
 end subroutine prgen_read_cer

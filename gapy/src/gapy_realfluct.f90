@@ -1,7 +1,7 @@
 subroutine realfluct(nr,nn,nx,ny,c,f)
 
   implicit none
-  
+
   integer, intent(in) :: nr,nn,nx,ny
   double complex, intent(in) :: c(0:nr-1,0:nn-1)
   double precision, intent(inout) :: f(0:nx-1,0:ny-1)
@@ -12,16 +12,16 @@ subroutine realfluct(nr,nn,nx,ny,c,f)
   double precision :: pi,xi,yj,fsum
   double complex :: ic
 
-! f2py intent(in) nr
-! f2py intent(in) nn
-! f2py intent(in) nx
-! f2py intent(in) ny
-! f2py intent(in) c
-! f2py intent(in,out) f
+  ! f2py intent(in) nr
+  ! f2py intent(in) nn
+  ! f2py intent(in) nx
+  ! f2py intent(in) ny
+  ! f2py intent(in) c
+  ! f2py intent(in,out) f
 
   allocate(epx(0:nr-1,0:nx-1))
   allocate(eny(0:nn-1,0:ny-1))
-  
+
   ic = (0d0,1d0)
   pi = atan(1d0)*4d0
 
@@ -32,31 +32,43 @@ subroutine realfluct(nr,nn,nx,ny,c,f)
      enddo
   enddo
 
-  do j=0,ny-1
-     yj = j*2*pi/(ny-1)
-     do n=0,nn-1    
-        eny(n,j) = exp(-ic*n*yj)
+  if (nn > 1) then
+     do j=0,ny-1
+        yj = j*2*pi/(ny-1)
+        do n=0,nn-1    
+           eny(n,j) = exp(-ic*n*yj)
+        enddo
      enddo
-  enddo
+     ! factor of 1/2 for n=0
+     eny(0,:) = eny(0,:)/2
+  else
+     do j=0,ny-1
+        yj = j*2*pi/(ny-1)
+        n=1    
+        eny(0,j) = exp(-ic*n*yj)
+     enddo
+  endif
 
-  ! factor of 1/2 for n=0
-  eny(0,:) = 0.5*eny(0,:)
- 
-  f = 0.0
-  
 !$omp parallel do private(j,i,fsum,n,p)
   do j=0,ny-1
      do i=0,nx-1
-        fsum = 0.0
-        do n=0,nn-1
-           do p=0,nr-1
-              fsum = fsum+real(c(p,n)*epx(p,i)*eny(n,j))
+        fsum = 0d0
+        if (nn > 1) then
+           do n=0,nn-1
+              do p=0,nr-1
+                 fsum = fsum+real(c(p,n)*epx(p,i)*eny(n,j))
+              enddo
            enddo
-        enddo
+        else
+           n=1
+           do p=0,nr-1
+              fsum = fsum+real(c(p,0)*epx(p,i)*eny(0,j))
+           enddo
+        endif
         f(i,j) = fsum
      enddo
   enddo
 
   deallocate(epx,eny)
-  
+
 end subroutine realfluct

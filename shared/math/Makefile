@@ -28,7 +28,7 @@ OBJECTS = math_constants.o \
           pseudospec_lib.o \
           timer_lib.o
 
-.SUFFIXES : .o .f90 .f
+.SUFFIXES : .o .f90 .F90 .f
 
 all: lib
 
@@ -45,5 +45,6 @@ clean:
 	rm -f *.o $(LLIB).a *.mod *.lst
 	rm -f ${GACODE_ROOT}/modules/math_constants.mod
 	rm -f ${GACODE_ROOT}/modules/timer_lib.mod
+	rm -f ${GACODE_ROOT}/modules/parallel_lib.mod
 
 -include ${GACODE_ROOT}/platform/build/make.inc.${GACODE_PLATFORM}

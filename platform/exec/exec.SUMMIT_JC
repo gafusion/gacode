@@ -1,0 +1,96 @@
+#! /usr/bin/env bash
+# GACODE Parallel execution script (SUMMIT_JC)
+
+simdir=${1}
+nmpi=${2} # nodes
+exec=${3}
+debug=${5} #NOTE: using this for debug flag (replaces numa=0)
+mpinuma=${6} # MPI per GPU
+
+cd $simdir
+
+nodes=$nmpi
+threads_per_core=2
+gpus_per_socket=3
+ranks_per_gpu=$mpinuma
+cores_per_socket=20
+eager=64
+
+# derived quantities:
+let ranks_per_socket=$ranks_per_gpu*$gpus_per_socket
+let cores_per_rank=$cores_per_socket/$ranks_per_socket
+let cores_per_gpu=$cores_per_rank*$ranks_per_gpu
+let nrs=2*$gpus_per_socket*$nodes
+let threads_per_rank=$threads_per_core*$cores_per_rank
+let snmpi=2*$ranks_per_socket*$nodes
+
+if [ $debug -eq 0 ] ; then
+
+ulimit -s 10240
+ulimit -c 0
+
+export PAMI_ENABLE_STRIPING=0
+export PAMI_IBV_ADAPTER_AFFINITY=1
+export PAMI_IBV_DEVICE_NAME="mlx5_0:1"
+export PAMI_IBV_DEVICE_NAME_1="mlx5_3:1"
+export PAMI_IBV_ENABLE_OOO_AR=1
+export PAMI_IBV_QP_SERVICE_LEVEL=8
+
+unset PAMI_IBV_ENABLE_DCT
+
+export MP_EAGER_LIMIT=1028
+export OMP_STACKSIZE=400M
+export OMP_NUM_THREADS=$threads_per_rank
+export PMPI_GPU_AWARE=1
+
+jsrun \
+-D CUDA_VISIBLE_DEVICES \
+-E OMP_NUM_THREADS=$threads_per_rank \
+-E PMPI_GPU_AWARE=1 \
+--nrs $nrs \
+--tasks_per_rs $ranks_per_gpu \
+--cpu_per_rs $cores_per_gpu \
+--gpu_per_rs 1 \
+--bind=proportional-packed:$cores_per_rank \
+-d plane:$ranks_per_gpu \
+-l cpu-cpu \
+--smpiargs="-gpu" \
+$exec
+
+fi
+
+# -- diagnostics
+
+cat > $simdir/batch.out << EOF
+ulimit -s 10240
+ulimit -c 0
+
+export PAMI_ENABLE_STRIPING=0
+export PAMI_IBV_ADAPTER_AFFINITY=1
+export PAMI_IBV_DEVICE_NAME="mlx5_0:1"
+export PAMI_IBV_DEVICE_NAME_1="mlx5_3:1"
+export PAMI_IBV_ENABLE_OOO_AR=1
+export PAMI_IBV_QP_SERVICE_LEVEL=8
+
+unset PAMI_IBV_ENABLE_DCT
+
+export MP_EAGER_LIMIT=1028
+export OMP_STACKSIZE=400M
+export OMP_NUM_THREADS=$threads_per_rank
+export PMPI_GPU_AWARE=1
+
+jsrun \
+-D CUDA_VISIBLE_DEVICES \
+-E OMP_NUM_THREADS=$threads_per_rank \
+-E PMPI_GPU_AWARE=1 \
+--nrs $nrs \
+--tasks_per_rs $ranks_per_gpu \
+--cpu_per_rs $cores_per_gpu \
+--gpu_per_rs 1 \
+--bind=proportional-packed:$cores_per_rank \
+-d plane:$ranks_per_gpu \
+-l cpu-cpu \
+--smpiargs="-gpu" \
+$exec
+
+EOF

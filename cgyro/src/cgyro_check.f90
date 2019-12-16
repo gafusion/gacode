@@ -35,16 +35,16 @@ subroutine cgyro_check
      return
   endif
 
-  if (n_species > 6) then
-     call cgyro_error('n_species <= 6.')
+  if (n_species > 11) then
+     call cgyro_error('n_species <= 11.')
      return
   endif
 
   if (h_print_flag == 1) then
      if (box_size > 1 .and. zf_test_mode == 0) then
         call cgyro_error('Distribution output not available for box_size > 1')
+        return
      endif
-     return
   endif
   !------------------------------------------------------------------------
 

@@ -27,7 +27,13 @@ module cgyro_globals
   integer :: n_field
   real    :: e_max
   integer :: e_method
+  integer :: delta_t_method
   real    :: delta_t
+  real    :: delta_t_gk
+  real    :: delta_t_tol
+  integer :: error_mode
+  integer :: delta_gk_method
+  real    :: total_local_error
   real    :: max_time
   integer :: print_step
   integer :: restart_step
@@ -64,13 +70,13 @@ module cgyro_globals
   real :: te_ade
   real :: ne_ade
   real :: dlntdre_ade   
-  real :: dlnndre_ade   
+  real :: dlnndre_ade
   real :: masse_ade
   real :: lambda_star
   integer :: test_flag
   integer :: h_print_flag
   integer :: moment_print_flag
-  integer :: kxkyflux_print_flag
+  integer :: gflux_print_flag
   integer :: field_print_flag
   real :: amp0
   real :: amp
@@ -114,14 +120,14 @@ module cgyro_globals
   !
   integer :: n_species
   real :: nu_ee
-  real, dimension(6) :: z
-  real, dimension(6) :: mass
-  real, dimension(6) :: dens
-  real, dimension(6) :: temp
-  real, dimension(6) :: dlnndr
-  real, dimension(6) :: dlntdr
-  real, dimension(6) :: sdlnndr
-  real, dimension(6) :: sdlntdr
+  real, dimension(11) :: z
+  real, dimension(11) :: mass
+  real, dimension(11) :: dens
+  real, dimension(11) :: temp
+  real, dimension(11) :: dlnndr
+  real, dimension(11) :: dlntdr
+  real, dimension(11) :: sdlnndr
+  real, dimension(11) :: sdlntdr
 
   integer :: subroutine_flag  ! only used for cgyro_read_input
 
@@ -139,8 +145,8 @@ module cgyro_globals
   real :: zeta_scale, s_zeta_scale
   real :: beta_star_scale, betae_unit_scale
   real :: nu_ee_scale
-  real, dimension(6) :: dlnndr_scale
-  real, dimension(6) :: dlntdr_scale
+  real, dimension(11) :: dlnndr_scale
+  real, dimension(11) :: dlntdr_scale
 
   real :: lambda_debye
   real :: rhos
@@ -212,7 +218,6 @@ module cgyro_globals
   character(len=16) :: runfile_memory  = 'out.cgyro.memory'
   character(len=15) :: runfile_hosts   = 'out.cgyro.hosts'
   character(len=17) :: runfile_restart = 'bin.cgyro.restart'
-  character(len=17) :: runfile_restart_old = 'out.cgyro.restart'
   character(len=13) :: runfile_restart_tag = 'out.cgyro.tag'
   character(len=15) :: runfile_grids   = 'out.cgyro.grids'
   character(len=14) :: runfile_prec    = 'out.cgyro.prec'
@@ -222,8 +227,8 @@ module cgyro_globals
   character(len=14) :: runfile_freq    = 'out.cgyro.freq'
   character(len=14) :: binfile_freq    = 'bin.cgyro.freq'
   character(len=12) :: binfile_hb      = 'bin.cgyro.hb'
-  character(len=21) :: binfile_kxky_flux = 'bin.cgyro.kxky_flux_e'
   character(len=17) :: binfile_ky_flux = 'bin.cgyro.ky_flux'
+  character(len=18) :: binfile_ky_cflux = 'bin.cgyro.ky_cflux'
   character(len=15), dimension(3) :: binfile_fieldb = &
        (/'bin.cgyro.phib ','bin.cgyro.aparb','bin.cgyro.bparb'/)
   character(len=16), dimension(2) :: binfile_kxky = &
@@ -278,8 +283,8 @@ module cgyro_globals
   real :: dlnndr_ele
   real :: dlntdr_ele
   !
-  real, dimension(6) :: vth  
-  real, dimension(6) :: nu
+  real, dimension(11) :: vth  
+  real, dimension(11) :: nu
   real :: rho
   real :: k_theta
   real :: length
@@ -332,12 +337,12 @@ module cgyro_globals
   real, dimension(:,:,:), allocatable :: dvjvec_c
   real, dimension(:,:,:), allocatable :: dvjvec_v
   real, dimension(:,:,:), allocatable :: jxvec_c
-  real, dimension(:,:), allocatable :: upfac1,upfac2
+  real, dimension(:,:,:), allocatable :: upfac1,upfac2
   !
   ! Fields
   real, dimension(:,:), allocatable :: fcoef
   real, dimension(:,:), allocatable :: gcoef
-  real, dimension(:,:), allocatable :: res_norm
+  real, dimension(:,:,:), allocatable :: res_norm
   complex, dimension(:,:), allocatable :: field
   complex, dimension(:,:), allocatable :: field_loc
   complex, dimension(:,:), allocatable :: field_old
@@ -346,13 +351,11 @@ module cgyro_globals
   complex, dimension(:,:,:,:), allocatable :: moment_loc
   complex, dimension(:,:,:,:), allocatable :: moment
   !
-  ! Nonlinear fluxes 
-  real, dimension(:,:), allocatable :: flux_loc
-  real, dimension(:,:), allocatable :: flux
-  real, dimension(:,:,:), allocatable :: fflux_loc
-  real, dimension(:,:,:), allocatable :: fflux
-  complex, dimension(:,:,:), allocatable :: gflux_loc
-  complex, dimension(:,:,:), allocatable :: gflux
+  ! Nonlinear fluxes (f=standard,c=central,g=global)
+  real, dimension(:,:,:), allocatable :: cflux_loc
+  real, dimension(:,:,:), allocatable :: cflux
+  complex, dimension(:,:,:,:), allocatable :: gflux_loc
+  complex, dimension(:,:,:,:), allocatable :: gflux
   !
   ! Nonlinear plans
   type(C_PTR) :: plan_r2c

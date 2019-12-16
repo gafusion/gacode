@@ -1,5 +1,4 @@
 import sys
-import string
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import rc
@@ -16,7 +15,7 @@ surf    = sys.argv[2]
 i0      = int(sys.argv[3])
 ftype   = sys.argv[4]
 
-filevec = string.splitfields(infiles,',')
+filevec = infiles.split(',')
 
 # Support only one input.profiles file
 prof = profiles_genData(filevec[0])

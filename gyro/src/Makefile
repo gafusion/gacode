@@ -23,7 +23,6 @@ OBJECTS += gyro_globals.o \
           gyro_maxwell_private.o \
           gyro_poisson_private.o \
           gyro_poissonaperp_private.o \
-          gyro_mumps_private.o \
           gyro_banana_private.o \
           gyro_module_ompdata.o \
           gyro.o \
@@ -64,7 +63,6 @@ OBJECTS += gyro_globals.o \
           gyro_collision_kernel.o \
           gyro_collision_main.o \
           gyro_collision_grid_write.o \
-          gyro_collision_krook.o \
           gyro_conserve_number.o \
           gyro_conserve_all.o \
           gyro_entropy.o \
@@ -105,8 +103,6 @@ OBJECTS += gyro_globals.o \
           gyro_nl_direct.o \
           gyro_nl_fft.o \
           gyro_nonlinear_flux.o \
-          gyro_nonlinear_flux_velocity.o \
-          gyro_nonlinear_transfer.o \
           gyro_omegas.o \
           gyro_operators_on_h.o \
           gyro_phi_kp_squared.o \
@@ -119,7 +115,6 @@ OBJECTS += gyro_globals.o \
           gyro_read_restart.o \
           gyro_set_exit_status.o \
           gyro_sparse_solve_umfpack.o \
-          gyro_sparse_solve_mumps.o \
           gyro_write_restart.o \
           gyro_rhs_nonlinear.o \
           gyro_rhs_total.o \

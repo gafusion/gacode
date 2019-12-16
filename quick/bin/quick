@@ -22,7 +22,7 @@ then
   echo
   echo "EXECUTE MODE (single core)"
   echo
-  echo "         -e <simdir>" 
+  echo "         -e <simdir>"
   echo "         Run QUICK using input.quick in <simdir>."
   echo
   echo "TEMPLATE GENERATION"
@@ -36,7 +36,7 @@ then
   exit 1
 fi
 #=============================================================
- 
+
 #=============================================================
 # Define variables for flag capture
 #
@@ -101,7 +101,7 @@ python $QUICK_DIR/bin/quick_parse.py
 
 if [ -f input.profiles ]
 then
-   python $GACODE_ROOT/shared/bin/profile_parse.py input.profiles
+   python $GACODE_ROOT/profiles_gen/bin/profile_parse.py input.profiles
 else
     echo "ERROR: (tgyro script) input.profiles missing."
     exit 1

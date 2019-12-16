@@ -24,6 +24,8 @@ subroutine tglf_run()
 
   integer :: i_ion,n
 
+  call put_units(tglf_units_in)
+
   call put_signs(tglf_sign_Bt_in,tglf_sign_It_in)
 
   call put_species(tglf_ns_in, &

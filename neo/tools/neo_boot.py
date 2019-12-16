@@ -1,13 +1,12 @@
 import os
 import numpy as np
 import sys
-import string
 
 workdir = 'bdir'
 tools   = os.environ['GACODE_ROOT']+'/neo/tools/'
 
 if len(sys.argv) < 11:
-   print "python neo_boot.py <rmin> <q> <nuee> <ni1/ne> <ti1/te> <shift> <kappa> <skappa> <delta> <sdelta>"
+   print("python neo_boot.py <rmin> <q> <nuee> <ni1/ne> <ti1/te> <shift> <kappa> <skappa> <delta> <sdelta>")
    sys.exit()
 
 # EXAMPLE:
@@ -143,6 +142,6 @@ for i in range(6):
 
    cneo.append(jneo/(ipsi*rhostar*abs(z_all[i])*n_all[i]))
 
-print list
-print cneo
-print geo1,geo2,geo3
+print(list)
+print(cneo)
+print(geo1,geo2,geo3)

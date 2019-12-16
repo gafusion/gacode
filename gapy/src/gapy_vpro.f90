@@ -1,11 +1,10 @@
 module vpro
 
-  integer, parameter :: ntag = 38
-  integer :: nt
-
   ! Fundamental input
+  integer, parameter :: ntag = 38
   
-  character*10, dimension(ntag) :: tag = (/&
+  character(len=2) :: ident='# '
+  character(len=20), dimension(ntag) :: tag = (/&
        'nexp      ',& !1
        'nion      ',& !2
        'bt_exp    ',& !3
@@ -105,98 +104,102 @@ contains
     implicit none
 
     integer :: i
-    character(len=10) :: ytag
+    character(len=22) :: ytag
 
     ! NOTE: nexp should appear before any profile arrays
 
-    open(unit=1,file='dat.bin',status='old',access='stream')
-    read(1) nt
-    
-    do i=1,nt
+    open(unit=1,file='dat.txt',status='old')
 
-       read(1) ytag
+    do 
 
-       select case (trim(ytag))
+       read(1,'(a)',end=99) ytag
+
+       select case (trim(ytag(3:22)))
        case('nexp')
-          read(1) nexp
+          read(1,*) nexp
+          if (allocated(rho)) call vpro_init(0)
           call vpro_init(1)
        case('nion')
-          read(1) nion
+          read(1,*) nion
        case('bt_exp')
-          read(1) bt_exp
+          read(1,30) bt_exp
        case('arho_exp')
-          read(1) arho_exp
+          read(1,30) arho_exp
        case ('rho')
-          read(1) rho 
+          read(1,30) rho 
        case ('rmin')
-          read(1) rmin 
+          read(1,30) rmin 
        case ('polflux')
-          read(1) polflux 
+          read(1,30) polflux 
        case ('q')
-          read(1) q 
+          read(1,30) q 
        case ('omega0')
-          read(1) omega0 
+          read(1,30) omega0 
        case ('rmaj')
-          read(1) rmaj 
+          read(1,30) rmaj 
        case ('zmag')
-          read(1) zmag 
+          read(1,30) zmag 
        case ('kappa')
-          read(1) kappa 
+          read(1,30) kappa 
        case ('delta')
-          read(1) delta 
+          read(1,30) delta 
        case ('zeta')
-          read(1) zeta 
+          read(1,30) zeta 
        case ('ne')
-          read(1) ne
+          read(1,30) ne
        case ('Te')
-          read(1) te 
+          read(1,30) te 
        case ('ptot')
-          read(1) ptot 
+          read(1,30) ptot 
        case ('z_eff')
-          read(1) z_eff 
+          read(1,30) z_eff 
        case ('ni')
-          read(1) ni(:,1:nion)
+          read(1,30) ni(:,1:nion)
        case ('ti')
-          read(1) ti(:,1:nion)
+          read(1,30) ti(:,1:nion)
        case ('vpol')
-          read(1) vpol(:,1:nion)
+          read(1,30) vpol(:,1:nion)
        case ('vtor')
-          read(1) vtor(:,1:nion)
+          read(1,30) vtor(:,1:nion)
        case ('flow_beam')
-          read(1) flow_beam 
+          read(1,30) flow_beam 
        case ('flow_wall')
-          read(1) flow_wall 
+          read(1,30) flow_wall 
        case ('flow_mom')
-          read(1) flow_mom 
+          read(1,30) flow_mom 
        case ('pow_e')
-          read(1) pow_e 
+          read(1,30) pow_e 
        case ('pow_i')
-          read(1) pow_i 
+          read(1,30) pow_i 
        case ('pow_ei')
-          read(1) pow_ei 
+          read(1,30) pow_ei 
        case ('pow_e_aux')
-          read(1) pow_e_aux 
+          read(1,30) pow_e_aux 
        case ('pow_i_aux')
-          read(1) pow_i_aux 
+          read(1,30) pow_i_aux 
        case ('pow_e_fus')
-          read(1) pow_e_fus 
+          read(1,30) pow_e_fus 
        case ('pow_i_fus')
-          read(1) pow_i_fus 
+          read(1,30) pow_i_fus 
        case ('pow_e_sync')
-          read(1) pow_e_sync
+          read(1,30) pow_e_sync
        case ('pow_e_brem')
-          read(1) pow_e_brem 
+          read(1,30) pow_e_brem 
        case ('pow_e_line')
-          read(1) pow_e_line 
+          read(1,30) pow_e_line 
        case ('sbeame')
-          read(1) sbeame 
+          read(1,30) sbeame 
        case ('sbcx')
-          read(1) sbcx 
+          read(1,30) sbcx 
        case ('sscxl')
-          read(1) sscxl 
+          read(1,30) sscxl 
        end select
-       
+
     enddo
+
+99  close(1)
+
+30  format(1pe12.5)
 
   end subroutine vpro_read
 
@@ -338,124 +341,121 @@ contains
 
     implicit none
 
-    open(unit=1,file='dat.bin',status='replace',access='stream')
-    write(1) ntag
+    open(unit=1,file='dat.txt',status='replace')
 
-    write(1) tag(1)
-    write(1) nexp
+    write(1,20) ident//tag(1)
+    write(1,'(i0)') nexp
 
-    write(1) tag(2)
-    write(1) nion
+    write(1,20) ident//tag(2)
+    write(1,'(i0)') nion
 
-    write(1) tag(3)
-    write(1) bt_exp
+    write(1,20) ident//tag(3)
+    write(1,30) bt_exp
 
-    write(1) tag(4)
-    write(1) arho_exp
-    
-    write(1) tag(5)
-    write(1) rho
+    write(1,20) ident//tag(4)
+    write(1,30) arho_exp
 
-    write(1) tag(6)
-    write(1) rmin
+    write(1,20) ident//tag(5) ; call vpro_writev(rho,nexp)
+    write(1,20) ident//tag(6) ; call vpro_writev(rmin,nexp)
+    write(1,20) ident//tag(7) ; call vpro_writev(polflux,nexp)
 
-    write(1) tag(7)
-    write(1) polflux
+    write(1,20) ident//tag(8)
+    write(1,30) q
 
-    write(1) tag(8)
-    write(1) q
+    write(1,20) ident//tag(9)
+    write(1,30) omega0
 
-    write(1) tag(9)
-    write(1) omega0
+    write(1,20) ident//tag(10)
+    write(1,30) rmaj
 
-    write(1) tag(10)
-    write(1) rmaj
+    write(1,20) ident//tag(11)
+    write(1,30) zmag
 
-    write(1) tag(11)
-    write(1) zmag
+    write(1,20) ident//tag(12)
+    write(1,30) kappa
 
-    write(1) tag(12)
-    write(1) kappa
+    write(1,20) ident//tag(13)
+    write(1,30) delta
 
-    write(1) tag(13)
-    write(1) delta
+    write(1,20) ident//tag(14)
+    write(1,30) zeta
 
-    write(1) tag(14)
-    write(1) zeta
+    write(1,20) ident//tag(15)
+    write(1,30) ne
 
-    write(1) tag(15)
-    write(1) ne
+    write(1,20) ident//tag(16)
+    write(1,30) te
 
-    write(1) tag(16)
-    write(1) te
+    write(1,20) ident//tag(17)
+    write(1,30) ptot
 
-    write(1) tag(17)
-    write(1) ptot
+    write(1,20) ident//tag(18)
+    write(1,30) z_eff
 
-    write(1) tag(18)
-    write(1) z_eff
+    write(1,20) ident//tag(19)
+    write(1,30) flow_beam
 
-    write(1) tag(19)
-    write(1) flow_beam
+    write(1,20) ident//tag(20)
+    write(1,30) flow_wall
 
-    write(1) tag(20)
-    write(1) flow_wall
+    write(1,20) ident//tag(21)
+    write(1,30) flow_mom
 
-    write(1) tag(21)
-    write(1) flow_mom
+    write(1,20) ident//tag(22)
+    write(1,30) pow_e
 
-    write(1) tag(22)
-    write(1) pow_e
+    write(1,20) ident//tag(23)
+    write(1,30) pow_i
 
-    write(1) tag(23)
-    write(1) pow_i
+    write(1,20) ident//tag(24)
+    write(1,30) pow_ei
 
-    write(1) tag(24)
-    write(1) pow_ei
+    write(1,20) ident//tag(25)
+    write(1,30) pow_e_aux
 
-    write(1) tag(25)
-    write(1) pow_e_aux
+    write(1,20) ident//tag(26)
+    write(1,30) pow_i_aux
 
-    write(1) tag(26)
-    write(1) pow_i_aux
+    write(1,20) ident//tag(27)
+    write(1,30) pow_e_fus
 
-    write(1) tag(27)
-    write(1) pow_e_fus
+    write(1,20) ident//tag(28)
+    write(1,30) pow_i_fus
 
-    write(1) tag(28)
-    write(1) pow_i_fus
+    write(1,20) ident//tag(29)
+    write(1,30) pow_e_sync
 
-    write(1) tag(29)
-    write(1) pow_e_sync
+    write(1,20) ident//tag(30)
+    write(1,30) pow_e_brem
 
-    write(1) tag(30)
-    write(1) pow_e_brem
+    write(1,20) ident//tag(31)
+    write(1,30) pow_e_line
 
-    write(1) tag(31)
-    write(1) pow_e_line
+    write(1,20) ident//tag(32)
+    write(1,30) sbeame
 
-    write(1) tag(32)
-    write(1) sbeame
+    write(1,20) ident//tag(33)
+    write(1,30) sbcx
 
-    write(1) tag(33)
-    write(1) sbcx
+    write(1,20) ident//tag(34)
+    write(1,30) sscxl
 
-    write(1) tag(34)
-    write(1) sscxl
+    write(1,20) ident//tag(35)
+    write(1,30) ni(:,1:nion)
 
-    write(1) tag(35)
-    write(1) ni(:,1:nion)
+    write(1,20) ident//tag(36)
+    write(1,30) ti(:,1:nion)
 
-    write(1) tag(36)
-    write(1) ti(:,1:nion)
+    write(1,20) ident//tag(37)
+    write(1,30) vpol(:,1:nion)
 
-    write(1) tag(37)
-    write(1) vpol(:,1:nion)
-
-    write(1) tag(38)
-    write(1) vtor(:,1:nion)
+    write(1,20) ident//tag(38)
+    write(1,30) vtor(:,1:nion)
 
     close(1)
+
+20  format(a)
+30  format(1pe12.5)
 
   end subroutine vpro_write
 
@@ -558,24 +558,20 @@ contains
 
   end subroutine vpro_read_legacy
 
-  subroutine vpro_compute_derived
+  subroutine vpro_writev(x,n)
 
-    use util
-    
     implicit none
 
-    double precision :: rhod(nexp)
-    
-    rhod(:) = arho_exp*rho(:)
+    integer, intent(in) :: n
+    double precision, intent(in), dimension(n) :: x
+    integer :: i
 
-    ! b_unit
-    call util_bound_deriv(bunit,rhod**2,rmin**2,nexp)
-    bunit(:) = bt_exp*bunit
+    do i=1,n
+       write(1,10) x(i),i
+    enddo
 
-    ! s
-    call util_bound_deriv(s,q,rmin,nexp)
-    s(:) = (rmin(:)/q(:))*s(:)
+10  format(1pe12.5,1x,i3)
 
-  end subroutine vpro_compute_derived
-  
+  end subroutine vpro_writev
+
 end module vpro

@@ -137,12 +137,10 @@ subroutine cgyro_init_manager
      allocate(field_old3(n_field,nc))
      allocate(    moment(n_radial,theta_plot,n_species,2))
      allocate(moment_loc(n_radial,theta_plot,n_species,2))
-     allocate(     flux(n_radial,n_species))
-     allocate( flux_loc(n_radial,n_species))
-     allocate(    fflux(n_species,3,n_field))
-     allocate(fflux_loc(n_species,3,n_field))
-     allocate(    gflux(0:n_global,n_species,3))
-     allocate(gflux_loc(0:n_global,n_species,3))
+     allocate(    cflux(n_species,3,n_field))
+     allocate(cflux_loc(n_species,3,n_field))
+     allocate(    gflux(0:n_global,n_species,3,n_field))
+     allocate(gflux_loc(0:n_global,n_species,3,n_field))
      allocate(recv_status(MPI_STATUS_SIZE))
 
      allocate(icd_c(-nup_theta:nup_theta, nc))
@@ -152,7 +150,8 @@ subroutine cgyro_init_manager
 !$acc enter data create(fcoef,gcoef,field,field_loc)
 
      ! Velocity-distributed arrays
-     allocate(rhs(nc,nv_loc,4))
+     ! allocate(rhs(nc,nv_loc,4))
+     allocate(rhs(nc,nv_loc,12))
      allocate(h_x(nc,nv_loc))
      allocate(g_x(nc,nv_loc))
      allocate(psi(nc,nv_loc))
@@ -169,8 +168,8 @@ subroutine cgyro_init_manager
      allocate(dvjvec_c(n_field,nc,nv_loc))
      allocate(dvjvec_v(n_field,nc_loc,nv))
      allocate(jxvec_c(n_field,nc,nv_loc))
-     allocate(upfac1(nc,nv_loc))
-     allocate(upfac2(nc,nv_loc))
+     allocate(upfac1(nc,nv_loc,2))
+     allocate(upfac2(nc,nv_loc,2))
      ! Real-space distributed arrays
      allocate(cap_h_v(nc_loc,nv))
      allocate(cap_h_v_prime(nc_loc,nv))

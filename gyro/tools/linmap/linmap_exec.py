@@ -27,8 +27,8 @@ MinFloat = pow(10, -sys.float_info.dig)
 #Go to directory
 os.chdir(directory)
 
-print "Starting gyro_linmap in directory : %s" % os.getcwd()
-print "**********************************************************"
+print("Starting gyro_linmap in directory : %s" % os.getcwd())
+print("**********************************************************")
 
 
 #-------------------------------------------------------
@@ -68,37 +68,37 @@ while i < NumVariables:
 	elif VariableName[i] == 'L_Ystep':
 		L_Ystep = VariableValue[i]
 	else:
-		print "Got false variable" 
+		print("Got false variable") 
 	i += 1
 
-print "Parameters:"
-print "DET_TOLERANCE: %E" % DET_TOLERANCE
-print "ERROR_TOLERANCE: %E" % ERROR_TOLERANCE
-print "WI_STABLE_LIMIT: %E" % WI_STABLE_LIMIT
-print "startWR: %E" % startWR
-print "startWI: %E" % startWI
-print "RADIUSstart: %E" % RADIUSstart
-print "RADIUSmin: %E" % RADIUSmin
-print "RADIUSmax: %E" % RADIUSmax
-print "RADIUSstep: %E" % RADIUSstep
-print "L_Ystart: %E" % L_Ystart
-print "L_Ymin: %E" % L_Ymin
-print "L_Ymax: %E" % L_Ymax
-print "L_Ystep: %E" % L_Ystep
-print "**********************************************************"
+print("Parameters:")
+print("DET_TOLERANCE: %E" % DET_TOLERANCE)
+print("ERROR_TOLERANCE: %E" % ERROR_TOLERANCE)
+print("WI_STABLE_LIMIT: %E" % WI_STABLE_LIMIT)
+print("startWR: %E" % startWR)
+print("startWI: %E" % startWI)
+print("RADIUSstart: %E" % RADIUSstart)
+print("RADIUSmin: %E" % RADIUSmin)
+print("RADIUSmax: %E" % RADIUSmax)
+print("RADIUSstep: %E" % RADIUSstep)
+print("L_Ystart: %E" % L_Ystart)
+print("L_Ymin: %E" % L_Ymin)
+print("L_Ymax: %E" % L_Ymax)
+print("L_Ystep: %E" % L_Ystep)
+print("**********************************************************")
 #-------------------------------------------------------
 
 #----------------------------------------
 NstepsR = int((RADIUSmax - RADIUSmin) / RADIUSstep)
 NstepsL_Y= int((L_Ymax - L_Ymin) / L_Ystep)
 
-print "Steps in RADIUS = %i" % NstepsR
-print "Steps in L_Y = %i" % NstepsL_Y
+print("Steps in RADIUS = %i" % NstepsR)
+print("Steps in L_Y = %i" % NstepsL_Y)
 #----------------------------------------
 #Set up first simulation
 os.chdir(directory)
 if not os.path.exists(directory + '/input.gyro.orig'):
-	print "No input.gyro.orig found in %s" % directory
+	print("No input.gyro.orig found in %s" % directory)
 	sys.exit(0)
 
 shutil.copyfile('input.gyro.orig', 'input.gyro')
@@ -111,7 +111,7 @@ input_gyro.close()
 #----------------------------------------
 
 if start_over :
-	print "Starting from scratch!"
+	print("Starting from scratch!")
 	if os.path.exists(directory + '/radius_krho_fieldeigen_omega.out'):
 		os.remove("radius_krho_fieldeigen_omega.out")
 	if os.path.exists(directory + '/fieldeigen_gbflux.out'):
@@ -119,11 +119,11 @@ if start_over :
 	if os.path.exists(directory + '/rho.out'):
 		os.remove("rho.out")
 else :
-	print "Restarting!"
+	print("Restarting!")
 
 #----------------------------------------
-print "Your tolerance is |det| < %E	error < %E" % (DET_TOLERANCE,  ERROR_TOLERANCE)
-print "An eigenmode is considered stable if gamma < %F" % WI_STABLE_LIMIT
+print("Your tolerance is |det| < %E	error < %E" % (DET_TOLERANCE,  ERROR_TOLERANCE))
+print("An eigenmode is considered stable if gamma < %F" % WI_STABLE_LIMIT)
 #----------------------------------------
 
 restartRadiusWR=startWR
@@ -148,9 +148,9 @@ while not (currentRADIUS < RADIUSmin - MinFloat or currentRADIUS > RADIUSmax + M
 		trials=0
 		#Loop to find a solution
 		while not converged :
-			print "**********************************************************"
-			print "RADIUS = %F" % currentRADIUS
-			print "L_Y = %F" % currentL_Y
+			print("**********************************************************")
+			print("RADIUS = %F" % currentRADIUS)
+			print("L_Y = %F" % currentL_Y)
 			input_gyro = open('input.gyro', 'a')
 			input_gyro.write("\n")
 			input_gyro.write("RADIUS=%F\n" % currentRADIUS)
@@ -160,7 +160,7 @@ while not (currentRADIUS < RADIUSmin - MinFloat or currentRADIUS > RADIUSmax + M
 			subprocess.call(["gyro", "-e", ".", "-n", "%i" %nProc])
 			fieldeigen_out = open('fieldeigen.out', 'r')
 			lines = fieldeigen_out.readlines()
-			results = map(float, lines[-1].split()) #Last line
+			results = list(map(float, lines[-1].split())) #Last line
 			fieldeigen_out.close()
 			resultsWR=results[0]
 			resultsWI=results[1]
@@ -168,7 +168,7 @@ while not (currentRADIUS < RADIUSmin - MinFloat or currentRADIUS > RADIUSmax + M
 			error=results[3]
 
 			if det <= (DET_TOLERANCE + MinFloat) and error <= (ERROR_TOLERANCE + MinFloat):
-				print "Converged!"
+				print("Converged!")
 				converged=True
 				break
 
@@ -181,13 +181,13 @@ while not (currentRADIUS < RADIUSmin - MinFloat or currentRADIUS > RADIUSmax + M
 			if currentL_Y == L_Ystart :
 
 				if trials == 1 : #Try reducing step in RADIUS to half
-					print "Try reducing step length in RADIUS to half"
+					print("Try reducing step length in RADIUS to half")
 					if downwardsRadius :
 						currentRADIUS = currentRADIUS + 0.5000*RADIUSstep
 					else :
 						currentRADIUS = currentRADIUS - 0.5000*RADIUSstep
 				if trials == 2 : #Try reducing step in RADIUS to 1/4th
-					print "Try reducing step length in RADIUS to 1/4th"
+					print("Try reducing step length in RADIUS to 1/4th")
 					if downwardsRadius :
 						currentRADIUS = currentRADIUS + 0.2500*RADIUSstep
 					else :
@@ -196,13 +196,13 @@ while not (currentRADIUS < RADIUSmin - MinFloat or currentRADIUS > RADIUSmax + M
 			else :
 
 				if trials == 1 : #Try reducing step in L_Y to half
-					print "Try reducing step length in L_Y to half"
+					print("Try reducing step length in L_Y to half")
 					if downwardsL_Y :
 						currentL_Y = currentL_Y + 0.5000*L_Ystep
 					else :
 						currentL_Y = currentL_Y - 0.5000*L_Ystep
 				if trials == 2 : #Try reducing step in L_Y to 1/4th
-					print "Try reducing step length in L_Y to 1/4th"
+					print("Try reducing step length in L_Y to 1/4th")
 					if downwardsL_Y :
 						currentL_Y = currentL_Y + 0.2500*L_Ystep
 					else :
@@ -210,7 +210,7 @@ while not (currentRADIUS < RADIUSmin - MinFloat or currentRADIUS > RADIUSmax + M
 
 		if converged : #Write eigenvalue to output files if converged
 			if resultsWI >= (WI_STABLE_LIMIT - MinFloat) :
-				print "Writing to output"
+				print("Writing to output")
 				radius_krho_fieldeigen_omega = open('radius_krho_fieldeigen_omega.out', 'a')
 				radius_krho_fieldeigen_omega.write("%F\t%F\t%E\t%E\t%E\t%E\n" % (currentRADIUS, currentL_Y, results[0], results[1], results[2], results[3]))
 				radius_krho_fieldeigen_omega.close()
@@ -226,7 +226,7 @@ while not (currentRADIUS < RADIUSmin - MinFloat or currentRADIUS > RADIUSmax + M
 				#profiles_gen -i input.profiles -loc_rad "$currentRADIUS" | grep "rho " >> rho.out
 				#rho
 		else :
-			print "Couldn't find solution! Stop following branch"
+			print("Couldn't find solution! Stop following branch")
 			if radiusbreak :
 				break
 
@@ -245,7 +245,7 @@ while not (currentRADIUS < RADIUSmin - MinFloat or currentRADIUS > RADIUSmax + M
 
 
 		if resultsWI < (WI_STABLE_LIMIT - MinFloat) : #Mode has become stable
-			print "Branch is stable! Stop following"
+			print("Branch is stable! Stop following")
 			if downwardsL_Y : #Start scanning upwards
 				downwardsL_Y=False
 				currentL_Y = L_Ystart + L_Ystep
