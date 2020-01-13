@@ -765,26 +765,6 @@ REAL FUNCTION get_QL_exchange(i1,i2,i3)
 END FUNCTION get_QL_exchange
 !-----------------------------------------------------------------
 !
-REAL FUNCTION get_QL_phi(i1)
-  !
-  USE tglf_global
-  !
-  IMPLICIT NONE
-  INTEGER,INTENT(IN) :: i1
-  INTEGER :: i3
-  !
-  i3 = SIZE(phi_QL_out)
-  if(i1.gt.i3)then
-     write(*,*)"requested QL phi index is of bounds",i3
-     get_QL_phi = 0.0
-  else
-     get_QL_phi = phi_QL_out(i1)
-  endif
-  !
-END FUNCTION get_QL_phi
-!
-!-----------------------------------------------------------------
-!
 REAL FUNCTION get_QL_density(i1,i2)
   !
   USE tglf_global
@@ -1462,6 +1442,68 @@ SUBROUTINE get_DEP_parameters(r_dep,rmaj_dep,q_dep,taui_dep,rlni_dep,rlti_dep,ni
 END SUBROUTINE get_DEP_parameters
 !-----------------------------------------------------------------
 !
+SUBROUTINE get_wavefunction_out(nmodes,nfields,nplot,angle,wavefunction)
+  !
+  USE tglf_global
+  !
+  IMPLICIT NONE
+  INTEGER,INTENT(OUT) :: nmodes,nfields,nplot
+  REAL,INTENT(OUT) :: angle(max_plot)
+  COMPLEX,INTENT(OUT) :: wavefunction(maxmodes,3,max_plot)
+  !
+  if(new_start)then
+     write(*,*)"error: tglf must be called before get_wavefunction_out"
+  else
+     call get_wavefunction
+     nmodes = nmodes_out
+     nfields = nfields_out
+     nplot = max_plot
+     angle(:) = plot_angle_out(:)
+     wavefunction(:,:,:) = plot_field_out(:,:,:)
+  endif
+  !
+END SUBROUTINE get_wavefunction_out
+!-----------------------------------------------------------------
+
+
+
+SUBROUTINE get_error_status(message,status)
+!-------------------------------------------------------------------
+! Determine internal TGLF error status and return string and integer
+!
+! TGLF success:
+!  status=0
+!  message='null'
+!
+! TGLF failure
+!  status=1
+!  message=<error description>
+!
+! TGLF warning
+!  status=2
+!  message=<warning description>
+!-------------------------------------------------------------------
+
+  use tglf_global
+
+  implicit none
+
+  character (len=*), intent(inout) :: message
+  integer, intent(inout) :: status
+
+  message = trim(error_msg)
+
+  if (message == 'null') then
+     status = 0
+  else
+     status = 1
+  endif
+
+END SUBROUTINE get_error_status
+
+!
+!-----------------------------------------------------------------
+!
 SUBROUTINE write_tglf_input
   !
   USE tglf_pkg
@@ -1629,30 +1671,7 @@ SUBROUTINE write_wavefunction_out(datafile)
 END SUBROUTINE write_wavefunction_out
 !-----------------------------------------------------------------
 !
-SUBROUTINE get_wavefunction_out(nmodes,nfields,nplot,angle,wavefunction)
-  !
-  USE tglf_global
-  !
-  IMPLICIT NONE
-  INTEGER,INTENT(OUT) :: nmodes,nfields,nplot
-  REAL,INTENT(OUT) :: angle(max_plot)
-  COMPLEX,INTENT(OUT) :: wavefunction(maxmodes,3,max_plot)
-  !
-  if(new_start)then
-     write(*,*)"error: tglf must be called before get_wavefunction_out"
-  else
-     call get_wavefunction
-     nmodes = nmodes_out
-     nfields = nfields_out
-     nplot = max_plot
-     angle(:) = plot_angle_out(:)
-     wavefunction(:,:,:) = plot_field_out(:,:,:)
-  endif
-  !
-END SUBROUTINE get_wavefunction_out
-!-----------------------------------------------------------------
-!
-SUBROUTINE write_tglf_flux_spectrum
+SUBROUTINE write_tglf_sum_flux_spectrum
   !
   USE tglf_dimensions
   USE tglf_global
@@ -1660,7 +1679,7 @@ SUBROUTINE write_tglf_flux_spectrum
   USE tglf_kyspectrum
   !   
   IMPLICIT NONE
-  CHARACTER(22) :: fluxfile="out.tglf.flux_spectrum"
+  CHARACTER(26) :: fluxfile="out.tglf.sum_flux_spectrum"
   INTEGER :: i,j,is,imax,jmax
   REAL :: dky
   REAL :: dky0,dky1,ky0,ky1
@@ -1702,7 +1721,7 @@ SUBROUTINE write_tglf_flux_spectrum
   do is=ns0,ns
      do j=1,jmax
         write(33,*)"species = ",is,"field =",j
-        write(33,*)" ky,particle flux,energy flux,toroidal stress,parallel stress,exchange"
+        write(33,*)" particle flux,energy flux,toroidal stress,parallel stress,exchange"
 
         !
         ! loop over ky spectrum
@@ -1747,7 +1766,7 @@ SUBROUTINE write_tglf_flux_spectrum
            mflux_tor_out = dky0*stress_tor0(is,j) + dky1*stress_tor1(is,j)
            mflux_par_out = dky0*stress_par0(is,j) + dky1*stress_par1(is,j)
            exch_out = dky0*exch0(is,j) + dky1*exch1(is,j)
-           write(33,*)ky_in,pflux_out,eflux_out,mflux_tor_out,mflux_par_out,exch_out
+           write(33,*)pflux_out,eflux_out,mflux_tor_out,mflux_par_out,exch_out
            pflux0(is,j) = pflux1(is,j)
            eflux0(is,j) = eflux1(is,j)
            stress_par0(is,j) = stress_par1(is,j)
@@ -1760,44 +1779,7 @@ SUBROUTINE write_tglf_flux_spectrum
   !
   CLOSE(33)
   !    
-END SUBROUTINE write_tglf_flux_spectrum
-!-----------------------------------------------------------------
-
-
-!-------------------------------------------------------------------
-! Determine internal TGLF error status and return string and integer
-! 
-! TGLF success:
-!  status=0
-!  message='null'
-!
-! TGLF failure
-!  status=1
-!  message=<error description>
-!
-! TGLF warning
-!  status=2
-!  message=<warning description>
-!-------------------------------------------------------------------
-
-SUBROUTINE get_error_status(message,status)
-
-  use tglf_global
-
-  implicit none
-
-  character (len=*), intent(inout) :: message
-  integer, intent(inout) :: status
-
-  message = trim(error_msg)
-
-  if (message == 'null') then
-     status = 0
-  else
-     status = 1
-  endif
-
-END SUBROUTINE get_error_status
+END SUBROUTINE write_tglf_sum_flux_spectrum
 !-----------------------------------------------------------------
 
 SUBROUTINE write_tglf_density_spectrum
@@ -1820,7 +1802,7 @@ SUBROUTINE write_tglf_density_spectrum
   OPEN(unit=33,file=fluxfile,status='replace')
 !
   write(33,*)"gyro-bohm normalized density fluctuation amplitude spectra"
-  write(33,*)"ky,(density(is),is=1,ns_in)"
+  write(33,*)"(density(is),is=1,ns_in)"
   do i=1,nky
     do is=1,ns
       density(is) = 0.0
@@ -1829,7 +1811,7 @@ SUBROUTINE write_tglf_density_spectrum
       enddo
       density(is) = SQRT(density(is))
     enddo
-    write(33,*)ky_spectrum(i),(density(is),is=1,ns)
+    write(33,*)(density(is),is=1,ns)
   enddo
 !
   CLOSE(33)
@@ -1857,7 +1839,7 @@ SUBROUTINE write_tglf_temperature_spectrum
   OPEN(unit=33,file=fluxfile,status='replace')
 !
   write(33,*)"gyro-bohm normalized temperature fluctuation amplitude spectra"
-  write(33,*)"ky,(temperature(is),is=1,ns_in)"
+  write(33,*)"(temperature(is),is=1,ns_in)"
   do i=1,nky
     do is=1,ns
       temp(is) = 0.0
@@ -1866,7 +1848,7 @@ SUBROUTINE write_tglf_temperature_spectrum
       enddo
       temp(is) = SQRT(temp(is))
     enddo
-    write(33,*)ky_spectrum(i),(temp(is),is=1,ns)
+    write(33,*)(temp(is),is=1,ns)
   enddo
 !
   CLOSE(33)
@@ -1882,51 +1864,7 @@ SUBROUTINE write_tglf_intensity_spectrum
   USE tglf_kyspectrum
   !   
   IMPLICIT NONE
-  CHARACTER(27) :: fluxfile="out.tglf.intensity_spectrum"
-  INTEGER :: i,is,n
-  REAL :: den,tem, u_par, q_tot
-  !
-  if(new_start)then
-     write(*,*)"error: tglf_TM must be called before write_tglf_intensity_spectrum"
-     write(*,*)"       NN doesn't compute spectra -> if needed set tglf_nn_max_error_in=-1"
-  endif
-  !
-  OPEN(unit=33,file=fluxfile,status='replace')
-!
-  write(33,*)"gyro-bohm normalized intensity fluctuation amplitude spectra"
-  write(33,*)"ky,density,temperature,parallel velocity, parallel energy"
-  do is=ns0,ns
-    write(33,*)"species ",is
-    do i=1,nky
-      den = 0.0
-      tem = 0.0
-      u_par = 0.0
-      q_tot = 0.0
-      do n = 1,nmodes_in
-        den = den + intensity_spectrum_out(1,is,i,n)
-        tem = tem + intensity_spectrum_out(2,is,i,n)
-        u_par = u_par + intensity_spectrum_out(3,is,i,n)
-        q_tot = q_tot + intensity_spectrum_out(4,is,i,n)
-      enddo
-      write(33,*)ky_spectrum(i),den,tem,u_par,q_tot
-    enddo
-  enddo
-!
-  CLOSE(33)
-!
-END SUBROUTINE write_tglf_intensity_spectrum
-
-!-----------------------------------------------------------------
-
-SUBROUTINE write_tglf_intensity_spectrum_per_mode
-  !
-  USE tglf_dimensions
-  USE tglf_global
-  USE tglf_species
-  USE tglf_kyspectrum
-  !   
-  IMPLICIT NONE
-  CHARACTER(36) :: fluxfile="out.tglf.intensity_spectrum_per_mode"
+  CHARACTER(36) :: fluxfile="out.tglf.intensity_spectrum"
   INTEGER :: i,is,n
   REAL :: den,tem, u_par, q_tot
   !
@@ -1943,26 +1881,19 @@ SUBROUTINE write_tglf_intensity_spectrum_per_mode
   write(33,*)ns,nky,nmodes_in
   do is=ns0,ns
     do i=1,nky
-      den = 0.0
-      tem = 0.0
-      u_par = 0.0
-      q_tot = 0.0
       do n = 1,nmodes_in
         den = intensity_spectrum_out(1,is,i,n)
         tem = intensity_spectrum_out(2,is,i,n)
         u_par = intensity_spectrum_out(3,is,i,n)
         q_tot = intensity_spectrum_out(4,is,i,n)
-        write(33,*) den
-        write(33,*) tem
-        write(33,*) u_par
-        write(33,*) q_tot
-      enddo      
+        write(33,*) den,tem,u_par,q_tot
+      enddo
     enddo
   enddo
 !
   CLOSE(33)
 !
-END SUBROUTINE write_tglf_intensity_spectrum_per_mode
+END SUBROUTINE write_tglf_intensity_spectrum
 
 !-----------------------------------------------------------------
 
@@ -1974,48 +1905,9 @@ SUBROUTINE write_tglf_field_spectrum
   USE tglf_kyspectrum
   !   
   IMPLICIT NONE
-  CHARACTER(27) :: fluxfile="out.tglf.field_spectrum"
+  CHARACTER(36) :: fluxfile="out.tglf.field_spectrum"
   INTEGER :: i,n
-  REAL :: phi,a_par,b_par
-  !
-  if(new_start)then
-     write(*,*)"error: tglf_TM must be called before write_tglf_field_spectrum"
-     write(*,*)"       NN doesn't compute spectra -> if needed set tglf_nn_max_error_in=-1"
-  endif
-  !
-  OPEN(unit=33,file=fluxfile,status='replace')
-!
-  write(33,*)"gyro-bohm normalized field fluctuation intensity spectra"
-  write(33,*)"ky,potential,A_par,B_par"
-  do i=1,nky
-    phi = 0.0
-    a_par=0.0
-    b_par=0.0
-    do n = 1,nmodes_in
-      phi = phi + field_spectrum_out(2,i,n)
-      if(use_bper_in)a_par = a_par + field_spectrum_out(3,i,n)
-      if(use_bpar_in)b_par = b_par + field_spectrum_out(4,i,n)
-    enddo
-    write(33,*)ky_spectrum(i),phi,a_par,b_par
-  enddo
-!
-  CLOSE(33)
-!
-END SUBROUTINE write_tglf_field_spectrum
-
-!-----------------------------------------------------------------
-
-SUBROUTINE write_tglf_field_spectrum_per_mode
-  !
-  USE tglf_dimensions
-  USE tglf_global
-  USE tglf_species
-  USE tglf_kyspectrum
-  !   
-  IMPLICIT NONE
-  CHARACTER(36) :: fluxfile="out.tglf.field_spectrum_per_mode"
-  INTEGER :: i,n
-  REAL :: phi,a_par,b_par
+  REAL :: v,phi,a_par,b_par
   !
   if(new_start)then
      write(*,*)"error: tglf_TM must be called before write_tglf_field_spectrum_per_mode"
@@ -2025,7 +1917,7 @@ SUBROUTINE write_tglf_field_spectrum_per_mode
   OPEN(unit=33,file=fluxfile,status='replace')
 !
   write(33,*)"gyro-bohm normalized field fluctuation intensity spectra per mode"
-  write(33,*)"potential,A_par,B_par"
+  write(33,*)"vector,potential,A_par,B_par"
   write(33,*)"index limits: nky,nmodes"
   write(33,*)nky,nmodes_in
   if(use_bper_in)then
@@ -2043,18 +1935,17 @@ SUBROUTINE write_tglf_field_spectrum_per_mode
     a_par=0.0
     b_par=0.0
     do n = 1,nmodes_in
+      v = field_spectrum_out(1,i,n)
       phi = field_spectrum_out(2,i,n)
-      if(use_bper_in)a_par = field_spectrum_out(3,i,n)
-      if(use_bpar_in)b_par = field_spectrum_out(4,i,n)
-      write(33,*)phi
-      if(use_bper_in)write(33,*)a_par
-      if(use_bpar_in)write(33,*)b_par
+      a_par = field_spectrum_out(3,i,n)
+      b_par = field_spectrum_out(4,i,n)
+      write(33,*)v,phi,a_par,b_par
     enddo
   enddo
 !
   CLOSE(33)
 !
-END SUBROUTINE write_tglf_field_spectrum_per_mode
+END SUBROUTINE write_tglf_field_spectrum
 !-----------------------------------------------------------------
 
 SUBROUTINE write_tglf_eigenvalue_spectrum
@@ -2076,9 +1967,9 @@ SUBROUTINE write_tglf_eigenvalue_spectrum
   OPEN(unit=33,file=fluxfile,status='replace')
 !
   write(33,*)"gyro-bohm normalized eigenvalue spectra"
-  write(33,*)"ky,(gamma(n),freq(n),n=1,nmodes_in)"
+  write(33,*)"(gamma(n),freq(n),n=1,nmodes_in)"
   do i=1,nky
-    write(33,*)ky_spectrum(i),(eigenvalue_spectrum_out(1,i,n),eigenvalue_spectrum_out(2,i,n),n=1,nmodes_in)
+    write(33,*)(eigenvalue_spectrum_out(1,i,n),eigenvalue_spectrum_out(2,i,n),n=1,nmodes_in)
   enddo
 !
   CLOSE(33)
@@ -2105,9 +1996,9 @@ SUBROUTINE write_tglf_nete_crossphase_spectrum
   OPEN(unit=33,file=fluxfile,status='replace')
 !
   write(33,*)"electron density-temperature cross phase spectra per mode"
-  write(33,*)"ky,(ne_te_phase,n=1,nmodes_in)"
+  write(33,*)"(ne_te_phase,n=1,nmodes_in)"
   do i=1,nky
-    write(33,*)ky_spectrum(i),(ne_te_phase_spectrum_out(i,n),n=1,nmodes_in)
+    write(33,*)(ne_te_phase_spectrum_out(i,n),n=1,nmodes_in)
   enddo
 !
   CLOSE(33)
@@ -2136,9 +2027,9 @@ SUBROUTINE write_tglf_nsts_crossphase_spectrum
   write(33,*)"density-temperature cross phase spectra per mode for ",ns_in," species"
    do is=1,ns_in
     write(33,*)"species index = ",is
-    write(33,*)"ky,(nsts_phase_spectrum_out,n=1,nmodes_in)"
+    write(33,*)"(nsts_phase_spectrum_out,n=1,nmodes_in)"
     do i=1,nky
-      write(33,*)ky_spectrum(i),(nsts_phase_spectrum_out(is,i,n),n=1,nmodes_in)
+      write(33,*)(nsts_phase_spectrum_out(is,i,n),n=1,nmodes_in)
     enddo
   enddo
 !
@@ -2147,7 +2038,7 @@ SUBROUTINE write_tglf_nsts_crossphase_spectrum
 END SUBROUTINE write_tglf_nsts_crossphase_spectrum
 !-----------------------------------------------------------------
 !
- SUBROUTINE write_tglf_QL_weight_spectrum
+ SUBROUTINE write_tglf_QL_flux_spectrum
 !
   USE tglf_dimensions
   USE tglf_global
@@ -2155,9 +2046,8 @@ END SUBROUTINE write_tglf_nsts_crossphase_spectrum
   USE tglf_kyspectrum
 ! 
   IMPLICIT NONE
-  CHARACTER(33) :: fluxfile="out.tglf.QL_weight_spectrum"
+  CHARACTER(33) :: fluxfile="out.tglf.QL_flux_spectrum"
   INTEGER :: i,j,k,is
-  REAL :: phinorm
   REAL,PARAMETER :: small=1.0E-10
   !
   if(new_start)then
@@ -2172,24 +2062,144 @@ END SUBROUTINE write_tglf_nsts_crossphase_spectrum
   write(33,*)"index limits: nky,nmodes,ns,field,type"
   write(33,*)nky,nmodes_in,ns,3,5
 !
-      ! renormalize the fluxes and intensities to the phi-norm from the v-norm
       do j=1,nky
          do i=1,nmodes_in
-            phinorm=1.0
-            if(ABS(field_spectrum_out(2,j,i)).gt.small)phinorm=field_spectrum_out(2,j,i)
             do is=1,ns
                do k=1,3
-                  write(33,*)flux_spectrum_out(1,is,k,j,i)/phinorm
-                  write(33,*)flux_spectrum_out(2,is,k,j,i)/phinorm
-                  write(33,*)flux_spectrum_out(3,is,k,j,i)/phinorm
-                  write(33,*)flux_spectrum_out(4,is,k,j,i)/phinorm
-                  write(33,*)flux_spectrum_out(5,is,k,j,i)/phinorm
+                  write(33,*)QL_flux_spectrum_out(1,is,k,j,i)
+                  write(33,*)QL_flux_spectrum_out(2,is,k,j,i)
+                  write(33,*)QL_flux_spectrum_out(3,is,k,j,i)
+                  write(33,*)QL_flux_spectrum_out(4,is,k,j,i)
+                  write(33,*)QL_flux_spectrum_out(5,is,k,j,i)
               enddo
            enddo
         enddo
       enddo
   CLOSE(33)
 !
- END SUBROUTINE write_tglf_QL_weight_spectrum
+ END SUBROUTINE write_tglf_QL_flux_spectrum
+!-----------------------------------------------------------------
+!
+ SUBROUTINE write_tglf_sat_geo_spectrum
+!
+  USE tglf_dimensions
+  USE tglf_global
+  USE tglf_species
+  USE tglf_kyspectrum
+!
+  IMPLICIT NONE
+  CHARACTER(33) :: fluxfile="out.tglf.sat_geo_spectrum"
+  INTEGER :: i,j
+  !
+  if(new_start)then
+     write(*,*)"error: tglf_TM must be called before write_tglf_sat_geo_spectrum"
+     write(*,*)"       NN doesn't compute spectra -> if needed set tglf_nn_max_error_in=-1"
+  endif
+  !
+  OPEN(unit=33,file=fluxfile,status='replace')
+!
+  write(33,*)"saturation model geometry factor 1/(<phi|(B/(B_unit grad_r))**2\phi>/<phi|phi>) per mode:"
+  write(33,*)"index limits: nky,nmodes"
+  write(33,*)nky,nmodes_in
+!
+  do i=1,nky
+    write(33,*)(sat_geo_spectrum_out(i,j),j=1,nmodes_in)
+  enddo
+  CLOSE(33)
+!
+ END SUBROUTINE write_tglf_sat_geo_spectrum
+!-----------------------------------------------------------------
+!
+ SUBROUTINE write_tglf_ky_spectrum
+!
+  USE tglf_dimensions
+  USE tglf_global
+  USE tglf_species
+  USE tglf_kyspectrum
+!
+  IMPLICIT NONE
+  CHARACTER(20) :: fluxfile="out.tglf.ky_spectrum"
+  INTEGER :: i
+  !
+  if(new_start)then
+     write(*,*)"error: tglf_TM must be called before write_tglf_spectral_shift"
+     write(*,*)"       NN doesn't compute spectra -> if needed set tglf_nn_max_error_in=-1"
+  endif
+  !
+  OPEN(unit=33,file=fluxfile,status='replace')
+!
+  write(33,*)"index limits: nky"
+  write(33,*)nky
+!
+  do i=1,nky
+    write(33,*)ky_spectrum(i)
+  enddo
+  CLOSE(33)
+!
+ END SUBROUTINE write_tglf_ky_spectrum
+!-----------------------------------------------------------------
+!
+ SUBROUTINE write_tglf_spectral_shift
+!
+  USE tglf_dimensions
+  USE tglf_global
+  USE tglf_species
+  USE tglf_kyspectrum
+!
+  IMPLICIT NONE
+  CHARACTER(33) :: fluxfile="out.tglf.spectral_shift"
+  INTEGER :: i
+  !
+  if(new_start)then
+     write(*,*)"error: tglf_TM must be called before write_tglf_spectral_shift"
+     write(*,*)"       NN doesn't compute spectra -> if needed set tglf_nn_max_error_in=-1"
+  endif
+  !
+  OPEN(unit=33,file=fluxfile,status='replace')
+!
+  write(33,*)"kx spectral shift model is used when ALPHA_QUENCH=0 and ALPHA_E=1.0"
+  write(33,*)"note: the model for the spectral shift (kx_e) = <phi|kx/ky|phi>/<phi|phi>"
+  write(33,*)"depends on which staturation model is being used: SAT_RULE and UNITS settings"
+  write(33,*)"index limits: nky"
+  write(33,*)nky
+!
+  do i=1,nky
+    write(33,*)spectral_shift_out(i)
+  enddo
+  CLOSE(33)
+!
+ END SUBROUTINE write_tglf_spectral_shift
+!-----------------------------------------------------------------
+!
+ SUBROUTINE write_tglf_scalar_saturation_parameters
+!
+  USE tglf_dimensions
+  USE tglf_global
+  USE tglf_species
+  USE tglf_kyspectrum
+!
+  IMPLICIT NONE
+  CHARACTER(37) :: fluxfile="out.tglf.scalar_saturation_parameters"
+  !
+  if(new_start)then
+     write(*,*)"error: tglf_TM must be called before write_tglf_saturation_parameters"
+     write(*,*)"       NN doesn't compute spectra -> if needed set tglf_nn_max_error_in=-1"
+  endif
+  !
+  OPEN(unit=33,file=fluxfile,status='replace')
+!
+  write(33,*)"kx spectral shift model is used when ALPHA_QUENCH=0 and ALPHA_E=1.0"
+  write(33,*)"note: This file has all of the scalar staturation parameters used for different SAT_RULE UNITS and ALPHA_ZF settings"
+  write(33,*)"SAT_RULE, UNITS, ALPHA_ZF"
+  write(33,*)sat_rule_in, units_in, alpha_zf_in
+!
+  write(33,*)"ave_p0_out, B_unit, R_unit, q_unit, SAT_geo0_out, kx_geo0_out"
+  write(33,*) ave_p0_out, B_unit, R_unit, q_unit, SAT_geo0_out, kx_geo0_out
+!
+  CLOSE(33)
+!
+ END SUBROUTINE write_tglf_scalar_saturation_parameters
+
+
 
 

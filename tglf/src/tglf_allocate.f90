@@ -266,6 +266,7 @@
       ALLOCATE(ave_gradBgu33(ns,nbasis,nbasis))
 !  ave_theta
       ALLOCATE(ave_kx(nbasis,nbasis))
+      ALLOCATE(ave_sat_geo(nbasis,nbasis))
       ALLOCATE(ave_c_tor_par(nbasis,nbasis))
       ALLOCATE(ave_c_tor_per(nbasis,nbasis))
       ALLOCATE(ave_c_par_par(nbasis,nbasis))

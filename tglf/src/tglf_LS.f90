@@ -24,7 +24,7 @@
       INTEGER :: imax,is
       INTEGER :: mi,me
       REAL :: zgamax
-      REAL :: v2_bar,kyi
+      REAL :: phi2_bar,kyi
       REAL :: sum_v_bar, sum_modB_bar
       REAL :: get_intensity, get_gamma_net
 !  ZGESV storage
@@ -153,7 +153,7 @@
         jmax(j1) = 0
         gamma_out(j1) = 0.0
         freq_out(j1) = 0.0
-        phi_QL_out(j1) = 0.0
+        v_QL_out(j1) = 0.0
         a_par_QL_out(j1) = 0.0
         b_par_QL_out(j1) = 0.0
         phi_bar_out(j1) = 0.0
@@ -283,8 +283,9 @@
 !
           wd_bar_out(imax)=wd_bar
           b0_bar_out(imax)=b0_bar
+          sat_geo_bar_out(imax)=sat_geo_bar
           modB_bar_out(imax)=modB_bar
-          phi_QL_out(imax)=phi_weight
+          v_QL_out(imax)=v_weight
           a_par_QL_out(imax)=a_par_weight
           b_par_QL_out(imax)=b_par_weight
           kx_bar_out(imax)=kx_bar
@@ -310,22 +311,28 @@
             Ns_Ts_phase_out(imax,is)=Ns_Ts_phase(is)
           enddo
           ne_te_phase_out(imax) = Ne_Te_phase
+          ! SAT_RULE = 0 intensity model assumes the vector norm v_bar
           kyi=ky
-          v2_bar =  &
-            get_intensity(kyi,gamma_out(imax))
-          v_bar_out(imax) = v2_bar
+          if(ABS(v_QL_out(imax)).lt.epsilon1)then
+            v_bar_out(imax)=0.0
+            phi2_bar = 0.0
+          else
+            v_bar_out(imax) = get_intensity(kyi,gamma_out(imax))
+            if(units_in.ne.'GYRO')v_bar_out(imax) = sat_geo_bar_out(imax)*v_bar_out(imax)
+            phi2_bar = v_bar_out(imax)/v_QL_out(imax)
+          endif
 !
-          phi_bar_out(imax) = v2_bar*phi_QL_out(imax)
-          a_par_bar_out(imax) = v2_bar*a_par_QL_out(imax)
-          b_par_bar_out(imax) = v2_bar*b_par_QL_out(imax)
+          phi_bar_out(imax) = phi2_bar
+          a_par_bar_out(imax) = phi2_bar*a_par_QL_out(imax)
+          b_par_bar_out(imax) = phi2_bar*b_par_QL_out(imax)
           do is=ns0,ns
-            N_bar_out(imax,is)=v2_bar*N_QL_out(imax,is)
-            T_bar_out(imax,is)=v2_bar*T_QL_out(imax,is)
-            U_bar_out(imax,is)=v2_bar*U_QL_out(imax,is)
-            Q_bar_out(imax,is)=v2_bar*Q_QL_out(imax,is)
+            N_bar_out(imax,is)=phi2_bar*N_QL_out(imax,is)
+            T_bar_out(imax,is)=phi2_bar*T_QL_out(imax,is)
+            U_bar_out(imax,is)=phi2_bar*U_QL_out(imax,is)
+            Q_bar_out(imax,is)=phi2_bar*Q_QL_out(imax,is)
           enddo
          endif
-        enddo
+        enddo !imax
 ! check for inward ballooing 
      ft_test = 0.0
      sum_modB_bar=0.0
@@ -561,7 +568,7 @@
 ! **************************************************************
 !
 ! compute the quasilinear weights for a single eigenmode
-! with eigenvector v
+! with eigenvector v. All of the QL weights are normalized to phi_norm
 !
 !
 !***************************************************************
@@ -600,6 +607,7 @@
       COMPLEX :: phi_modB_phi,modB_phi
       COMPLEX :: phi_kx_phi,kx_phi
       COMPLEX :: phi_kpar_phi,kpar_phi
+      COMPLEX :: phi_sat_geo_phi,sat_geo_phi
       COMPLEX :: freq_QL
       REAL :: betae_psi,betae_sig
       REAL :: phi_norm,psi_norm,bsig_norm,vnorm
@@ -720,35 +728,41 @@
       phi_modB_phi = 0.0
       phi_kx_phi = 0.0
       phi_kpar_phi = 0.0
+      phi_sat_geo_phi = 0.0
       do i=1,nbasis
          wd_phi = 0.0
          b0_phi = 0.0
          modB_phi = 0.0
          kx_phi = 0.0
          kpar_phi = 0.0
+         sat_geo_phi = 0.0
          do j=1,nbasis
            wd_phi = wd_phi +ave_wdh(i,j)*phi(j)
            b0_phi = b0_phi +ave_b0(i,j)*phi(j)
            modB_phi = modB_phi +ave_c_par_par(i,j)*phi(j)
            kx_phi = kx_phi +ave_kx(i,j)*phi(j)
            kpar_phi = kpar_phi +xi*ave_kpar(i,j)*phi(j)
+           sat_geo_phi = sat_geo_phi + ave_sat_geo(i,j)*phi(j)
          enddo
          phi_wd_phi = phi_wd_phi + CONJG(phi(i))*wd_phi
          phi_b0_phi = phi_b0_phi + CONJG(phi(i))*b0_phi
          phi_modB_phi = phi_modB_phi + CONJG(phi(i))*modB_phi
          phi_kx_phi = phi_kx_phi + CONJG(phi(i))*kx_phi
          phi_kpar_phi = phi_kpar_phi + CONJG(phi(i))*kpar_phi
+         phi_sat_geo_phi = phi_sat_geo_phi + CONJG(phi(i))*sat_geo_phi
       enddo
       wd_bar = REAL(phi_wd_phi)/phi_norm
       b0_bar = REAL(phi_b0_phi)/phi_norm
       modB_bar = ABS(REAL(phi_modB_phi)/phi_norm)
       kx_bar = REAL(phi_kx_phi)/phi_norm
       kpar_bar = REAL(phi_kpar_phi)/phi_norm
+      sat_geo_bar = 1.0/MAX(REAL(phi_sat_geo_phi)/phi_norm,epsilon1)
 !      write(*,*)"wd_bar = ",wd_bar
 !      write(*,*)"b0_bar = ",b0_bar
 !       write(*,*)"modB_bar = ",modB_bar
 !      write(*,*)"kx_bar = ",kx_bar
 !      write(*,*)"kpar_bar = ",kpar_bar
+!      write(*,*)"sat_geo_bar = ",sat_geo_bar
 !
 ! fill the stress moments
 !
@@ -866,14 +880,14 @@
           U_weight(is) = U_weight(is) + REAL(u_par(is,i)*CONJG(u_par(is,i)))
           Q_weight(is) = Q_weight(is) + REAL(q_tot(is,i)*CONJG(q_tot(is,i)))
         enddo
-        N_weight(is) = N_weight(is)/vnorm
-        T_weight(is) = T_weight(is)/vnorm 
-        U_weight(is) = U_weight(is)/vnorm
-        Q_weight(is) = Q_weight(is)/vnorm 
+        N_weight(is) = N_weight(is)/phi_norm
+        T_weight(is) = T_weight(is)/phi_norm
+        U_weight(is) = U_weight(is)/phi_norm
+        Q_weight(is) = Q_weight(is)/phi_norm
       enddo
-      phi_weight = phi_norm/vnorm 
-      a_par_weight = psi_norm/vnorm
-      b_par_weight = bsig_norm/vnorm
+      v_weight = vnorm/phi_norm
+      a_par_weight = psi_norm/phi_norm
+      b_par_weight = bsig_norm/phi_norm
 !
 !      write(*,*) 'ns = ',ns
 !      write(*,*) 'is  particle_weight   energy_weight'
