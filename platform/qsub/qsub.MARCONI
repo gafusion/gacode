@@ -11,9 +11,7 @@ echo "#SBATCH -e $SIMDIR/batch.err" >> $bfile
 # Eurofusion users	
 echo "#SBATCH -p skl_fua_prod" >> $bfile	
 echo "#SBATCH --time $WALLTIME" >> $bfile
-# FIX LINE BELOW
-#echo "#SBATCH --nodes $nodes_used" >> $bfile
-echo "#SBATCH --nodes 1" >> $bfile
+echo "#SBATCH --nodes $(($nmpi/$CORES_PER_NODE+1))" >> $bfile
 echo "#SBATCH --ntasks-per-node $mpinode" >> $bfile
 echo "#SBATCH --mem=180000" >> $bfile
 echo "#SBATCH --mail-type=ALL" >> $bfile
