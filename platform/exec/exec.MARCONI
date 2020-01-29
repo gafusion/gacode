@@ -1,0 +1,17 @@
+#!/bin/sh
+# GACODE Parallel execution script (MARCONI)
+
+simdir=${1}
+nmpi=${2}
+exec=${3}
+nomp=${4}
+numa=${5}
+mpinuma=${6}
+
+cd $simdir
+
+# SLURM wrapper to mpirun:
+# no. of processes etc taken from Batch environment variables
+# cannot run interactively
+srun $exec
+

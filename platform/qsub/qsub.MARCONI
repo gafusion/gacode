@@ -1,0 +1,26 @@
+
+bfile=$SIMDIR/batch.src
+echo "#!/bin/bash -l" > $bfile
+
+echo "#SBATCH -A $ACCOUNT" >> $bfile         # SET $ACCOUNT IN .bashrc!
+echo "#SBATCH --job-name $LOCDIR" >> $bfile
+echo "#SBATCH -o $SIMDIR/batch.out" >> $bfile
+echo "#SBATCH -e $SIMDIR/batch.err" >> $bfile
+# Other users
+#echo "#SBATCH -p skl_usr_prod" >> $bfile
+# Eurofusion users	
+echo "#SBATCH -p skl_fua_prod" >> $bfile	
+echo "#SBATCH --time $WALLTIME" >> $bfile
+# FIX LINE BELOW
+#echo "#SBATCH --nodes $nodes_used" >> $bfile
+echo "#SBATCH --nodes 1" >> $bfile
+echo "#SBATCH --ntasks-per-node $mpinode" >> $bfile
+echo "#SBATCH --mem=180000" >> $bfile
+echo "#SBATCH --mail-type=ALL" >> $bfile
+echo "#SBATCH --mail-user=$EMAIL" >> $bfile  # SET $EMAIL IN .bashrc!
+
+# git apparently not available on worker nodes
+# cgyro version not available at runtime
+# echo "alias git='/usr/bin/git'" >> $bfile
+
+echo "$CODE -e $LOCDIR -n $nmpi -nomp $nomp -numa $numa -mpinuma $mpinuma -p $SIMROOT" >> $bfile

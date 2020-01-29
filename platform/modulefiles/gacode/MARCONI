@@ -1,0 +1,55 @@
+#%Module
+#
+# Module file for loading environment for GACODE
+#
+
+proc ModulesHelp { } {
+        puts stderr "This modulefile sets the environment for GACODE"
+        puts stderr ""
+        puts stderr "GACODE is the collection of transport and turbulence codes"
+        puts stderr "maintained by the theory group at General Atomics, "
+        puts stderr "including TGLF, TGYRO, GYRO, NEO, and GLF23."
+        puts stderr ""
+        puts stderr "The GACODE distribution on SATURN is maintained by"
+        puts stderr "Sterling Smith smithsp@fusion.gat.com" 
+        puts stderr ""
+        puts stderr "The currently compiled version is the unstable branch"
+        puts stderr ""
+        puts stderr "https://fusion.gat.com/theory/Gyro"
+        puts stderr ""
+}
+
+conflict gacode
+module-whatis gacode
+
+#=====================
+# begin of machine-specific settings here
+#=====================
+#if { ! [ is-loaded default-paths ] } {
+#  module load default-paths
+#}
+module load intel intelmpi
+module load fftw
+module load zlib szip hdf5 netcdf
+module load mkl
+#
+set GACODE_ROOT $::env(HOME)/gacode
+setenv GACODE_PLATFORM MARCONI
+setenv OMP_STACKSIZE 32M
+
+#=====================
+# end of machine-specific settings here
+# do not modify the settings below
+#=====================
+
+setenv GACODE_ROOT ${GACODE_ROOT}
+
+if { [ module-info mode load ] } {
+  module use ${GACODE_ROOT}/shared/modulefiles
+} 
+
+module load gacode_base
+
+if { [ module-info mode remove ] } {
+  module use ${GACODE_ROOT}/shared/modulefiles
+}
