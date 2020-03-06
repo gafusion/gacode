@@ -4,6 +4,7 @@ program cgyro
   use cgyro_globals, only : path, CGYRO_COMM_WORLD, i_proc, n_proc, i_err, n_omp, test_flag
   use cgyro_io
   use timer_lib
+  use cgyro_interface
 
   implicit none
   
@@ -61,6 +62,7 @@ program cgyro
   call cgyro_read_input
   call timer_lib_out('input')
 
+  call map_global2interface
   call cgyro_kernel
 
   call MPI_FINALIZE(i_err)

@@ -15,6 +15,7 @@ FC += ${FOMP} ${FACC}
 EXEC = cgyro
 
 OBJECTS = cgyro_globals.o \
+	  cgyro_interface.o \
 	  cgyro_timer_lib.o \
           cgyro_parallel_lib.o \
           cgyro_io.o \

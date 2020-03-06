@@ -17,6 +17,7 @@ subroutine cgyro_kernel
   use mpi
   use cgyro_globals
   use cgyro_io
+  use cgyro_interface
 
   implicit none
 
@@ -32,6 +33,9 @@ subroutine cgyro_kernel
 
   ! the time_lib relies on MPI being initalized, so need to use lower level functions for this
   call system_clock(start_time,count_rate,count_max)
+
+  call map_interface2global
+  call interfacelocaldump
 
   i_time = 0
 
@@ -192,18 +196,28 @@ subroutine cgyro_kernel
 
 100 continue
 
+  ! Write output to interface
+  cgyro_omega_out = freq
+  cgyro_omega_error_out = freq_err
+  
   ! Manage exit message
 
+  cgyro_error_status_out = error_status
+  
   if (error_status == 0) then
      if (nonlinear_flag == 1) then
         final_msg = 'Normal'
      else
+        cgyro_signal_out = signal
         if (signal == 1) then
            final_msg = 'Linear converged'
         else
            final_msg = 'Linear terminated at max time'
         endif
      endif
+
+     cgyro_error_message_out = final_msg
+     
      if (silent_flag == 0 .and. i_proc == 0) then
         open(unit=io,file=trim(path)//runfile_info,status='old',position='append')
         write(io,'(a)') 'EXIT: (CGYRO) '//trim(final_msg)

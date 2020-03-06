@@ -9,6 +9,7 @@ subroutine cgyro_init(path_in,mpi_comm_in)
 
   use mpi
   use cgyro_globals
+  use cgyro_interface
   use timer_lib
  
   implicit none
@@ -64,5 +65,6 @@ subroutine cgyro_init(path_in,mpi_comm_in)
   call timer_lib_in('input')
   call cgyro_read_input
   call timer_lib_out('input')
+  call map_global2interface
 
 end subroutine cgyro_init

@@ -30,6 +30,7 @@ subroutine cgyro_flux
 
   use mpi
   use cgyro_globals
+  use cgyro_interface
 
   implicit none
 
@@ -228,5 +229,11 @@ subroutine cgyro_flux
        MPI_SUM, &
        NEW_COMM_1, &
        i_err)
+
+  ! Reorder output for QLGYRO
+  do l=1,3
+     cgyro_gbflux_out(l, :, :) = real(gflux(0, :, l, :))
+  end do
+
 
 end subroutine cgyro_flux
