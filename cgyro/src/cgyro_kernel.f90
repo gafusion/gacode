@@ -34,9 +34,6 @@ subroutine cgyro_kernel
   ! the time_lib relies on MPI being initalized, so need to use lower level functions for this
   call system_clock(start_time,count_rate,count_max)
 
-  call map_interface2global
-  call interfacelocaldump
-
   i_time = 0
 
   ! Need to initialize the info runfile very early
@@ -67,6 +64,10 @@ subroutine cgyro_kernel
   !    NOTE: On exit, field_old = field 
 
   call cgyro_init_manager
+    
+  call map_interface2global
+  call interfacelocaldump
+
   if (test_flag == 1) return
 
   !---------------------------------------------------------------------------

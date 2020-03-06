@@ -180,6 +180,7 @@ contains
   subroutine map_global2interface()
 
     use cgyro_globals
+    use cgyro_io
 
     implicit none
     
@@ -334,9 +335,7 @@ contains
 
     if(.not.allocated(cgyro_gbflux_out)) allocate(cgyro_gbflux_out(3, n_species, n_field))
 
-    if (i_proc == 0) then
-       print *, '[map_global2interface done]'
-    endif
+    call cgyro_info('Map_global2interface done')
 
   end subroutine map_global2interface
 
@@ -344,6 +343,7 @@ contains
   subroutine map_interface2global()
 
     use cgyro_globals
+    use cgyro_io
 
     implicit none
 
@@ -481,9 +481,7 @@ contains
     path = cgyro_path_in
     integration_error = cgyro_integration_error_in
     
-    if (i_proc == 0) then
-       print *, '[map_interface2global done]'
-    endif
+    call cgyro_info('Map_interface2global done')
 
   end subroutine map_interface2global
 
@@ -491,7 +489,8 @@ contains
   subroutine interfacelocaldump
 
     use cgyro_globals
-
+    use cgyro_io
+    
     implicit none
 
     if (i_proc > 0) return
@@ -672,9 +671,7 @@ contains
 20  format(a,'=',i3)
 30  format(a,'=',1pe12.5)
 
-    if (i_proc .eq. 0) then
-       print*, '[interfacelocaldump done]'
-    end if
+    call cgyro_info('Interfacelocaldump done')
     
   end subroutine interfacelocaldump
 
