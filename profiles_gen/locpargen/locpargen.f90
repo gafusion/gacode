@@ -133,7 +133,9 @@ subroutine fileopen(fname)
      open(unit=1,file=trim(fname),status='replace')
   else
      open(unit=1,file=trim(fname),position='append')
-     write(1,*) '#---------------------------------------------------------'
+     if(index(trim(fname),'stack') == 0) then
+        write(1,*) '#---------------------------------------------------------'
+     endif
   endif
 
 end subroutine fileopen
