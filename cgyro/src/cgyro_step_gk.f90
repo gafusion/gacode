@@ -1,3 +1,5 @@
+! RK4 time-advance for the distribution 
+
 subroutine cgyro_step_gk
 
   use timer_lib
@@ -5,7 +7,6 @@ subroutine cgyro_step_gk
 
   implicit none
 
-  ! RK4 time-advance for the distribution 
   !
   !           z e             vpar            z e  vperp^2
   !  h = H - ----- G0 ( phi - ----- Apar ) + ----- ---------- Gperp Bpar
@@ -22,11 +23,10 @@ subroutine cgyro_step_gk
   call timer_lib_in('str_mem')
 !$omp parallel do collapse(2)
   do iv_loc=1,nv_loc
-     do ic_loc=1,nc
-       h0_x(ic_loc,iv_loc) = h_x(ic_loc,iv_loc)
+     do ic=1,nc
+       h0_x(ic,iv_loc) = h_x(ic,iv_loc)
      enddo
   enddo
-
   call timer_lib_out('str_mem')
 
   
@@ -35,8 +35,8 @@ subroutine cgyro_step_gk
   call timer_lib_in('str')
 !$omp parallel do collapse(2)
   do iv_loc=1,nv_loc
-     do ic_loc=1,nc
-       h_x(ic_loc,iv_loc) = h0_x(ic_loc,iv_loc) + 0.5 * delta_t * rhs(ic_loc,iv_loc,1)
+     do ic=1,nc
+       h_x(ic,iv_loc) = h0_x(ic,iv_loc) + 0.5 * delta_t * rhs(ic,iv_loc,1)
      enddo
   enddo
   call timer_lib_out('str')
@@ -47,8 +47,8 @@ subroutine cgyro_step_gk
   call timer_lib_in('str')
 !$omp parallel do collapse(2)
   do iv_loc=1,nv_loc
-     do ic_loc=1,nc
-       h_x(ic_loc,iv_loc) = h0_x(ic_loc,iv_loc) + 0.5 * delta_t * rhs(ic_loc,iv_loc,2)
+     do ic=1,nc
+       h_x(ic,iv_loc) = h0_x(ic,iv_loc) + 0.5 * delta_t * rhs(ic,iv_loc,2)
      enddo
   enddo
   call timer_lib_out('str')
@@ -59,8 +59,8 @@ subroutine cgyro_step_gk
   call timer_lib_in('str')
 !$omp parallel do collapse(2)
   do iv_loc=1,nv_loc
-     do ic_loc=1,nc
-        h_x(ic_loc,iv_loc) = h0_x(ic_loc,iv_loc) + delta_t * rhs(ic_loc,iv_loc,3)
+     do ic=1,nc
+        h_x(ic,iv_loc) = h0_x(ic,iv_loc) + delta_t * rhs(ic,iv_loc,3)
      enddo
   enddo
   call timer_lib_out('str')
@@ -71,10 +71,12 @@ subroutine cgyro_step_gk
   call timer_lib_in('str')
 !$omp parallel do collapse(2)
   do iv_loc=1,nv_loc
-     do ic_loc=1,nc
-       h_x(ic_loc,iv_loc) = h0_x(ic_loc,iv_loc) &
-                          + delta_t*( rhs(ic_loc,iv_loc,1)+2*rhs(ic_loc,iv_loc,2)+ &
-                                      2*rhs(ic_loc,iv_loc,3)+rhs(ic_loc,iv_loc,4) )/6  
+     do ic=1,nc
+        h_x(ic,iv_loc) = h0_x(ic,iv_loc)+delta_t*(&
+                rhs(ic,iv_loc,1) &
+             +2*rhs(ic,iv_loc,2) &
+             +2*rhs(ic,iv_loc,3) &
+               +rhs(ic,iv_loc,4))/6  
      enddo
   enddo
   call timer_lib_out('str')
@@ -84,47 +86,13 @@ subroutine cgyro_step_gk
   call timer_lib_in('str')
 !$omp parallel do collapse(2)
   do iv_loc=1,nv_loc
-     do ic_loc=1,nc
-       rhs(ic_loc,iv_loc,1) = h0_x(ic_loc,iv_loc) &
-                            + delta_t*(rhs(ic_loc,iv_loc,2)+2*rhs(ic_loc,iv_loc,3))/3 &
-                            - h_x(ic_loc,iv_loc)
+     do ic=1,nc
+        rhs(ic,iv_loc,1) = h0_x(ic,iv_loc) +delta_t*( &
+             rhs(ic,iv_loc,2)&
+            +2*rhs(ic,iv_loc,3))/3 &
+                            - h_x(ic,iv_loc)
      enddo
   enddo
   call timer_lib_out('str')
-  
-  ! Filter special spectral components
-  call cgyro_filter
-  
+    
 end subroutine cgyro_step_gk
-  
-subroutine cgyro_filter
-
-  use cgyro_globals
-
-  implicit none
-
-  integer :: ir
-  
-  if (zf_test_mode == 0 .and. n == 0) then
-     do ic=1,nc
-        ir = ir_c(ic) 
-        if (ir == 1 .or. px(ir) == 0) then
-           h_x(ic,:)     = 0.0
-           cap_h_c(ic,:) = 0.0
-        endif
-     enddo
-  endif
-
-  ! Remove p=-M (is this ever useful?)
-  if (psym_flag == 1) then
-     do ic=1,nc
-        ir = ir_c(ic) 
-        if (ir == 1) then
-           h_x(ic,:)     = 0.0
-           cap_h_c(ic,:) = 0.0
-        endif
-     enddo
-  endif
-
-end subroutine cgyro_filter
-

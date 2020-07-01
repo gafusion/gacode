@@ -163,10 +163,10 @@ fi
 SIMDIR=$SIMROOT/$LOCDIR
 cd $SIMDIR
 
-PYROOT=$GACODE_ROOT/python/gyro
+PYROOT=$GACODE_ROOT/f2py/pygacode/gyro
 
 #==============================================================================
-PLT="$PYROOT/data_plot_single.py $FONTSIZE $LX $LY"
+PLT="-m pygacode.gyro.data_plot_single $FONTSIZE $LX $LY"
 
 case "$PLOT_TYPE" in
 

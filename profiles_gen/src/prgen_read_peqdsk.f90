@@ -24,7 +24,7 @@ subroutine prgen_read_peqdsk
   open(unit=1,file='pfile.ne',status='old')
   read(1,*) i
   nx = i
-  call allocate_internals
+  call prgen_allocate
   call allocate_peqdsk_vars
   allocate(xv(ncol,i))
   read(1,*) xv
@@ -263,10 +263,6 @@ subroutine prgen_read_peqdsk
   rmin(:)   = 0.0
   rmaj(:)   = 0.0
   rho(:)    = 0.0
-  kappa(:)  = 0.0
-  delta(:)  = 0.0
-  zmag(:)   = 0.0
-  zeta(:)   = 0.0
   omega0(:) = 0.0
   
 end subroutine prgen_read_peqdsk

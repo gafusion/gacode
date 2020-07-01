@@ -1,7 +1,7 @@
 subroutine locpargen_geo
 
-  use EXPRO_interface
-  use EXPRO_locsim_interface
+  use locpargen_globals
+  use expro_locsim_interface
 
   implicit none
 
@@ -10,13 +10,13 @@ subroutine locpargen_geo
   open(unit=1,file='input.geo',status='replace')
   write(1,'(a)') '# input.geo'
   write(1,'(a)') '#'
-  write(1,'(a,f10.6)') '# NOTE: Derived from input.profiles.geo at r/a=',rmin_loc
+  write(1,'(a,f10.6)') '# NOTE: Derived from input.gacode.geo at r/a=',rmin_loc
   write(1,'(a)') '# Lengths normalized to a' 
   write(1,'(a,f10.6)') '# ASPECT_RATIO=',rmaj_loc
   write(1,'(a,f10.6)') '# SAFETY_FACTOR=',q_loc
   write(1,'(a,f10.6)') '# SHEAR=',s_loc
-  write(1,'(a,i3)') '# BTCCW=',-EXPRO_signb
-  write(1,'(a,i3)') '# IPCCW=',-EXPRO_signb*EXPRO_signq
+  write(1,'(a,f4.1)') '# BTCCW=',btccw
+  write(1,'(a,f4.1)') '# IPCCW=',ipccw
   write(1,'(a)') '#'
   write(1,'(a)') '# File format:'
   write(1,'(a)') '#-------------------'
@@ -32,7 +32,7 @@ subroutine locpargen_geo
      enddo
   enddo
 
-  print '(a)','INFO: (locpargen) Wrote input.geo.'
+  print '(a)','INFO: (locpargen_geo) Wrote input.geo.'
 
   close(1)
   

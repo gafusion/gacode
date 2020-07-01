@@ -1,6 +1,0 @@
-INFO: Number of code instances: 4
-INFO: Processed input.* in TGLF1; CPU_max=1
-INFO: Processed input.* in TGLF2; CPU_max=1
-INFO: Processed input.* in TGLF3; CPU_max=1
-INFO: Processed input.* in TGLF4; CPU_max=1
-INFO: Required MPI tasks in TGYRO: 4

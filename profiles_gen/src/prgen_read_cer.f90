@@ -40,7 +40,7 @@ subroutine prgen_read_cer
   ! Determine vector length
   !
   count = 0 
-  open(unit=1,file=cer_file,status='old')
+  open(unit=1,file=file_cer,status='old')
   read(1,*) a
   do 
      read(1,*,iostat=ierr) x(1)
@@ -58,7 +58,7 @@ subroutine prgen_read_cer
   allocate(rho_in(n_in))
   allocate(f_in(n_in,3))
   !
-  open(unit=1,file=cer_file,status='old')
+  open(unit=1,file=file_cer,status='old')
   read(1,*) a
   do i=1,n_in 
      read(1,*,iostat=ierr) x(:)
@@ -71,7 +71,7 @@ subroutine prgen_read_cer
      f_in(i,2) = x(5) ! vtor (km/s)
      f_in(i,3) = x(7) ! omega0 (krad/s)
   enddo
-  print '(a,a)','INFO: Assuming 7-column Solomon CER format in ',trim(cer_file)
+  print '(a,a)','INFO: Assuming 7-column Solomon CER format in ',trim(file_cer)
 
   close(1)
   !-------------------------------------------------------

@@ -1,7 +1,7 @@
 subroutine vgen_getgeo
 
   use vgen_globals
-  use EXPRO_interface
+  use expro
   use geo
 
   implicit none
@@ -36,6 +36,16 @@ subroutine vgen_getgeo
      GEO_s_delta_in   = EXPRO_sdelta(i)
      GEO_zeta_in      = EXPRO_zeta(i)
      GEO_s_zeta_in    = EXPRO_szeta(i)
+     GEO_shape_sin3_in    = EXPRO_shape_sin3(i)
+     GEO_shape_s_sin3_in  = EXPRO_shape_ssin3(i)
+     GEO_shape_cos0_in    = EXPRO_shape_cos0(i)
+     GEO_shape_s_cos0_in  = EXPRO_shape_scos0(i)
+     GEO_shape_cos1_in    = EXPRO_shape_cos1(i)
+     GEO_shape_s_cos1_in  = EXPRO_shape_scos1(i)
+     GEO_shape_cos2_in    = EXPRO_shape_cos2(i)
+     GEO_shape_s_cos2_in  = EXPRO_shape_scos2(i)
+     GEO_shape_cos3_in    = EXPRO_shape_cos3(i)
+     GEO_shape_s_cos3_in  = EXPRO_shape_scos3(i)
      GEO_beta_star_in = 0.0
      !
      if (EXPRO_ctrl_numeq_flag == 0) then

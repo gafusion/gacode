@@ -1,0 +1,18 @@
+#!/bin/bash
+
+echo "-queue: debug, batch"
+
+# Default queue
+if [ "$QUEUE" == "null_queue" ] ; then
+   QUEUE=debug
+fi
+
+#
+# Note: Will always put 32 mpi ranks per node
+#
+
+bfile=$SIMDIR/batch.src
+echo "#!/bin/bash " > $bfile
+echo "#SBATCH --time $WALLTIME -p hpc --ntasks-per-node=32 --mem=400G -n $nmpi" >> $bfile
+
+echo "$CODE -e $LOCDIR -n $nmpi -nomp $nomp -numa $numa -mpinuma $mpinuma -p $SIMROOT" >> $bfile

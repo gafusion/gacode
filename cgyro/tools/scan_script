@@ -1,0 +1,53 @@
+#!/bin/bash
+#
+#=============================================================
+# scan_script
+#
+# PURPOSE:
+#  Template script for CGYRO linear scans.
+
+#================================================
+# USER-SET PARAMETERS
+
+# Simulation directory and number of cores
+
+dir=.
+cpu=4
+
+# List of parameters to scan
+
+list="
+PX0=0.0
+PX0=0.03
+PX0=0.06
+PX0=0.09
+PX0=0.12
+PX0=0.15
+PX0=0.18
+PX0=0.21
+"
+
+#=============================================
+
+cd $dir
+cp input.cgyro input.cgyro.orig
+
+> scan_x
+> scan_y
+
+for x in $list
+do
+   echo "$x"
+   echo "$x" >> input.cgyro
+   cgyro -e . -n $cpu
+   tail -1 out.cgyro.freq >> scan_y
+   z=`echo "$x" | cut -d '=' -f 2`
+   echo "$z" >> scan_x
+   mv bin.cgyro.restart tmp.cgyro.restart
+   cgyro -clean
+   mv tmp.cgyro.restart bin.cgyro.restart
+
+done
+
+cp input.cgyro.orig input.cgyro
+

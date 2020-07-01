@@ -190,11 +190,15 @@
       REAL :: exch1, gamma_max
       ! mpi 
       REAL :: ne_te_phase_spectrum_save(nkym,maxmodes)
+      REAL :: sat_geo_spectrum_save(nkym,maxmodes)
       REAL :: nsts_phase_spectrum_save(nsm,nkym,maxmodes)
       REAL :: eigenvalue_spectrum_save(2,nkym,maxmodes)
       REAL :: field_spectrum_save(4,nkym,maxmodes)
+      REAL :: QL_field_spectrum_save(4,nkym,maxmodes)
       REAL :: intensity_spectrum_save(4,nsm,nkym,maxmodes)
+      REAL :: QL_intensity_spectrum_save(4,nsm,nkym,maxmodes)
       REAL :: flux_spectrum_save(5,nsm,3,nkym,maxmodes)
+      REAL :: QL_flux_spectrum_save(5,nsm,3,nkym,maxmodes)
       REAL :: spectral_shift_save(nkym)
       INTEGER :: ierr
 !
@@ -207,24 +211,29 @@
 !
       do i=1,nky
        spectral_shift_save(i) = 0.0
+       width_save(i) = 0.0
        do k=1,nmodes_in
         do t = 1,2
           eigenvalue_spectrum_save(t,i,k) = 0.0
         enddo
         do t=1,4
           field_spectrum_save(t,i,k) = 0.0
+          QL_field_spectrum_save(t,i,k) = 0.0
         enddo
         do is=ns0,ns
           do t=1,4
             intensity_spectrum_save(t,is,i,k) = 0.0
+            QL_intensity_spectrum_save(t,is,i,k) = 0.0
           enddo
           do j=1,3
             do t=1,5
               flux_spectrum_save(t,is,j,i,k) = 0.0
+              QL_flux_spectrum_save(t,is,j,i,k) = 0.0
             enddo
           enddo ! j
           nsts_phase_spectrum_save(is,i,k)=0.0
         enddo ! is
+        sat_geo_spectrum_out(i,k)=0.0
         ne_te_phase_spectrum_save(i,k)=0.0
        enddo  !k
       enddo  !i
@@ -310,12 +319,17 @@
          spectral_shift_save(i) = kx0_e
 ! save field_spectrum_out and eigenvalue_spectrum_out
          do imax=1,nmodes_out
+           QL_field_spectrum_save(1,i,imax) = v_QL_out(imax)
+           QL_field_spectrum_save(2,i,imax) = 1.0
+           QL_field_spectrum_save(3,i,imax) = a_par_QL_out(imax)
+           QL_field_spectrum_save(4,i,imax) = b_par_QL_out(imax)
            field_spectrum_save(1,i,imax) = reduce*v_bar_out(imax)
            field_spectrum_save(2,i,imax) = reduce*phi_bar_out(imax)
            field_spectrum_save(3,i,imax) = reduce*a_par_bar_out(imax)
            field_spectrum_save(4,i,imax) = reduce*b_par_bar_out(imax)
            eigenvalue_spectrum_save(1,i,imax)=gamma_out(imax)
            eigenvalue_spectrum_save(2,i,imax)=freq_out(imax)
+           sat_geo_spectrum_save(i,imax) = sat_geo_bar_out(imax)
            if(ky_in.le.1.0.and.gamma_out(imax).gt.gmax)then
              gmax=gamma_out(imax)
              fmax=freq_out(imax)
@@ -327,6 +341,10 @@
 ! save intensity_spectrum_out
          do is=ns0,ns
           do imax=1,nmodes_out
+            QL_intensity_spectrum_save(1,is,i,imax) = N_QL_out(imax,is)
+            QL_intensity_spectrum_save(2,is,i,imax) = T_QL_out(imax,is)
+            QL_intensity_spectrum_save(3,is,i,imax) = U_QL_out(imax,is)
+            QL_intensity_spectrum_save(4,is,i,imax) = Q_QL_out(imax,is)
             intensity_spectrum_save(1,is,i,imax) = N_bar_out(imax,is)
             intensity_spectrum_save(2,is,i,imax) = T_bar_out(imax,is)
             intensity_spectrum_save(3,is,i,imax) = U_bar_out(imax,is)
@@ -338,16 +356,21 @@
           do j=1,3
             do imax=1,nmodes_out
               phi_bar = reduce*phi_bar_out(imax)
-              pflux1 = phi_bar*particle_QL_out(imax,is,j)
-              eflux1 = phi_bar*energy_QL_out(imax,is,j)
-              stress_tor1 = phi_bar*stress_tor_QL_out(imax,is,j)
-              stress_par1 = phi_bar*stress_par_QL_out(imax,is,j)
+              pflux1 = particle_QL_out(imax,is,j)
+              eflux1 = energy_QL_out(imax,is,j)
+              stress_tor1 = stress_tor_QL_out(imax,is,j)
+              stress_par1 = stress_par_QL_out(imax,is,j)
               exch1 = phi_bar*exchange_QL_out(imax,is,j)
-              flux_spectrum_save(1,is,j,i,imax) = pflux1
-              flux_spectrum_save(2,is,j,i,imax) = eflux1
-              flux_spectrum_save(3,is,j,i,imax) = stress_tor1
-              flux_spectrum_save(4,is,j,i,imax) = stress_par1
-              flux_spectrum_save(5,is,j,i,imax) = exch1
+              QL_flux_spectrum_save(1,is,j,i,imax) = pflux1
+              QL_flux_spectrum_save(2,is,j,i,imax) = eflux1
+              QL_flux_spectrum_save(3,is,j,i,imax) = stress_tor1
+              QL_flux_spectrum_save(4,is,j,i,imax) = stress_par1
+              QL_flux_spectrum_save(5,is,j,i,imax) = exch1
+              flux_spectrum_save(1,is,j,i,imax) = phi_bar*pflux1
+              flux_spectrum_save(2,is,j,i,imax) = phi_bar*eflux1
+              flux_spectrum_save(3,is,j,i,imax) = phi_bar*stress_tor1
+              flux_spectrum_save(4,is,j,i,imax) = phi_bar*stress_par1
+              flux_spectrum_save(5,is,j,i,imax) = phi_bar*exch1
             enddo !imax
            enddo ! j
          enddo  ! is 
@@ -372,21 +395,21 @@
 ! collect and broadcast the results 
       call MPI_BARRIER(iCommTglf,ierr)
 
-      call MPI_ALLREDUCE(ne_te_phase_spectrum_save     &
-                        ,ne_te_phase_spectrum_out          &
-                        ,nkym*maxmodes                      &
+      call MPI_ALLREDUCE(ne_te_phase_spectrum_save   &
+                        ,ne_te_phase_spectrum_out    &
+                        ,nkym*maxmodes               &
                         ,MPI_DOUBLE_PRECISION        &
                         ,MPI_SUM                     &
                         ,iCommTglf                   &
                         ,ierr)
-       call MPI_ALLREDUCE(nsts_phase_spectrum_save     &
-                        ,nsts_phase_spectrum_out          &
-                        ,nsm*nkym*maxmodes                      &
+       call MPI_ALLREDUCE(nsts_phase_spectrum_save   &
+                        ,nsts_phase_spectrum_out     &
+                        ,nsm*nkym*maxmodes           &
                         ,MPI_DOUBLE_PRECISION        &
                         ,MPI_SUM                     &
                         ,iCommTglf                   &
                         ,ierr)
-     call MPI_ALLREDUCE(eigenvalue_spectrum_save    &
+      call MPI_ALLREDUCE(eigenvalue_spectrum_save    &
                         ,eigenvalue_spectrum_out     &
                         ,2*nkym*maxmodes             &
                         ,MPI_DOUBLE_PRECISION        &
@@ -400,8 +423,29 @@
                         ,MPI_SUM                     &
                         ,iCommTglf                   &
                         ,ierr)
+      call MPI_ALLREDUCE(QL_field_spectrum_save      &
+                        ,QL_field_spectrum_out       &
+                        ,4*nkym*maxmodes             &
+                        ,MPI_DOUBLE_PRECISION        &
+                        ,MPI_SUM                     &
+                        ,iCommTglf                   &
+                        ,ierr)
+      call MPI_ALLREDUCE(sat_geo_spectrum_save       &
+                        ,sat_geo_spectrum_out        &
+                        ,nkym*maxmodes             &
+                        ,MPI_DOUBLE_PRECISION        &
+                        ,MPI_SUM                     &
+                        ,iCommTglf                   &
+                        ,ierr)
       call MPI_ALLREDUCE(intensity_spectrum_save     &
                         ,intensity_spectrum_out      &
+                        ,4*nsm*nkym*maxmodes         &
+                        ,MPI_DOUBLE_PRECISION        &
+                        ,MPI_SUM                     &
+                        ,iCommTglf                   &
+                        ,ierr)
+      call MPI_ALLREDUCE(QL_intensity_spectrum_save  &
+                        ,QL_intensity_spectrum_out   &
                         ,4*nsm*nkym*maxmodes         &
                         ,MPI_DOUBLE_PRECISION        &
                         ,MPI_SUM                     &
@@ -414,8 +458,22 @@
                         ,MPI_SUM                     &
                         ,iCommTglf                   &
                         ,ierr)
+      call MPI_ALLREDUCE(QL_flux_spectrum_save       &
+                        ,QL_flux_spectrum_out        &
+                        ,5*nsm*3*nkym*maxmodes       &
+                        ,MPI_DOUBLE_PRECISION        &
+                        ,MPI_SUM                     &
+                        ,iCommTglf                   &
+                        ,ierr)
       call MPI_ALLREDUCE(spectral_shift_save         &
                         ,spectral_shift_out          &
+                        ,nkym                        &
+                        ,MPI_DOUBLE_PRECISION        &
+                        ,MPI_SUM                     &
+                        ,iCommTglf                   &
+                        ,ierr)
+     call MPI_ALLREDUCE(width_save                   &
+                        ,width_out                   &
                         ,nkym                        &
                         ,MPI_DOUBLE_PRECISION        &
                         ,MPI_SUM                     &

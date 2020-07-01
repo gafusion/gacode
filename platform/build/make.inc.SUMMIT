@@ -13,6 +13,7 @@ NUMAS_PER_NODE=2
 #
 
 FFTW_INC=${OLCF_FFTW_ROOT}/include
+LAPACK=${OLCF_PGI_ROOT}/linuxpower/19.10/lib
 
 FC=mpif90 -m64 -module ${GACODE_ROOT}/modules -Mpreprocess -DUSE_INLINE -fpic \
 	  -Mhugetlb -DSUMMIT
@@ -25,20 +26,23 @@ CC=mpicc -m64 -fpic -I${OLCF_CUDA_ROOT}/include
 F77=mpif90 -m64 -fast -fastsse -I${GACODE_ROOT}/modules -fpic
 
 FACC   =-acc -I${OLCF_CUDA_ROOT}/include CUDA_HOME=${CUDA_DIR} -Minfo=accel \
-       	     -ta=nvidia,cc70 -Mcudalib=cufft \
-     	     -Mcudalib=cusolver -Mcudalib=cusparse \
-	     -Mcudalib=cublas
+       -ta=nvidia,cc70 -Mcudalib=cufft \
+       -Mcudalib=cusolver -Mcudalib=cusparse \
+       -Mcudalib=cublas
 
 FOMP   =-mp -Mstack_arrays
 FMATH  =-r8 -I${OLCF_FFTW_ROOT}/include
 FOPT   =-fast -fastsse -Mvect
+FFLAGS = 
 FDEBUG =-g -Kieee -Ktrap=fp,divz -Mbounds -Mchkptr -Mchkstk -traceback -Minform=inform
+
 # F2PY   = f2py --fcompiler=pg
 
 LMATH=-L${OLCF_CUDA_ROOT}/lib64 -L${OLCF_ESSL_ROOT}/lib64 \
 				-L${CUDA_DIR}/lib64 -lcusolver -lcusparse -lcudart \
 				-lesslsmpcuda \
-				-lessl
+				-lessl \
+				$(LAPACK)/liblapack.a $(LAPACK)/libblas.a
 
 #
 

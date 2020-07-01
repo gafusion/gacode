@@ -11,7 +11,7 @@ module neo_theory
        vpol_ion_HH,  efluxi_CH, efluxi_TG, &
        jpar_S, kpar_S, uparB_S, vpol_ion_S, jtor_S, phi_HR, jpar_K
   real, dimension(:), allocatable :: pflux_multi_HS, eflux_multi_HS
-  
+
   real, private :: eps ! r/rmaj
   real, private :: EparB_avg     ! <E_|| B>
   real, private :: nui_HH, nue_HH, nui_star_HH, nue_star_HH
@@ -44,7 +44,7 @@ contains
        if(sim_model == 1 .or. sim_model == 3) then
           call NCLASS_DR_alloc(1)
        endif
-       
+
        initialized = .true.
 
     else
@@ -73,15 +73,15 @@ contains
 
     ! inverse aspect ratio
     eps = r(ir) / rmaj(ir)
-    
+
     ! majority ion species and zeff
-           
-    if(adiabatic_ele_model == 0) then
+
+    if(ae_flag == 0) then
        dens_ele = dens(is_ele,ir)
        temp_ele = temp(is_ele,ir)
     else
-       dens_ele = ne_ade(ir)
-       temp_ele = te_ade(ir)
+       dens_ele = dens_ae(ir)
+       temp_ele = temp_ae(ir)
     endif
     is_ion = -1
     d_max = -1.0
@@ -101,19 +101,19 @@ contains
        ! assume primary ion species is is=1
        is_ion = 1
     endif
-    
+
     zeff = 0.0
     do is=1,n_species
        if(is /= is_ele) then
           zeff = zeff + dens(is,ir) * z(is)**2 / dens_ele
        endif
     enddo
-    
+
     ! theory coll freqs
     nui_HH = nu(is_ion,ir) * (4.0/3.0) / sqrt(2.0*pi)
     nui_star_HH = nui_HH * rmaj(ir) * abs(q(ir)) &
          / (sqrt(eps)*sqrt(eps)*sqrt(eps) * vth(is_ion,ir))
-    if(adiabatic_ele_model == 1) then
+    if(ae_flag == 1) then
        nue_HH = 0.0
        nue_star_HH = 0.0
     else
@@ -173,10 +173,10 @@ contains
 
   end subroutine THEORY_do
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Hinton-Rosenbluth potential
   ! Phys. Fluids, vol. 16, 836 (1973)
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine compute_HR(ir,phi)
     use neo_globals
     implicit none
@@ -188,12 +188,12 @@ contains
     fac = (q(ir)/eps) * eps * dlntdr(is_ion,ir) * rho(ir) &
          * (sqrt(temp(is_ion,ir) * mass(is_ion)) / (1.0 * Z(is_ion))) &
          / (1.0*Z(is_ion) / temp(is_ion,ir) + 1.0/temp_ele)
-    
+
     ! banana regime -- phi_1 = phi_1 * nui_HH
     phi_1 = 1.81 * nui_star_HH / nui_HH
     ! plateau regime
     phi_2 = sqrt(pi/2.0) 
-  
+
     nu_crit = phi_2 / phi_1
 
     if(nui_HH > nu_crit) then
@@ -201,13 +201,13 @@ contains
     else
        phi = (phi_1 * nui_HH) * (phi_1 * nui_HH) * thavg_fac * fac**2
     endif
-    
+
   end subroutine compute_HR
-  
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Hinton-Hazeltine fluxes and flows
   ! Rev. Mod. Phys., vol. 48, 239 (1976)
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine compute_HH(ir,pflux, efluxi, efluxe, jpar, kpar, uparB)
     use neo_globals
     use neo_equilibrium, only : I_div_psip, Bmag2_avg, Bmag2inv_avg
@@ -220,9 +220,9 @@ contains
     fac = (1.17-0.35*sqrt(nui_star_HH)) / (1+0.7*sqrt(nui_star_HH))
     beta1 = (fac - 2.1*nui_star_HH*nui_star_HH*eps*eps*eps) &
          / (1.0 + nui_star_HH*nui_star_HH*eps*eps*eps)
-    
+
     kpar = beta1
-    
+
     ! Note: only jpar and upar B use I_div_psip rather than q/eps
     uparB  = I_div_psip * rho(ir) * temp(is_ion,ir) / (z(is_ion)*1.0) &
          * (dlnndr(is_ion,ir) &
@@ -233,33 +233,33 @@ contains
     K2 = k0 * ( 1.0/(1 + a0*sqrt(nui_star_HH) + b0*nui_star_HH) &
          + eps*eps*eps * (c0*c0/b0) * nui_star_HH &
          / (1 + c0 * sqrt(eps*eps*eps) * nui_star_HH) )
-    
+
     ! Note: ion Q get additional part below if not adiabatic ele
     qi = (q(ir)/eps)**2 &
          * dens(is_ion,ir) * temp(is_ion,ir) &
          * (2.0 * mass(is_ion) * temp(is_ion,ir) / (1.0 *Z(is_ion)**2)) &
          * rho(ir)**2 * sqrt(eps) * nui_HH * K2 * dlntdr(is_ion,ir)
-    
-    if(adiabatic_ele_model == 1) then
+
+    if(ae_flag == 1) then
        pflux  = 0.0
        efluxe = 0.0
        jpar   = 0.0
        efluxi = qi
-       
+
     else
-       
+
        A1e = -(dlnndr(is_ele,ir) + dlntdr(is_ele,ir)) &
             + 2.5 * dlntdr(is_ele,ir) &
             + temp(is_ion,ir) / (temp(is_ele,ir) * Z(is_ion)) &
-              * ( -(dlnndr(is_ion,ir) + dlntdr(is_ion,ir)) &
-                  + beta1 / (1.0 + nue_star_HH*nue_star_HH*eps*eps) &
-                    * dlntdr(is_ion,ir) )
+            * ( -(dlnndr(is_ion,ir) + dlntdr(is_ion,ir)) &
+            + beta1 / (1.0 + nue_star_HH*nue_star_HH*eps*eps) &
+            * dlntdr(is_ion,ir) )
 
        k0=1.04; a0=2.01; b0=1.53; c0=0.89
        K11 = k0 * ( 1.0/(1 + a0*sqrt(nue_star_HH) + b0*nue_star_HH) &
             + eps*eps*eps * (c0*c0/b0) * nue_star_HH  &
             / (1 + c0 * sqrt(eps*eps*eps) * nue_star_HH) )
-       
+
        k0=1.20; a0=0.76; b0=0.67; c0=0.56
        K12 =  k0 * ( 1.0/(1 + a0*sqrt(nue_star_HH) + b0*nue_star_HH) &
             + eps*eps*eps * (c0*c0/b0) * nue_star_HH &
@@ -277,7 +277,7 @@ contains
        k0=4.19; a0=0.57; b0=0.61; c0=0.61
        K23 = k0 * ( 1.0 / (1 + a0*sqrt(nue_star_HH) + b0*nue_star_HH) ) &
             * ( 1.0 / (1 + c0  * sqrt(eps*eps*eps) * nue_star_HH) )
-       
+
        k0=1.83; a0=0.68; b0=0.32; c0=0.66
        K33 = k0 * ( 1.0 / (1 + a0*sqrt(nue_star_HH) + b0*nue_star_HH) ) &
             * ( 1.0 / (1 + c0  * sqrt(eps*eps*eps) * nue_star_HH) )
@@ -301,7 +301,7 @@ contains
             * sqrt(eps) * nue_HH * (K12*A1e - K22*dlntdr(is_ele,ir)) &
             - EparB_avg  * dens(is_ele,ir) * sqrt(eps) * rho(ir) * I_div_psip &
             * temp(is_ele,ir) * K23
-       
+
 
        ! Note: only jpar and upar B and inductive E-field 
        ! use I_div_psip rather than q/eps
@@ -319,10 +319,10 @@ contains
   end subroutine compute_HH
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Chang-Hinton ion heat flux (q_i) (Q = q_i + 2.5 * particle flux)
   ! Phys. Plasmas, vol. 25, 1493 (1982)
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine compute_CH(ir,efluxi)
     use neo_globals
     implicit none
@@ -361,14 +361,14 @@ contains
          * (2.0*mass(is_ion)*temp(is_ion,ir) / (1.0 *Z(is_ion)**2)) &
          * rho(ir)**2 * sqrt(eps) * nui_HH &
          * ( (K2 + K1) * dlntdr(is_ion,ir) + K1 * dlnndr(is_ion,ir))
-    
+
   end subroutine compute_CH
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Taguchi ion heat flux (q_i) (Q = q_i + 2.5 * particle flux)
   ! modified with Chang-Hinton collisional interpolation factor
   ! PPCF, vol. 30, 1897 (1988)
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine compute_TG(ir,efluxi)
     use neo_globals
     use neo_equilibrium, only: ftrap
@@ -397,7 +397,7 @@ contains
     k0=0.66; a0=1.03; b0=0.31; c0=0.74
 
     F2 = (0.5/sqrt(eps)) * (CH_Bmag2inv_avg - CH_Bmag2avg_inv)
-    
+
     K2 = k0 *( (K2_star/k0) / (1 + a0*sqrt(nui_star_HH) + b0*nui_star_HH) &
          + sqrt(eps*eps*eps) * (c0*c0/b0) * nui_star_HH * F2 &
          / (1.0 + c0 * sqrt(eps*eps*eps) * nui_star_HH) )
@@ -407,13 +407,13 @@ contains
          * dens(is_ion,ir) * temp(is_ion,ir) &
          *   (2.0*mass(is_ion)*temp(is_ion,ir) / (1.0 *Z(is_ion)**2)) &
          * rho(ir)**2 * nui_HH * K2 * dlntdr(is_ion,ir)
-    
+
   end subroutine compute_TG
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Sauter bootstrap current model
   ! Phys. Plasmas, vol. 6, 2834 (1999)
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine compute_Sauter(ir,jpar, kpar, uparB, jtor)
     use neo_globals
     use neo_equilibrium
@@ -444,14 +444,14 @@ contains
     !     * dens_sum * zeff**4
 
     alpha_0 = -1.17*(1.0-ftrap) / (1.0 - 0.22*ftrap - 0.19*ftrap*ftrap)
-    
+
     alpha_S = ( (alpha_0 + 0.25*(1.0-ftrap*ftrap) * sqrt(nui_star_S)) &
          / (1.0 + 0.5 * sqrt(nui_star_S)) &
          + (0.315) * nui_star_S * nui_star_S  &
          * ftrap*ftrap*ftrap*ftrap*ftrap*ftrap ) &
          / (1.0 + 0.15 *nui_star_S*nui_star_S &
          * ftrap*ftrap*ftrap*ftrap*ftrap*ftrap)
-    
+
     kpar = -1.0 * alpha_S
 
     uparB  = I_div_psip * rho(ir) * temp(is_ion,ir) / (z(is_ion)*1.0) &
@@ -459,7 +459,7 @@ contains
          - (z(is_ion)*1.0)/temp(is_ion,ir) * dphi0dr(ir) &
          + (1.0 - kpar) * dlntdr(is_ion,ir))
 
-    if(adiabatic_ele_model == 1) then
+    if(ae_flag == 1) then
        jpar = 0.0
        jtor = 0.0
     else
@@ -468,43 +468,43 @@ contains
             * (1.0*zeff) / (1.0* Z(is_ion))**2 
        nue_star_S = nue_S * rmaj(ir) * abs(q(ir)) &
             / (sqrt(eps)*sqrt(eps)*sqrt(eps) * vth(is_ele,ir))
-       
+
        X31    = ftrap / (1.0 + (1.0-0.1*ftrap) * sqrt(nue_star_S)  &
             + 0.5*(1.0-ftrap) * nue_star_S / (1.0*zeff))
-       
+
        L31_S  = (1.0 + 1.4/(zeff+1)) * X31 &
             - (1.9/(zeff+1)) * X31*X31 &
             + (0.3/(zeff+1)) * X31*X31*X31 &
             + (0.2/(zeff+1)) * X31*X31*X31*X31
-       
+
        X32e   = ftrap / (1.0 + 0.26*(1-ftrap) * sqrt(nue_star_S) &
             + 0.18*(1.0-0.37*ftrap) * nue_star_S / sqrt(1.0*zeff))
-       
+
        F32_ee = (0.05 + 0.62*zeff) &
             / (zeff*(1+0.44*zeff)) * (X32e - X32e*X32e*X32e*X32e) &
             + 1.0/(1+0.22*zeff) * (X32e*X32e - X32e*X32e*X32e*X32e &
             - 1.2*(X32e*X32e*X32e - X32e*X32e*X32e*X32e)) &
             + 1.2/(1+0.5*zeff) * X32e*X32e*X32e*X32e
-       
+
        X32i   = ftrap / (1.0 + (1+0.6*ftrap) * sqrt(nue_star_S)  &
             + 0.85*(1-0.37*ftrap) * nue_star_S*(1.0+zeff))
-       
+
        F32_ei = -(0.56 + 1.93*zeff) & 
             /(zeff*(1+0.44*zeff)) * (X32i - X32i*X32i*X32i*X32i)  &
             + 4.95/(1+2.48*zeff) * (X32i*X32i - X32i*X32i*X32i*X32i &
             - 0.55*(X32i*X32i*X32i - X32i*X32i*X32i*X32i)) &
             + (-1.2)/(1+0.5*zeff) * X32i*X32i*X32i*X32i;
-       
+
        L32_S  = F32_ee + F32_ei
-       
+
        X34   = ftrap / (1.0 + (1.0-0.1*ftrap) * sqrt(nue_star_S) &
             + 0.5*(1.0-0.5*ftrap) * nue_star_S/(1.0*zeff))
-       
+
        L34_S = (1 + 1.4/(zeff+1.0)) * X34 &
             - (1.9/(zeff+1.0)) * X34*X34 &
             + (0.3/(zeff+1.0)) * X34*X34*X34 &
             + (0.2/(zeff+1.0)) * X34*X34*X34*X34
-       
+
        X33 = ftrap / (1.0 + (0.55-0.1*ftrap) * sqrt(nue_star_S) &
             + 0.45*(1.0-ftrap) * nue_star_S/(1.0*zeff**1.5))
 
@@ -512,7 +512,7 @@ contains
        ! -- Sauter spizer is a little different than HH spitzer
        ! HH: L11 = 1.0  / (0.29 + 0.46/(1.08+z(is_ion)))
        ! S : L11 = 0.58 *32 / (3.0*pi) / (0.58+0.74/(0.76+z(is_ion)))
-       
+
        sigma_spitzer = dens_ele / ( mass(is_ele) * nue_S ) &
             * 0.58 * 32 / (3.0*pi) / (0.58 + 0.74/(0.76+zeff))
 
@@ -546,15 +546,15 @@ contains
                * (dlnndr(is,ir) + dlntdr(is,ir))*(1.0-Btor2_avg/Bmag2_avg)
        enddo
        jtor = jtor/(Btor_th0*bigR_th0*bigRinv_avg)
-       
+
     end if
 
   end subroutine compute_Sauter
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Hirshman-Sigmar fluxes
   ! Phys. Fluids, vol. 20, 418 (1977)
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine compute_HS(ir,pflux_multi, eflux_multi)
     use neo_globals
     use neo_equilibrium, only: I_div_psip, Bmag2_avg, ftrap
@@ -595,7 +595,7 @@ contains
     enddo
 
     do is_global=1, n_species
-             
+
        A1 = -dlnndr(is_global,ir) + 1.5*dlntdr(is_global,ir)
        A2 = -dlntdr(is_global,ir)
        pflux_multi(is_global) = 0.0
@@ -622,7 +622,7 @@ contains
                   + L_a * (nux2(is_global) / nux0(is_global) &
                   - nux4(is_global) / nux2(is_global)))
              L21 = L12
-             
+
           else       
              L11 = L_a * (Z(is_global) * temp(js,ir)) &
                   / (Z(js) * temp(is_global,ir)) &
@@ -634,7 +634,7 @@ contains
                   * (mass(is_global) * dens(is_global,ir) * nux0(is_global) &
                   / sum_nm) * L_b
              L22 = (nux2(is_global) / nux0(is_global)) * L12
-             
+
           end if
 
 
@@ -642,7 +642,7 @@ contains
                + L11 * A1 + L12 * A2
           eflux_multi(is_global) = eflux_multi(is_global) &
                + L21 * A1 + L22 * A2
-          
+
        enddo
     enddo
 
@@ -652,9 +652,9 @@ contains
 
   end subroutine compute_HS
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Ion Poloidal Flow at theta=0 (from kpar)
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine compute_vpol_ion(ir, kpar, vpol_ion)
     use neo_globals
     use neo_equilibrium, only: I_div_psip, Bmag2_avg, Bpol
@@ -669,7 +669,7 @@ contains
     bigk = -kpar *  (dlntdr(is_ion,ir) * I_div_psip * rho(ir) &
          * temp(is_ion,ir) / (z(is_ion)*1.0)) &
          / (Bmag2_avg / dens(is_ion,ir))
-    
+
     allocate(vpol_ion_th(n_theta))
     do it=1,n_theta
        vpol_ion_th(it) = bigk * Bpol(it) / dens(is_ion,ir)
@@ -697,9 +697,9 @@ contains
 
   end subroutine compute_vpol_ion
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Function Defininitions
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   ! uses ir_global, is_global, ietype, eps
   real function myHSenefunc(x)
@@ -788,7 +788,7 @@ contains
              Hd_coll = exp(-xb*xb) / (xb*sqrt(pi)) &
                   + (1.0-1.0/(2.0*xb*xb)) * erf(xb)
              Xd_coll = 1.0 / (xa)
-             endif
+          endif
        else if(mass(is_loc) < mass(js_loc)) then
           ! case 2: ele-ion and ion-imp(heavy) collisions
           Hd_coll = 1.0
@@ -827,11 +827,11 @@ contains
 
   end subroutine get_coll_freqs
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Koh modification to
   ! Sauter bootstrap current model
   ! Phys. Plasmas, vol. 19, 072505 (2012)
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine compute_Koh(ir,jpar)
     use neo_globals
     use neo_equilibrium, only: I_div_psip, ftrap
@@ -846,7 +846,7 @@ contains
     integer :: is
     real :: dens_sum, press_sum
 
-    if(adiabatic_ele_model == 1) then
+    if(ae_flag == 1) then
        jpar = 0.0
 
     else
@@ -865,9 +865,9 @@ contains
           endif
        enddo
        nui_star_S = nui_star_HH / dens(is_ion,ir) * dens_sum
-       
+
        alpha_0 = -1.17*(1.0-ftrap) / (1.0 - 0.22*ftrap - 0.19*ftrap*ftrap)
-       
+
        alpha_S = ( (alpha_0 + 0.25*(1.0-ftrap*ftrap) * sqrt(nui_star_S)) &
             / (1.0 + 0.5 * sqrt(nui_star_S)) &
             + (0.315) * nui_star_S * nui_star_S  &
@@ -900,23 +900,23 @@ contains
             * eps**2.8 * nue_star_S**0.1 / zeff**alpha_param))
 
 
-        if(profile_model < 2 .or. h_flag == 2) then
-           h_param = 1.0
-        else
-           pfac = 1.0/(rho(ir)*mass(is_ele)*vth(is_ele,ir)*sqrt(2.0)&
-                *rmaj(ir)*sqrt(eps)) &
-                * psiN_polflux_a * (1.0 - psiN_polflux(ir)) &
-                /(a_meters**2 * b_unit(ir))
-           if(h_flag == 1) then
-              ! single null
-              h_param = 1.0 - (0.2/zeff**4) &
-                   * exp(-abs(pfac/(2.7*log(eps**1.5 *nue_star_S/3.2 + 3.0))))
-           else
-              ! double null
-              h_param = 1.0 - (0.6/zeff**4) &
-                   * exp(-abs(pfac/(3.3*log(eps**1.5 *nue_star_S/3.2 + 2.0))))
-           endif
-        endif
+       if(profile_model < 2 .or. h_flag == 2) then
+          h_param = 1.0
+       else
+          pfac = 1.0/(rho(ir)*mass(is_ele)*vth(is_ele,ir)*sqrt(2.0)&
+               *rmaj(ir)*sqrt(eps)) &
+               * psiN_polflux_a * (1.0 - psiN_polflux(ir)) &
+               /(a_meters**2 * b_unit(ir))
+          if(h_flag == 1) then
+             ! single null
+             h_param = 1.0 - (0.2/zeff**4) &
+                  * exp(-abs(pfac/(2.7*log(eps**1.5 *nue_star_S/3.2 + 3.0))))
+          else
+             ! double null
+             h_param = 1.0 - (0.6/zeff**4) &
+                  * exp(-abs(pfac/(3.3*log(eps**1.5 *nue_star_S/3.2 + 2.0))))
+          endif
+       endif
 
        ftrap_new = ftrap * h_param
 
@@ -924,47 +924,47 @@ contains
        X31    = ftrap_new * (1.0 + delta_param) &
             / (1.0 + (1.0-0.1*ftrap_new) * sqrt(nue_star_S)  &
             + 0.5*(1.0-ftrap_new) * nue_star_S / (1.0*zeff))
-       
+
        L31_S  = (1.0 + 1.4/(zeff+1)) * X31 &
             - (1.9/(zeff+1)) * X31*X31 &
             + (0.3/(zeff+1)) * X31*X31*X31 &
             + (0.2/(zeff+1)) * X31*X31*X31*X31
-       
+
        X32e   = ftrap_new * (1.0 + delta_param) & 
             / (1.0 + 0.26*(1-ftrap_new) * sqrt(nue_star_S) &
             + 0.18*(1.0-0.37*ftrap_new) * nue_star_S / sqrt(1.0*zeff))
-       
+
        F32_ee = (0.05 + 0.62*zeff) &
             / (zeff*(1+0.44*zeff)) * (X32e - X32e*X32e*X32e*X32e) &
             + 1.0/(1+0.22*zeff) * (X32e*X32e - X32e*X32e*X32e*X32e &
             - 1.2*(X32e*X32e*X32e - X32e*X32e*X32e*X32e)) &
             + 1.2/(1+0.5*zeff) * X32e*X32e*X32e*X32e
-       
+
        X32i   = ftrap_new * (1.0 + delta_param) &
             / (1.0 + (1+0.6*ftrap_new) * sqrt(nue_star_S)  &
             + 0.85*(1-0.37*ftrap_new) * nue_star_S*(1.0+zeff))
-       
+
        F32_ei = -(0.56 + 1.93*zeff) & 
             /(zeff*(1+0.44*zeff)) * (X32i - X32i*X32i*X32i*X32i)  &
             + 4.95/(1+2.48*zeff) * (X32i*X32i - X32i*X32i*X32i*X32i &
             - 0.55*(X32i*X32i*X32i - X32i*X32i*X32i*X32i)) &
             + (-1.2)/(1+0.5*zeff) * X32i*X32i*X32i*X32i;
-       
+
        L32_S  = F32_ee + F32_ei
-       
+
        X34   = ftrap_new * (1.0 + delta_param) &
             / (1.0 + (1.0-0.1*ftrap_new) * sqrt(nue_star_S) &
             + 0.5*(1.0-0.5*ftrap_new) * nue_star_S/(1.0*zeff))
-       
+
        L34_S = (1 + 1.4/(zeff+1.0)) * X34 &
             - (1.9/(zeff+1.0)) * X34*X34 &
             + (0.3/(zeff+1.0)) * X34*X34*X34 &
             + (0.2/(zeff+1.0)) * X34*X34*X34*X34
-       
-       !!!!!!!!!!!!
+
+!!!!!!!!!!!!
        ! Epar components unchanged from Sauter
        ! but EAB modified X33 to match other X_ modifications
-       
+
        X33 = ftrap_new * (1.0 + delta_param) & 
             / (1.0 + (0.55-0.1*ftrap_new) * sqrt(nue_star_S) &
             + 0.45*(1.0-ftrap_new) * nue_star_S/(1.0*zeff**1.5))
@@ -977,7 +977,7 @@ contains
             * (1.0 - (1.0+0.36/(1.0*zeff)) * X33 &
             + 0.59/(1.0*zeff) * X33 * X33 &
             - 0.23/(1.0*zeff) * X33 * X33 * X33)
-       !!!!!!!!!!!!
+!!!!!!!!!!!!
 
        jpar = sigma_S * EparB_avg &
             + L32_S * I_div_psip * rho(ir) * &
@@ -999,7 +999,70 @@ contains
             * dlntdr(is_ion,ir) * press_sum
 
     end if
-    
+
   end subroutine compute_Koh
+
+  subroutine gauss_integ(xmin,xmax,func,order,n_subdiv,answer)
+
+    implicit none
+
+    !--------------------------------------------
+    ! Subroutine arguments
+    !
+    real, intent(in) :: xmin
+    real, intent(in) :: xmax
+    real :: func
+    integer, intent(in) :: order
+    integer, intent(in) :: n_subdiv
+    !
+    real, intent(inout) :: answer
+    !--------------------------------------------
+
+    !--------------------------------------------
+    ! Internal variables
+    !
+    integer :: n_node
+    integer :: i
+    integer :: j
+    integer :: p
+    !
+    real :: dx
+    !
+    real, dimension(:), allocatable :: x
+    real, dimension(:), allocatable :: w
+    real, dimension(:), allocatable :: x0
+    real, dimension(:), allocatable :: w0
+    !--------------------------------------------
+
+    allocate(x0(order))
+    allocate(w0(order))
+    call gauss_legendre(0.0,1.0,x0,w0,order)     
+
+    dx = (xmax-xmin)/n_subdiv
+
+    n_node = n_subdiv*order
+
+    allocate(x(n_node))
+    allocate(w(n_node))
+
+    do i=1,n_subdiv
+       do j=1,order
+          p = (i-1)*order+j
+          x(p) = xmin+((i-1)+x0(j))*dx
+          w(p) = w0(j)*dx
+       enddo
+    enddo
+
+    answer = 0.0
+    do p=1,n_node
+       answer = answer+w(p)*func(x(p))
+    enddo
+
+    deallocate(x)
+    deallocate(w)
+    deallocate(x0)
+    deallocate(w0)
+
+  end subroutine  gauss_integ
 
 end module neo_theory

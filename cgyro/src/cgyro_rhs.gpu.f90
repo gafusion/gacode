@@ -120,8 +120,9 @@ subroutine cgyro_rhs(ij)
 
 !$acc end data    
 
-  ! g_x and h_x
+! g_x and h_x
 !$acc end data 
+ 
   call timer_lib_out('str_mem')
 
 end subroutine cgyro_rhs

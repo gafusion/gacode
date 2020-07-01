@@ -61,7 +61,7 @@ fi
 
 # -- diagnostics
 
-cat > $simdir/batch.out << EOF
+cat >> $simdir/batch.out << EOF
 ulimit -s 10240
 ulimit -c 0
 

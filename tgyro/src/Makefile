@@ -1,5 +1,3 @@
-USE_HARVEST=
-
 include ${GACODE_ROOT}/platform/build/make.inc.${GACODE_PLATFORM}
 
 ifeq ($(OPT),debug)
@@ -17,18 +15,6 @@ ifdef NEURAL_ROOT
 else
    NN=tgyro_eped_nn
 endif
-
-ifdef USE_HARVEST
-   HAR_SRC=tgyro_harvest
-   HARVEST=-L$(GACODE_ROOT)/shared/harvest_client/ \
-           -I$(GACODE_ROOT)/shared/harvest_client/ \
-           -lharvest
-else
-   HAR_SRC=tgyro_harvest.stub
-   HARVEST=
-endif
-
-
 
 OBJECTS += tgyro_globals.o \
            tgyro_iteration_variables.o \
@@ -74,16 +60,15 @@ OBJECTS += tgyro_globals.o \
            tgyro_write_intermediate.o \
            tgyro_write_data.o \
            $(NN).o \
-           $(HAR_SRC).o \
            $(EXEC).o
 
 .SUFFIXES : .o .f90
 
 all: $(OBJECTS) $(EXTRA_LIBS)
-	$(FC) $(FFLAGS) -o $(EXEC) $(OBJECTS) $(EXTRA_LIBS) $(LMATH) $(NN_LIB) $(HARVEST)
+	$(FC) $(FFLAGS) -o $(EXEC) $(OBJECTS) $(EXTRA_LIBS) $(LMATH) $(NN_LIB)
 
 .f90.o :
-	$(FC) $(FMATH) $(FFLAGS) $(NN_LIB) $(HARVEST) -c $<
+	$(FC) $(FMATH) $(FFLAGS) $(NN_LIB) -c $<
 
 clean:
 	rm -f $(EXEC)

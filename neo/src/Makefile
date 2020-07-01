@@ -77,6 +77,6 @@ neo_lib.a: $(OBJECTS)
 
 clean:
 	rm -rf *.o neo_lib.a $(EXEC) *~
-	cd ${GACODE_ROOT}/modules ; rm -f neo*.mod
+	cd ${GACODE_ROOT}/modules ; rm -f neo*.mod matconv.mod
 
 -include ../install/make.ext.${GACODE_PLATFORM}

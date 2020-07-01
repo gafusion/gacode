@@ -60,7 +60,6 @@ subroutine gyro_banana_operators
   do i=1,n_x
 
      call gyro_to_geo(i)
-
      call gyro_banana_init(nint_ORB_s)
 
      do k=1,n_pass

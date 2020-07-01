@@ -32,7 +32,6 @@ subroutine gyro_lambda_grid
      if (i == 1 .or. flat_profile_flag == 0) then
 
         call gyro_to_geo(i)
-        
         call gyro_banana_init(nint_ORB_s)
         
         ! Passing

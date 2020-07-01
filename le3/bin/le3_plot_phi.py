@@ -1,3 +1,6 @@
+# file processed by 2to3
+from __future__ import print_function, absolute_import
+from builtins import map, filter, range
 import sys
 import os
 import numpy as np
@@ -17,7 +20,7 @@ tb = np.loadtxt(simdir+'/out.le3.tb')
 fig = plt.figure(figsize=(7,6))
 fig.subplots_adjust(left=0.17, right=0.97, top=0.95, bottom=0.12)
 ax = fig.add_subplot(111)
-ax.grid(which="majorminor",ls=":")
+ax.grid(which="both",ls=":")
 ax.grid(which="major",ls=":")
 ax.set_xlabel(r'\boldmath{$\varphi$}')
 ax.set_ylabel(r'\boldmath{$\bar\theta$}',color='k')

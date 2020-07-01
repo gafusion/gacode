@@ -101,9 +101,7 @@ subroutine cgyro_kernel
     close(statusfd)
   endif
 
-  ! setting adaptive time-stepping parameters
-  
-  delta_t_tol = min(adapt_tol, error_tol)
+  ! Initialize adaptive time-stepping parameter
   delta_t_gk = delta_t
   
   do i_time=1,n_time
@@ -120,37 +118,20 @@ subroutine cgyro_kernel
 !$acc update device(field,psi,cap_h_c,chi,h_x)
      call timer_lib_out('str_mem')
 
-     ! Collisionless step: returns new h_x, cap_h_x, fields 
-     ! Normal timestep
-
-     if (integration_error(2) > adapt_tol .and. nonlinear_flag == 1) then
-        ! Trigger adaptive step
-        delta_t = delta_t/4
-        call cgyro_step_gk
-        call cgyro_step_gk
-        call cgyro_step_gk
-        call cgyro_step_gk
-        delta_t = 4*delta_t
-     else
+     ! Collisionless step: returns new h_x, cap_h_x, fields
+     
+     select case(delta_t_method)
+     case(1)
+        call cgyro_step_gk_ck
+     case(2)
+        call cgyro_step_gk_bs5
+     case(3)
+        call cgyro_step_gk_v76 
+     case default
         ! Normal timestep
         call cgyro_step_gk
-     endif
+     end select
      
-     !error_mode=0  !! currently default to sum of relative error
-
-     !! if ( delta_t_method == 0 ) ! default RK4
-
-     !call cgyro_step_gk
-
-     !! if ( delta_t_method == 1 )     
-     
-     !! call cgyro_step_gk_bs5 !! bogacki-shampine 5(4)
-     !! if ( delta_t_method == 2 )     
-     !! call cgyro_step_gk_ck  !! cash-karp or 5(4)
-     !! if ( delta_t_method == 3 )
-     
-     !call cgyro_step_gk_v76   !! vernier order 7(6)
-
      call timer_lib_in('str_mem')
 !$acc update host(rhs(:,:,1))
      call timer_lib_out('str_mem')
@@ -166,14 +147,12 @@ subroutine cgyro_kernel
 !$acc update host(field,psi,cap_h_c,chi,h_x)
      call timer_lib_out('coll_mem')
 
-     ! Hammett method for ExB shear
      if (shear_method == 1) then
         ! Discrete shift (Hammett) 
-        call timer_lib_in('shear')
         call cgyro_shear_hammett
-        call timer_lib_out('shear')
      endif
-     !------------------------------------------------------------
+     call cgyro_source
+    !------------------------------------------------------------
 
      !------------------------------------------------------------
      ! Diagnostics
@@ -285,6 +264,8 @@ subroutine cgyro_kernel
   if(allocated(xi_lor_mat))    deallocate(xi_lor_mat)
   if(allocated(xi_deriv_mat))  deallocate(xi_deriv_mat)
   if(allocated(h_x))           deallocate(h_x)
+  if(allocated(h0_x))          deallocate(h0_x)
+  if(allocated(h0_old))          deallocate(h0_old)
   if(allocated(cap_h_c))       deallocate(cap_h_c)
   if(allocated(cap_h_v))       deallocate(cap_h_v)
   if(allocated(field))         deallocate(field)
@@ -301,13 +282,5 @@ subroutine cgyro_kernel
   else
     exit_dt = (exit_time-start_time+count_max)/real(count_rate)
   endif
-
-  !if (i_proc == 0) then
-  !  call date_and_time(date,time,zone);
-  !  open(NEWUNIT=statusfd,FILE=trim(path)//runfile_startups,action="write",status="unknown",position='append')
-  !  write(statusfd, '(a,a,a,a,a,a,a,a,a,a,a,a,a,1pe10.3)') date(1:4),"/",date(5:6),"/",date(7:8)," ", &
-  !                  time(1:2),":",time(3:4),":",time(5:10), zone, ' [EXIT] After ', exit_dt
-  !  close(statusfd)
-  !endif
 
 end subroutine cgyro_kernel

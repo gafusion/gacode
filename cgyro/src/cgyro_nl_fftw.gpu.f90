@@ -293,6 +293,18 @@ subroutine cgyro_nl_fftw(ij)
 
   call timer_lib_out('nl_mem')
 
+  ! Filter
+  if (n == 0) then
+!$acc parallel loop gang vector private(ir) &
+!$acc          present(ir_c,psi,px) default(none)
+      do ic=1,nc
+        ir = ir_c(ic)
+        if (ir == 1 .or. px(ir) == 0) then
+           psi(ic,:) = 0.0
+        endif
+     enddo
+  endif
+
   ! RHS -> -[f,g] = [f,g]_{r,-alpha}
 
   call timer_lib_in('nl')

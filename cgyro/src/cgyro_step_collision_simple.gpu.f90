@@ -43,7 +43,7 @@ subroutine cgyro_step_collision_simple
 !$acc parallel loop gang num_workers(4) vector_length(32) &
 !$acc&         present(ix_v,ie_v,is_v,ir_c,it_c,px,cap_h_v,cmat_simple,fsendf) &
 !$acc&         private(bvec,cvec,bvec_flat) &
-!$acc&         private(ic_loc,ir,it) default(none)
+!$acc&         private(ic_loc,ir,it,cvec_re,cvec_im) 
   do ic=nc1,nc2
 
      ic_loc = ic-nc1+1

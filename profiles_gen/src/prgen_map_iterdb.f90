@@ -13,121 +13,18 @@
 subroutine prgen_map_iterdb
 
   use prgen_globals
-  use EXPRO_interface
+  use expro
 
   implicit none
 
   integer :: i
-  integer :: ip
   integer :: n0
 
-  do i=1,nx
-     rho(i) = (i-1)/(nx-1.0)
-  enddo
-
-  call volint(1e-6*onetwo_qbeame,pow_e_nb)
-  call volint(1e-6*onetwo_qrfe,pow_e_rf)
-  call volint(1e-6*onetwo_qohm,pow_e_ohm)
-  call volint(1e-6*onetwo_qrad,pow_e_rad)
-  call volint(1e-6*onetwo_qione,powe_ion_exp)
-  call volint(1e-6*onetwo_dpedt,powe_wdot_exp)
-  call volint(1e-6*onetwo_qfuse,pow_e_fus)
-  call volint(1e-6*onetwo_qfusi,pow_i_fus)
-  call volint(1e-6*onetwo_qbeami,pow_i_nb)
-  call volint(1e-6*onetwo_qrfi,pow_i_rf)
-  call volint(1e-6*onetwo_qioni,powi_ion_exp)
-  call volint(1e-6*onetwo_qcx,powi_cx_exp)
-  call volint(1e-6*onetwo_dpidt,powi_wdot_exp)
-  ! Note sign change to keep pow_ei_exp positive for te>ti
-  call volint(-1e-6*onetwo_qdelt,pow_ei)
-
-  ! Wall ion flow (scale is undefined) (MW/KeV = Kamp)
-  call volint(kevdsecpmw*sion_d,flow_wall_exp)
-
-  ! Beam ion flow
-  call volint(kevdsecpmw*(onetwo_sbeam+sbcx_d),flow_beam)
-
-  ! Torque (TAM flow) (nt-m)
-  call volint(onetwo_storqueb,flow_mom)
-  ! COORDINATES: -ipccw accounts for DIII-D toroidal angle convention
-  flow_mom = -ipccw*flow_mom
-
-  ! Total transport power (MW) to electrons: pow_e
-
-  ! pow_e_nb  (MW)     : NBI power to electrons
-  ! pow_e_rf  (MW)     : RF power to electrons
-  ! pow_e_ohm (MW)     : Ohmic power to electrons
-  ! pow_e_rad (MW)     : [negative] Radiated power to electrons
-  ! powe_ion_exp (MW)  : [negative] Neutral ionization power to electrons
-  ! powe_wdot_exp (MW) : 
-  ! pow_ei    (MW)     : Exchange power from electrons to ions 
-  ! pow_e_fus (MW)     : Fusion power to electrons
-
-  pow_e_aux(:) = &
-       +pow_e_nb(:) &
-       +pow_e_rf(:) &
-       +pow_e_ohm(:) &
-       +powe_ion_exp(:) 
-
-  pow_e(:) = &
-       -0.0*powe_wdot_exp(:) &
-       +pow_e_aux(:) &
-       +pow_e_rad(:) &
-       -pow_ei(:) &
-       +pow_e_fus(:)
-
-  ! Total transport power (MW) to ions: pow_i
-
-  ! pow_i_nb (MW)      : NBI power to ions
-  ! pow_i_rf (MW)      : RF power to ions
-  ! powi_ion_exp (MW)  : [positive] Neutral ionization power to ions
-  ! powi_cx_exp (MW)   : [negative] Neutral charge exch power to ions
-  ! powi_wdot_exp (MW) 
-  ! pow_ei (MW)        : Exchange power to ions
-  ! pow_i_fus (MW)     : Fusion power to ions
-
-  pow_i_aux(:) = &
-       +pow_i_nb(:) &
-       +pow_i_rf(:) &
-       +powi_ion_exp(:) &
-       +powi_cx_exp(:) 
-
-  pow_i(:) = &
-       -0.0*powi_wdot_exp(:) &
-       +pow_i_aux(:) &
-       +pow_ei(:) &
-       +pow_i_fus(:)
-
-  !---------------------------------------------------------
-  ! Map profile data into EXPRO interface variables
+  !----------------------------------------------------------------------
+  ! shot number and time slice (ms)
   !
-  EXPRO_n_exp = nx
-  call EXPRO_alloc('./',1)
-  !
-  EXPRO_rho  = rho
-  EXPRO_rmin = rmin(:)
-  EXPRO_rmaj = rmaj(:)
-  ! COORDINATES: set sign of q
-  EXPRO_q = abs(q(:))*ipccw*btccw
-  EXPRO_kappa = kappa(:)
-  EXPRO_delta = delta(:)
-  EXPRO_te = onetwo_te(:)
-  EXPRO_ne = onetwo_ene(:)*1e-19
-  EXPRO_z_eff = onetwo_zeff(:)
-  EXPRO_flow_mom = flow_mom(:)
-  EXPRO_pow_e = pow_e(:)
-  EXPRO_pow_i = pow_i(:)
-  EXPRO_pow_ei = pow_ei(:)
-  EXPRO_zeta = zeta(:)
-  EXPRO_flow_beam = flow_beam(:)
-  EXPRO_flow_wall = flow_wall_exp(:)
-  EXPRO_sbeame = onetwo_sbeame(:)
-  EXPRO_sbcx = sbcx_d(:)
-  EXPRO_sscxl = onetwo_sscxl(:)
-  EXPRO_zmag = zmag(:)
-  EXPRO_ptot = p_tot(:) ! Total pressure
-  ! COORDINATES: set sign of poloidal flux
-  EXPRO_polflux = abs(dpsi(:))*(-ipccw)
+  expro_shot = onetwo_ishot
+  expro_time = int(onetwo_time*1e3)
 
   !----------------------------------------------------------------------
   ! Construct ion densities and temperatures, manage naming and numbering
@@ -188,67 +85,65 @@ subroutine prgen_map_iterdb
 
   endif
 
-  onetwo_nion_tot = n0
   if (n0 > 10) then
      print '(a)',"ERROR: (prgen_map_iterdb) Too many ions; report to GACODE developers."
      stop
   endif
 
-  ! reorder
-  do i=1,10
-     ip = reorder_vec(i)
-     EXPRO_ni(i,:) = onetwo_enion_vec(ip,:)
-     EXPRO_ti(i,:) = onetwo_tion_vec(ip,:)
+  !---------------------------------------------------------
+  ! Map profile data into expro interface variables
+  !
+  expro_n_exp = nx
+  expro_n_ion = n0
+  call expro_init(1)
+  !
+  expro_rho  = rho
+  expro_rmin = rmin(:)
+  expro_rmaj = rmaj(:)
+  expro_te = onetwo_te(:)
+  expro_ne = onetwo_ene(:)*1e-19
+  expro_z_eff = onetwo_zeff(:)
+  expro_ptot = p_tot(:) ! Total pressure
+
+  do i=1,expro_n_ion
+     expro_ni(i,:) = onetwo_enion_vec(i,:)
+     expro_ti(i,:) = onetwo_tion_vec(i,:)
   enddo
 
   ! velocities
-  EXPRO_vpol = 0.0
-  EXPRO_vtor = 0.0
+  expro_vpol = 0.0
+  expro_vtor = 0.0
 
   ! Look for carbon as first impurity, and insert toroidal velocity at theta=0
 
-  allocate(vphi_carbon(nx))
-
   if (trim(onetwo_namei(1)) == 'c') then
      ! COORDINATES: -ipccw accounts for DIII-D toroidal angle convention
-     vphi_carbon(:) = -ipccw*onetwo_angrot(:)*(rmaj(:)+rmin(:))
+     vtorc_exp(:) = -ipccw*onetwo_angrot(:)*(rmaj(:)+rmin(:))
   else
-     vphi_carbon(:) = 0.0
+     vtorc_exp(:) = 0.0
   endif
 
   ! Insert carbon toroidal velocity
-  do i=1,10
-     if (reorder_vec(i) == onetwo_nprim+1) then
-        EXPRO_vtor(i,:) = vphi_carbon(:)
+  do i=1,expro_n_ion
+     if (i == onetwo_nprim+1) then
+        expro_vtor(i,:) = vtorc_exp(:)
      endif
   enddo
 
   ! Use angrot as an initial approximation for omega0
-  EXPRO_w0 = -ipccw*onetwo_angrot(:)
-  
-  ! Additional powers (fusion and radiation)
-  ! * for iterdb, put all radiated power in pow_e_line
-  EXPRO_pow_e_fus  = pow_e_fus(:)
-  EXPRO_pow_i_fus  = pow_i_fus(:)
-  EXPRO_pow_e_line = -pow_e_rad(:) !Sign convention is pow_e_line should be positive
-
-  ! Additional powers (external heating)
-  EXPRO_pow_e_aux = pow_e_aux(:)
-  EXPRO_pow_i_aux = pow_i_aux(:)
+  expro_w0 = -ipccw*onetwo_angrot(:)
   !---------------------------------------------------------
 
   !---------------------------------------------------------
   ! Read the cer file and overlay
   !
-  if (cer_file /= "null") then
-     allocate(vpolc_exp(nx))
-     allocate(vtorc_exp(nx))
+  if (file_cer /= "null") then
      call prgen_read_cer
-     EXPRO_w0 = omega0(:)
-     do i=1,10
-        if (reorder_vec(i) == onetwo_nprim+1) then
-           EXPRO_vtor(i,:) = vtorc_exp(:)
-           EXPRO_vpol(i,:) = vpolc_exp(:)
+     expro_w0 = omega0(:)
+     do i=1,expro_n_ion
+        if (i == onetwo_nprim+1) then
+           expro_vtor(i,:) = vtorc_exp(:)
+           expro_vpol(i,:) = vpolc_exp(:)
         endif
      enddo
   endif
@@ -258,34 +153,67 @@ subroutine prgen_map_iterdb
   ! Ion name association
   !
   print '(a)','INFO: (prgen_map_iterdb) Found these ion species:'
-  do i=1,onetwo_nion_tot
+  do i=1,expro_n_ion
      call onetwo_ion_zmass(onetwo_ion_name(i),onetwo_z(i),onetwo_m(i))
      print '(t6,i2,1x,a)',i,trim(onetwo_ion_name(i))
   enddo
   !
-  ! Reordering
-  !
-  print '(a)','INFO: (prgen_map_iterdb) Created these species'
-  do i=1,n_ion_max
-
-     ip = reorder_vec(i)
-
-     if (ip > onetwo_nion_tot) then
-        print '(t6,i2,1x,a)',i,'[null]'
+  do i=1,expro_n_ion
+     expro_mass(i) = onetwo_m(i)             
+     expro_z(i)    = onetwo_z(i)             
+     call prgen_ion_name(nint(expro_mass(i)),nint(expro_z(i)),expro_name(i))         
+     if (i > onetwo_nion) then
+        expro_type(i) = type_fast
      else
-        if (ip > onetwo_nion) then
-           ion_type(i) = type_fast
-        else
-           ion_type(i) = type_therm
-        endif
-        print '(t6,i2,1x,a,1x,a)',i,trim(onetwo_ion_name(ip)),ion_type(i)
-        ion_mass(i) = onetwo_m(ip)             
-        ion_z(i)    = onetwo_z(ip)             
-
-        call prgen_ion_name(nint(ion_mass(i)),ion_z(i),ion_name(i))     
-    
+        expro_type(i) = type_therm
      endif
   enddo
+  !---------------------------------------------------------
+
+  !---------------------------------------------------------
+  ! Power densities (q*) : source > 0, sink < 0
+  !
+  ! Ohmic
+  expro_qohme = 1e-6*onetwo_qohm
+  ! NBI
+  expro_qbeame = 1e-6*onetwo_qbeame
+  expro_qbeami = 1e-6*onetwo_qbeami
+  ! RF
+  expro_qrfe = 1e-6*onetwo_qrfe
+  expro_qrfi = 1e-6*onetwo_qrfi
+  ! Fusion
+  expro_qfuse = 1e-6*onetwo_qfuse
+  expro_qfusi = 1e-6*onetwo_qfusi
+  ! Radiated
+  expro_qbrem = 1e-6*(onetwo_qrad-onetwo_qione-onetwo_qsync)
+  expro_qsync = 1e-6*onetwo_qsync
+  expro_qline = 0.0
+  ! electron-to-ion exchange (positive for Te > Ti)
+  expro_qei = -1e-6*onetwo_qdelt
+  ! neutrals (ion=ionization and recombination, cx=charge exchange) 
+  expro_qione = 1e-6*onetwo_qione
+  expro_qioni = 1e-6*onetwo_qioni
+  expro_qcxi  = 1e-6*onetwo_qcx
+  !---------------------------------------------------------
+
+  !---------------------------------------------------------
+  ! Particle/momentum sources
+  !
+  ! particles
+  expro_qpar_beam = onetwo_sbeame
+  expro_qpar_wall = sion_d
+  !
+  ! Torque (TAM flow) (nt-m)
+  expro_qmom = -ipccw*onetwo_storqueb
+  !---------------------------------------------------------
+
+  !---------------------------------------------------------
+  ! Current densities
+  !
+  expro_johm = -ipccw*johm*1e-6
+  expro_jbs = -ipccw*jbs*1e-6
+  expro_jnb = -ipccw*jnb*1e-6
+  expro_jrf = -ipccw*jrf*1e-6
   !---------------------------------------------------------
 
 end subroutine prgen_map_iterdb
@@ -293,34 +221,6 @@ end subroutine prgen_map_iterdb
 !------------------------------------------------------------------
 ! Routine to perform Volume integration
 !------------------------------------------------------------------
-
-subroutine volint(f,fdv)
-
-  use prgen_globals, &
-       only : onetwo_rho_grid,pi,onetwo_R0,onetwo_hcap,nx
-
-  implicit none
-
-  integer :: i
-  real, intent(in) :: f(nx)
-  real, intent(out) :: fdv(nx)
-  real :: drho
-  real :: dvoldr_p,dvoldr_m
-
-  fdv(1) = 0.0
-
-  do i=2,nx
-
-     drho = onetwo_rho_grid(i)-onetwo_rho_grid(i-1)
-
-     dvoldr_p = 2.0*pi*onetwo_rho_grid(i)*2.0*pi*onetwo_R0*onetwo_hcap(i)
-     dvoldr_m = 2.0*pi*onetwo_rho_grid(i-1)*2.0*pi*onetwo_R0*onetwo_hcap(i-1)
-
-     fdv(i) = fdv(i-1)+0.5*(dvoldr_p*f(i)+dvoldr_m*f(i-1))*drho
-
-  enddo
-
-end subroutine volint
 
 subroutine onetwo_ion_zmass(iname,z,m)
 

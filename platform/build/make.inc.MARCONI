@@ -1,0 +1,46 @@
+#---------------------------------------------------
+# MARCONI [BROADWELL component]
+#
+# SYSTEM INFO:
+# - 2 18-core Intel "Broadwell" E5-2697v4 (2.3GHz) per node 
+#   
+#---------------------------------------------------
+$(info Compiling for MARCONI Broadwell)
+
+#  FIXED Hardware parameters
+
+IDENTITY="MARCONI Broadwell"
+CORES_PER_NODE=36
+NUMAS_PER_NODE=2
+
+# Compilers and flags
+
+FC     = mpiifort -mod ${GACODE_ROOT}/modules -I ${GACODE_ROOT}/modules
+F77    = ${FC}
+
+FOMP   = -qopenmp
+FMATH  = -r8
+FOPT   = -xhost -implicitnone -no-prec-div -O3 -fp-model fast=2 -pad -ip -qoverride-limits -mkl=sequential#-fast -no-ipo
+FDEBUG = -shared-intel -implicitnone -check all -check noarg_temp_created -traceback
+#FPETSC = 
+F2PY  = f2py
+
+# System math libraries
+
+LMATH =  
+#       -L${FFTW_DIR}/lib -lfftw3_threads -lfftw3f_threads -lfftw3 -lfftw3f -mkl=cluster
+#       -L${FFTW_DIR}/lib -lfftw3_threads -lfftw3 -mkl=cluster
+
+# NetCDF
+#NETCDF = -K${NETCDF_LIB} -l${NETCDF_LIB}netcdf -lnetcdff
+#NETCDF  = ${NETCDFF_LIB}/libnetcdff.a ${NETCDF_LIB}/libnetcdf.a -L{HDF5_LIB} -lhdf5_hl -lhdf5 -lcurl
+#NETCDF not tested since not needed for [c]gyro
+NETCDF  = -L${NETCDF_LIB} -lnetcdf
+NETCDF_INC = ${NETCDF_INCLUDE}
+
+GATOFLAGS = -r8 -i8
+
+# Archive 
+ARCH = ar cr
+
+

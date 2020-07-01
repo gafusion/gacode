@@ -1,7 +1,0 @@
-echo "SCRIPT: running ./vpro_test"
-
-./vpro_test
-
-echo "SCRIPT: running python vpro_test.py"
-
-python vpro_test.py

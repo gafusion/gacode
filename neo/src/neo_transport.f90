@@ -305,8 +305,8 @@ contains
           poisson_F0fac = poisson_F0fac &
                + dens(is,ir) * Z(is) * Z(is) / temp(is,ir)
        enddo
-       if(adiabatic_ele_model == 1) then
-          poisson_F0fac = poisson_F0fac + ne_ade(ir) / te_ade(ir)
+       if(ae_flag == 1) then
+          poisson_F0fac = poisson_F0fac + dens_ae(ir) / temp_ae(ir)
        endif
        d_phi_sqavg = 0.0
        do it=1, n_theta
@@ -681,12 +681,12 @@ contains
     close(io)
 
     ! fluxes in GB units
-    if(adiabatic_ele_model == 0) then
+    if(ae_flag == 0) then
        dens_ele = dens(is_ele,ir)
        temp_ele = temp(is_ele,ir)
     else
-       dens_ele = ne_ade(ir)
-       temp_ele = te_ade(ir)
+       dens_ele = dens_ae(ir)
+       temp_ele = temp_ae(ir)
     endif
     pgb = dens_ele * rho(ir)**2 * temp_ele**1.5
     egb = dens_ele * rho(ir)**2 * temp_ele**2.5

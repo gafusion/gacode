@@ -1,0 +1,43 @@
+Geometry
+
+expro_bunit(:)       B_unit (T)
+expro_rmaj   , (m) , plasma major radius , R0                  
+expro_skappa , (-) , kappa shear         , r/kappa d(kappa)/dr
+expro_drmaj(:)       dR_0/dr
+expro_dzmag(:)       dZ_0/dr
+expro_sdelta(:)      r d(delta)/dr
+expro_skappa(:)      (r/kappa) d(kappa)/dr
+expro_szeta(:)       r d(zeta)/dr
+
+Profiles
+
+expro_q(:)           q
+expro_s(:)           (r/q)(dq/dr)
+expro_dlnnedr(:)     -dln(ne)/dr (1/m)
+expro_dlntedr(:)     -dln(Te)/dr (1/m)
+expro_dlnnidr(1:5,:) -dln(ni)/dr (1/m)
+expro_dlntidr(1:5,:) -dln(ti)/dr (1/m)
+expro_sdlnnedr(:)     -ne''/ne (1/m^2)
+expro_sdlntedr(:)     -Te''/Te (1/m^2)
+expro_sdlnnidr(1:5,:) -ni''/ni /dr (1/m^2)
+expro_sdlntidr(1:5,:) -Ti''/Ti (1/m^2)
+expro_dlnptotdr(:)   -dln(ptot)/dr (1/m)
+expro_w0p(:)         d(w0)/dr (1/s/m)
+expro_vol(:)         V (m^3)
+expro_volp(:)        dV/dr (m^2)
+expro_cs(:)          cs (m/s)
+expro_rhos(:)        rhos (m)
+expro_nuee(:)        nuee (1/s)
+expro_ni_new(:)      ni [Corrected for quasin.]
+expro_dlnnidr_new(:) -dln(ni)/dr (1/m) [Corrected for quasin.]
+expro_sdlnnidr_new(:) -ni''/ni /dr (1/m^2) [Corrected for quasin.]
+expro_grad_r0(:)     |grad r| at theta=0 
+expro_ave_grad_r(:)  Flux-surface average <|grad r|> 
+expro_drdrho(:)      dr/d(rho) [r and rho have units of length]
+expro_bp0(:)         B_pol at theta=0 (T)
+expro_bt0(:)         B_tor at theta=0 (T)
+expro_ip(:)          Plasma current (A)
+expro_gamma_e(:)     r/q d(w0)/dr (1/s)
+expro_gamma_p(:)     R_0 d(w0)/dr (1/s)
+expro_mach(:)        R_0 w0/cs
+expro_thetascale(:)  max(gsin') [measure of poloidal scale length]

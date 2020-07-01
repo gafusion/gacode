@@ -71,17 +71,7 @@ then
   echo
   echo "         -compress"
   echo "         Replicate directory, but without restart or nonstandard files."
-  echo
-  echo "         -bin"
-  echo "         Map old-style ASCII data to binary files."
-  echo
-  echo "         -cbin"
-  echo "         Remove old-style ASCII files."
-  echo
-  echo "         -globalmap"
-  echo "         Create global data mapping file."
-  echo "         NOTE: requries setting -rhos <rho/a>"
-
+ 
   exit 1
 fi
 #=============================================================
@@ -102,13 +92,9 @@ GENERATE_FLAG=0
 REGRESS_FLAG=0
 CLEAN_FLAG=0
 COMPRESS_FLAG=0
-BIN_FLAG=0
-CBIN_FLAG=0
 RESET=0
 INIT_FLAG=0
-GLOBALMAP_FLAG=0
 HELP_TAG=null
-RHOS=0.002
 SCASE=
 #=============================================================
 
@@ -150,14 +136,6 @@ while [ $# -gt 0 ] ; do
 
   -compress) COMPRESS_FLAG=1 ;;
 
-  -bin) BIN_FLAG=1 ;;
-
-  -cbin) CBIN_FLAG=1 ;;
-
-  -globalmap) GLOBALMAP_FLAG=1 ;;
-
-  -rhos) shift ; RHOS=$1 ;;
-
   *) echo "ERROR (cgyro script): unknown option $1." ; exit 1 ;;
 
   esac
@@ -190,48 +168,6 @@ if [ $COMPRESS_FLAG -eq 1 ]
 then
     cgyro_compress $SIMDIR $LOCDIR
     exit 1
-fi
-#============================================================
-
-#============================================================
-# Binary option
-if [ $BIN_FLAG -eq 1 ]
-then
-    EXEC="python $GACODE_ROOT/cgyro/bin/cgyro_t2b.py"
-    $EXEC out.cgyro.kxky_phi    bin.cgyro.kxky_phi
-    $EXEC out.cgyro.kxky_n      bin.cgyro.kxky_n
-    $EXEC out.cgyro.kxky_e      bin.cgyro.kxky_e
-    $EXEC out.cgyro.kxky_flux_e bin.cgyro.kxky_flux_e
-    $EXEC out.cgyro.kxky_flux_n bin.cgyro.kxky_flux_n
-    $EXEC out.cgyro.ky_flux     bin.cgyro.ky_flux
-    $EXEC out.cgyro.lky_flux_n  bin.cgyro.lky_flux_n
-    $EXEC out.cgyro.lky_flux_e  bin.cgyro.lky_flux_e
-    $EXEC out.cgyro.lky_flux_v  bin.cgyro.lky_flux_v
-    $EXEC out.cgyro.phib        bin.cgyro.phib
-    $EXEC out.cgyro.aparb       bin.cgyro.aparb
-    $EXEC out.cgyro.bparb       bin.cgyro.bparb
-    $EXEC out.cgyro.freq        bin.cgyro.freq
-    $EXEC out.cgyro.geo         bin.cgyro.geo
-    exit 0
-fi
-if [ $CBIN_FLAG -eq 1 ]
-then
-    EXEC="$GACODE_ROOT/cgyro/bin/cgyro_trm"
-    $EXEC cgyro.kxky_phi
-    $EXEC cgyro.kxky_n
-    $EXEC cgyro.kxky_e
-    $EXEC cgyro.kxky_flux_e
-    $EXEC cgyro.kxky_flux_n
-    $EXEC cgyro.ky_flux
-    $EXEC cgyro.lky_flux_n
-    $EXEC cgyro.lky_flux_e
-    $EXEC cgyro.lky_flux_v
-    $EXEC cgyro.phib
-    $EXEC cgyro.aparb
-    $EXEC cgyro.bparb
-    $EXEC cgyro.freq
-    $EXEC cgyro.geo
-    exit 0
 fi
 #============================================================
 
@@ -280,17 +216,6 @@ cd $SIMDIR
 #============================================================
 
 #============================================================
-# Global map option
-if [ $GLOBALMAP_FLAG -eq 1 ]
-then
-    echo "$RHOS" > input.globalmap
-    $GACODE_ROOT/cgyro/tools/globalmap/src/globalmap
-    echo "INFO: (cgyro) Global mapping done."
-    exit 1
-fi
-#============================================================
-
-#============================================================
 # Clean/new options
 
 CFILES="out.* bin.* batch.out batch.err *~ *gen *header"
@@ -299,6 +224,17 @@ if [ $CLEAN_FLAG -eq 1 ] ; then
     rm -f $CFILES
     echo "INFO: (cgyro) Cleaned directory."
     exit 1
+fi
+#============================================================
+
+#============================================================
+# datafile check
+if [ -s 'out.cgyro.time' ] ; then
+   ncol=`awk '{print NF}' out.cgyro.time | sort -nu | tail -n 1`
+   if [ $ncol -eq 3 ] ; then
+      echo 'ERROR: (CGYRO) Run cgyro_plot -plot text to update number of columns in out.cgyro.time'
+      exit 1
+   fi
 fi
 #============================================================
 
@@ -326,7 +262,8 @@ then
    PREC=0
    python $GACODE_ROOT/shared/math/gauss_exp_quad.py $emax $ne $PREC
    echo "INFO: (cgyro) Generated energy mesh data"
-else
+elif [ $emethod -ne 3 ]
+then
    data=$GACODE_ROOT/cgyro/tools/egrid/egrid.$ne.${emax%.*}
    if [ -f $data ]
    then
@@ -336,15 +273,6 @@ else
       echo $data
       exit 1
    fi
-fi
-#==========================================================
-
-#==========================================================
-# See if we are using experimental profiles
-
-if [ -f input.profiles ]
-then
-   python $GACODE_ROOT/profiles_gen/bin/profile_parse.py input.profiles
 fi
 #==========================================================
 

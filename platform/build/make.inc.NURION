@@ -1,0 +1,30 @@
+#----------------------------------------------------------
+# craype-mic-knl (KISTI) [nodes]
+#
+# - 68 cores Intel Xeon Phi 7250 1.4GHz
+#----------------------------------------------------------
+
+IDENTITY="craype-mic-knl"
+CORES_PER_NODE=64
+NUMAS_PER_NODE=1
+
+# Compilers and flags
+FC     = mpiifort -gen-interfaces -mod ${GACODE_ROOT}/modules -I ${GACODE_ROOT}/modules -I${MKLROOT}/include/fftw
+F77    = ${FC}
+
+FOMP   = -qopenmp
+FMATH  = -real-size 64
+FOPT   = -xMIC-AVX512 -O3 -fPIC
+FDEBUG = -shared-intel -check all -traceback
+# System math libraries
+LMATH = -mkl
+
+# NetCDF
+NETCDF_DIR=/apps/compiler/intel/18.0.3/applib1/mic-knl/netcdf/4.6.1
+
+NETCDF=-L${NETCDF_DIR}/lib -lnetcdff -lnetcdf
+NETCDF_INC =${NETCDF_DIR}/include
+
+# Archive 
+ARCH = ar cr
+

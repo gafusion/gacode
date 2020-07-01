@@ -88,9 +88,13 @@ program tglf
      write(1,'(i2)') tglf_ns_in,tglf_nxgrid_in
      close(1)
 
-     ! write flux spectrum to file out.tglf.flux_spectrum
+     ! write ky spectrum to file out.tglf.ky_spectrum
+     CALL write_tglf_ky_spectrum
 
-     CALL write_tglf_flux_spectrum
+     ! write flux spectrum summed over nmodes to file out.tglf.sum_flux_spectrum
+     ! this can be compared directly with the flux spectrum from CGYRO 
+
+     CALL write_tglf_sum_flux_spectrum
 
      ! write density fluctuation amplitude spectrum to file out.tglf.density_spectrum
      CALL write_tglf_density_spectrum
@@ -98,10 +102,10 @@ program tglf
      ! write temperature fluctuation amplitude spectrum to file out.tglf.temperature_spectrum
      CALL write_tglf_temperature_spectrum
 
-     ! write intensity fluctuation amplitude spectrum to file out.tglf.intensity_spectrum
+     ! write intensity fluctuation amplitude spectrum per mode to file out.tglf.intensity_spectrum
      CALL write_tglf_intensity_spectrum
 
-     ! write field fluctuation amplitude spectrum to file out.tglf.field_spectrum
+     ! write field fluctuation amplitude per mode spectrum to file out.tglf.field_spectrum
      CALL write_tglf_field_spectrum
 
      ! write eigenvalue spectrum to file out.tglf.eigenvalue_spectrum
@@ -113,14 +117,20 @@ program tglf
      ! write ns-ts crossphase spectrum to file out.tglf.nsts_crossphase_spectrum
      CALL write_tglf_nsts_crossphase_spectrum
 
-     ! write QL weights spectrum to file out.tglf.QL_weight_spectrum
-     CALL write_tglf_QL_weight_spectrum
+     ! write QL flux (weight) spectrum per mode to file out.tglf.QL_weight_spectrum
+     CALL write_tglf_QL_flux_spectrum
 
-     ! write intensity fluctuation amplitude spectrum per mode to file out.tglf.intensity_spectrum_per_mode
-     CALL write_tglf_intensity_spectrum_per_mode
+     ! write saturation geometry facotor spectrum per mode to file out.tglf.
+     CALL write_tglf_sat_geo_spectrum
 
-     ! write field fluctuation amplitude spectrum per mode to file out.tglf.field_spectrum_per_mode
-     CALL write_tglf_field_spectrum_per_mode
+     ! write kx/ky-spectral shift spectrum to file out.tglf.spectral_shift
+     CALL write_tglf_spectral_shift
+
+     ! write intensity fluctuation amplitude spectrum per mode to file out.tglf.scalar_saturation_parameters
+     CALL write_tglf_scalar_saturation_parameters
+
+     ! write Gaussian width spectrum to file out.tglf.width_spectrum
+     CALL write_tglf_width_spectrum
 
   else
 

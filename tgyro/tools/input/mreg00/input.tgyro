@@ -1,0 +1,5 @@
+DIR n1 2
+DIR n2 2
+
+TGYRO_MODE=3
+

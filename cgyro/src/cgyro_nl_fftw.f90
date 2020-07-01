@@ -391,6 +391,16 @@ subroutine cgyro_nl_fftw(ij)
   enddo
   call timer_lib_out('nl_mem')
 
+  ! Filter
+  if (n == 0) then
+     do ic=1,nc
+        ir = ir_c(ic)
+        if (ir == 1 .or. px(ir) == 0) then
+           psi(ic,:) = 0.0
+        endif
+     enddo
+  endif
+
   ! RHS -> -[f,g] = [f,g]_{r,-alpha}
 
   call timer_lib_in('nl')
@@ -410,7 +420,7 @@ subroutine cleanx(f,n)
 
   ! Average elements so as to ensure
   !
-  !   f(kx,ky=0) = f(-kx,jy=0)^*
+  !   f(kx,ky=0) = f(-kx,ky=0)^*
   !
   ! This symmetry is required for complex input to the FFTW
   ! c2r transform 

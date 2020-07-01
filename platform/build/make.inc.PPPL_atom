@@ -14,7 +14,7 @@ CONDA_LIB = $(CONDA_HOME)/lib
 
 # Compilers (intel) and flags 
 
-FC	= mpif90 -std=f2008 -fall-intrinsics -J $(GACODE_ROOT)/modules -I $(GACODE_ROOT)/modules -L $(CONDA_LIB) 
+FC	= mpif90 -std=f2008 -fall-intrinsics -J $(GACODE_ROOT)/modules -I $(GACODE_ROOT)/modules 
 F77	= mpif90
 CC	= mpicc
 
@@ -27,12 +27,12 @@ FOMP	= -fopenmp
 
 # System math libraries
 
-LAPACK = -L $(CONDA_LIB) -l lapack -l blas
-LMATH = $(LAPACK) -L$(CONDA_LIB) -lfftw3_mpi -lfftw3_threads  -lfftw3 -lfftw3f -lfftw3l -L /usr/lib64 -lm
+LAPACK =  -L $(LAPACKHOME)/lib -l lapack -l refblas
+LMATH = $(LAPACK)  -L $(FFTW_HOME)/lib -lfftw3_mpi -lfftw3_threads  -lfftw3 -lfftw3f -lfftw3l -lm
 
 
-NETCDF = -L /usr/lib64 ${CONDA_HOME}/lib/libnetcdff.a ${CONDA_HOME}/lib/libnetcdf.a  -Wl,-rpath,$(CONDA_LIB):/usr/lib64 -L ${CONDA_HOME}/lib -lhdf5_hl -lhdf5 -lcurl -ldf -lmfhdf -lz -lm
-NETCDF_INC = ${CONDA_HOME}/include
+NETCDF = -L $(NETCDF_FORTRAN_HOME)/lib -l netcdff -L $(NETCDF_C_HOME)/lib -l netcdf  -Wl,-rpath,$(NETCDF_FORTRAN_HOME)/lib:$(NETCDF_C_HOME)/lib -L ${HDF5_HOME}/lib -lhdf5_hl -lhdf5 -lcurl -L${HDF_HOME}/lib -ldf -lmfhdf -lz -lm
+NETCDF_INC = ${NETCDF_FORTRAN_HOME}/include
 
 # Archive
 

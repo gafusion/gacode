@@ -1,0 +1,27 @@
+#---------------------------------------------------
+# Azure+CentOS
+#---------------------------------------------------
+
+IDENTITY="Azure"
+CORES_PER_NODE=1
+NUMAS_PER_NODE=1
+
+FFTWDIR=/usr/lib64
+
+ROOT=/mnt/exports/shared
+
+# Compilers
+
+FC     = mpif90 -std=f2008 -fall-intrinsics -I $(GACODE_ROOT)/modules -J $(GACODE_ROOT)/modules -fPIC
+F77    = mpif77
+FOMP   =-fopenmp
+FMATH  =-fdefault-real-8 -fdefault-double-8
+FOPT   =-Ofast
+FDEBUG =-Wall -W -fcheck=all -g -fbacktrace -ffpe-trap=invalid,zero,overflow
+F2PY   =
+
+# System math libraries
+LMATH = ${ROOT}/OpenBLAS/libopenblas.a $(FFTWDIR)/libfftw3.a $(FFTWDIR)/libfftw3_omp.a
+FFTW_INC=/usr/include
+
+ARCH = ar cr

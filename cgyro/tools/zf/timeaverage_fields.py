@@ -1,11 +1,11 @@
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-import math 
+import math
 from gacodefuncs import *
 from cgyro.data import cgyrodata
 
-# This is the fraction of the simulation length at the end 
+# This is the fraction of the simulation length at the end
 # that is considered for the average
 frac=0.5
 
@@ -29,7 +29,7 @@ data.getdata()
 ntheta=len(data.theta)
 ntime=len(data.t)
 
-tmin=math.ceil(ntime*(1-frac)) 
+tmin=math.ceil(ntime*(1-frac))
 tlength=len(data.t[tmin:ntime])
 
 rephiaver=math.fsum(list(map(math.fsum, data.phib[0,:,tmin:ntime-1])))/(ntheta*tlength)
@@ -51,8 +51,8 @@ print("Average Re[delta B||] and Im[delta B||] during time interval")
 print(rebpaver)
 print(imbpaver)
 
-# writing time traces of poloidal averages into files 
-# Time 
+# writing time traces of poloidal averages into files
+# Time
 
 fphi= open("PhiAv.txt","w+")
 fapa= open("ApaAv.txt","w+")
@@ -80,7 +80,7 @@ for i in range(ntime):
      fbpa.write("%11.3e"% (data.t[i]))
      fbpa.write("%11.3e"% (rebpafsa))
      fbpa.write("%11.3e\n"% (imbpafsa))
-     
+
      rebpacos=0.0
      imbpacos=0.0
      for j in range(ntheta):
@@ -90,16 +90,16 @@ for i in range(ntime):
      cosbpa.write("%11.3e"% (data.t[i]))
      cosbpa.write("%11.3e"% (rebpacos))
      cosbpa.write("%11.3e\n"% (imbpacos))
-     
+
      if i >= tmin:
          rebpcosaver=rebpcosaver+rebpacos/tlength
 
 print("Average cos component of Re[delta B||] during time interval")
 print(rebpcosaver)
-      
-fphi.close() 
-fapa.close() 
-fbpa.close() 
+
+fphi.close()
+fapa.close()
+fbpa.close()
 cosbpa.close()
 
 # print "theta dependence of Re[delta B||] at last time point"

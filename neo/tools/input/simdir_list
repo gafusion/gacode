@@ -3,7 +3,7 @@ reg01:	  connor+i  +loc +sa +nrot +2d
 reg02:	  hs0   +i  +loc +sa +nrot +2d
 reg03:	  hs	+i  +loc +sa +nrot +2d
 reg04:	  fp	+i  +loc +sa +nrot +2d
-reg05:	  connor+i  +loc +sa +nrot +2d
+reg05:	  connor+ie +loc +sa +nrot +2d
 reg06:	  hs0   +ie +loc +sa +nrot +2d
 reg07:	  hs	+ie +loc +sa +nrot +2d
 reg08:	  fp	+ie +loc +sa +nrot +2d
@@ -14,10 +14,11 @@ reg12:	  fp	+iec+loc +sa +nrot +2d
 reg13:	  fp	+i  +loc +mil+nrot +2d
 reg14:	  fp	+i  +loc +sa + rot +2d
 reg15:	  fp	+i  +loc +sa + rots+2d
-reg16:	  fp	+iec+pro1+mil+nrot +2d
-reg17:	  fp	+iec+pro1+mil+ rots+2d
-reg18:	  fp	+iec+pro1+gen+nrot +2d
-reg19:	  fp	+iec+pro1+gen+ rots+2d
-reg20:	  fp	+iec+pro2+gen+ rots+2d
-reg21:	  fp	+ie +loc +mil+nrot +3d
-reg22:	  fp	+ie +loc +mil+nrot +3d+er
+reg16:    fp    +ic +pro1+mil+nrot +2d
+reg17:	  fp	+iec+pro1+mil+nrot +2d
+reg18:	  fp	+iec+pro1+mil+ rots+2d
+reg19:	  fp	+iec+pro1+gen+nrot +2d
+reg20:	  fp	+iec+pro1+gen+ rots+2d
+reg21:	  fp	+iec+pro2+gen+ rots+2d
+reg22:	  fp	+ie +loc +mil+nrot +3d
+reg23:	  fp	+ie +loc +mil+nrot +3d+er

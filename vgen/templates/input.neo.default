@@ -1,0 +1,16 @@
+# NEO resolution 
+N_ENERGY=6
+N_XI=17
+N_THETA=17
+
+# Theory (0,3), Neo drift-kinetic (1,2)
+SIM_MODEL=2
+
+# Kinetic electrons
+AE_FLAG=0
+
+# Num ions + electrons
+N_SPECIES=3
+
+# (2=model shape,3=general geometry)
+EQUILIBRIUM_MODEL=3

@@ -143,6 +143,9 @@ subroutine cgyro_init_h
 
               arg = abs(px(ir))/real(n_radial)
               h_x(ic,:) = amp0*rho*exp(-arg)
+              if (ir == 1 .or. px(ir) == 0) then
+                 h_x(ic,:) = 0.0
+              endif
 
            else 
 
@@ -161,7 +164,6 @@ subroutine cgyro_init_h
      endif
   end select
 
-  call cgyro_filter
   call cgyro_field_c
 
   ! Initialize time-history of fields (-3,-2,-1) to initial field.

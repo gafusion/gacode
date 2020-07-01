@@ -15,6 +15,7 @@
 subroutine cgyro_shear_hammett
 
   use cgyro_globals
+  use timer_lib
 
   implicit none
 
@@ -27,6 +28,7 @@ subroutine cgyro_shear_hammett
   ! Forward shearing
   if (gtime > 0.5) then
 
+     call timer_lib_in('shear')
      gtime = gtime-1.0
 
      a1 = h_x(ic_c(1,:),:)
@@ -36,6 +38,7 @@ subroutine cgyro_shear_hammett
      enddo
 
      h_x(ic_c(n_radial,:),:) = 0.0
+     call timer_lib_out('shear')
 
      call cgyro_field_c
 
@@ -44,6 +47,7 @@ subroutine cgyro_shear_hammett
   ! Backward shearing
   if (gtime < -0.5) then
 
+     call timer_lib_in('shear')
      gtime = gtime+1.0
 
      a1 = h_x(ic_c(n_radial,:),:) 
@@ -53,6 +57,7 @@ subroutine cgyro_shear_hammett
      enddo
 
      h_x(ic_c(1,:),:) = 0.0
+     call timer_lib_out('shear')
 
      call cgyro_field_c
 

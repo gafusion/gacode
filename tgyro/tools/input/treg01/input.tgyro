@@ -16,15 +16,22 @@ TGYRO_NEO_METHOD=1
 #-----------------------------------------------------
 # Profile control
 TGYRO_DEN_METHOD0=0
-LOC_TE_FEEDBACK_FLAG=1
+TGYRO_DEN_METHOD1=0
+LOC_TE_FEEDBACK_FLAG=0
 LOC_TI_FEEDBACK_FLAG=1
 #-----------------------------------------------------
 
 #-----------------------------------------------------
-# Physics control
-LOC_SCENARIO=2 (1=static exch, 2=dynamic exch, 3=reactor)
-TGYRO_RMAX=0.75
-LOC_ZEFF_FLAG=1
+# Scenario (1=static exch, 2=dynamic exch, 3=reactor)
+LOC_SCENARIO=2 
+TGYRO_RMIN=0.2
+TGYRO_RMAX=0.65
+
+LOC_N_ION=1
+LOC_Z=1.0
+LOC_MA1=2.0
+#LOC_Z2=6.0
+#LOC_MA2=12.0
 #-----------------------------------------------------
 
 #-----------------------------------------------------
@@ -32,8 +39,8 @@ LOC_ZEFF_FLAG=1
 TGYRO_ITERATION_METHOD=4
 LOC_RESIDUAL_METHOD=3
 
-LOC_DX=0.02
-LOC_DX_MAX=4.0
+LOC_DX=0.05
+LOC_DX_MAX=1.0
 LOC_RELAX=2.0
 
 # TGYRO iterations

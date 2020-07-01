@@ -184,6 +184,7 @@ module tgyro_globals
   real, dimension(:), allocatable :: zeta
   real, dimension(:), allocatable :: s_zeta
 
+  real, dimension(:), allocatable :: b_ref
   real, dimension(:), allocatable :: b_unit
   real, dimension(:), allocatable :: volp
   real, dimension(:), allocatable :: vol
@@ -243,7 +244,6 @@ module tgyro_globals
   real :: aspect_rat
   real :: mu_0
   !
-  real :: b_ref
   real :: r_min
   !
   integer, dimension(:,:), allocatable :: pmap,mask

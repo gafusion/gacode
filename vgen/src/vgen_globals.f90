@@ -13,6 +13,7 @@ module vgen_globals
   integer :: er_method
   integer :: erspecies_indx
   integer :: vel_method
+  integer :: epar_flag
   integer :: nth_min
   integer :: nth_max
   integer :: nn_flag
@@ -24,18 +25,16 @@ module vgen_globals
   
   real :: dens_norm, temp_norm, mass_norm, vth_norm, jbs_norm
 
-  real, dimension(11) :: zfac
-
   real, dimension(:), allocatable :: vtor_measured
 
   character(len=8) :: fmt='(I2.2)' 
   character(len=2), dimension(100) :: tag
 
+    real, dimension(:), allocatable :: pflux_sum
   real, dimension(:), allocatable :: jbs_neo
   real, dimension(:), allocatable :: jbs_sauter
-  real, dimension(:), allocatable :: jbs_koh
-  real, dimension(:), allocatable :: jbs_nclass
-  real, dimension(:), allocatable :: pflux_sum
+  real, dimension(:), allocatable :: jsigma_neo
+  real, dimension(:), allocatable :: jsigma_sauter
   real, dimension(:), allocatable :: jtor_neo
   real, dimension(:), allocatable :: jtor_sauter
   

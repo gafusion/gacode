@@ -1,0 +1,79 @@
+#!/usr/bin/env python
+
+import os
+import sys, getopt
+import numpy as np
+import pandas as pd
+from tqdm import tqdm
+from gacodeinput import *
+from gacodefuncs import *
+from cgyro.data import cgyrodata
+
+pd.set_option('display.max_rows', None)
+
+opts, args = getopt.getopt(sys.argv[1:],"hm:",[])
+
+if opts == []:
+   print('cgyrodb -m <mode>')
+   sys.exit(2)
+
+for opt,arg in opts:
+   if opt == '-h' or opt == '':
+      print('cgyrodb -m <mode> with mode=[update,scan,flux]')
+      sys.exit()
+   elif opt == '-m':
+      mode = arg
+
+meta = {}
+
+def gendict(sim,mode):
+
+   mydict = {}
+
+   mydict['n_radial'] = sim.n_radial
+   mydict['n_theta'] = sim.n_theta
+   mydict['q'] = sim.q
+   mydict['s'] = sim.shear
+   mydict['a/Ln0'] = sim.dlnndr[0]
+   mydict['a/Lt0'] = sim.dlntdr[0]
+   if sim.n_species > 1:
+      mydict['a/Ln1'] = sim.dlnndr[1]
+      mydict['a/Lt1'] = sim.dlntdr[1]
+   else:
+      mydict['a/Ln1'] = 0.0
+      mydict['a/Lt1'] = 0.0
+
+   if mode == 'flux':
+      sim.getflux()
+      y = np.sum(sim.ky_flux,axis=(2,3))   
+      for ispec in range(sim.n_species):
+         g = average(y[ispec,0,:],sim.t,0.5,0.0)
+         q = average(y[ispec,1,:],sim.t,0.5,0.0)
+         v = average(y[ispec,2,:],sim.t,0.5,0.0)
+         mydict['g'+str(ispec)] = g
+         mydict['q'+str(ispec)] = q
+         mydict['v'+str(ispec)] = v
+
+   return mydict
+
+# First locate all directories
+y = []
+for root,xd,xf in os.walk('./'):
+   if xd == []:
+      y.append(root)
+
+if mode == 'update':
+   # Run through directories and update
+   for mdir in y:
+      print('Updating '+mdir) 
+      os.system('cgyro_plot -plot text -e '+mdir)
+      os.system('cgyro -t '+mdir)
+else:
+   # Create master dictionary "meta"
+   for mdir in tqdm(y):
+      sim = cgyrodata(mdir+'/',silent=True)
+      meta[mdir]=gendict(sim,mode)
+
+   df = pd.DataFrame(meta)
+   dfpart = df.T[['n_radial','n_theta','q','s','a/Ln0','a/Lt0','a/Ln1','a/Lt1']]
+   print(dfpart)

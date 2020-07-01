@@ -6,48 +6,32 @@
 # D. Mikkelsen (mikk@pppl.gov)
 # N. Ferraro (nferraro@pppl.gov)
 # B.A. Grierson (bgriers@pppl.gov)
-#
-# Need the following modules, in this order:
-# module load intel/2015.u1
-# module load openmpi/1.8.4
-# module load acml/5.3.1/ifort64
-# module load hdf5-parallel/1.8.14
-# module load netcdf
-# module load fftw/3.3.6-pl1
-
 
 IDENTITY="PPPL cluster"
 CORES_PER_NODE=1
 NUMAS_PER_NODE=1
 
-
 # Compilers (intel) and flags 
 
-FC	= mpif90 -mod $(GACODE_ROOT)/modules -I $(GACODE_ROOT)/modules
-F77	= mpif90
-CC	= mpicc
+FC     = mpif90 -gen-interfaces -module ${GACODE_ROOT}/modules -I${GACODE_ROOT}/modules -I${MKLROOT}/include/fftw -I$(NETCDF_FORTRAN_HOME)/include
+F77    = ${FC}
 
-FOMP    = -openmp
-FMATH	= -r8
-FOPT	= -qopt-report=0 -qopt-report-phase=vec -shared-intel
-FDEBUG	= -warn all -shared-intel -check all -g
+FOMP   = -qopenmp
+FMATH  = -real-size 64
+FOPT   = -O2
+FDEBUG = -check all -traceback
+F2PY   = f2py
 
 # System math libraries
+LMATH = -mkl
 
-# FFTW 
-FFTW3HOME=/usr/pppl/intel/2015-pkgs/openmpi-1.8-pkgs/fftw-3.3.6-pl1
+# NetCDF
+NETCDF = -L${NETCDF_FORTRAN_HOME}/lib -lnetcdff -L${NETCDF_C_HOME} -lnetcdf
+NETCDF_INC =-I${NETCDF_FORTRAN_HOME}/include -I${NETCDF_C_HOME}/include
 
-LAPACK = ${ACML_HOME}/lib/libacml.a
+# Mapping
+%.o : %.mod
 
-LMATH = $(LAPACK) \
-      -L${FFTW3HOME}/lib -lfftw3 -lfftw3_threads
-
-FFTW_INC = ${FFTW3HOME}/include
-
-NETCDF = ${NETCDFHOME}/lib/libnetcdff.a ${NETCDFHOME}/lib/libnetcdf.a -L${HDF5_HOME}/lib -lhdf5_hl -lhdf5 -lz
-NETCDF_INC = ${NETCDFHOME}/include
-
-# Archive
-
+# Archive 
 ARCH = ar cr
 

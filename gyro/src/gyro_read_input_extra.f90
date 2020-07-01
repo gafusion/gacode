@@ -9,6 +9,7 @@ subroutine gyro_read_input_extra
 
   use mpi
   use gyro_globals
+  use expro
 
   !-------------------------
   implicit none
@@ -64,7 +65,7 @@ subroutine gyro_read_input_extra
      inquire(file=trim(path)//'input.geo',exist=lfe)
      if (lfe .eqv. .true.) then
         open(unit=1,file=trim(path)//'input.geo',status='old')
-        call EXPRO_skip_header(1)
+        call expro_skip_header(1)
         read(1,*) n_fourier_geo
         read(1,*) a_fourier_geo(:,0:n_fourier_geo)
         close(1)

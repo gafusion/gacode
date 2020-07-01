@@ -232,3 +232,173 @@ subroutine gyro_radial_operators
   endif
 
 end subroutine gyro_radial_operators
+
+!-----------------------------------------------
+! polydiff.f90 
+!
+! PURPOSE:
+!  Compute coefficients for arbitrary-order, 
+!  equally-spaced, uncentered finite-difference 
+!  derivatives.
+!
+! NOTES:
+!  The coefficients computed are:
+!
+!           1   n
+!  f'(j) = --- Sum c(p) f(p)
+!           h  p=0    
+!
+!  where h = x(j) - x(j-1) (and f(j) means f[x(j)]).
+!       
+! 
+!
+!                   /   Prod   (j-m) , if j /= p
+!          1  f(p)  |  m /= p,j
+!  c(p) = --- ----  |        
+!          h   [p]  |   Sum     Prod   (p-m) , if j=p
+!                   \  i /= j  m /= p,i
+!
+!
+! [p] =  Prod  (p-i)
+!       i /= p
+!
+! REVISIONS
+! 11 Jan 01: jeff.candy@gat.com
+!  Added this revision info; code originally written
+!  in fall 2000.
+!--------------------------------------------------------------
+
+subroutine polydiff(n,j,c,denom)
+
+  implicit none
+
+  integer, intent(in) :: n
+  integer, intent(in) :: j
+
+  real, intent(inout), dimension(0:n) :: c
+  real, intent(inout) :: denom
+
+  integer :: p,k,i,m
+
+  real :: temp
+  real :: add
+
+
+  do p=0,n
+
+     temp = 1.0
+     do k=0,n
+        if (k /= p) temp = temp*(p-k)
+     enddo
+     denom = temp
+
+     temp = 1.0
+     if (j /= p) then
+
+        do m=0,n
+           if (m /= p .and. m /= j) temp = temp*(j-m)
+        enddo
+
+        c(p) = temp/denom
+
+     else
+
+        add = 0.0
+        do i=0,n
+           if (i /= j) then
+              temp = 1.0
+              do m=0,n
+                 if (m /= p .and. m /= i) temp = temp*(p-m)
+              enddo
+              add = add+temp
+           endif
+        enddo
+
+        c(p) = add/denom
+
+     endif
+
+  enddo
+
+end subroutine polydiff
+
+!-----------------------------------------------
+! poly2diff.f90 
+!
+! PURPOSE:
+!  Compute coefficients for arbitrary-order, 
+!  centered 2nd finite-difference derivative.
+!  
+! NOTES:
+!  The coefficients computed are:
+!
+!                 n
+!  f''(0) = ---  Sum c(i) f(i)
+!           h^2  i=-n    
+!
+!  where f(j) means f[x(j)].
+!      
+!                1           1           -j
+! c(i) = Sum_p ----- Sum_q ----- Prod_j -----
+!        p/=i   i-p  q/=i   i-q   j/=i   i-j
+!                    q/=p         j/=p
+!                                 j/=q
+!
+! REVISIONS
+! 18 July 01: jeff.candy@gat.com
+!  New.
+!--------------------------------------------------------------
+
+subroutine poly2diff(n,c)
+
+  implicit none
+
+  integer, intent(in) :: n
+
+  real, intent(inout), dimension(-n:n) :: c
+
+  integer :: p
+  integer :: q
+  integer :: i
+  integer :: j
+
+  real :: prod
+
+
+  do i=-n,n
+ 
+     c(i) = 0.0
+
+     do p=-n,n
+
+        if (p /= i) then
+
+           do q=-n,n
+
+              if (q /= i .and. q /= p) then
+
+                 prod = 1.0
+
+                 do j=-n,n
+
+                    if (j /= i .and. j /= q .and. j /= p) then
+
+                    prod = -j*prod/(i-j)
+
+                    endif
+
+                 enddo ! j
+
+                 c(i) = c(i)+prod/((i-p)*(i-q))
+
+              endif
+
+           enddo ! q
+
+        endif
+
+     enddo ! p
+
+  enddo ! i
+ 
+end subroutine poly2diff

@@ -16,7 +16,7 @@ subroutine neo_spitzer
   real :: nu_ei
   real, dimension(3) :: sp_pflux, sp_eflux, src1, src2
 
-  if(adiabatic_ele_model == 1) then
+  if(ae_flag == 1) then
      call neo_error('ERROR: (NEO) Must have electron species for Spitzer problem')
      return
   endif

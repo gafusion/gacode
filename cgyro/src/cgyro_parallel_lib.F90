@@ -73,7 +73,7 @@ contains
 
     allocate(fsendf(nj_loc,ni_loc,nproc))
     allocate(fsendr(ni_loc,nj_loc,nproc))
-    allocate(fsendr_real(ni_loc,nj_loc,nproc))
+    if (.not. allocated(fsendr_real)) allocate(fsendr_real(ni_loc,nj_loc,nproc))
 
 !$acc enter data create(fsendf,fsendr)
 

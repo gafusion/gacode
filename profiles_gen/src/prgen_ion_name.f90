@@ -2,7 +2,7 @@ subroutine prgen_ion_name(m,z,name)
 
   integer, intent(in) :: m
   integer, intent(in) :: z
-  character (len=6), intent(inout) :: name
+  character (len=*), intent(inout) :: name
 
   select case (m)
 

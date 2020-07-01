@@ -26,10 +26,6 @@ subroutine neo_read_input
   read(1,*) profile_equilibrium_model
   read(1,*) ipccw_in
   read(1,*) btccw_in
-  read(1,*) te_ade_in
-  read(1,*) ne_ade_in
-  read(1,*) dlntdre_ade_in
-  read(1,*) dlnndre_ade_in
 
   read(1,*) rotation_model
   read(1,*) omega_rot_in
@@ -42,6 +38,12 @@ subroutine neo_read_input
   read(1,*) coll_uncoupledei_model
   read(1,*) coll_uncoupledaniso_model
 
+  read(1,*) ae_flag
+  read(1,*) dens_ae_in
+  read(1,*) temp_ae_in
+  read(1,*) dlnndr_ae_in
+  read(1,*) dlntdr_ae_in
+  
   read(1,*) n_species
 
   read(1,*) nu_1_in
@@ -67,19 +69,26 @@ subroutine neo_read_input
   read(1,*) q_in
   read(1,*) rho_in
   read(1,*) shear_in
-  read(1,*) shift_in     
+  read(1,*) shift_in
+  read(1,*) zmag_in        
+  read(1,*) s_zmag_in
   read(1,*) kappa_in    
   read(1,*) s_kappa_in   
   read(1,*) delta_in        
   read(1,*) s_delta_in 
   read(1,*) zeta_in        
   read(1,*) s_zeta_in
-  read(1,*) zmag_in        
-  read(1,*) s_zmag_in
+  read(1,*) shape_sin3_in        
+  read(1,*) shape_s_sin3_in
+  read(1,*) shape_cos0_in        
+  read(1,*) shape_s_cos0_in
+  read(1,*) shape_cos1_in
+  read(1,*) shape_s_cos1_in
+  read(1,*) shape_cos2_in        
+  read(1,*) shape_s_cos2_in
+  read(1,*) shape_cos3_in        
+  read(1,*) shape_s_cos3_in
   read(1,*) beta_star_in
-  read(1,*) profile_delta_scale
-  read(1,*) profile_zeta_scale
-  read(1,*) profile_zmag_scale
 
   read(1,*) subroutine_flag
 

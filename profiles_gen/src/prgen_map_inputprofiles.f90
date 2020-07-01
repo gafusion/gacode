@@ -8,105 +8,75 @@
 subroutine prgen_map_inputprofiles
 
   use prgen_globals
-  use EXPRO_interface
+  use expro
 
   implicit none
 
   integer :: i
   real :: xnew(nx)
+  
+  if (efit_method == 1) then
 
-  EXPRO_n_exp = nx
-  call EXPRO_alloc('./',1) 
-  call EXPRO_read
+     call prgen_get_chi(nx,q,dpsi,rho,torfluxa)
 
-  if (efit_method > 1) then
-
-     ! Compute rho, bref and arho based on GATO dpsi and q.
-     call prgen_get_chi(nx,q,kappa,rmin,dpsi,rho,EXPRO_b_ref,EXPRO_arho)
-
-     ! Align with new (GATO) rho grid, not old rho grid, EXPRO_rho:
-     call cub_spline(EXPRO_rho,EXPRO_te,nx,rho,xnew,nx)
-     EXPRO_te = xnew
-     call cub_spline(EXPRO_rho,EXPRO_ne,nx,rho,xnew,nx)
-     EXPRO_ne = xnew
-     call cub_spline(EXPRO_rho,EXPRO_z_eff,nx,rho,xnew,nx)
-     EXPRO_z_eff = xnew
-     call cub_spline(EXPRO_rho,EXPRO_w0,nx,rho,xnew,nx)
-     EXPRO_w0 = xnew
-     call cub_spline(EXPRO_rho,EXPRO_flow_mom,nx,rho,xnew,nx)
-     EXPRO_flow_mom = xnew
-     call cub_spline(EXPRO_rho,EXPRO_pow_e,nx,rho,xnew,nx)
-     EXPRO_pow_e = xnew
-     call cub_spline(EXPRO_rho,EXPRO_pow_i,nx,rho,xnew,nx)
-     EXPRO_pow_i = xnew
-     call cub_spline(EXPRO_rho,EXPRO_pow_ei,nx,rho,xnew,nx)
-     EXPRO_pow_ei = xnew
-     call cub_spline(EXPRO_rho,EXPRO_flow_beam,nx,rho,xnew,nx)
-     EXPRO_flow_beam = xnew
-     call cub_spline(EXPRO_rho,EXPRO_flow_wall,nx,rho,xnew,nx)
-     EXPRO_flow_wall = xnew
-     call cub_spline(EXPRO_rho,EXPRO_ptot,nx,rho,xnew,nx)
-     EXPRO_ptot = xnew
+     ! Align with new rho grid, not old rho grid, expro_rho:
+     call cub_spline(expro_rho,expro_te,nx,rho,xnew,nx)
+     expro_te = xnew
+     call cub_spline(expro_rho,expro_ne,nx,rho,xnew,nx)
+     expro_ne = xnew
+     call cub_spline(expro_rho,expro_z_eff,nx,rho,xnew,nx)
+     expro_z_eff = xnew
+     call cub_spline(expro_rho,expro_w0,nx,rho,xnew,nx)
+     expro_w0 = xnew
+     call cub_spline(expro_rho,expro_ptot,nx,rho,xnew,nx)
+     expro_ptot = xnew
      do i=1,10
-        call cub_spline(EXPRO_rho,EXPRO_ni(i,:),nx,rho,xnew,nx)
-        EXPRO_ni(i,:) = xnew(:)
-        call cub_spline(EXPRO_rho,EXPRO_ti(i,:),nx,rho,xnew,nx)
-        EXPRO_ti(i,:) = xnew(:)
-        call cub_spline(EXPRO_rho,EXPRO_vtor(i,:),nx,rho,xnew,nx)
-        EXPRO_vtor(i,:) = xnew(:)
-        call cub_spline(EXPRO_rho,EXPRO_vpol(i,:),nx,rho,xnew,nx)
-        EXPRO_vpol(i,:) = xnew(:)
+        call cub_spline(expro_rho,expro_ni(i,:),nx,rho,xnew,nx)
+        expro_ni(i,:) = xnew(:)
+        call cub_spline(expro_rho,expro_ti(i,:),nx,rho,xnew,nx)
+        expro_ti(i,:) = xnew(:)
+        call cub_spline(expro_rho,expro_vtor(i,:),nx,rho,xnew,nx)
+        expro_vtor(i,:) = xnew(:)
+        call cub_spline(expro_rho,expro_vpol(i,:),nx,rho,xnew,nx)
+        expro_vpol(i,:) = xnew(:)
      enddo
 
-     !---------------------------------------------------------
-     ! Map profile data into EXPRO interface.
-     ! NOTE: EXPRO_alloc already called in prgen_read_inputprofiles
-     !
-     EXPRO_rho(:)  = rho(:)
-     EXPRO_rmin(:) = rmin
-     EXPRO_rmaj(:) = rmaj(:)
-     ! COORDINATES: set sign of q
-     EXPRO_q(:)     = abs(q(:))*ipccw*btccw
-     EXPRO_kappa(:) = kappa(:)
-     EXPRO_delta(:) = delta(:)
-     EXPRO_zeta(:)  = zeta(:)
-     EXPRO_zmag(:)  = zmag(:)
-     ! COORDINATES: set sign of poloidal flux
-     EXPRO_polflux = abs(dpsi(:))*(-ipccw)
+     call cub_spline(expro_rho,expro_qohme,nx,rho,xnew,nx)  ; expro_qohme = xnew
+     call cub_spline(expro_rho,expro_qbeame,nx,rho,xnew,nx) ; expro_qbeame = xnew
+     call cub_spline(expro_rho,expro_qbeami,nx,rho,xnew,nx) ; expro_qbeami = xnew
+     call cub_spline(expro_rho,expro_qrfe,nx,rho,xnew,nx)   ; expro_qrfe = xnew
+     call cub_spline(expro_rho,expro_qrfi,nx,rho,xnew,nx)   ; expro_qrfi = xnew
+     call cub_spline(expro_rho,expro_qfuse,nx,rho,xnew,nx) ; expro_qfuse = xnew
+     call cub_spline(expro_rho,expro_qfusi,nx,rho,xnew,nx) ; expro_qfusi = xnew
+     call cub_spline(expro_rho,expro_qbrem,nx,rho,xnew,nx) ; expro_qbrem = xnew
+     call cub_spline(expro_rho,expro_qsync,nx,rho,xnew,nx) ; expro_qsync = xnew
+     call cub_spline(expro_rho,expro_qline,nx,rho,xnew,nx) ; expro_qline = xnew
+     call cub_spline(expro_rho,expro_qei,nx,rho,xnew,nx)   ; expro_qei = xnew
+     call cub_spline(expro_rho,expro_qione,nx,rho,xnew,nx) ; expro_qione = xnew
+     call cub_spline(expro_rho,expro_qioni,nx,rho,xnew,nx) ; expro_qioni = xnew
+     call cub_spline(expro_rho,expro_qcxi,nx,rho,xnew,nx)  ; expro_qcxi = xnew
+     call cub_spline(expro_rho,expro_qmom,nx,rho,xnew,nx)  ; expro_qmom = xnew
+     call cub_spline(expro_rho,expro_qpar_wall,nx,rho,xnew,nx)  ; expro_qpar_wall = xnew
+     call cub_spline(expro_rho,expro_qpar_beam,nx,rho,xnew,nx)  ; expro_qpar_beam = xnew
 
+     !---------------------------------------------------------
+     ! Map profile data into expro interface.
+     ! NOTE: expro_alloc already called in prgen_read_inputprofiles
+     !
+     expro_rho(:)  = rho
+     expro_rmin(:) = rmin
+     expro_rmaj(:) = rmaj
+     !---------------------------------------------------------
+ 
   endif
 
-  call swap(EXPRO_ni(:,1:10))  
-  call swap(EXPRO_ti(:,1:10))  
-  call swap(EXPRO_vpol(:,1:10))  
-  call swap(EXPRO_vtor(:,1:10))  
-
   !---------------------------------------------------------
-  ! Read the cer file and overlay
+  ! Notification about CER file
   !
-  if (cer_file /= "null") then
+  if (file_cer /= "null") then
     print '(a)','INFO: (prgen_map_inputprofiles) IGNORING cer file'
   endif
   !---------------------------------------------------------
 
 end subroutine prgen_map_inputprofiles
 
-subroutine swap(f)
-
-  use prgen_globals
-
-  implicit none
-
-  real, intent(inout), dimension(10,nx) :: f
-
-  integer :: i,ip
-  real, dimension(10,nx) :: ftmp
-
-  ftmp = f
-  do i=1,10
-     ip     = reorder_vec(i)
-     f(i,:) = ftmp(ip,:)
-  enddo
-  
-end subroutine swap
-  

@@ -9,24 +9,11 @@ endif
 LLIB=math_lib
 
 OBJECTS = math_constants.o \
-          bound_deriv.o \
-          bound_extrap.o \
-          cub_spline.o \
-          cub_spline_deriv.o \
-          cub_spline_deriv2.o \
-          energy_integral.o \
-          gacode_system.o \
           gauss_legendre.o \
-          gauss_integ.o \
+          half_hermite.o \
           i0.o \
-          math_scaleint.o \
-          math_scaleintv.o \
           parallel_dim.o \
-          polydiff.o \
-          poly2diff.o \
-          proc_time.o \
-          pseudospec_lib.o \
-          timer_lib.o
+          pseudospec_lib.o
 
 .SUFFIXES : .o .f90 .F90 .f
 
@@ -43,7 +30,8 @@ lib: $(OBJECTS)
 
 clean:
 	rm -f *.o $(LLIB).a *.mod *.lst
+	rm -f ${GACODE_ROOT}/modules/half_hermite.mod
 	rm -f ${GACODE_ROOT}/modules/math_constants.mod
-	rm -f ${GACODE_ROOT}/modules/timer_lib.mod
+	rm -f ${GACODE_ROOT}/modules/parallel_lib.mod
 
 -include ${GACODE_ROOT}/platform/build/make.inc.${GACODE_PLATFORM}

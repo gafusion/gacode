@@ -19,11 +19,12 @@ subroutine gyro_geometry_arrays
 
   do i=1,n_x
 
-     call geo_interp(n_lambda*n_stack,theta_t(i,:,:),.false.)
+     call gyro_to_geo(i)
+     call geo_interp(n_lambda*n_stack,theta_t(i,:,:),.true.)
 
      p = 0
-        do m=1,n_stack
-     do k=1,n_lambda
+     do m=1,n_stack
+        do k=1,n_lambda
 
            p = p+1
 

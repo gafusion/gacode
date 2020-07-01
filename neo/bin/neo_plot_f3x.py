@@ -1,3 +1,4 @@
+# file processed by 2to3
 import sys
 import numpy as np
 from gacodeplotdefs import *
@@ -63,7 +64,7 @@ for p in range(msize):
     if n == n0:
         if init[m] == 0:
             ax = fig.add_subplot(k,k,m+1)
-            ax.grid(which="majorminor",ls=":")
+            ax.grid(which="both",ls=":")
             ax.grid(which="major",ls=":")
             ax.set_title(r'$(m,n)=('+str(m)+','+str(n)+')$')
             ax.set_xlabel(r'$\xi = v_\parallel/v$')

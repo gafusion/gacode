@@ -762,7 +762,7 @@ contains
     endif
 
     if(coll_uncoupledei_model == 1 .or. coll_uncoupledei_model == 2) then
-       if(adiabatic_ele_model == 1) then
+       if(ae_flag == 1) then
           call neo_error('ERROR: (NEO) Must have electron species for uncoupled e-i problem')
           return
        endif

@@ -43,15 +43,17 @@
 !
 !      write(*,*)"R_unit=",R_unit,"q_unit=",q_unit
 !      write(*,*)ns0,ns,ky_in
+    if(alpha_p_in.gt.0.0)then
       do is=ns0,ns
         kyi = ky_in*SQRT(taus(is)*mass(is))/ABS(zs(is))
         wgp_max = ABS((taus(is)/zs(is))*vpar_shear_in(is)/vs(is))*ky_in/(1+kyi**2)
         width_p_max = 3.6*vs(is)/(sqrt_two*R_unit*q_unit*MAX(wgp_max,0.001))
-        width_p_max=MAX(width_p_max,0.01)
+        width_p_max=MAX(width_p_max,0.1)
          if(width_p_max.lt.width_min_in)then
           width_min = width_p_max
         endif
       enddo
+    endif
 !        kyi = ky_in*SQRT(taus_in(2)*mass_in(2))/ABS(zs_in(2))
 !        wgp_max = ABS(vpar_shear_in(2)/vs(2))*kyi/(1+kyi**2)
 !        width_p_max = 3.6/(sqrt_two*R_unit*q_unit*MAX(wgp_max,0.001))

@@ -1,3 +1,6 @@
+# file processed by 2to3
+from __future__ import print_function, absolute_import
+from builtins import map, filter, range
 import os
 import numpy as np
 import sys
@@ -115,7 +118,7 @@ for i in range(6):
    neoin.close()
    os.system('neo -e '+workdir)
 
-   # Harvest output
+   # load output
    neoout = np.loadtxt(workdir+'/out.neo.transport') 
    jneo=neoout[2]
 

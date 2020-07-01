@@ -1,3 +1,6 @@
+# file processed by 2to3
+from __future__ import print_function, absolute_import
+from builtins import map, filter, range
 #-------------------------------------------------------------------
 # tglf_input_gyro.py
 #
@@ -20,11 +23,11 @@ f = open('input.gyro.gen','r')
 for line in f.readlines():
      
    # Remove leading and trailing whitespace from line
-    line = string.strip(line)
+    line = line.strip()
 #    print(line)
     # Skip blank lines
     if len(line) > 0 :
-        tmp = string.splitfields(line,'  ')
+        tmp = line.split('  ')
         if len(tmp) == 2 :
             val = eval(tmp[0])
             arg = tmp[1]
@@ -58,8 +61,8 @@ if g['ELECTRON_METHOD'] == 1 :
     tg['ADIABATIC_ELECT'] = 'T'
 if g['GEO_GRADBCURV_FLAG'] == 0 :
     tg['USE_MHD_RULE'] = 'F'
-tg['ALPHA_E'] = g['DOPPLER_SCALE']
-tg['ALPHA_P'] = g['PGAMMA_SCALE']
+tg['ALPHA_E'] = g['GAMMA_E_SCALE']
+tg['ALPHA_P'] = g['GAMMA_P_SCALE']
 tg['ALPHA_MACH'] = g['MACH_SCALE']
 tg['DEBYE_FACTOR'] = g['LAMBDA_DEBYE_SCALE']
 tg['XNU_FACTOR'] = g['NU_EI_SCALE']
@@ -121,12 +124,12 @@ tg['VPAR_3'] = -tg['SIGN_IT']*g['MACH']
 tg['VPAR_4'] = -tg['SIGN_IT']*g['MACH']
 tg['VPAR_5'] = -tg['SIGN_IT']*g['MACH']
 tg['VPAR_6'] = -tg['SIGN_IT']*g['MACH']
-tg['VPAR_SHEAR_1'] = -tg['SIGN_IT']*g['PGAMMA']
-tg['VPAR_SHEAR_2'] = -tg['SIGN_IT']*g['PGAMMA']
-tg['VPAR_SHEAR_3'] = -tg['SIGN_IT']*g['PGAMMA']
-tg['VPAR_SHEAR_4'] = -tg['SIGN_IT']*g['PGAMMA']
-tg['VPAR_SHEAR_5'] = -tg['SIGN_IT']*g['PGAMMA']
-tg['VPAR_SHEAR_6'] = -tg['SIGN_IT']*g['PGAMMA']
+tg['VPAR_SHEAR_1'] = -tg['SIGN_IT']*g['GAMMA_P']
+tg['VPAR_SHEAR_2'] = -tg['SIGN_IT']*g['GAMMA_P']
+tg['VPAR_SHEAR_3'] = -tg['SIGN_IT']*g['GAMMA_P']
+tg['VPAR_SHEAR_4'] = -tg['SIGN_IT']*g['GAMMA_P']
+tg['VPAR_SHEAR_5'] = -tg['SIGN_IT']*g['GAMMA_P']
+tg['VPAR_SHEAR_6'] = -tg['SIGN_IT']*g['GAMMA_P']
 tg['VEXB_SHEAR'] = -tg['SIGN_BT']*g['GAMMA_E']
 tg['BETAE'] = g['BETAE_UNIT']*g['AMPERE_SCALE']
 tg['ZEFF'] = g['Z_EFF']

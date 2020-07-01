@@ -32,7 +32,7 @@ echo "--"
 # BATCH SCRIPT:
 
 cat > $SIMDIR/batch.src << EOF
-#BSUB -P fus127
+#BSUB -P fus129
 #BSUB -J $LOCDIR
 #BSUB -o $SIMDIR/batch.out
 #BSUB -e $SIMDIR/batch.err

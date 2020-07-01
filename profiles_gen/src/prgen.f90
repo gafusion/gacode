@@ -23,23 +23,19 @@
 program prgen
 
   use prgen_globals
-  use EXPRO_interface
 
-  !--------------------------------------------------
   implicit none
-  !--------------------------------------------------
 
-  !--------------------------------------------------
+  !--------------------------------------------------------------------
   ! Parse the config file
   !
-  open(unit=1,file='.config',status='old')
+  open(unit=1,file='.prgenconfig',status='old')
   read(1,'(a)') date
-  read(1,'(a)') raw_data_file
+  read(1,'(a)') file_state
   read(1,'(a)') raw_data_type
-  read(1,'(a)') cer_file
+  read(1,'(a)') file_g
+  read(1,'(a)') file_cer
   read(1,*) efit_method
-  read(1,*) noq_flag
-  read(1,*) nop_flag
   read(1,*) verbose_flag
   read(1,*) ipccw
   read(1,*) btccw
@@ -52,9 +48,10 @@ program prgen
   allocate(lump_vec(n_lump))
   read(1,*) lump_vec(:)
   close(1)
-  !--------------------------------------------------
+  !--------------------------------------------------------------------
 
-  !------------------------------------------------------------------
+
+  !--------------------------------------------------------------------
   ! Read the iterdb file and define standard variables.
   !
   ! Note that nx will be the experimental vector length in ALL cases:
@@ -62,11 +59,20 @@ program prgen
   if (trim(raw_data_type) == 'GACODE') then
 
      ! Note (we may or may not have gmerge_flag == 1)
-     print '(a)','INFO: (prgen) Assuming input.profiles (GACODE) format.'
+     print '(a)','INFO: (prgen) Assuming input.gacode (GACODE) format.'
+
+     call prgen_read_inputgacode
+
+     format_type = 7
+
+  else if (trim(raw_data_type) == 'LEGACY') then
+
+     ! Note (we may or may not have gmerge_flag == 1)
+     print '(a)','INFO: (prgen) Assuming input.profiles (LEGACY GACODE) format.'
 
      call prgen_read_inputprofiles
 
-     format_type = 7
+     format_type = 8
 
   else if (trim(raw_data_type) == 'null') then
 
@@ -140,39 +146,41 @@ program prgen
      stop
 
   endif
-  !------------------------------------------------------------------
+  !--------------------------------------------------------------------
 
-  !---------------------------------------------------
-  ! Read the GATO file for "better" geometry.  At this
-  ! point, GATO has already run and we are just reading 
-  ! the output.
+  !--------------------------------------------------------------------
+  ! Contour the EFIT data for "better" geometry analysis and calculation
+  ! of shape parameters.  At this point, the shape coefficients have
+  ! already been computed and we are just reading the output.
   !
   select case (efit_method)
-  case (1)
+  case (0)
      ! Use geometry data contained in profile data 
      print '(a)','INFO: (prgen) Using original geometry data.'
-  case (2)
-     ! Use GATO-EFIT mapper
-     call prgen_read_gato
-  case (3)
+  case (1)
      ! Use OMFIT-EFIT mapper
      call prgen_read_omfit
-  case (4,5)
-     ! Use DSKGATO data
-     call prgen_read_dskgato
   end select
-  !---------------------------------------------------
+  !--------------------------------------------------------------------
 
-  !--------------------------------------------------
-  ! Set ipccw and btccw if not defined at input
-  if(ipccw == 0) then
-     ipccw = 1
+  !--------------------------------------------------------------------
+  ! High-resolution geometry
+  !
+  if (efit_method == 1) then
+     if (format_type == 1 .or. format_type == 2) then
+        print '(a,2(f10.8,a))', &
+             'INFO: (prgen) dpsi = ',dpsi_data,' (statefile) ',dpsi_efit,' (new)'
+     endif
   endif
-  if(btccw == 0) then
-     btccw = -1
-  endif
-  !---------------------------------------------------
-  
+  !--------------------------------------------------------------------
+
+  !-----------------------------------------------------
+  ! Set ipccw and btccw to standard DIII-D configuration
+  ! if not defined at input
+  if (ipccw == 0) ipccw = 1
+  if (btccw == 0) btccw = -1
+  !------------------------------------------------------
+
   select case (format_type)
 
   case (0)
@@ -187,12 +195,12 @@ program prgen
      call prgen_map_corsica
   case (6)
      call prgen_map_ufile
-  case (7)
-     call prgen_map_inputprofiles
+  case (7,8)
+     call prgen_map_inputgacode
   end select
 
+  call prgen_swap
   call prgen_write
-  call EXPRO_alloc('./',0)
 
   ! Successful completion
   open(unit=1,file='success',status='replace')

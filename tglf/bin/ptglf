@@ -1,0 +1,95 @@
+#!/bin/bash
+#=============================================================
+# tglf
+#
+# PURPOSE:
+#  Top-level script controlling execution of TGLF.
+#=============================================================
+
+#=============================================================
+# Syntax validity check and help message
+#
+n=$#
+
+if [ $n -eq 0 ]
+then
+  echo
+  echo "Usage:   ptglf [options]"
+  echo
+  echo "         -p <path>"
+  echo "         Set optional path to simulation directory."
+  echo "         [The default path is the current directory]" 
+  echo
+  echo "EXECUTE MODE (single core)"
+  echo
+  echo "         -e <simdir>" 
+  echo "         Run TGLF using input.tglf data in <simdir>."
+  echo
+  echo "         -n <MPI tasks>" 
+  echo "         Number of MPI tasks."
+  echo
+
+  exit 1
+fi
+#=============================================================
+ 
+#=============================================================
+# Define variables for flag capture
+#
+RUNBASE='out.tglf.run'
+VERBASE='out.tglf.version'
+#
+SIMROOT=$PWD
+TGLF_DIR=$GACODE_ROOT/tglf
+# Parallelization parameters
+NPROC=1
+NOMP=1
+NUMA=0
+MPINUMA=0
+#=============================================================
+
+#=============================================================
+# Parse command line options
+#
+while [ $# -gt 0 ] ; do
+  case "$1" in
+
+  -p) shift ; SIMROOT=$1 ;;
+
+  -e) shift ; LOCDIR=$1 ; EXEC_FLAG=1 ;;
+
+  -n) shift ; NPROC=$1 ;;
+
+  *) echo "ERROR: incorrect ptglf syntax." ; exit 1 ;;
+ 
+  esac
+  shift
+done
+#=============================================================
+
+if [ "$LOCDIR" == "." ]
+then
+   SIMDIR=$PWD
+   cd .. ; LOCDIR=$PWD
+else
+   SIMDIR=$SIMROOT/$LOCDIR
+fi
+
+cd $SIMDIR
+#============================================================
+
+#===========================================================
+# RUN TGLF
+#
+
+# Version stamp:
+echo `gacode_getversion` > $VERBASE
+echo $GACODE_PLATFORM >> $VERBASE
+date >> $VERBASE
+
+rm out.tglf.*
+
+$GACODE_ROOT/platform/exec/exec.$GACODE_PLATFORM \
+    $SIMDIR $NPROC $TGLF_DIR/tools/ptglf/src/ptglf $NOMP $NUMA $MPINUMA >> $RUNBASE
+  
+#===========================================================

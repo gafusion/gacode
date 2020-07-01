@@ -1,14 +1,30 @@
-!-----------------------------------------------------------------
+!---------------------------------------------------------------------------
 ! cgyro_flux.f90
 !
 ! PURPOSE:
 !  Compute flux and mean-square fluctuation amplitudes as
 !  functions of (kx,ky).
 !
-! The fluxes are:
-!  gflux(ky) = (l,ky)-dependent fluxes
-!  cflux(ky) = ky-dependent "interior" fluxes
-!-----------------------------------------------------------------
+! NOTES:
+!
+!  Flux definitions (these are all broken down by ky) 
+!
+!   gflux(l,ky) = Radial Fourier expansion of flux (l is the Fourier harmonic)
+!   gflux(0,ky) = Domain-averaged flux [this is the standard flux-tube flux]
+!     cflux(ky) = Interior-averaged flux [this is the "central" flux]
+!
+!  Global flux logic:
+!
+!   Retain radial harmonics l = [0,...,N_GLOBAL], where N_GLOBAL=4 by default
+!
+!   To trigger output of the global flux (viewable by -plot xflux),
+!    set GFLUX_PRINT_FLAG=1
+!
+! NOTE:
+!  cflux is only of interest when profile or ExB shear is active
+!  cflux(ky) is the average flux in the "positive-shear region"
+!  gflux(ky,0)-cflux is the flux in the "negative-shear region"
+!---------------------------------------------------------------------------
 
 subroutine cgyro_flux
 
@@ -55,7 +71,6 @@ subroutine cgyro_flux
         ir = ir_c(ic)
         it = it_c(ic)
 
-        dvr   = w_theta(it)*dens_rot(it,is)*dens(is)*dv
         erot  = (energy(ie)+lambda_rot(it,is))*temp(is)
 
         if (itp(it) > 0) then
@@ -67,6 +82,9 @@ subroutine cgyro_flux
 
            ! Energy moment : (delta E_a)/(n_norm T_norm rho_norm)
            moment_loc(ir,itp(it),is,2) = moment_loc(ir,itp(it),is,2)-(cn*field(1,ic)-cprod)*erot
+
+           ! Velocity moment : (delta v_a)/(n_norm v_norm rho_norm)
+           moment_loc(ir,itp(it),is,3) = moment_loc(ir,itp(it),is,3)-(cn*field(1,ic)-cprod)*vpar
         endif
 
      enddo

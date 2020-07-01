@@ -80,6 +80,8 @@
 !  
       if(gauss_hermite_uncalled)CALL gauss_hermite
 !
+      if(igeo.eq.1)grad_r0_out = 1.0/(1.0 + drmajdx_loc)
+!
       END SUBROUTINE tglf_startup
 !
 !

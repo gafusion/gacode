@@ -72,11 +72,13 @@ contains
     real, dimension(6) :: xmax = (/ 0.35,0.766,10.0,1.0,0.99,3.0 /)
     real, dimension(6) :: C_ln, C_ke, C_ki1, C_ki2
     real :: ke, ki1, ki2
-    character(len=218) :: neonn_model
-
     character NUL
+    character(len=218) :: root
+    character(len=255) :: data
+    character(len=218) :: neonn_model
+    
     include 'brainfusetf_lib.inc'
-
+    
     NUL = CHAR(0)
 
     ! The nn assumes 2 ion species + electrons
@@ -84,7 +86,7 @@ contains
        call neo_error('ERROR: (NEO) NN requires 2 ion species + electrons')
        return
     endif
-    if(adiabatic_ele_model == 1) then
+    if(ae_flag == 1) then
        call neo_error('ERROR: (NEO) NN requires 2 ion species + electrons')
        return
     endif

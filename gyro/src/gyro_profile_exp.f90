@@ -13,9 +13,6 @@ module gyro_profile_exp
   !
   real, parameter :: kevdsecpmw = 1.6022e-19*1e3*1e-6
   !--------------------------------------------------
- 
-  real :: bt_exp
-  real :: arho_exp
 
   real, dimension(:), allocatable :: rhogrid_exp
   real, dimension(:), allocatable :: rmin_exp

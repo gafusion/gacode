@@ -20,9 +20,9 @@ if ( $?GACODE_ADD_ROOT ) then
 endif
 
 if ( $?PYTHONPATH ) then
-   setenv PYTHONPATH $GACODE_ROOT/python:${PYTHONPATH}
+   setenv PYTHONPATH $GACODE_ROOT/f2py:$GACODE_ROOT/f2py/pygacode:${PYTHONPATH}
 else
-   setenv PYTHONPATH $GACODE_ROOT/python
+   setenv PYTHONPATH $GACODE_ROOT/f2py:$GACODE_ROOT/f2py/pygacode
 endif
 
 if ( $?IDL_PATH ) then

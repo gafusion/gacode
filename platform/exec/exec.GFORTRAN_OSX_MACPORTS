@@ -13,5 +13,5 @@ mpinuma=${6}
 
 echo $simdir
 
-cd $simdir 
-export OMP_NUM_THREADS=$nomp ; mpirun -np $nmpi $exec
+cd $simdir
+export OMP_NUM_THREADS=$nomp ; mpirun-openmpi-mp --oversubscribe -np $nmpi $exec

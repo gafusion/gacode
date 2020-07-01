@@ -12,18 +12,17 @@ export PATH=$GACODE_ROOT/tglf/bin:${PATH}
 export PATH=$GACODE_ROOT/le3/bin:${PATH}
 export PATH=$GACODE_ROOT/profiles_gen/bin:${PATH}
 export PATH=$GACODE_ROOT/shared/bin:${PATH}
-#export PATH=$GACODE_ROOT/glf23/bin:${PATH}
-#export PATH=$GACODE_ROOT/quick/bin:${PATH}
 
-if [ -d $GACODE_ADD_ROOT ] 
+if [ -d $GACODE_ROOT/../gacode_add ] 
 then
+   export GACODE_ADD_ROOT=$GACODE_ROOT/../gacode_add
    export PATH=$GACODE_ADD_ROOT/freya/bin:${PATH}
    export PATH=$GACODE_ADD_ROOT/prefreya/bin:${PATH}
+   export PATH=$GACODE_ADD_ROOT/qlgyro/bin:${PATH}
 fi
 
-export PYTHONPATH=$GACODE_ROOT/python:${PYTHONPATH}
-
-export IDL_PATH=$GACODE_ROOT/gyro/vugyro:${IDL_PATH}
+export PYTHONPATH=$GACODE_ROOT/f2py:${PYTHONPATH}
+export PYTHONPATH=$GACODE_ROOT/f2py/pygacode:${PYTHONPATH}
 
 if [ -z "$NEURAL_ROOT" ] && [ -d $GACODE_ROOT/../neural ]; then
     export NEURAL_ROOT=$GACODE_ROOT/../neural

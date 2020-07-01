@@ -2,11 +2,11 @@ import numpy as np
 from scipy import integrate,optimize,interpolate
 
 try:
-   import gapy
-   hasgapy = True
+   import pygacode
+   haspygacode = True
 except:
-   print('WARNING: (banana_width.py) gapy.so not found.  Using circular geometry.')
-   hasgapy = False
+   print('WARNING: (banana_width.py) pygacode.so not found.  Using circular geometry.')
+   haspygacode = False
 
 data=np.loadtxt('out.locpargen')
 
@@ -14,15 +14,15 @@ data=np.loadtxt('out.locpargen')
 n = 32
 theta = np.linspace(0,2*np.pi,n)-np.pi
 
-if hasgapy:
-   gapy.geo.geo_q_in = data[0]
-   gapy.geo.geo_rmin_in = data[1]
-   gapy.geo.geo_rmaj_in = data[2]
-   gapy.geo.geo_drmaj_in = data[3]
-   gapy.geo.geo_kappa_in = data[4]
-   gapy.geo.geo_interp(theta,True)
-   b_gapy = gapy.geo.geo_b
-   s_gapy = gapy.geo.geo_gsin*gapy.geo.geo_g_theta*gapy.geo.geo_grad_r
+if haspygacode:
+   pygacode.geo.geo_q_in = data[0]
+   pygacode.geo.geo_rmin_in = data[1]
+   pygacode.geo.geo_rmaj_in = data[2]
+   pygacode.geo.geo_drmaj_in = data[3]
+   pygacode.geo.geo_kappa_in = data[4]
+   pygacode.geo.geo_interp(theta,True)
+   b_gapy = pygacode.geo.geo_b
+   s_gapy = pygacode.geo.geo_gsin*pygacode.geo.geo_g_theta*pygacode.geo.geo_grad_r
    s_gapy[0] = 0.0 ; s_gapy[-1] = 0.0
 else:
    eps = data[1]/data[2]

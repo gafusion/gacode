@@ -1,0 +1,19 @@
+#!/bin/sh
+# GACODE Parallel execution script (Azure)
+
+simdir=${1}
+nmpi=${2}
+exec=${3}
+nomp=${4}
+numa=${5}
+mpinuma=${6}
+
+cd $simdir
+
+#module purge
+#module load gcc-9.2.0
+#module load mpi/hpcx
+
+mpirun -np $nmpi --map-by node -hostfile $PBS_NODEFILE $exec
+
+

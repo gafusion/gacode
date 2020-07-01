@@ -2,7 +2,7 @@
 #
 #   python gacode_ufile_tool.py <datafile> <time>
 #
-#   NOTES: 
+#   NOTES:
 #   - Interpolate data to t=<time>.
 #   - If time is absent, print list of tags.
 #   - Operates on 1d and 2D datafiles
@@ -14,16 +14,15 @@ import numpy as np
 def extract0d(infile):
 
     # Test for csv or block format
-    f = open(infile,'r')  
+    f = open(infile,'r')
     line = f.readline()
     if line[0] == 'A':
         csv = 1
     else:
         csv = 0
- 
 
     if csv == 1:
-        
+
         print('INFO: (ufile_tool) Detected CSV format for '+infile)
 
         # CSV format for 0d file.
@@ -168,7 +167,7 @@ def extract1d(infile,t0):
             if line.count("-DEP") == 1:
                 # Extract current variable name
                 var=line.split('  ')[0].strip()
-             
+
             if line.count("OF PTS") == 1:
                 # Get length of radial grid
                 nt=int(line.split(";-# OF PTS")[0].strip())
@@ -183,7 +182,7 @@ def extract1d(infile,t0):
 
             # Here we are reading numbers
 
-            # Number of columns 
+            # Number of columns
             n = np.max([line.count("E"),line.count("e")])
 
             if it < nt:
@@ -223,7 +222,7 @@ def extract2d(infile,t0):
             if line.count("-DEP") == 1:
                 # Extract current variable name
                 var=line.split('  ')[0].strip()
-             
+
             if line.count("X PTS") == 1:
                 # Get length of radial grid
                 nx=int(line.split(";-# OF X")[0].strip())
@@ -249,9 +248,9 @@ def extract2d(infile,t0):
 
             # Here we are reading numbers
 
-            # Number of columns 
+            # Number of columns
             n = np.max([line.count("E"),line.count("e")])
-        
+
             if ix < nx:
                 # Read the radial grid [nx points]
                 for i in range(n):
@@ -310,5 +309,3 @@ if infile.split("_")[-1]=='1d.dat':
 
 if infile.split("_")[-1]=='2d.dat':
     extract2d(infile,t0)
-
-

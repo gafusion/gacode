@@ -1,3 +1,0 @@
-gacode_system.o : gacode_system.legacy.f90
-	$(FC) $(FMATH) $(FFLAGS) -o gacode_system.o -c gacode_system.legacy.f90
-

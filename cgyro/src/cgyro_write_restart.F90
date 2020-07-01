@@ -62,20 +62,28 @@ subroutine cgyro_write_restart_one
   integer(KIND=8) :: start_time,cp_time
   integer(KIND=8) :: count_rate, count_max
   real :: cp_dt
-  integer :: statusfd
+  integer :: j,ic0,statusfd
 
   ! use system_clock to be consistent with cgyro_kernel
   call system_clock(start_time,count_rate,count_max)
 
   !-----------------------------------------------
-  ! Dump h and blending coefficients:
+  ! Write h_x [filling (0,0) with source]
   !
   filemode = IOR(MPI_MODE_WRONLY,MPI_MODE_CREATE)
   disp     = 0
 
+  ! Pack source into h(0,0)
+  if (source_flag == 1 .and. n == 0) then
+     ic0 = (n_radial/2)*n_theta
+     do j=1,n_theta
+        h_x(ic0+j,:) = source(j,:)
+     enddo
+  endif
+
   offset1 = size(h_x,kind=MPI_OFFSET_KIND)*(i_proc_1+i_proc_2*n_proc_1) + restart_header_size
   if (offset1 < restart_header_size) then
-     call cgyro_error('ERROR: (CGYRO) overflow in cgyro_write_restart')
+     call cgyro_error('Overflow in cgyro_write_restart')
      return
   endif
 
@@ -92,7 +100,7 @@ subroutine cgyro_write_restart_one
           fhv,&
           i_err)
   if (i_err /= 0) then
-     call cgyro_error('ERROR: (CGYRO) MPI_FILE_OPEN in cgyro_write_restart failed')
+     call cgyro_error('MPI_FILE_OPEN in cgyro_write_restart failed')
      return
   endif
 
@@ -113,19 +121,19 @@ subroutine cgyro_write_restart_one
           i_err)
 
   if (i_err /= 0) then
-     call cgyro_error('ERROR: (CGYRO) MPI_FILE_WRITE_AT in cgyro_write_restart failed')
+     call cgyro_error('MPI_FILE_WRITE_AT in cgyro_write_restart failed')
      return
   endif
 
   call MPI_FILE_SYNC(fhv,i_err)
   if (i_err /= 0) then
-     call cgyro_error('ERROR: (CGYRO) MPI_FILE_SYNC in cgyro_write_restart failed')
+     call cgyro_error('MPI_FILE_SYNC in cgyro_write_restart failed')
      return
   endif
 
   call MPI_FILE_CLOSE(fhv,i_err)
   if (i_err /= 0) then
-     call cgyro_error('ERROR: (CGYRO) MPI_FILE_CLOSE in cgyro_write_restart failed')
+     call cgyro_error('MPI_FILE_CLOSE in cgyro_write_restart failed')
      return
   endif
 
@@ -146,7 +154,7 @@ subroutine cgyro_write_restart_one
 
     i_err = RENAME(trim(path)//runfile_restart//".part", trim(path)//runfile_restart)
     if (i_err /= 0) then
-       call cgyro_error('ERROR: (CGYRO) Final rename in cgyro_write_restart failed')
+       call cgyro_error('Final rename in cgyro_write_restart failed')
        return
     endif
   endif
@@ -169,6 +177,14 @@ subroutine cgyro_write_restart_one
     close(statusfd)
   endif
 
+  ! Re-set h(0,0)=0
+  if (source_flag == 1 .and. n == 0) then
+     ic0 = (n_radial/2)*n_theta
+     do j=1,n_theta
+        h_x(ic0+j,:) = 0.0
+     enddo
+  endif
+  
 end subroutine cgyro_write_restart_one
 
 subroutine cgyro_write_restart_header_part

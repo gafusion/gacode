@@ -8,6 +8,7 @@ subroutine cgyro_check
   integer :: is
   logical :: lfe
   character(len=1), dimension(7) :: ctag
+  character(len=7) :: floatstr
 
   !-----------------------------------------------------------------------
   ! Grid parameter checks
@@ -46,7 +47,48 @@ subroutine cgyro_check
         return
      endif
   endif
+
+  if (abs(px0) > 0.0) then
+     if (box_size > 1) then
+        call cgyro_error('Nonzero PXO not available for box_size > 1')
+     else
+        write(floatstr,'(f5.3)') 2*px0
+        call cgyro_info('Finite-theta0 mode: theta0 = '//trim(floatstr)//' pi')
+     endif
+  endif
   !------------------------------------------------------------------------
+
+  !-----------------------------------------------------------------------
+  ! Time integration
+  !
+  select case (delta_t_method)
+  case(0)
+     call cgyro_info('Time integrator: RK4 4:4(3) [non-adaptive]')
+  case(1)
+     call cgyro_info('Time integrator: Cash-Karp 6:5(4) [adaptive]')
+  case(2)
+     call cgyro_info('Time integrator: Bogacki-Shampine 7:5(4) [adaptive]')
+  case(3)
+     call cgyro_info('Time integrator: Verner 10:7(6) [adaptive]')
+  case default
+     call cgyro_error('Invalid value for delta_t_method')
+     return
+  end select
+  !-----------------------------------------------------------------------
+
+  !-----------------------------------------------------------------------
+  ! Electrons
+  !
+  select case (ae_flag)
+  case(0)
+     call cgyro_info('Using gyrokinetic electrons')
+  case(1)
+     call cgyro_info('Using adiabatic electrons')
+  case default
+     call cgyro_error('Invalid value for ae_flag')
+     return
+  end select
+  !-----------------------------------------------------------------------
 
   !-----------------------------------------------------------------------
   ! Profile checks
@@ -57,7 +99,7 @@ subroutine cgyro_check
      call cgyro_info('Profile model: local input (input.cgyro)')
 
   case (2)
-     call cgyro_info('Profile model: experimental (input.profiles)')
+     call cgyro_info('Profile model: experimental (input.gacode)')
 
   case default
      call cgyro_error('Invalid value for profile_model')
@@ -77,7 +119,7 @@ subroutine cgyro_check
         return
      end select
   endif
-  
+
   !------------------------------------------------------------------------
   ! Equilibrium model
   !
@@ -91,10 +133,10 @@ subroutine cgyro_check
      endif
 
   case (2) 
-     call cgyro_info('Equilibrium: Miller')
+     call cgyro_info('Equilibrium: HAM')
 
   case (3) 
-     call cgyro_info('Equilibrium: General (Fourier)')
+     call cgyro_info('Equilibrium: Fourier')
 
      if (geo_ny <= 0) then
         call cgyro_error('Fourier geometry coefficients missing.')
@@ -253,7 +295,7 @@ subroutine cgyro_check
         call cgyro_error('Invalid value for collision_kperp')
         return
      end select
-     
+
   endif
 
   if (collision_model /= 5 .and. collision_model /= 1) then
@@ -334,20 +376,6 @@ subroutine cgyro_check
   if (nup_alpha < 1 .or. nup_alpha > 4) then
      call cgyro_error('Invalid value for nup_alpha')
      return
-  endif
-  !------------------------------------------------------------------------
-
-  !------------------------------------------------------------------------
-  ! Check for existence of restart file
-  !
-  if (restart_mode == 1) then
-
-     inquire(file=trim(path)//runfile_restart,exist=lfe)
-     if (lfe .eqv. .false.) then
-        call cgyro_error('Missing restart file')
-        return
-     endif
-
   endif
   !------------------------------------------------------------------------
 

@@ -25,6 +25,7 @@
       !
       LOGICAL :: USE_MIX=.TRUE.
       LOGICAL :: USE_X3=.FALSE.
+      LOGICAL :: USE_X4=.FALSE.
       
       LOGICAL :: USE_SUB1=.FALSE.
       INTEGER :: i,is,k,j,j1,j2,jmax1,jmax2
@@ -40,7 +41,8 @@
       REAL :: mix1,mix2,mixnorm,gamma_ave
       REAL :: vzf,dvzf,vzf1,vzf2,vzf3,vzf4
       REAL :: bz1,bz2
-      REAL :: etg_streamer
+      REAL :: etg_streamer, ky_factor
+      REAL :: kxzf, sat_geo_factor
       REAL,DIMENSION(nkym) :: gamma_net=0.0
       REAL,DIMENSION(nkym) :: gamma=0.0
       REAL,DIMENSION(nkym) :: gamma_mix=0.0
@@ -50,12 +52,17 @@
       ! need to set alpha_zf_in = 1.0
       ! Miller geometry values igeo=1
       if(xnu_model_in.eq.3)USE_X3=.TRUE.
+      if(xnu_model_in.eq.4)USE_X4=.TRUE.
       czf = ABS(alpha_zf_in)
       bz1=0.0
       bz2=0.0
       kyetg=1.28
       cnorm=14.21
-      
+      if(units_in.eq.'GYRO')then
+        ky_factor=1.0
+      else
+        ky_factor=grad_r0_out
+      endif
       if(USE_SUB1)then
         
         cnorm=12.12       
@@ -74,7 +81,7 @@
       !   write(*,*)" ax= ",ax," ay= ",ay
       do i=1,nky
          kx=spectral_shift_out(i)
-         gamma_net(i) = eigenvalue_spectrum_out(1,i,1)/(1.0 + (ax*kx_geo0_out*kx)**4)
+         gamma_net(i) = eigenvalue_spectrum_out(1,i,1)/(1.0 + (ax*kx)**4)
       !   write(*,*)i,"gamma_net = ",gamma_net(i)
       enddo
       if(USE_MIX)then
@@ -90,19 +97,25 @@
         cz2 = 1.0*czf  
         etg_streamer=1.05
         if(alpha_quench_in .ne. 0.0)etg_streamer=2.1
-        kyetg=etg_streamer*ABS(zs(2))/SQRT(taus(2)*mass(2))  ! fixed to ion gyroradius
+        kyetg=etg_streamer*ABS(zs(2))*ky_factor/SQRT(taus(2)*mass(2))  ! fixed to ion gyroradius
         if(USE_X3)then
-           bz1=1.0
-           bz2=0.18
-           cz1=0.48*czf
-           cz2=1.6*czf
-!           cz2=1.35*czf*(1.563824/q_in)
-!           cz1=0.48*czf*((3.0*2.0/0.5)*(rmin_input/(Rmaj_input*q_in)))**2
-!           cz2=1.35*czf*((3.098143*1.563824/0.600049)*(rmin_input/(Rmaj_input*q_in)))
-           kyetg=0.8*0.04/SQRT(taus(1)*mass(1))  ! fixed streamer size to electron gyroradius
+           cnorm = 12.94  ! note this is normed to GASTD CGYRO units
+           cz1 = 0.0
+           cz2=1.4*czf
+           etg_streamer = 1.0
+           kyetg=etg_streamer*ABS(zs(2))*ky_factor/SQRT(taus(2)*mass(2))  ! fixed to ion gyroradius
            cky=3.0
            sqcky=SQRT(cky)
-        endif  
+        endif
+        if(USE_X4)then
+           cnorm = 14.44  !normed to GASTD CGYRO units XNU=0.05, with sat_geo from Gaussian envelope average
+           cz1 = 0.0
+           cz2=1.4*czf
+           etg_streamer = 1.0
+           kyetg=etg_streamer*ABS(zs(2))*ky_factor/SQRT(taus(2)*mass(2))  ! fixed to ion gyroradius
+           cky=3.0
+           sqcky=SQRT(cky)
+        endif
       endif   
       if(igeo.eq.0)then ! s-alpha 
        cnorm=14.63
@@ -110,38 +123,15 @@
        cz2=1.0*czf
       endif
       !
-      ! renormalize the fluxes and intensities to the phi-norm from the v-norm
-      do j=1,nky
-      !  write(*,*)"spectal_shift_out(",j,") = ",spectral_shift_out(j)
-         do i=1,nmodes_in
-            phinorm=1.0
-            if(ABS(field_spectrum_out(2,j,i)).gt.small)phinorm=field_spectrum_out(2,j,i)
-            do is=1,ns
-               field_spectrum_out(3,j,i) = field_spectrum_out(3,j,i)/phinorm
-               field_spectrum_out(4,j,i) = field_spectrum_out(4,j,i)/phinorm
-               intensity_spectrum_out(1,is,j,i) = intensity_spectrum_out(1,is,j,i)/phinorm
-               intensity_spectrum_out(2,is,j,i) = intensity_spectrum_out(2,is,j,i)/phinorm
-               intensity_spectrum_out(3,is,j,i) = intensity_spectrum_out(3,is,j,i)/phinorm
-               intensity_spectrum_out(4,is,j,i) = intensity_spectrum_out(4,is,j,i)/phinorm
-               do k=1,3
-                  flux_spectrum_out(1,is,k,j,i) = flux_spectrum_out(1,is,k,j,i)/phinorm
-                  flux_spectrum_out(2,is,k,j,i) = flux_spectrum_out(2,is,k,j,i)/phinorm
-                  flux_spectrum_out(3,is,k,j,i) = flux_spectrum_out(3,is,k,j,i)/phinorm
-                  flux_spectrum_out(4,is,k,j,i) = flux_spectrum_out(4,is,k,j,i)/phinorm
-                  flux_spectrum_out(5,is,k,j,i) = flux_spectrum_out(5,is,k,j,i)/phinorm
-              enddo
-           enddo
-        enddo
-      enddo
-      ! find the maximum of gamma/ky 
+      ! find the maximum of gamma/ky
       gammamax1= gamma_net(1)
       kymax1 = ky_spectrum(1)
       testmax1 = gammamax1/kymax1
       testmax2 = 0.0
       jmax1=1
       jmax2=0
-      kycut=0.8*ABS(zs(2))/SQRT(taus_in(2)*mass_in(2))
-      kyhigh=0.15/SQRT(taus_in(1)*mass_in(1))
+      kycut=0.8*ky_factor*ABS(zs(2))/SQRT(taus_in(2)*mass_in(2))
+      kyhigh=0.15*ky_factor*ABS(zs(1))/SQRT(taus_in(1)*mass_in(1))
 !      write(*,*)" kycut = ",kycut," kyhigh = ",kyhigh
       j1=1
       j2=1
@@ -228,7 +218,7 @@
 !          gamma=0.0
           gamma0 = gamma_net(j)
           ky0=ky_spectrum(j)
-          if(USE_X3)then
+          if(USE_X3.or.USE_X4)then
             if(ky0.lt.kymax1)then
               gamma(j) = MAX(gamma0  - cz1*(kymax1 - ky0)*vzf3,0.0)
             else
@@ -269,15 +259,22 @@
         ky0 = ky_spectrum(j)
         kx = spectral_shift_out(j)
         do i=1,nmodes_in
+          sat_geo_factor = SAT_geo0_out*sat_geo_spectrum_out(j,i)
           gammaeff = 0.0
           if(gamma0.gt.small)gammaeff = &
                gamma_mix(j)*(eigenvalue_spectrum_out(1,j,i)/gamma0)**expsub
           if(USE_X3)then
-            if(ky0.gt.kyetg)gammaeff = gammaeff*(ky0/kyetg)
-          else
-            if(ky0.gt.kyetg)gammaeff = gammaeff*SQRT(ky0/kyetg)
+            if(ky0.le.kymax1)gammaeff = gammaeff*ky0/(kymax1)
+          elseif(USE_X4)then
+            sat_geo_factor = sat_geo_spectrum_out(j,i)
+            kxzf = 0.5*kymax1
+            if(ky0.le.kxzf)gammaeff = gammaeff*ky0/kxzf
+            if(ky0.lt.kymax1)sat_geo_factor= 1.0+(sat_geo_spectrum_out(j,i)-1.0)*ky0/kymax1
           endif
-          field_spectrum_out(2,j,i) = SAT_geo0_out*(cnorm*gammaeff*gammaeff/ky0**4)/(1.0+ay*(kx_geo0_out*kx)**2)**2
+          sat_geo_spectrum_out(j,i)=sat_geo_factor
+          if(ky0.gt.kyetg)gammaeff = gammaeff*SQRT(ky0/kyetg)
+          field_spectrum_out(2,j,i) = (cnorm*gammaeff*gammaeff/ky0**4)/(1.0+ay*kx**2)**2
+          if(units_in.ne.'GYRO')field_spectrum_out(2,j,i) = sat_geo_factor*field_spectrum_out(2,j,i)
         enddo
      enddo
      ! recompute the intensity and flux spectra
@@ -285,19 +282,19 @@
          do i=1,nmodes_in
             phinorm=field_spectrum_out(2,j,i) 
             field_spectrum_out(1,j,i) = phinorm
-            field_spectrum_out(3,j,i) = field_spectrum_out(3,j,i)*phinorm
-            field_spectrum_out(4,j,i) = field_spectrum_out(4,j,i)*phinorm
+            field_spectrum_out(3,j,i) = QL_field_spectrum_out(3,j,i)*phinorm
+            field_spectrum_out(4,j,i) = QL_field_spectrum_out(4,j,i)*phinorm
             do is=1,ns
-               intensity_spectrum_out(1,is,j,i) = intensity_spectrum_out(1,is,j,i)*phinorm
-               intensity_spectrum_out(2,is,j,i) = intensity_spectrum_out(2,is,j,i)*phinorm
-               intensity_spectrum_out(3,is,j,i) = intensity_spectrum_out(3,is,j,i)*phinorm
-               intensity_spectrum_out(4,is,j,i) = intensity_spectrum_out(4,is,j,i)*phinorm
+               intensity_spectrum_out(1,is,j,i) = QL_intensity_spectrum_out(1,is,j,i)*phinorm
+               intensity_spectrum_out(2,is,j,i) = QL_intensity_spectrum_out(2,is,j,i)*phinorm
+               intensity_spectrum_out(3,is,j,i) = QL_intensity_spectrum_out(3,is,j,i)*phinorm
+               intensity_spectrum_out(4,is,j,i) = QL_intensity_spectrum_out(4,is,j,i)*phinorm
                do k=1,3
-                  flux_spectrum_out(1,is,k,j,i) = flux_spectrum_out(1,is,k,j,i)*phinorm
-                  flux_spectrum_out(2,is,k,j,i) = flux_spectrum_out(2,is,k,j,i)*phinorm
-                  flux_spectrum_out(3,is,k,j,i) = flux_spectrum_out(3,is,k,j,i)*phinorm
-                  flux_spectrum_out(4,is,k,j,i) = flux_spectrum_out(4,is,k,j,i)*phinorm
-                  flux_spectrum_out(5,is,k,j,i) = flux_spectrum_out(5,is,k,j,i)*phinorm
+                  flux_spectrum_out(1,is,k,j,i) = QL_flux_spectrum_out(1,is,k,j,i)*phinorm
+                  flux_spectrum_out(2,is,k,j,i) = QL_flux_spectrum_out(2,is,k,j,i)*phinorm
+                  flux_spectrum_out(3,is,k,j,i) = QL_flux_spectrum_out(3,is,k,j,i)*phinorm
+                  flux_spectrum_out(4,is,k,j,i) = QL_flux_spectrum_out(4,is,k,j,i)*phinorm
+                  flux_spectrum_out(5,is,k,j,i) = QL_flux_spectrum_out(5,is,k,j,i)*phinorm
               enddo
            enddo
         enddo

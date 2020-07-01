@@ -3,43 +3,36 @@
 # profiles_gen
 #
 # PURPOSE:
-#  Top-level script for conversion of raw data into GYRO 
-#  format (input.profiles).
+#  Top-level script for conversion of raw data into GYRO
+#  format (input.gacode).
 #
 #  Autodetected profile formats:
-#   GACODE      (input.profiles)
+#   GACODE      (input.gacode)
 #   ITERDB      (ASCII iterdb)
 #   ITERDBNC    (netCDF iterdb)
 #   SWIM        (plasmastate)
-#   CORSICA     (Corsica) 
+#   CORSICA     (Corsica)
 #   PFILE       (peqdsk)
 #   UFILE       (ITPA profile database format)
 #
 #  Autodetected geometry formats:
 #   GFILE       (geqdsk equilibrium data)
-#   DSKGATO_OLD (old-type dskgato flux-surface data)
-#   DSKGATO_NEW (new-type dskgato flux-surface data)
-#============================================================= 
+#=============================================================
 
 #=============================================================
 # EXECUTABLE AND CONFIG FILE LOCATIONS:
 #
-# GYRO directory
-GYRO_DIR=${GACODE_ROOT}/gyro
 # VGEN inputs directory
 VGEN_DIR=${GACODE_ROOT}/vgen/templates
 # VGEN exec directory
 VGEN_EXE=${GACODE_ROOT}/vgen/src
 # - profiles_gen converter executable
 EXEC=${GACODE_ROOT}/profiles_gen/src/prgen
-# - GATO executable
-GATO=${GACODE_ROOT}/gato/gato
-# - OMFIT script
-OMFIT=${OMFIT_ROOT}/omfit/omfit.py
+# - OMFIT fitter script
+OMFIT='-m pygacode.profiles_gen.prgen_shapeprofile'
+#${GACODE_ROOT}/f2py/pygacode/profiles_gen/prgen_shapeprofile.py
 # - locpargen executable
 LOCPARGEN=${GACODE_ROOT}/profiles_gen/locpargen/locpargen
-# - exprodump executable
-EXPRODUMP=${GACODE_ROOT}/profiles_gen/exprotools/exprodump
 # - profiles_gen bin directory
 PRGEN_BIN=${GACODE_ROOT}/profiles_gen/bin
 #=============================================================
@@ -52,98 +45,74 @@ n=$#
 if [ $n -eq 0 ]
 then
    echo "Usage:       profiles_gen [options]"
-   echo 
+   echo
    echo "             Autodetected profile formats:"
-   echo "               GACODE      (input.profiles)"
+   echo "               GACODE      (input.gacode)"
+   echo "               LEGACY      (legacy input.profiles)"
    echo "               ITERDB      (text iterdb)"
    echo "               ITERDBNC    (netCDF iterdb)"
    echo "               SWIM        (plasmastate)"
    echo "               PFILE       (peqdsk)"
    echo "               CORSICA     (Corsica) "
-   echo "               U FILE       (ITPA profile database format)"
-   echo 
+   echo "               UFILE       (ITPA profile database format)"
+   echo
    echo "             Autodetected geometry formats:"
    echo "               GFILE       (geqdsk equilibrium data)"
-   echo "               DSKGATO_OLD (old-type dskgato flux-surface data)"
-   echo "               DSKGATO_NEW (new-type dskgato flux-surface data)"
-   echo 
+   echo
    echo "             -p <path>"
    echo "             Set optional path to simulation directory."
    echo "             [The default path is the current directory]"
    echo
    echo "             -e <workdir>"
    echo "             Working directory (default is present directory)"
-   echo 
-   echo "             -describe"
-   echo "             Print structure of current input.profiles to screen."
-   echo 
-   echo "             -V"
-   echo "             Verbose (for debugging; use this if you get an error)."
-   echo 
-   echo "Flags for gfile control (see -g option below)"
-   echo 
-   echo "             -noq"
-   echo "             Do not use the q from the EFIT gfile"
-   echo 
-   echo "             -nop"
-   echo "             Do not use the P_tot from the EFIT gfile."
    echo
-   echo "ITERDB Options"
-   echo 
-   echo "             -i <data>"
-   echo "             Specify text or NetCDF data file."
-   echo 
-   echo "             -g <gfile>"
-   echo "             Merge EFIT gfile for high-precision geometry data."
-   echo 
-   echo "             -nfourier <int>"
-   echo "             Number of Fourier modes to retain in input.profiles.geo/input.geo. (default: 24)"
-   echo 
-   echo "             -cer <vpol>"
-   echo "             Merge data Er and velocity data from Solomon's cer datafile."
-   echo 
+   echo "             -g <GFILE>"
+   echo "             GFILE (geqdsk) containing flux-surface data [required]."
+   echo
    echo "             -ipccw <val>"
    echo "             Specify direction of current (as seen from above)"
    echo "             (1=counter-clockwise,-1=clockwise)"
-   echo 
+   echo
    echo "             -btccw <val>"
    echo "             Specify direction of toroidal field (as seen from above)"
    echo "             (1=counter-clockwise,-1=clockwise)"
-   echo 
+   echo
+   echo "             -neut"
+   echo "             Toggle extraction of neutral profiles (input.gacode.neutral)"
+   echo
+   echo "             -V"
+   echo "             Verbose (for debugging; use this if you get an error)."
+   echo
+   echo "ITERDB Options"
+   echo
+   echo "             -i <data>"
+   echo "             Specify text or NetCDF data file."
+   echo
+   echo "             -cer <vpol>"
+   echo "             Merge data Er and velocity data from Solomon's cer datafile."
+   echo
    echo "PLASMA STATE Options"
    echo
    echo "             -i <data>"
    echo "             Specify NetCDF data file."
    echo
-   echo "             -g <gfile>"
-   echo "             EFIT gfile for high-precision geometry data (includes q and P_tot)."
-   echo 
-   echo "             -nfourier <int>"
-   echo "             Number of Fourier modes to retain in input.profiles.geo/input.geo. (default: 24)"
-   echo 
    echo "             -r <i1,i2,i3,i4,i5>"
    echo "             Reorder ions."
-   echo 
+   echo
    echo "             -l <i1,i2,...>"
    echo "             Lump ions before reordering."
    echo
    echo "             -lf"
    echo "             Lump fast ions into a single species."
    echo
-   echo "             -sub_aux"
-   echo "             Toggles subtractive auxiliary power (rather than true sum of RF and NBI)"
+   echo "             -true_aux"
+   echo "             Toggles true auxiliary power (sum of individual powers)"
    echo
    echo "CORSICA Options"
    echo
    echo "             -i <data.corsica>"
    echo "             Specify Corsica data file."
    echo
-   echo "             -g <gfile>"
-   echo "             EFIT gfile for high-precision geometry data (includes q and P_tot)."
-   echo 
-   echo "             -nfourier <int>"
-   echo "             Number of Fourier modes to retain in input.profiles.geo/input.geo. (default: 24)"
-   echo 
    echo "             -r <reorder sequence>"
    echo "             Reorder ions."
    echo
@@ -158,91 +127,76 @@ then
    echo "             -r <reorder sequence>"
    echo "             Reorder ions."
    echo
-   echo
    echo "             Example: To invoke UFILE mode, ensure the *d.dat files exist in the"
    echo "                      current directory, then type:"
    echo
    echo "                       $ profiles_gen -i UFILE -t <time>"
-   echo                   
+   echo
    echo "                      Leaving out the -t option will print time window"
    echo
-   echo "PEQDSK/PFILE Options"
+   echo "PEQDSK/PFILE Options (gfile required)"
    echo
    echo "             -i <PFILE>"
    echo "             Specify PFILE (peqdsk) data file."
-   echo
-   echo "             -g <gfile>"
-   echo "             EFIT gfile for high precision geometry data [REQUIRED] (includes q and P_tot)"
-   echo 
-   echo "             -nfourier <int>"
-   echo "             Number of Fourier modes to retain in input.profiles.geo/input.geo. (default 24)"
    echo
    echo "null Options"
    echo
    echo "             -i null"
    echo "             Toggle null profile data mode."
    echo
-   echo "             -g <GFILE>"
-   echo "             GFILE (geqdsk) containing flux-surface data [required]."
-   echo 
-   echo "             -nfourier <int>"
-   echo "             Number of Fourier modes to retain in input.profiles.geo/input.geo. (default: 24)"
-   echo
    echo "             -n_null <int>"
    echo "             Number of radial gridpoints (default: 40)"
    echo
-   echo "GATO mapper control options"
-   echo 
-   echo "             -gato <parameter=val,parameter=val,...>"
-   echo 
-   echo "             Important parameters and defaults"
+   echo "Flux-surface mapper control options"
    echo
-   echo "              dpsidl=0.0   [DEFINE]"    
-   echo "              npfit=150    [DEFINE]"   
+   echo "             -npsi <int>"
+   echo "              Number of flux-surfaces to contout"
    echo
-   echo "OMFIT mapper control options"
-   echo 
-   echo "             -omfit"
-   echo "             Toggle OMFIT mapper instead of default GATO mapper."
+   echo "             -nrz <int>"
+   echo "              R-Z resolution for psi contours."
    echo
-   echo "             -omfitres <resolution>"
-   echo "              <resolution>=low,medium,high (default medium)."
+   echo "             -narc <int>"
+   echo "              Equal-arc contour points."
    echo
-   echo "input.profiles (simple passthrough if no gfile specified)"
+   echo "             -nfourier <int>"
+   echo "             General legacy Fourier geometry coefficents in input.gacode.geo (off by default)"
+   echo
+   echo "input.gacode (simple passthrough if no gfile specified)"
    echo
    echo "             -i <data>"
-   echo "             Data in input.profiles format."
+   echo "             Data in input.gacode format."
    echo
-   echo "             -g <GFILE>"
-   echo "             GFILE (geqdsk) containing flux-surface data."
-   echo 
-   echo "             -nfourier <int>"
-   echo "             Number of Fourier modes to retain in input.profiles.geo/input.geo. (default: 24)"
+   echo "             -info"
+   echo "             Toggle info generation."
    echo
    echo "VELOCITY GENERATION (VGEN) MODE"
    echo
    echo "             -vgen"
    echo "             Toggle vgen mode."
    echo
-   echo "             -in <string of ion species> " 
-   echo "             Choices: DC, DC_lowres, DC.revip, DCD, DHCD, HDC"
-   echo "             If this is blank, input.vgen must exist."
+   echo "             -in <number of ion species or input.neo> "
+   echo "             If number specified (>=1), uses default neo template"
+   echo "             Otherwise, input.neo must exist."
    echo "             See"
-   echo "             $VGEN_DIR/input.vgen.*"
+   echo "             $VGEN_DIR/input.neo.*"
    echo "             for examples."
    echo
-   echo "             -er <val>" 
+   echo "             -er <val>"
    echo "             Method to compute Er."
    echo "             1=Force balance, 2=NEO (weak rot), 3=NEO (strong rot), 4=Return given"
    echo
-   echo "             -vel <val>" 
+   echo "             -vel <val>"
    echo "             Method to compute velocities."
    echo "             1=NEO (weak rot), 2=NEO (strong rot), 3=Return given"
    echo
-   echo "             -ix <index>" 
+   echo "             -epar <val>"
+   echo "             Flag to compute conductivity."
+   echo "             0=yes, 1=no"
+   echo
+   echo "             -ix <index>"
    echo "             Index of ion species to match NEO and given velocities."
    echo
-   echo "             -nth <min,max>" 
+   echo "             -nth <min,max>"
    echo "             Minimum and maximum theta resolutions.  Default -nth 17,39"
    echo
    echo "             -n <mpi tasks>"
@@ -251,57 +205,44 @@ then
    echo "             Use the NEO neural network instead of NEO DKE solve."
    echo
    echo "LOCAL INPUT GENERATION MODE"
-   echo 
+   echo
    echo "             -loc_rad <r/a>"
    echo "             Reference radius, r/a."
-   echo 
+   echo
    echo "             -loc_rho <rho>"
    echo "             Reference rho=sqrt[chi/chi(a)]"
-   echo 
+   echo
    echo "             -loc_psi <psi_N>"
    echo "             Reference psi_N=psi/psi(a)"
-   echo 
+   echo
    echo "             -qn"
    echo "             Toggle quasineutrality."
-   echo 
+   echo
    echo "             -banana"
    echo "             Include banana-width diagnostic"
-   echo 
+   echo
    echo "             -append"
    echo "             Append to existing input.*.locpargen files"
-   echo
-   echo "DUMP MODE"
-   echo 
-   echo "             -dump <EXPRO variable>"
-   echo "             Dump any variable in EXPRO interface."
-   echo
-   echo "             -dump list"
-   echo "             Print list of available variables."
-   echo
-   echo "             -x <arg>"
-   echo "              <arg>=none: omit independent variable column."
-   echo "              <arg>=r:    r/a is first column."
-   echo "              <arg>=rho:  rho=sqrt[chi/chi(a)] is first column. [DEFAULT]"
-   echo "              <arg>=psi:  psi_N=psi/psi(a) is first column."
    echo
    echo "EXAMPLES:"
    echo " "
    echo
    echo "(1) Typical usage for DIII-D plasmas with iterdbfile only (2 steps)"
    echo "    NEO will generate Er and all velocities:"
-   echo 
-   echo "    profiles_gen -i iterdb -g gfile"
-   echo "    profiles_gen -vgen -i input.profiles -er 2 -vel 1 -in DC -ix 2"
+   echo "    (2 ions + electrons)"
    echo
-   echo "    or for fast calculations"
-   echo "    profiles_gen -vgen -i input.profiles -er 2 -vel 1 -in DC_lowres -ix 2"
+   echo "    profiles_gen -i iterdb -g gfile"
+   echo "    profiles_gen -vgen -i input.gacode -er 2 -vel 1 -in 2 -ix 2"
+   echo
+   echo "    if using your own input.neo, use '-in input.neo'"
    echo
    echo "(2) Typical usage for DIII-D plasmas with CER file available (2 steps)"
    echo "    NEO will take Er from CER file and generate all velocities:"
-   echo 
+   echo "    (2 ions + electrons)"
+   echo
    echo "    profiles_gen -i iterdb -g gfile -cer cerfile"
-   echo "    profiles_gen -vgen -i input.profiles -er 4 -vel 2 -in DC -ix 2"
-   echo 
+   echo "    profiles_gen -vgen -i input.gacode -er 4 -vel 2 -in 2 -ix 2"
+   echo
 
    exit 1
 fi
@@ -313,42 +254,38 @@ fi
 # working root
 SIMROOT=$PWD
 
-CONFIG=.config
-DESCRIBE_FLAG=0
+CONFIG=.prgenconfig
 
 FILE_FLAG=0
-G_FLAG=0
+INFO_FLAG=0
 VERBOSE_FLAG=0
 ORDER_FLAG=0
 LUMP_FLAG=0
 LUMP_FAST_FLAG=0
-TRUE_AUX_FLAG=1
+TRUE_AUX_FLAG=0
 
 # Number of points for -i null option
 N_NULL=40
 
 IPCCW=0
 BTCCW=0
-NFOURIER=24
-
-# GATO variables
-GATO_ARGS=
-
-# EFIT data options
-NOP_FLAG=0
-NOQ_FLAG=0
 
 # OMFIT mapper variables
-OMFIT_FLAG=0
-OMFIT_RES="medium"
+EFIT=0
+NRZ=1600
+NPSI=200
+NARC=600
+NFOURIER=0
 
-# CER file 
+# Extra datafiles
+GFILE=null
 CER_FILE=null
 
 # VGEN mode variables
 VGEN_IN=null
 VGEN_ER=1
 VGEN_VEL=2
+VGEN_EPAR=0
 VGEN_IX=2
 VGEN_NTH=17,39
 VGEN_FLAG=0
@@ -358,7 +295,7 @@ NOMP=1
 NUMA=0
 MPINUMA=0
 
-# UFILE 
+# UFILE
 UFILETIME=null
 
 # LOCAL PARAMETER MODE variables
@@ -368,15 +305,7 @@ LOC_PSI=0
 HASGEO=0
 QNFLAG=0
 BANANA=0
-
-# DUMP MODE variables
-DUMP_FLAG=0
-DUMP_VAR=null
-X=rho
 APPENDFLAG=0
-
-# Plotting in locpargen
-PLOT_FLAG=0
 #=============================================================
 
 #=============================================================
@@ -391,31 +320,28 @@ while [ $# -gt 0 ] ; do
 
   -i) shift ; FILE_FLAG=1 ; FILE="$1" ;;
 
-  -describe) shift ; DESCRIBE_FLAG=1 ;;
-
   -cer) shift ; CER_FILE="$1" ;
         echo "INFO: (profiles_gen) Will merge data from $CER_FILE" ;;
 
   -ipccw) shift ; IPCCW="$1" ;;
   -btccw) shift ; BTCCW="$1" ;;
 
-  -g) shift ; G_FLAG=1 ; GFILE="$1" ;;
+  -g) shift ; GFILE="$1" ; EFIT=1 ;;
 
   -nfourier) shift ; NFOURIER=$1 ;;
 
   -n_null) shift ; N_NULL=$1 ;;
 
-  -gato) shift ; GATO_ARGS="$1" ;;
+  -nrz) shift ; NRZ=$1 ;;
+  -narc) shift ; NARC=$1 ;;
+  -npsi) shift ; NPSI=$1 ;;
 
-  -omfit) OMFIT_FLAG=1 ;;
-  -omfitres) shift ; OMFIT_RES=$1 ;;
+  -true_aux) TRUE_AUX_FLAG=1 ;;
 
-  -sub_aux) TRUE_AUX_FLAG=0 ;;
-  
   -V) VERBOSE_FLAG=1 ;;
 
-  -nop) NOP_FLAG=1 ;;
-  -noq) NOQ_FLAG=1 ;;
+  -neut) NEUT_FLAG=1 ;;
+  -info) INFO_FLAG=1 ;;
 
   -r) shift ; ORDER="$1" ; ORDER_FLAG=1 ;;
 
@@ -436,6 +362,8 @@ while [ $# -gt 0 ] ; do
 
   -ix) shift ; VGEN_IX=$1 ;;
 
+  -epar) shift ; VGEN_EPAR=$1 ;;
+
   -nth) shift ; VGEN_NTH=$1 ;;
 
   -t) shift ; UFILETIME="$1" ;;
@@ -444,13 +372,8 @@ while [ $# -gt 0 ] ; do
   -loc_rho) shift ; LOC_RHO=$1 ;;
   -loc_psi) shift ; LOC_PSI=$1 ;;
   -append) APPENDFLAG=1 ;;
-  
-  -dump) shift ; DUMP_FLAG=1 ; DUMP_VAR=$1 ;;
-  -x) shift ; X=$1 ;;
   -qn) QNFLAG=1 ;;
   -banana) BANANA=1 ;;
-
-  -plot) PLOT_FLAG=1 ;;
 
   esac
   shift
@@ -470,12 +393,6 @@ SIMDIR=$SIMROOT/$LOCDIR
 cd $SIMDIR
 #=============================================================
 
-if [ $DESCRIBE_FLAG -eq 1 ]
-then
-    python $GACODE_ROOT/python/profiles_gen/profileplot_describe.py
-    exit 0
-fi
-
 #=============================================================
 # Filetype detection and management
 #
@@ -492,29 +409,45 @@ if [ "$itype" == "NOT_FOUND" ] ; then
 fi
 if [ "$itype" == "UNKNOWN" ] ; then
    echo "ERROR: (profiles_gen) $FILE is an unknown type."
-   exit 1 
+   exit 1
 fi
 
-if [ $G_FLAG -eq 1 ] ; then
+if [ $EFIT -eq 0 ] ; then
 
-   gtype=`gacode_type_autodetect $GFILE`
-   echo "INFO: (profiles_gen) $GFILE is autodetected as $gtype."
-
-else
-
-   gtype=none
+   gtype="none"
    if [ "$itype" == "PFILE" ] ; then
-      echo "ERROR: (profiles_gen) A GFILE (-g) must be used with a PFILE."  
+      echo "ERROR: (profiles_gen) A GFILE (-g) must be used with a PFILE."
       exit 1
    fi
    if [ "$itype" == "CORSICA" ] ; then
-      echo "ERROR: (profiles_gen) A GFILE (-g) must be used with a CORSICA file."  
+      echo "ERROR: (profiles_gen) A GFILE (-g) must be used with a CORSICA file."
       exit 1
    fi
 
+else
+
+   gtype=`gacode_type_autodetect $GFILE`
+   echo "INFO: (profiles_gen) $GFILE is autodetected as $gtype."
+   header=`head -1 $GFILE` ; harr=($header)
+
 fi
 #=============================================================
-
+# If file is GACODE LEGACY (input.profiles), parse header
+# to get ion masses, charge, names
+#
+if [ "$itype" == "LEGACY" ] ; then
+  echo "INFO: (profiles_gen) Parsing input.profiles header."
+  python $PRGEN_BIN/profile_header_dump.py $FILE
+  python $PRGEN_BIN/profile_header_shot.py $FILE
+fi
+#=============================================================
+#=============================================================
+# If file is input.gacode and -info set, generate info
+#
+if [ "$itype" == "GACODE" ] && [ $INFO_FLAG == 1 ] ; then
+    python $PRGEN_BIN/pygacode_info.py $FILE
+    exit 0
+fi
 #=============================================================
 # Managing input file (also catches UFILE mode)
 
@@ -548,46 +481,13 @@ else
 fi
 
 #=============================================================
-# If file is GACODE, parse it.
-if [ "$itype" == "GACODE" ] ; then
-  cp -f $FILE $FILE.save
-  python $PRGEN_BIN/profile_parse.py $FILE
-fi
-#=============================================================
-
-
-#=============================================================
-# Trap a p-file and split into components 
+# Trap a p-file and split into components
 #
 if [ "$itype" == "PFILE" ] ; then
    # Now, strip pfile into parts.  Rename $FILE so pfile detected in prgen.
    rm -f pfile.*
    python $PRGEN_BIN/gacode_pfile_tool.py $FILE
 fi
-#=============================================================
-
-#=============================================================
-# Manage execution of dump
-if  [ $DUMP_FLAG -eq 1 ]
-then
-  if [ ! -f $EXPRODUMP ]
-  then
-     echo "ERROR: (profiles_gen) You need to build the exprodump executable."
-     exit 1
-  fi
-  python $PRGEN_BIN/profile_parse.py $FILE
-  if [ "$DUMP_VAR" == "" ]
-  then
-     DUMP_VAR=list
-  fi
-  echo $DUMP_VAR > input.exprodump
-  echo $X >> input.exprodump
-  echo $QNFLAG >> input.exprodump
-  echo "INFO: (profiles_gen) Calling $EXPRODUMP"
-  $EXPRODUMP
-  rm input.exprodump
-  exit 0
-fi   
 #=============================================================
 
 #=============================================================
@@ -600,13 +500,10 @@ then
      echo "ERROR: (profiles_gen) You need to build the locpargen executable."
      exit 1
   fi
-  if [ -f input.profiles.geo ]
+  if [ -f input.gacode.geo ]
   then
       HASGEO=1
   fi
-  python $PRGEN_BIN/profile_parse.py $FILE
-  cp $FILE.gen temp
-  mv temp input.profiles.gen
   echo $LOC_RAD > input.locpargen
   echo $LOC_RHO >> input.locpargen
   echo $LOC_PSI >> input.locpargen
@@ -617,7 +514,7 @@ then
   if [ $BANANA -eq 1 ] ; then
      python ${PRGEN_BIN}/banana_width.py
   fi
-  rm input.locpargen
+  #rm input.locpargen
   exit 0
 fi
 
@@ -644,39 +541,44 @@ then
    rm -rf vgen ; mkdir vgen ; cd vgen
 
    # Check for input.neo file
-
-   if [ -f $VGEN_DIR/input.neo.$VGEN_IN ]
+   if [ $VGEN_IN == 'input.neo' ]
    then
-     cp $VGEN_DIR/input.neo.$VGEN_IN input.neo
-   else 
       if [ -f ../input.neo ]
       then
-         cp ../input.neo input.neo
+          cp ../input.neo input.neo
       else
-         echo "ERROR: (profiles_gen) Specify ion string with -in, or create input.neo"
-         exit 1
+          echo "ERROR: (profiles_gen) Specify ion number >= 1 with -in for default input.neo template, or create input.neo"
+          exit 1
       fi
+   else if [[ $VGEN_IN =~ [1-9] ]]
+	then
+	    cp $VGEN_DIR/input.neo.default input.neo
+	    echo "N_SPECIES="$((VGEN_IN + 1)) >> input.neo
+	else
+	  echo "ERROR: (profiles_gen) Specify ion number >= 1 with -in for default input.neo template, or create input.neo"
+          exit 1
+	fi
    fi
 
    # Tell NEO that its being run in subroutine mode by vgen.
-   echo "SUBROUTINE_FLAG=1" >> input.neo 
+   echo "SUBROUTINE_FLAG=1" >> input.neo
 
-   cp ../$FILE input.profiles
+   cp ../$FILE input.gacode
    if [ -f "../$FILE.geo" ]
-       then
-       cp ../$FILE.geo input.profiles.geo
+   then
+       cp ../$FILE.geo input.gacode.geo
    else
-       echo "INFO: (profiles_gen) $FILE.geo not found -- using EQUILIBRIUM_MODEL=2"
+       echo "INFO: (profiles_gen) $FILE.geo not found -- using EQUILIBRIUM_MODEL=2 (miller geo)"
        echo "EQUILIBRIUM_MODEL=2" >> input.neo
    fi
 
    python $NEO_DIR/bin/neo_parse.py
-   python $PRGEN_BIN/profile_parse.py input.profiles 
 
    # Construct vgen.dat
    echo "$VGEN_ER"  > vgen.dat
    echo "$VGEN_VEL" >> vgen.dat
    echo "$VGEN_IX"  >>  vgen.dat
+   echo "$VGEN_EPAR"  >>  vgen.dat
    # Strip to obtain nmin,nmax
    p=0
    for i in $(echo $VGEN_NTH | tr "," "\n")
@@ -684,7 +586,7 @@ then
       p=$(($p+1))
       echo $i >> vgen.dat
    done
-   if [ $p -eq 1 ] 
+   if [ $p -eq 1 ]
    then
       echo $i >> vgen.dat
    fi
@@ -694,36 +596,6 @@ then
    $GACODE_ROOT/platform/exec/exec.$GACODE_PLATFORM \
     $SIMDIR/vgen $NPROC $VGEN_EXE/vgen $NOMP $NUMA $MPINUMA
 
-
-   if [ -f "input.profiles.new" ]
-   then
-       > input.profiles
-       DATESTAMP=`date`
-       # Manage generated input.profiles and print diagnistics
-       echo "# VGEN: The file modified by VGEN on $DATESTAMP" >> input.profiles
-       if [ "$VGEN_ER" == "1" ] ; then 
-          echo "# VGEN: omega0 computed by force balance (-er 1)" >> input.profiles 
-       fi
-       if [ "$VGEN_ER" == "2" ] ; then 
-          echo "# VGEN: omega0 computed by NEO with weak rotation (-er 2)" >> input.profiles
-          echo "# VGEN: matched toroidal velocity of species $VGEN_IX" >> input.profiles
-       fi
-       if [ "$VGEN_ER" == "4" ] ; then 
-          echo "# VGEN: omega0 unchanged (-er 4)" >> input.profiles
-       fi
-       if [ "$VGEN_VEL" == "1" ] ; then 
-          echo "# VGEN: velocities computed by NEO with weak rotation (-vel 1)" >> input.profiles
-       fi
-       if [ "$VGEN_VEL" == "2" ] ; then 
-          echo "# VGEN: velocities computed by NEO with strong rotation (-vel 2)" >> input.profiles
-       fi
-
-       cat input.profiles.new >> input.profiles
-       echo "INFO: (profiles_gen) VGEN created vgen/input.profiles [new data]"
-       echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.extra    [diagnostics]"
-       echo "INFO: (profiles_gen) VGEN created vgen/input.profiles.jbs      [boostrap current]"
-   fi
-
    exit 0
 fi
 #=============================================================
@@ -731,8 +603,8 @@ fi
 #=============================================================
 # If we make it here, its time for cleanup
 #
-echo "INFO: (profiles_gen) Removing old input.profiles* files"
-rm -f input.profiles.geo input.profiles.extra
+echo "INFO: (profiles_gen) Removing old input.gacode* files"
+rm -f input.gacode.geo
 #=============================================================
 
 #=============================================================
@@ -746,37 +618,19 @@ fi
 
 #=============================================================
 # Construct prgen input file ($CONFIG)
-#
-# Determine method to extract flux surfaces
-# EFIT method:
-#  1=none, 2=GATO-gfile, 3=OMFIT-gfile, 4=DSKGATO_OLD, 5=DSKGATO_NEW
-#
-if [[ "$gtype" == DSKGATO_OLD ]] ; then
-   EFIT_METHOD=4
-elif [[ "$gtype" == DSKGATO_NEW ]] ; then
-   EFIT_METHOD=5
-else
-   EFIT_METHOD=$(($G_FLAG+$OMFIT_FLAG+1))
-fi
-#=============================================================
-
-#=============================================================
-# Construct prgen input file ($CONFIG)
 date > $CONFIG
 
 # Required data file (ITERDB, PLASMASTATE, etc)
 echo $FILE >> $CONFIG
 echo $itype >> $CONFIG
 
-# Optional CER file
+# Optional data files
+echo $GFILE ${harr[1]} ${harr[5]} ${harr[6]} >> $CONFIG
 echo $CER_FILE >> $CONFIG
 
-# EFIT method
-echo $EFIT_METHOD >> $CONFIG
-
-# EFIT options
-echo $NOQ_FLAG >> $CONFIG
-echo $NOP_FLAG >> $CONFIG
+# EFIT data control
+echo $EFIT >> $CONFIG
+echo $NEUT_FLAG >> $CONFIG
 
 # Verbosity
 echo $VERBOSE_FLAG >> $CONFIG
@@ -797,182 +651,10 @@ echo $TRUE_AUX_FLAG >> $CONFIG
 # NOTE: reorder flags will be appended later.
 #=============================================================
 
+
 #==============================================================
-# Manage equilibrium (run GATO, OMFIT, etc) here
-#
-
-# Use GATO:
-if [ $EFIT_METHOD -eq 2 ]
-then
-   if [ ! -f $GATO ]
-   then
-      echo "ERROR: (profiles_gen) You need to build the GATO executable: $ cd gato ; make"
-      exit 1
-   fi
-   echo "INFO: (profiles_gen) Spawning GATO mapper to generate flux surfaces from $GFILE."
-
-   # GATO requires gfile as "eqgta"
-   cp $GFILE eqgta
-
-   # Clear any stale error files
-   rm -f gato_error
-
-   # Create entire GATO "ingta" namelist
-   echo "GATO template" > ingta
-   echo "129x129 200x400  ncase=0" >> ingta
-   echo "n  = 1  ncorr=+1  Wall on the Plasma" >> ingta
-   echo " &inputd" >> ingta
-   echo " ntor     = 1" >> ingta
-   echo " ncase    = 0" >> ingta
-   echo " norm     = 0" >> ingta
-   echo " nmap     = 0" >> ingta
-   echo " neqtyp   = 0" >> ingta
-   echo " jpsi     = 100" >> ingta
-   echo " itht     = 200" >> ingta
-   echo " isym     = 0" >> ingta
-   echo " igrid    = 0" >> ingta
-   echo " ncorr    = +1" >> ingta
-   echo " corrfac  = 1.0000" >> ingta
-   echo " nmesh    = 2" >> ingta
-   echo " nedge    = +4" >> ingta
-   echo " sedg0    = 0.0" >> ingta
-   echo " sedg1    = 0.0" >> ingta
-   echo " maptrace = 0" >> ingta
-   echo " npak     = 0" >> ingta
-   echo " nrat     = 0" >> ingta
-   echo " nppack   = 0" >> ingta
-   echo " nqpack   = 0" >> ingta
-   echo " pkfrac   = 0.3333333333333333" >> ingta
-   echo " qpfrac   = 0.3333333333333333" >> ingta
-   echo " cspak    = 0.5" >> ingta
-   echo " npfit    = 150" >> ingta
-   echo " dpsisl   = 0.0" >> ingta
-   echo " dpsisd   = +0.10e-04" >> ingta
-   echo " psipak   = 1.0" >> ingta
-   echo " delac    = 0.10e-02" >> ingta
-   echo " tolspln  = 0.10e-02" >> ingta
-   echo " ntrymx   = 10" >> ingta
-   echo " nccellr  = +1" >> ingta
-   echo " nqaxis   =  0" >> ingta
-   echo " qxin     = 0.0" >> ingta
-   echo " idnsty   = 0" >> ingta
-   echo " ifastp   = 0" >> ingta
-   echo " ndnxp0   = 0" >> ingta
-   echo " ndnxp1   = 2" >> ingta
-   echo " ndnxp2   = 2" >> ingta
-   echo " iwal     = 0" >> ingta
-   echo " nwall    = 60" >> ingta
-   echo " irext    = 0" >> ingta
-   echo " rext     = 1.000" >> ingta
-   echo " nrestrt  = 0" >> ingta
-   echo " ndsktim  = +1" >> ingta
-   echo " nev      = 1" >> ingta
-   echo " nreslv   = 0" >> ingta
-   echo " nbrmax   = 10" >> ingta
-   echo " nismax   = 10" >> ingta
-   echo " ncymax   = 1" >> ingta
-   echo " nitmax   = 20" >> ingta
-   echo " ncyfin   = 1" >> ingta
-   echo " al0      = -0.100000e-04" >> ingta
-   echo " dal0     = 10.0" >> ingta
-   echo " al0bas   = +0.00" >> ingta
-   echo " al0min   = -0.10e+00" >> ingta
-   echo " al0max   = -0.10e-11" >> ingta
-   echo " epschy   = 0.00001" >> ingta
-   echo " epscon   = 0.00001" >> ingta
-   echo " njplot   = +200" >> ingta
-   echo " niplot   = 1" >> ingta
-   echo " nskpi    = +2" >> ingta
-   echo " nskpj    = +2" >> ingta
-   echo " ncont    = 10" >> ingta
-   echo " ncplot   = 10" >> ingta
-   echo " nxisgn   = +1" >> ingta
-   echo " nxuplt   = +3" >> ingta
-   echo " nxiplt   = +1" >> ingta
-   echo " nxrplt   =  0" >> ingta
-   echo " nxpplt   =  0" >> ingta
-   echo " nbuplt   = +1" >> ingta
-   echo " nbiplt   = +1" >> ingta
-   echo " nbrplt   =  0" >> ingta
-   echo " nbpplt   =  0" >> ingta
-   echo " nauplt   = +1" >> ingta
-   echo " naiplt   = +1" >> ingta
-   echo " narplt   =  0" >> ingta
-   echo " napplt   =  0" >> ingta
-   echo " ntphase  = -4" >> ingta
-   echo " mshpsi   = 12" >> ingta
-   echo " mshchi   = 3" >> ingta
-   echo " nvfft    = 0" >> ingta
-   echo " iplotm   = +10" >> ingta
-   echo " ioutm    = 1" >> ingta
-   echo " ioutw    = 1" >> ingta
-   echo " ioute    = 0" >> ingta
-   echo " ioutp    = +19" >> ingta
-   echo " iomshp   = -2" >> ingta
-   echo " ioeqlp   = -2" >> ingta
-   echo " ioeigp   = +2" >> ingta
-   echo " iodlbp   = +2" >> ingta
-   echo " iodlap   = +2" >> ingta
-   echo " iopsip   = -2" >> ingta
-   echo " iolinp   = +2" >> ingta
-   echo " iolnbp   = +2" >> ingta
-   echo " iolnap   = +2" >> ingta
-   echo " iofftp   = +2" >> ingta
-   echo " ioffbp   = -2" >> ingta
-   echo " ioffap   = -2" >> ingta
-   echo " ioconp   = -2" >> ingta
-   echo " iodlbp   = -2" >> ingta
-   echo " iodlap   = -2" >> ingta
-   echo " iodlwp   = +2" >> ingta
-   p=0
-   for i in $(echo $GATO_ARGS | tr "," "\n")
-   do
-      echo "$i" >> ingta
-      p=$(($p+1))
-   done
-   echo " &end" >> ingta
-
-   $GATO >& out.gato.info
-   if [ -f 'gato_error' ]
-   then
-      echo 'ERROR: (gato) Fatal error.'
-      exit 1
-   else
-      mv grid.dat out.gato.fluxsurf
-      echo 'INFO: (gato) Done.  Check out.gato.info for diagnostics.'
-   fi
-fi
-
-# Use OMFIT:
-if [ $EFIT_METHOD -eq 3 ] ; then
-   # OMFIT mapper options
-   # uniform -> points around separatrix
-   # levels -> flux surfaces
-   # resolution -> in mm
-   cp $GFILE gfile
-   case "$OMFIT_RES" in
-      low)    RES="resolution=0.003 uniform=500 levels=128" ;;
-      medium) RES="resolution=0.002 uniform=750 levels=256" ;;
-      high)   RES="resolution=0.001 uniform=1000 levels=512" ;;
-   esac
-   OMFIT_OPT="rhoVSpsi='rho' maxPSI=0.9999 gfiles='$GFILE'"
-   echo "INFO: (omfit) Running with parameters: $RES"
-   echo "INFO: (omfit) Fixed mapper parameters: $OMFIT_OPT"
-   python $OMFIT fluxSurfaceTracer $RES $OMFIT_OPT >& out.omfit.info
-   if ls flux_* 1> /dev/null 2>&1
-   then
-      mv flux_* out.omfit.fluxsurf
-      echo "INFO: (omfit) Done.  Check out.omfit.info for OMFIT diagnostics."
-   else
-      echo "ERROR: (omfit) OMFIT failed.  Check out.omfit.info for OMFIT diagnostics."
-      exit 1
-   fi
-fi
-
-# DSKGATO
-if [[ $EFIT_METHOD -eq 4 || $EFIT_METHOD -eq 5 ]]
-then
-   cp $GFILE grid.dat
+if [ $EFIT -eq 1 ] ; then
+   python $OMFIT $GFILE $NRZ $NARC $NPSI $NFOURIER
 fi
 #==============================================================
 
@@ -999,7 +681,7 @@ fi
 #==============================================================
 
 #==============================================================
-# Ion lumping parameters: 
+# Ion lumping parameters:
 #
 if [ $LUMP_FLAG -eq 1 ]
 then
@@ -1014,7 +696,7 @@ then
 else
    echo "1" >> $CONFIG
    echo "0" >> $CONFIG
-fi 
+fi
 #==============================================================
 
 #==============================================================
@@ -1032,20 +714,12 @@ fi
 #==============================================================
 # Final cleanup:
 #
-#  Remove configuration files, output files, etc.
-rm -f egta eqgta nova.* 
-#  Remove stale files
-rm -f input.gato.* dummy.peq 
 
 if [ $VERBOSE_FLAG -eq 0 ]
 then
-   rm -f $CONFIG fluxfit.* ingta o1gta grid.dat success
-   rm -f *.ave out.com out.dim out.ufile.log
+   rm -f $CONFIG fluxfit.* success profile_header profile_shot
+   rm -f *.ave out.com out.dim out.data out.ufile.log
    rm -f gfile out.expro.run pfile.*
-else
-   if [ -f "ingta" ] ; then
-      mv ingta input.gato.ingta
-   fi
 fi
 #==============================================================
 

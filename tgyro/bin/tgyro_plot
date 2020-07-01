@@ -82,7 +82,7 @@ while [ $# -gt 0 ] ; do
   case "$1" in
 
   -plot) shift ; PLOT_TYPE=$1 ;;
-  
+
   -e) shift ; LOCDIR=$1 ;;
 
   -p) shift ; SIMROOT=$1 ;;
@@ -100,7 +100,7 @@ while [ $# -gt 0 ] ; do
   -n) shift ; N=$1 ;;
 
   -dots) DOTS=1 ;;
-  
+
   *) echo "ERROR: incorrect tgyro_plot syntax." ; exit 1 ;;
 
   esac
@@ -116,17 +116,17 @@ fi
 SIMDIR=$SIMROOT/$LOCDIR
 cd $SIMDIR
 
-PYROOT=$GACODE_ROOT/python/tgyro
+PYROOT=$GACODE_ROOT/f2py/pygacode/tgyro
 
 #==============================================================================
-# 
+#
 #
 case "$PLOT_TYPE" in
 
-   note)  
+   note)
 	python $PYROOT/plot_notebook.py $SIMDIR $UNITS $EXT $N $LOC ;;
 
-   glob)  
+   glob)
 	python $PYROOT/plot_global.py $SIMDIR $F $EXT $RVAR $LOC $DOTS ;;
 
    null)
@@ -134,7 +134,7 @@ case "$PLOT_TYPE" in
 
    *)
         echo "Unrecognized plot type: $PLOT_TYPE" ;;
-   
-esac 
+
+esac
 
 exit 0

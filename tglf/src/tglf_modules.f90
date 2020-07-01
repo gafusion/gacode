@@ -13,7 +13,7 @@
       INTEGER, PARAMETER :: max_ELITE=700
       INTEGER, PARAMETER :: max_fourier = 24
       INTEGER, PARAMETER :: ms = 128  ! ms needs to be divisible by 8
-      INTEGER, PARAMETER :: max_plot =6*ms/8+1
+      INTEGER, PARAMETER :: max_plot =18*ms/8+1
 !
       END MODULE tglf_max_dimensions
 !
@@ -59,7 +59,7 @@
       LOGICAL,EXTERNAL :: tglf_isnan
       LOGICAL,EXTERNAL :: tglf_isinf
 ! input units switch
-      CHARACTER (len=4) :: units_in = 'TGLF'
+      CHARACTER (len=8) :: units_in = 'GYRO'
 ! Input Gaussian width
       REAL :: width_in=1.65
       REAL :: width_min_in=0.3
@@ -221,22 +221,28 @@
       REAL,DIMENSION(nsm,3) :: exchange_out=0.0
       REAL,DIMENSION(nsm,3) :: stress_par_out=0.0,stress_tor_out=0.0
       REAL,DIMENSION(maxmodes) :: gamma_out=0.0,freq_out=0.0
-      REAL,DIMENSION(maxmodes) :: phi_QL_out=0.0,a_par_QL_out=0.0,b_par_QL_out=0.0
+      REAL,DIMENSION(maxmodes) :: v_QL_out=0.0,a_par_QL_out=0.0,b_par_QL_out=0.0
       REAL,DIMENSION(maxmodes) :: phi_bar_out=0.0,v_bar_out=0.0
       REAL,DIMENSION(maxmodes) :: a_par_bar_out=0.0,b_par_bar_out=0.0
       REAL,DIMENSION(maxmodes) :: wd_bar_out=0.0,b0_bar_out=0.0
-      REAL,DIMENSION(maxmodes) :: ne_te_phase_out=0.0
+      REAL,DIMENSION(maxmodes) :: sat_geo_bar_out=0.0, ne_te_phase_out=0.0
       REAL,DIMENSION(maxmodes) :: kx_bar_out=0.0,kpar_bar_out=0.0
       REAL,DIMENSION(maxmodes) :: modB_bar_out=0.0
       REAL,DIMENSION(nsm) :: n_bar_sum_out=0.0,t_bar_sum_out=0.0
       REAL,DIMENSION(nsm) :: q_low_out=0.0
       REAL,DIMENSION(4,nkym,maxmodes) :: field_spectrum_out=0.0
+      REAL,DIMENSION(4,nkym,maxmodes) :: QL_field_spectrum_out=0.0
       REAL,DIMENSION(4,nsm,nkym,maxmodes) :: intensity_spectrum_out=0.0
+      REAL,DIMENSION(4,nsm,nkym,maxmodes) :: QL_intensity_spectrum_out=0.0
       REAL,DIMENSION(5,nsm,3,nkym,maxmodes) :: flux_spectrum_out=0.0
+      REAL,DIMENSION(5,nsm,3,nkym,maxmodes) :: QL_flux_spectrum_out=0.0
       REAL,DIMENSION(2,nkym,maxmodes) :: eigenvalue_spectrum_out=0.0
+      REAL,DIMENSION(nkym,maxmodes) :: sat_geo_spectrum_out = 0.0
       REAl,DIMENSION(nkym,maxmodes) :: ne_te_phase_spectrum_out=0.0
       REAl,DIMENSION(nsm,nkym,maxmodes) :: nsts_phase_spectrum_out=0.0
+      REAL,DIMENSION(nkym,maxmodes) :: sat_geo_out=0.0
       REAL,DIMENSION(nkym) :: spectral_shift_out=0.0
+      REAL,DIMENSION(nkym) :: width_out=0.0
       REAL :: phi_bar_sum_out=0.0
       REAL :: v_bar_sum_out=0.0
       REAL :: gamma_nb_min_out=0.0
@@ -254,6 +260,7 @@
       REAL :: DM_out = 0.25
       REAL :: DR_out = 0.0
       REAL :: Bref_out = 1.0
+      REAL :: ave_p0_out=1.0
       INTEGER :: nmodes_out
       INTEGER :: nfields_out
       character (len=80) :: error_msg='null' 
@@ -370,10 +377,10 @@
       REAL :: exchange_weight(nsm,3)
       REAL :: N_weight(nsm),T_weight(nsm)
       REAl :: U_weight(nsm),Q_weight(nsm)
-      REAL :: phi_weight,a_par_weight,b_par_weight
+      REAL :: phi_weight,a_par_weight,b_par_weight,v_weight
       REAL :: Ne_Te_phase,Ne_Te_cos,Ne_Te_sin
       REAL :: Ns_Ts_phase(nsm),Ns_Ts_cos,Ns_Ts_sin
-      REAL :: wd_bar,b0_bar,modB_bar,kx_bar,kpar_bar
+      REAL :: wd_bar,b0_bar,modB_bar,kx_bar,kpar_bar,sat_geo_bar
 !      
       END MODULE tglf_weight
 !
@@ -396,7 +403,7 @@
       REAL,DIMENSION(nxm) :: wdx, wdpx, b0x, b2x, kxx
       REAL,DIMENSION(nxm) :: cx_tor_par, cx_tor_per
       REAL,DIMENSION(nxm) :: cx_par_par
-      REAL,DIMENSION(nxm) :: p0x, Bx
+      REAL,DIMENSION(nxm) :: p0x, Bx, sat_geo_invx
       INTEGER,DIMENSION(nkym) :: mask_save
       REAL,DIMENSION(nkym) :: gamma_nb_min_save
       REAL,DIMENSION(nkym) :: width_save, ft_save
@@ -448,6 +455,7 @@
       REAL :: Rmaj_s, Zmaj_s,rmin_s, q_s
       REAL :: p_prime_s, q_prime_s
       REAL :: p_prime_zero_s
+      REAL :: betae_s, debye_s
 ! OUTPUT
       REAL,DIMENSION(0:ms) :: costheta_geo, sintheta_geo
       REAL,DIMENSION(0:ms) :: costheta_p_geo, s_p
@@ -688,6 +696,7 @@
       REAL,ALLOCATABLE,DIMENSION(:,:,:) :: ave_gradBgu33
 !  ave_theta
       REAL :: gradB
+      REAL,ALLOCATABLE,DIMENSION(:,:) :: ave_sat_geo_inv
       REAL,ALLOCATABLE,DIMENSION(:,:) :: ave_kx
       REAL,ALLOCATABLE,DIMENSION(:,:) :: ave_c_tor_par, ave_c_tor_per
       REAL,ALLOCATABLE,DIMENSION(:,:) :: ave_c_par_par

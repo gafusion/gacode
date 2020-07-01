@@ -20,7 +20,7 @@ subroutine prgen_read_iterdb
   !----------------------------------------------------
   ! Read the iterdb file
   !
-  open(unit=1,file=raw_data_file,status='old')
+  open(unit=1,file=file_state,status='old')
   read(1,*) t
 
   read(1,*) t ; read(1,*) onetwo_ishot
@@ -44,15 +44,15 @@ subroutine prgen_read_iterdb
   read(1,*) t ; read(1,*) x
   read(1,*) t ; read(1,*) onetwo_volo
   read(1,*) t ; read(1,*) onetwo_cxareao
-  read(1,*) t ; read(1,*) onetwo_Btor
-  read(1,*) t ; read(1,*) ip_tot
+  read(1,*) t ; read(1,*) bcentr
+  read(1,*) t ; read(1,*) current
   read(1,*) t ; read(1,*) x
   read(1,*) t ; read(1,*) x
   read(1,*) t ; read(1,*) x
   read(1,*) t ; read(1,*) x ! Te0
   read(1,*) t ; read(1,*) x ! Ti0
 
-  call allocate_internals
+  call prgen_allocate
   call allocate_iterdb_vars
 
   allocate(xv(nx))
@@ -67,6 +67,10 @@ subroutine prgen_read_iterdb
   read(1,*) t ; read(1,*) q
   read(1,*) t ; read(1,*) onetwo_ene
 
+  ! Will use this for normalized rho-grid
+  do i=1,nx
+     rho(i) = (i-1)/(nx-1.0)
+  enddo
 
   do i=1,onetwo_nion
      read(1,*) t ; read(1,*) onetwo_enion(:,i)
@@ -89,15 +93,15 @@ subroutine prgen_read_iterdb
   read(1,*) t ; read(1,*) onetwo_enbeam(:,1) ! fast ion density
 
   do i=1,onetwo_nprim
-     read(1,*) t ; read(1,*) xv ! neutral density
+     read(1,*) t ; read(1,*) onetwo_enn(:,i) ! neutral density
   enddo
 
   do i=1,onetwo_nprim
-     read(1,*) t ; read(1,*) xv ! neutral density from wall source
+     read(1,*) t ; read(1,*) onetwo_ennw(:,i) ! neutral density from wall source
   enddo
 
   do i=1,onetwo_nprim
-     read(1,*) t ; read(1,*) xv ! neutral density from volume source
+     read(1,*) t ; read(1,*) onetwo_ennv(:,i) ! neutral density from volume source
   enddo
 
   do i=1,onetwo_nprim
@@ -107,10 +111,10 @@ subroutine prgen_read_iterdb
   read(1,*) t ; read(1,*) onetwo_sbeame ! (sbion) beam electron source
   read(1,*) t ; read(1,*) onetwo_sbeam  ! (sbion) beam thermal ion source
   read(1,*) t ; read(1,*) xv ! total current density
-  read(1,*) t ; read(1,*) xv ! ohmic current density
-  read(1,*) t ; read(1,*) xv ! bootstrap current density
-  read(1,*) t ; read(1,*) xv ! beam-driven current density
-  read(1,*) t ; read(1,*) xv ! RF current density
+  read(1,*) t ; read(1,*) johm ! ohmic current density
+  read(1,*) t ; read(1,*) jbs ! bootstrap current density
+  read(1,*) t ; read(1,*) jnb ! beam-driven current density
+  read(1,*) t ; read(1,*) jrf ! RF current density
   read(1,*) t ; read(1,*) xv ! rho*bp0*fcap*gcap*hcap, tesla*meters
   read(1,*) t ; read(1,*) onetwo_zeff   ! 31
   read(1,*) t ; read(1,*) onetwo_angrot ! 32
@@ -197,14 +201,19 @@ subroutine prgen_read_iterdb
     onetwo_sscxl(:) = 0.0
   endif
 
-
+  ! qsync may be missing in iterdb file
+  read(1,'(a)',iostat=i) t
+  if (i == 0) then
+     print '(3(a))', 'INFO: (prgen_read_iterdb) Found new quantity "', trim(t), '" in iterdb file.'
+    read(1,*) onetwo_qsync(:)
+  else
+    onetwo_qsync(:) = 0.0
+  endif
   
   dpsi(:) = onetwo_psi(:)-onetwo_psi(1)
 
-  ! No squareness
-  zeta(:) = 0.0
-
-  ! No elevation
-  zmag(:) = 0.0
-
+  ! Compute torflux(a) [will be overwritten by gfile]
+  rcentr = onetwo_R0
+  torfluxa = 0.5*bcentr*onetwo_rho_grid(nx)**2
+  
 end subroutine prgen_read_iterdb

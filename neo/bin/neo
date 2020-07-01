@@ -219,15 +219,6 @@ cd $SIMDIR
 python $NEO_DIR/bin/neo_parse.py 
 #==========================================================
 
-#==========================================================
-# See if we are using experimental profiles
-
-if [ -f input.profiles ]
-then 
-   python $GACODE_ROOT/profiles_gen/bin/profile_parse.py input.profiles
-fi
-#==========================================================
-
 #===========================================================
 # RUN NEO
 #

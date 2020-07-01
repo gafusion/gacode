@@ -5,7 +5,6 @@
 IDENTITY="Linux Mint gfortran+mpich+OpenBLAS (/usr)"
 CORES_PER_NODE=4
 NUMAS_PER_NODE=1
-#SOLVER_OPT=slumt
 
 FFTWDIR=/usr/lib/x86_64-linux-gnu
 

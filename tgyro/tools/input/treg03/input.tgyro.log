@@ -1,6 +1,0 @@
-INFO: Number of code instances: 4
-INFO: Processed input.* in GYRO1; CPU_max=64
-INFO: Processed input.* in GYRO2; CPU_max=64
-INFO: Processed input.* in GYRO3; CPU_max=64
-INFO: Processed input.* in GYRO4; CPU_max=64
-INFO: Required MPI tasks in TGYRO: 4

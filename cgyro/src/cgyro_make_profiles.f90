@@ -2,7 +2,7 @@ subroutine cgyro_make_profiles
 
   use cgyro_globals
   use cgyro_io
-  use EXPRO_locsim_interface
+  use expro_locsim_interface
 
   implicit none
 
@@ -13,29 +13,11 @@ subroutine cgyro_make_profiles
   real :: cc,loglam
 
   !-------------------------------------------------------------
-  ! Manage electrons
-  !
-  num_ele = 0
-  do is=1,n_species
-     if (z(is) < 0) then
-        num_ele = num_ele + 1
-        is_ele = is
-     endif
-  enddo
-
-  if (num_ele == 0) then
-     ! Adiabatic electrons
+  ! Adiabatic-electron logic
+  if (n_species == 1) then
      ae_flag = 1
-     is_ele = n_species+1
-     call cgyro_info('Using adiabatic electrons')
-  else if (num_ele == 1) then
-     ! GK electrons
-     ae_flag = 0
-     call cgyro_info('Using gyrokinetic electrons')
-  else
-     call cgyro_error('Only one electron species allowed')
-     return
   endif
+  !-------------------------------------------------------------
 
   !-------------------------------------------------------------
   ! Local geometry treatment
@@ -47,7 +29,7 @@ subroutine cgyro_make_profiles
      allocate(geo_yin(8,0:geo_ny))
      geo_yin(:,:) = 0.0
   else if (equilibrium_model == 2) then
-     ! Miller
+     ! HAM
      geo_numeq_flag = 0
      geo_ny = 0
      allocate(geo_yin(8,0:geo_ny))
@@ -79,17 +61,7 @@ subroutine cgyro_make_profiles
 
      ! Experimental profiles
 
-     ! Determine if electrons are to be included in the 
-     ! simulation.  Electron profiles are read even if not 
-     ! to be included in the simulation (needed to re-scale 
-     ! ion density/temp if not quasi-neutral).
-     if (ae_flag == 0 .and. z(n_species) > 0.0) then
-        call cgyro_error('For exp. profiles, electron index must be n_species')
-        return
-     endif
-
-     call EXPRO_locsim_profiles(path,&
-          CGYRO_COMM_WORLD,&
+     call expro_locsim_profiles(&
           geo_numeq_flag,&
           udsymmetry_flag,&
           quasineutral_flag,&
@@ -99,6 +71,11 @@ subroutine cgyro_make_profiles
           ipccw,&
           a_meters)
 
+     do is=1,n_species
+        z(is)    = z_loc(is)
+        mass(is) = mass_loc(is)/2.0
+     enddo
+
      shift   = shift_loc
      kappa   = kappa_loc
      delta   = delta_loc
@@ -106,6 +83,20 @@ subroutine cgyro_make_profiles
      s_kappa = s_kappa_loc
      s_delta = s_delta_loc
      s_zeta  = s_zeta_loc
+
+     ! HAM (will be reset to 0.0 if udsymmetry_flag=1)
+     shape_sin3 = shape_sin3_loc
+     shape_cos0 = shape_cos0_loc
+     shape_cos1 = shape_cos1_loc
+     shape_cos2 = shape_cos2_loc
+     shape_cos3 = shape_cos3_loc
+
+     shape_s_sin3 = shape_s_sin3_loc
+     shape_s_cos0 = shape_s_cos0_loc
+     shape_s_cos1 = shape_s_cos1_loc
+     shape_s_cos2 = shape_s_cos2_loc
+     shape_s_cos3 = shape_s_cos3_loc
+ 
      q       = q_loc
      s       = s_loc
      zmag    = zmag_loc
@@ -124,7 +115,13 @@ subroutine cgyro_make_profiles
      dlntdr(1:n_species) = dlntdr_loc(1:n_species)
      sdlnndr(1:n_species) = sdlnndr_loc(1:n_species)     
      sdlntdr(1:n_species) = sdlntdr_loc(1:n_species)     
-     
+
+     if (ae_flag == 1) then
+        is_ele = n_species+1
+     else
+        is_ele = n_species
+     endif
+
      dens_ele = dens_loc(is_ele)
      temp_ele = temp_loc(is_ele)
      mass_ele = mass(is_ele)
@@ -192,13 +189,13 @@ subroutine cgyro_make_profiles
         temp(is) = temp(is)/temp_norm
         vth(is)  = vth(is)/vth_norm
      enddo
-     ne_ade   = ne_ade/dens_norm
-     te_ade   = te_ade/temp_norm
-     dens_ele = dens_ele/dens_norm
-     temp_ele = temp_ele/temp_norm
-     gamma_e  = gamma_e/(vth_norm/a_meters)
-     gamma_p  = gamma_p/(vth_norm/a_meters)
-     mach     = mach/vth_norm
+     dens_ae   = dens_ae/dens_norm
+     temp_ae   = temp_ae/temp_norm
+     dens_ele  = dens_ele/dens_norm
+     temp_ele  = temp_ele/temp_norm
+     gamma_e   = gamma_e/(vth_norm/a_meters)
+     gamma_p   = gamma_p/(vth_norm/a_meters)
+     mach      = mach/vth_norm
 
      do is=1,n_species
         nu(is) = nu_ee *z(is)**4 &
@@ -213,16 +210,7 @@ subroutine cgyro_make_profiles
      lambda_star      = lambda_star * lambda_star_scale
      gamma_e          = gamma_e      * gamma_e_scale
      gamma_p          = gamma_p      * gamma_p_scale
-     mach             = mach         * mach_scale
-     q                = q            * q_scale
-     s                = s            * s_scale
-     shift            = shift        * shift_scale
-     kappa            = kappa        * kappa_scale
-     delta            = delta        * delta_scale
-     zeta             = zeta         * zeta_scale
-     s_kappa          = s_kappa      * s_kappa_scale
-     s_delta          = s_delta      * s_delta_scale
-     s_zeta           = s_zeta       * s_zeta_scale
+     mach             = mach         * mach_scale    
      beta_star(0)     = beta_star(0) * beta_star_scale
      betae_unit       = betae_unit   * betae_unit_scale
      do is=1,n_species
@@ -248,12 +236,24 @@ subroutine cgyro_make_profiles
      q = abs(q)*(ipccw)*(btccw)
 
      if (ae_flag == 1) then
-        dens_ele = ne_ade
-        temp_ele = te_ade
-        mass_ele = masse_ade
-        dlnndr_ele = dlnndre_ade
-        dlntdr_ele = dlntdre_ade
-     else 
+        is_ele = -1
+        dens_ele = dens_ae
+        temp_ele = temp_ae
+        mass_ele = mass_ae
+        dlnndr_ele = dlnndr_ae
+        dlntdr_ele = dlntdr_ae
+     else
+        is_ele = -1
+        do is=1, n_species
+           if(z(is) < 0.0) then
+              is_ele = is
+              exit
+           endif
+        enddo
+        if(is_ele == -1) then
+           call cgyro_error('No electron species specified')
+           return
+        endif
         dens_ele = dens(is_ele)
         temp_ele = temp(is_ele)
         mass_ele = mass(is_ele)
@@ -292,6 +292,37 @@ subroutine cgyro_make_profiles
      enddo
   endif
 
+  ! Check electron species consistency
+  num_ele = 0
+  do is=1,n_species
+     if (z(is) < 0) then
+        num_ele = num_ele + 1
+     endif
+  enddo
+  if(num_ele == 0) then
+     if(ae_flag == 0) then
+        call cgyro_error('No electron species specified')
+        return
+     endif
+  else if(num_ele == 1) then
+     if(ae_flag == 1) then
+        call cgyro_error('Electron species specified with adiabatic electron flag')
+        return
+     endif
+  else
+     call cgyro_error('Only one electron species allowed')
+     return
+  endif
+
+  if (udsymmetry_flag == 1) then
+     zmag = 0.0 ; dzmag = 0.0
+     shape_sin3 = 0.0 ; shape_s_sin3 = 0.0
+     shape_cos0 = 0.0 ; shape_s_cos0 = 0.0
+     shape_cos1 = 0.0 ; shape_s_cos1 = 0.0
+     shape_cos2 = 0.0 ; shape_s_cos2 = 0.0
+     shape_cos3 = 0.0 ; shape_s_cos3 = 0.0
+  endif
+
   !-------------------------------------------------------------
   ! Manage simulation type (n=0,linear,nonlinear)
   !
@@ -315,7 +346,7 @@ subroutine cgyro_make_profiles
      call cgyro_info('Triggered zonal flow test')
 
      if (n_radial /= 1) then
-        call cgyro_info('Zonal flow test with n_radial>1')
+        call cgyro_info('Zonal flow test with n_radial > 1')
      endif
 
      n = 0
@@ -363,6 +394,7 @@ subroutine cgyro_make_profiles
   !------------------------------------------------------------------------
   ! ExB and profile shear
   !
+  source_flag = 0
   if (abs(gamma_e) > 1e-10 .and. nonlinear_flag > 0) then
      omega_eb = k_theta*length*gamma_e/(2*pi)
      select case (shear_method)
@@ -370,6 +402,7 @@ subroutine cgyro_make_profiles
         call cgyro_info('ExB shear: Hammett discrete shift') 
      case (2)
         call cgyro_info('ExB shear: Wavenumber advection') 
+        source_flag = 1
      case default
         call cgyro_error('Unknown ExB shear method') 
      end select
@@ -381,6 +414,7 @@ subroutine cgyro_make_profiles
 
   if (profile_shear_flag == 1) then
      call cgyro_info('Profile shear: Continuous wavenumber advection') 
+     source_flag = 1
   else
      sdlnndr(1:n_species) = 0.0
      sdlntdr(1:n_species) = 0.0
@@ -407,9 +441,7 @@ subroutine cgyro_make_profiles
   endif
 
   !-------------------------------------------------------------
-!$acc enter data copyin(px)
-
-!$acc update device(temp)
+!$acc enter data copyin(px,z,temp)
 
 end subroutine cgyro_make_profiles
 

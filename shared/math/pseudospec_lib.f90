@@ -30,6 +30,7 @@ subroutine pseudo_legendre(n,x,w,d1,dl)
   real, dimension(:), allocatable :: work
   real, dimension(:,:), allocatable :: c
   real, dimension(:,:), allocatable :: cp
+  real, dimension(:,:), allocatable :: cpp
   real, dimension(:,:), allocatable :: cl
 
   integer, parameter :: print_flag=0
@@ -39,15 +40,15 @@ subroutine pseudo_legendre(n,x,w,d1,dl)
   lwork = 2*n
   allocate(ipiv(n))
   allocate(work(lwork))
-
   allocate(c(n,n))
   allocate(cp(n,n))
+  allocate(cpp(n,n))
   allocate(cl(n,n))
 
   do i=1,n
      do j=1,n
         ! d/dxi
-        call pseudo_rec_legendre(j-1,x(i),c(i,j),cp(i,j))
+        call pseudo_rec_legendre(j-1,x(i),c(i,j),cp(i,j),cpp(i,j))
         ! L
         cl(i,j) = -(j-1)*j*c(i,j)
      enddo
@@ -84,6 +85,13 @@ subroutine pseudo_legendre(n,x,w,d1,dl)
      enddo
 
   endif
+
+  deallocate(ipiv)
+  deallocate(work)
+  deallocate(c)
+  deallocate(cp)
+  deallocate(cpp)
+  deallocate(cl)
 
 end subroutine pseudo_legendre
 
@@ -164,32 +172,31 @@ subroutine pseudo_orthog(n,nu,alpha,beta,a,b)
 end subroutine pseudo_orthog
 
 !-------------------------------------------------------
-! p -> P(n,x)
-! q -> P(n,x)'
+! p = P(n,x) ; q = P'(n,x) ; r = P''(n,x)
 !-------------------------------------------------------
 
-subroutine pseudo_rec_legendre(n,x,p,q)
+subroutine pseudo_rec_legendre(n,x,p,q,r)
 
   implicit none
 
   integer, intent (in) :: n
   real, intent (in) :: x
-  real, intent(out) :: p,q
+  real, intent(out) :: p,q,r
   integer :: j
   real :: a,b
   real :: pmm,pm
   real :: qmm,qm
+  real :: rmm,rm
 
   if (n == 0) then
-     p  = 1.0
-     q  = 0.0
+     p = 1.0
+     q = 0.0
+     r = 0.0
   else
-     pmm = 0.0
-     pm  = 1.0
-
-     qmm = 0.0
-     qm  = 0.0
-
+     pmm = 0.0 ; pm = 1.0
+     qmm = 0.0 ; qm = 0.0
+     rmm = 0.0 ; rm = 0.0
+     
      do j=0,n-1
 
         a = (2*j+1.0)/(j+1.0)
@@ -197,13 +204,16 @@ subroutine pseudo_rec_legendre(n,x,p,q)
 
         ! P(n,x)
         p = a*x*pm-b*pmm
-        pmm = pm
-        pm = p
+        pmm = pm ; pm = p
 
         ! P'(n,x)
         q = a*x*qm-b*qmm + a*pmm
-        qmm = qm
-        qm  = q
+        qmm = qm ; qm = q
+
+        ! P''(n,x)
+        r = a*x*rm-b*rmm + 2*a*qmm
+        rmm = rm ; rm = r
+        
      enddo
   endif
 
@@ -215,9 +225,9 @@ real function p_legendre(n,x)
 
   integer, intent(in) :: n
   real, intent(in) :: x
-  real :: p,q
+  real :: p,q,r
 
-  call pseudo_rec_legendre(n,x,p,q)
+  call pseudo_rec_legendre(n,x,p,q,r)
 
   p_legendre = p
 

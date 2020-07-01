@@ -3,11 +3,10 @@ program pneo
   use mpi
   use pneo_globals
   use neo_interface
-  use EXPRO_interface
 
   implicit none
 
-  integer :: p,k, is
+  integer :: p,is
   integer :: i1,i2,i3,i4,i5,i6,i7,i8,i9
   integer :: n1,n2,n3,n4,n5,n6,n7,n8,n9
   real, dimension(:), allocatable :: rmin_over_rmaj

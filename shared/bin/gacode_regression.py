@@ -1,4 +1,4 @@
-#!/task/imd/anaconda/bin/python
+#!python
 import os, sys
 def make_clean():
     ret = os.system('cd $GACODE_ROOT; make clean')
@@ -10,7 +10,7 @@ def make():
     if ret:
         print('GACODE failed to make')
         sys.exit(125)
-class RegressionError():
+class RegressionError(Exception):
     pass
 def run_regressions():
     for code in ['gyro','neo','tglf','tgyro','cgyro']:

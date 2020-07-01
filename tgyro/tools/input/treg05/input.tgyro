@@ -1,0 +1,51 @@
+DIR TGLF1 1
+DIR TGLF2 1
+DIR TGLF3 1
+DIR TGLF4 1
+
+#-----------------------------------------------------
+# TGLF control
+TGYRO_TGLF_REVISION=3
+#-----------------------------------------------------
+
+#-----------------------------------------------------
+# NEO control
+TGYRO_NEO_METHOD=1
+#-----------------------------------------------------
+
+#-----------------------------------------------------
+# Profile control
+TGYRO_DEN_METHOD0=0
+TGYRO_DEN_METHOD1=0
+LOC_TE_FEEDBACK_FLAG=1
+LOC_TI_FEEDBACK_FLAG=1
+#-----------------------------------------------------
+
+#-----------------------------------------------------
+# Scenario (1=static exch, 2=dynamic exch, 3=reactor)
+LOC_SCENARIO=2 
+TGYRO_RMIN=0.2
+TGYRO_RMAX=0.65
+
+LOC_N_ION=2
+LOC_Z=1.0
+LOC_MA1=2.0
+LOC_Z2=6.0
+LOC_MA2=12.0
+#-----------------------------------------------------
+
+#-----------------------------------------------------
+# Iteration control
+TGYRO_ITERATION_METHOD=2
+LOC_RESIDUAL_METHOD=2
+
+LOC_DX=0.15
+LOC_DX_MAX=0.15
+LOC_RELAX=1.0
+
+# TGYRO iterations
+TGYRO_RELAX_ITERATIONS=4
+
+# Restart (0=new,1=restart)
+LOC_RESTART_FLAG=0
+#-----------------------------------------------------

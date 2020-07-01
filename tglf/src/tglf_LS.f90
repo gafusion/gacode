@@ -24,7 +24,7 @@
       INTEGER :: imax,is
       INTEGER :: mi,me
       REAL :: zgamax
-      REAL :: v2_bar,kyi
+      REAL :: phi2_bar,kyi
       REAL :: sum_v_bar, sum_modB_bar
       REAL :: get_intensity, get_gamma_net
 !  ZGESV storage
@@ -153,7 +153,7 @@
         jmax(j1) = 0
         gamma_out(j1) = 0.0
         freq_out(j1) = 0.0
-        phi_QL_out(j1) = 0.0
+        v_QL_out(j1) = 0.0
         a_par_QL_out(j1) = 0.0
         b_par_QL_out(j1) = 0.0
         phi_bar_out(j1) = 0.0
@@ -283,8 +283,9 @@
 !
           wd_bar_out(imax)=wd_bar
           b0_bar_out(imax)=b0_bar
+          sat_geo_bar_out(imax)=sat_geo_bar
           modB_bar_out(imax)=modB_bar
-          phi_QL_out(imax)=phi_weight
+          v_QL_out(imax)=v_weight
           a_par_QL_out(imax)=a_par_weight
           b_par_QL_out(imax)=b_par_weight
           kx_bar_out(imax)=kx_bar
@@ -310,22 +311,28 @@
             Ns_Ts_phase_out(imax,is)=Ns_Ts_phase(is)
           enddo
           ne_te_phase_out(imax) = Ne_Te_phase
+          ! SAT_RULE = 0 intensity model assumes the vector norm v_bar
           kyi=ky
-          v2_bar =  &
-            get_intensity(kyi,gamma_out(imax))
-          v_bar_out(imax) = v2_bar
+          if(ABS(v_QL_out(imax)).lt.epsilon1)then
+            v_bar_out(imax)=0.0
+            phi2_bar = 0.0
+          else
+            v_bar_out(imax) = get_intensity(kyi,gamma_out(imax))
+            if(units_in.ne.'GYRO')v_bar_out(imax) = sat_geo_bar_out(imax)*v_bar_out(imax)
+            phi2_bar = v_bar_out(imax)/v_QL_out(imax)
+          endif
 !
-          phi_bar_out(imax) = v2_bar*phi_QL_out(imax)
-          a_par_bar_out(imax) = v2_bar*a_par_QL_out(imax)
-          b_par_bar_out(imax) = v2_bar*b_par_QL_out(imax)
+          phi_bar_out(imax) = phi2_bar
+          a_par_bar_out(imax) = phi2_bar*a_par_QL_out(imax)
+          b_par_bar_out(imax) = phi2_bar*b_par_QL_out(imax)
           do is=ns0,ns
-            N_bar_out(imax,is)=v2_bar*N_QL_out(imax,is)
-            T_bar_out(imax,is)=v2_bar*T_QL_out(imax,is)
-            U_bar_out(imax,is)=v2_bar*U_QL_out(imax,is)
-            Q_bar_out(imax,is)=v2_bar*Q_QL_out(imax,is)
+            N_bar_out(imax,is)=phi2_bar*N_QL_out(imax,is)
+            T_bar_out(imax,is)=phi2_bar*T_QL_out(imax,is)
+            U_bar_out(imax,is)=phi2_bar*U_QL_out(imax,is)
+            Q_bar_out(imax,is)=phi2_bar*Q_QL_out(imax,is)
           enddo
          endif
-        enddo
+        enddo !imax
 ! check for inward ballooing 
      ft_test = 0.0
      sum_modB_bar=0.0
@@ -423,8 +430,8 @@
        intensity = cnorm*(wd0**2)*(gnet**exponent1 &
         + c1*gnet)/(kp**4)
        if(alpha_quench_in.eq.0.0.and.ABS(kx0_e).gt.0.0)then
-         intensity = intensity/(1.0+0.56*(kx_geo0_out*kx0_e)**2)**2
-         intensity = intensity/(1.0+(1.15*(kx_geo0_out*kx0_e))**4)**2
+         intensity = intensity/(1.0+0.56*kx0_e**2)**2
+         intensity = intensity/(1.0+(1.15*kx0_e)**4)**2
        endif
          intensity = intensity*SAT_geo0_out
       elseif(sat_rule_in.eq.1)then
@@ -561,7 +568,7 @@
 ! **************************************************************
 !
 ! compute the quasilinear weights for a single eigenmode
-! with eigenvector v
+! with eigenvector v. All of the QL weights are normalized to phi_norm
 !
 !
 !***************************************************************
@@ -572,6 +579,7 @@
       USE tglf_eigen
       USE tglf_coeff
       USE tglf_weight
+      USE tglf_sgrid
 ! 
       IMPLICIT NONE
 !
@@ -599,6 +607,7 @@
       COMPLEX :: phi_modB_phi,modB_phi
       COMPLEX :: phi_kx_phi,kx_phi
       COMPLEX :: phi_kpar_phi,kpar_phi
+      COMPLEX :: phi_sat_geo_phi,sat_geo_phi
       COMPLEX :: freq_QL
       REAL :: betae_psi,betae_sig
       REAL :: phi_norm,psi_norm,bsig_norm,vnorm
@@ -652,9 +661,9 @@
 !  compute the electromagnetic potentials
 !
       betae_psi = 0.0
-      if(use_bper_in)betae_psi = 0.5*betae_in/(ky*ky)
+      if(use_bper_in)betae_psi = 0.5*betae_s/(ky*ky)
       betae_sig = 0.0
-      if(use_bpar_in)betae_sig = 0.5*betae_in
+      if(use_bpar_in)betae_sig = 0.5*betae_s
       do i=1,nbasis
         phi(i)=0.0
         psi(i)=0.0
@@ -719,35 +728,42 @@
       phi_modB_phi = 0.0
       phi_kx_phi = 0.0
       phi_kpar_phi = 0.0
+      phi_sat_geo_phi = 0.0
       do i=1,nbasis
          wd_phi = 0.0
          b0_phi = 0.0
          modB_phi = 0.0
          kx_phi = 0.0
          kpar_phi = 0.0
+         sat_geo_phi = 0.0
          do j=1,nbasis
            wd_phi = wd_phi +ave_wdh(i,j)*phi(j)
            b0_phi = b0_phi +ave_b0(i,j)*phi(j)
            modB_phi = modB_phi +ave_c_par_par(i,j)*phi(j)
            kx_phi = kx_phi +ave_kx(i,j)*phi(j)
            kpar_phi = kpar_phi +xi*ave_kpar(i,j)*phi(j)
+           sat_geo_phi = sat_geo_phi + ave_sat_geo_inv(i,j)*phi(j)
          enddo
          phi_wd_phi = phi_wd_phi + CONJG(phi(i))*wd_phi
          phi_b0_phi = phi_b0_phi + CONJG(phi(i))*b0_phi
          phi_modB_phi = phi_modB_phi + CONJG(phi(i))*modB_phi
          phi_kx_phi = phi_kx_phi + CONJG(phi(i))*kx_phi
          phi_kpar_phi = phi_kpar_phi + CONJG(phi(i))*kpar_phi
+         phi_sat_geo_phi = phi_sat_geo_phi + CONJG(phi(i))*sat_geo_phi
       enddo
       wd_bar = REAL(phi_wd_phi)/phi_norm
       b0_bar = REAL(phi_b0_phi)/phi_norm
       modB_bar = ABS(REAL(phi_modB_phi)/phi_norm)
       kx_bar = REAL(phi_kx_phi)/phi_norm
       kpar_bar = REAL(phi_kpar_phi)/phi_norm
+      sat_geo_bar = 1.0/MAX(REAL(phi_sat_geo_phi)/phi_norm,epsilon1)
+      if(xnu_model_in.eq.4)sat_geo_bar = 1.0/MAX(ave_sat_geo_inv(1,1),epsilon1)
 !      write(*,*)"wd_bar = ",wd_bar
 !      write(*,*)"b0_bar = ",b0_bar
 !       write(*,*)"modB_bar = ",modB_bar
 !      write(*,*)"kx_bar = ",kx_bar
 !      write(*,*)"kpar_bar = ",kpar_bar
+!      write(*,*)"sat_geo_bar = ",sat_geo_bar
 !
 ! fill the stress moments
 !
@@ -865,14 +881,14 @@
           U_weight(is) = U_weight(is) + REAL(u_par(is,i)*CONJG(u_par(is,i)))
           Q_weight(is) = Q_weight(is) + REAL(q_tot(is,i)*CONJG(q_tot(is,i)))
         enddo
-        N_weight(is) = N_weight(is)/vnorm
-        T_weight(is) = T_weight(is)/vnorm 
-        U_weight(is) = U_weight(is)/vnorm
-        Q_weight(is) = Q_weight(is)/vnorm 
+        N_weight(is) = N_weight(is)/phi_norm
+        T_weight(is) = T_weight(is)/phi_norm
+        U_weight(is) = U_weight(is)/phi_norm
+        Q_weight(is) = Q_weight(is)/phi_norm
       enddo
-      phi_weight = phi_norm/vnorm 
-      a_par_weight = psi_norm/vnorm
-      b_par_weight = bsig_norm/vnorm
+      v_weight = vnorm/phi_norm
+      a_par_weight = psi_norm/phi_norm
+      b_par_weight = bsig_norm/phi_norm
 !
 !      write(*,*) 'ns = ',ns
 !      write(*,*) 'is  particle_weight   energy_weight'
@@ -919,49 +935,49 @@
 !
       IMPLICIT NONE
 !
-      INTEGER :: n,i,j,k,np
+      INTEGER :: n,i,j,k,np,npi,j0,imax
       REAL :: dx,hp0
       REAL :: hp(nb,max_plot)
       REAL :: xp(max_plot)
 !
-! set up the theta-grid 
+! set up the theta-grid
+! npi is the number of pi intervals for the plot from -npi Pi to +npi Pi
+     npi=9  !npi <= 9 limited by max_plot = 2*npi*ms/8+1
+     np = ms/8   ! number of points per 1/2 period = 16 for ms=12
      if(igeo.eq.0)then
-       dx = 6.0*pi/REAL(max_plot-1)
+       dx = REAL(npi)*2.0*pi/REAL(max_plot-1)
        do i=1,max_plot
-         xp(i) = -3*pi + REAL(i-1)*dx
+         xp(i) = -REAL(npi)*pi + REAL(i-1)*dx
          plot_angle_out(i) = xp(i)        
        enddo
      else
 ! general geometry case 0<y<Ly one loop counterclockwise 
-! y is the the straight field line coordiant of the Hermite basis
-! t_s is the mapping of the original theta coordinate that will be
-! used for plotting, Note that t_s has the opposite sign to y.
+! y is the the straight field line coordinant of the Hermite basis
+! t_s is the mapping of the original theta coordinate 0 < t_s < -2Pi with t_s(0)=0, t_s(ms)=-2 Pi
+! this will be used for plotting, Note that t_s has the opposite sign to y.
        dx = 2.0*pi/(y(ms)*width_in)
-       np = ms/8   ! number of points per 1/2 period = 16 for ms=128
-       xp(3*np+1)=0.0
-       plot_angle_out(3*np+1)=0.0
-       do i=1,np
-         j=4*(i-1)
-         xp(i) = -(y(ms) +y(ms/2-j))*dx
-         xp(i+np) = -y(ms-j)*dx
-         xp(i+2*np) = -y(ms/2-j)*dx
-         j=4*i
-         xp(i+3*np+1) = y(j)*dx 
-         xp(i+4*np+1) = y(ms/2+j)*dx
-         xp(i+5*np+1) = (y(ms)+y(j))*dx
-         j=4*(i-1)
-         plot_angle_out(i) = t_s(ms) +t_s(ms/2-j)
-         plot_angle_out(i+np) = t_s(ms-j)
-         plot_angle_out(i+2*np) = t_s(ms/2-j)
-         j=4*i
-         plot_angle_out(i+3*np+1) = -t_s(j)
-         plot_angle_out(i+4*np+1) = -t_s(ms/2+j)
-         plot_angle_out(i+5*np+1) = -(t_s(ms)+t_s(j))
+       j0 = npi*np+1 ! the index of the midpoint
+       xp(j0) = 0.0
+       plot_angle_out(j0) = 0.0
+       j = 0  ! j is the local index for one circuit poloidally
+       k = 0  ! counts the number of 2 pi  intervals
+       imax=np*npi
+       do i=1,imax
+           j = j+1
+           if(j.gt.2*np)then
+             j = j - 2*np
+             k = k + 1
+           endif
+           xp(j0+i) = (REAL(k)*y(ms) + y(4*j))*dx  ! remember y is positive 0 <= y <= Ly
+           xp(j0-i) = -(REAL(k+1)*y(ms) - y(ms-4*j))*dx ! ok for up/down assymetric cases
+           plot_angle_out(j0+i) = -(REAL(k)*t_s(ms) + t_s(4*j))  ! remember t_s is negative  0 <= t_s <= -2 Pi
+           plot_angle_out(j0-i) = REAL(k+1)*t_s(ms) - t_s(ms-4*j)
        enddo
      endif
-!     do i=1,max_plot
-!       write(*,*)i,"xp=",xp(i),"tp=",plot_angle_out(i)
-!     enddo
+ !     write(*,*)"t_s = ",(t_s(i),i=0,ms)
+ !   do i=1,imax
+ !     write(*,*)i,"xp=",xp(i),"tp=",plot_angle_out(i)
+ !   enddo
 ! compute the hermite polynomials on the theta-grid using recursion
       hp0 = sqrt_two/pi**0.25
       do i=1,max_plot

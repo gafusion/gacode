@@ -1,8 +1,7 @@
 subroutine locpargen_neo
 
   use locpargen_globals
-  use EXPRO_interface
-  use EXPRO_locsim_interface
+  use expro_locsim_interface
 
   implicit none
 
@@ -36,16 +35,26 @@ subroutine locpargen_neo
   write(1,10) 'S_DELTA=',s_delta_loc
   write(1,10) 'ZETA=',zeta_loc
   write(1,10) 'S_ZETA=',s_zeta_loc
-  write(1,11) 'IPCCW=', -EXPRO_signq*EXPRO_signb
-  write(1,11) 'BTCCW=', -EXPRO_signb
+  write(1,10) 'SHAPE_SIN3=',shape_sin3_loc
+  write(1,10) 'SHAPE_S_SIN3=',shape_s_sin3_loc
+  write(1,10) 'SHAPE_COS0=',shape_cos0_loc
+  write(1,10) 'SHAPE_S_COS0=',shape_s_cos0_loc
+  write(1,10) 'SHAPE_COS1=',shape_cos1_loc
+  write(1,10) 'SHAPE_S_COS1=',shape_s_cos1_loc
+  write(1,10) 'SHAPE_COS2=',shape_cos2_loc
+  write(1,10) 'SHAPE_S_COS2=',shape_s_cos2_loc
+  write(1,10) 'SHAPE_COS3=',shape_cos3_loc
+  write(1,10) 'SHAPE_S_COS3=',shape_s_cos3_loc
+  write(1,11) 'IPCCW=',int(ipccw)
+  write(1,11) 'BTCCW=',int(btccw)
   write(1,*)
 
   !---------------------------------------------------------
   ! Rotation data
 
   write(1,'(a)')  '# Rotation (Sonic)'
-  write(1,11) 'ROTATION_MODEL=', 2   
-  write(1,10) 'OMEGA_ROT=', mach_loc/rmaj_loc/cs_loc
+  write(1,11) 'ROTATION_MODEL=',2   
+  write(1,10) 'OMEGA_ROT=',mach_loc/rmaj_loc/cs_loc
   write(1,10) 'OMEGA_ROT_DERIV=',-gamma_p_loc*a/cs_loc/rmaj_loc
   write(1,*)  
 

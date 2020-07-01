@@ -2,14 +2,16 @@ Regression cases
 
 Transport mode:
 
-    treg01: [t+ th+ne0+te1+ti1]
-    treg02: [t+ th+ne1+te1+ti1]
-    treg03: [g+ th+ne1+te1+ti1]
-    treg04: [t+ th+ne1+te1+ti1] * DIII-D 128913 Benchmark case
+    treg01: [i4+ne0+te0+ti1+1+na]
+    treg02: [i1+ne0+te1+ti1+2+na]
+    treg03: [i1+ne1+te1+ti1+2+na]
+    treg04: [i1+ne1+te1+ti1+2+nk]
+    treg05: [i2+ne0+te1+ti1+2+na]
     iter01: TGLF-ITER recalibration case
 
 Multi-run mode:
 
+    mreg00: 
     mreg01: 
     embed : Embedded turbulence strong scaling case 
 
@@ -19,14 +21,12 @@ Neural network:
 
 ------------------------------------------------------
 
-t  = TGLF
-g  = GYRO
-
 tn = TGLFNN
 pn = EPEDNN
 
-neo = neo kinetic neoclassical
-th  = analytic neoclassical
+i1 = iteration scheme 1 (standard)
+i2 = iteration scheme 2 (diagonal)
+i4 = iteration scheme 1 (serial)
 
 ne0 = do not evolve ne
 ne1 = evolve ne
@@ -36,3 +36,9 @@ te1 = evolve Te
 
 ti0 = do not evolve Ti
 ti1 = evolve Ti
+
+1 = 1 ion
+2 = 2 ions
+
+nk = kinetic NEO
+na = analytic NEO

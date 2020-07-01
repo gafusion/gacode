@@ -88,7 +88,7 @@ subroutine cgyro_write_hosts
           i_err)
   
   if (i_err /= 0) then
-     call cgyro_error('ERROR: (CGYRO) MPI_FILE_WRITE_AT in cgyro_write_hosts failed')
+     call cgyro_error('MPI_FILE_WRITE_AT in cgyro_write_hosts failed')
      return
   endif
 

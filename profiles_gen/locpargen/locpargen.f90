@@ -9,8 +9,8 @@
 program locpargen
 
   use locpargen_globals
-  use EXPRO_interface
-  use EXPRO_locsim_interface
+  use expro
+  use expro_locsim_interface
 
   implicit none
 
@@ -23,45 +23,41 @@ program locpargen
   read(1,*) appendflag
   close(1)
 
-  EXPRO_ctrl_quasineutral_flag = qnflag
+  expro_ctrl_quasineutral_flag = qnflag
   ! We don't need the numerical eq. flag set for this routine.
-  EXPRO_ctrl_numeq_flag = hasgeo
+  expro_ctrl_numeq_flag = hasgeo
 
-  call EXPRO_alloc('./',1) 
-  call EXPRO_read
+  call expro_read('input.gacode') 
 
   ! Minor radius
-  a = EXPRO_rmin(EXPRO_n_exp)
+  a = expro_rmin(expro_n_exp)
 
   ! Electron index
-  ise = EXPRO_n_ion+1
+  ise = expro_n_ion+1
 
   if (rho0 > 0.0) then
 
      ! Use local rho
 
      x(1) = rho0
-     call cub_spline(EXPRO_rho,EXPRO_rmin/a,EXPRO_n_exp,x,y,1)
+     call cub_spline(expro_rho,expro_rmin/a,expro_n_exp,x,y,1)
      r0 = y(1)
 
   else if (psi0 > 0.0) then
 
      ! Use local psi_N
 
-     x(1) = psi0*abs(EXPRO_polflux(EXPRO_n_exp))
-     call cub_spline(abs(EXPRO_polflux),EXPRO_rmin/a,EXPRO_n_exp,x,y,1)
+     x(1) = psi0*abs(expro_polflux(expro_n_exp))
+     call cub_spline(abs(expro_polflux),expro_rmin/a,expro_n_exp,x,y,1)
      r0 = y(1)
 
   endif
 
-  call EXPRO_alloc('./',0) 
-
-  call EXPRO_locsim_profiles('./',&
-       -1,&
+  call expro_locsim_profiles(&
        hasgeo,&
        0,&
        qnflag,&
-       EXPRO_n_ion+1,&
+       expro_n_ion+1,&
        r0,&
        btccw,&
        ipccw,&
@@ -70,7 +66,7 @@ program locpargen
   !------------------------------------------------------------
   ! Create input.geo with local parameters for general geometry
   !
-  if (hasgeo == 1) call locpargen_geo
+  !if (hasgeo == 1) call locpargen_geo
   !------------------------------------------------------------
 
   if (qnflag == 0) then 
@@ -85,6 +81,7 @@ program locpargen
   print 10,'INFO: (locpargen) Ti [keV] =',temp_loc(1)
   print 10,'INFO: (locpargen) Bunit    =',b_unit_loc
   print 10,'INFO: (locpargen) beta_*   =',beta_star_loc
+  print 10,'INFO: ----->  n=1: ky*rhos =',q_loc/rmin_loc*rhos_loc/a
 
   ! Compute collision frequency
   !
@@ -100,8 +97,10 @@ program locpargen
   nu_ee  = cc*loglam*dens_loc(ise)/(sqrt(mass_loc(ise)/2.0)*temp_loc(ise)**1.5)
 
   betae_unit = 4.027e-3*dens_loc(ise)*temp_loc(ise)/b_unit_loc**2
+  
+  lambda_star = 7.43 * sqrt((1e3*temp_loc(ise))/(1e13*dens_loc(ise)))/rhos_loc
 
-  tag(:) = (/'1','2','3','4','5'/)
+  tag(:) = (/'1','2','3','4','5','6','7','8','9'/)
 
   open(unit=1,file='out.locpargen',status='replace')
   write(1,*) q_loc
@@ -114,6 +113,7 @@ program locpargen
 
   call fileopen('input.cgyro.locpargen') ; call locpargen_cgyro
   call fileopen('input.tglf.locpargen')  ; call locpargen_tglf
+  call fileopen('input.tglf.locpargen_stack') ; call locpargen_tglf_stack
   call fileopen('input.neo.locpargen')   ; call locpargen_neo
   print 10,'INFO: (locpargen) Wrote input.*.locpargen'
 
@@ -133,7 +133,7 @@ subroutine fileopen(fname)
      open(unit=1,file=trim(fname),status='replace')
   else
      open(unit=1,file=trim(fname),position='append')
-     write(1,*) '# **************** CUT HERE **********************'
+     write(1,*) '#---------------------------------------------------------'
   endif
 
 end subroutine fileopen

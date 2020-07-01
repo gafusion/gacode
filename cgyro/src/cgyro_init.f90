@@ -51,6 +51,11 @@ subroutine cgyro_init(path_in,mpi_comm_in)
   call MPI_BCAST(inputdat_flag,1,MPI_LOGICAL,0,CGYRO_COMM_WORLD,i_err)
 
   if (inputdat_flag .eqv. .false.) then
+     if (i_proc == 0) then
+     open(unit=io,file=trim(path)//runfile_info,status='old',position='append')
+     write(io,*) 'input.cgyro.gen missing'
+     close(io)
+     endif
      call MPI_FINALIZE(i_err)
      stop
   endif

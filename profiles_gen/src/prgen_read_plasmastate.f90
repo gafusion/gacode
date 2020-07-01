@@ -21,7 +21,7 @@ subroutine prgen_read_plasmastate
   real, parameter :: idiag=0
 
   ! Open the file (NF90_NOWRITE means read-only)
-  err = nf90_open(raw_data_file,NF90_NOWRITE,ncid)
+  err = nf90_open(file_state,NF90_NOWRITE,ncid)
 
   ! Shot
   plst_tag = 'shot_number'
@@ -87,7 +87,7 @@ subroutine prgen_read_plasmastate
 
   nx = plst_dim_nrho
 
-  call allocate_internals
+  call prgen_allocate
   call allocate_plasmastate_vars
 
   ! Species names (abridged)
@@ -110,35 +110,40 @@ subroutine prgen_read_plasmastate
   err = nf90_inq_varid(ncid,trim(plst_tag),varid)
   err = nf90_get_var(ncid,varid,plst_m_all(1:plst_dp1_nspec_all))
 
+  ! Total current
+  err = nf90_inq_varid(ncid,trim('curt'),varid)
+  err = nf90_get_var(ncid,varid,plst_vol(:))
+  current = plst_vol(nx)*1e-6
+  
   ! Flux-surface volume
   err = nf90_inq_varid(ncid,trim('vol'),varid)
   err = nf90_get_var(ncid,varid,plst_vol(:))
 
-  ! Normalizing B for toroidal flux
-  err = nf90_inq_varid(ncid,trim('B_axis_vac'),varid)
-  err = nf90_get_var(ncid,varid,plst_b_axis_vac)
+  ! Area
+  err = nf90_inq_varid(ncid,trim('area'),varid)
+  err = nf90_get_var(ncid,varid,plst_surf(:))
+
+  ! R_axis (proxy for EFIT rcentr -- will be overwritten by EFIT)
+  err = nf90_inq_varid(ncid,trim('R_axis'),varid)
+  err = nf90_get_var(ncid,varid,rcentr)
+
+  ! B_axis (proxy for EFIT bcentr -- will be overwritten by EFIT)
+  err = nf90_inq_varid(ncid,trim('B_axis'),varid)
+  err = nf90_get_var(ncid,varid,bcentr)
 
   ! B_phi orientation
   err = nf90_inq_varid(ncid,trim('kccw_Bphi'),varid)
   err = nf90_get_var(ncid,varid,plst_btccw)
-  if(btccw == 0) then
-     btccw = plst_btccw
-  endif
+  if (btccw == 0) btccw = plst_btccw
 
   ! J_phi orientation
   err = nf90_inq_varid(ncid,trim('kccw_Jphi'),varid)
   err = nf90_get_var(ncid,varid,plst_ipccw)
-  if(ipccw == 0) then
-     ipccw = plst_ipccw
-  endif
+  if (ipccw == 0) ipccw = plst_ipccw
 
   ! Root of normalized toroidal flux (rho)
   err = nf90_inq_varid(ncid,trim('rho'),varid)
-  err = nf90_get_var(ncid,varid,plst_rho(:))
-
-  ! Grad(rho)
-  err = nf90_inq_varid(ncid,trim('grho1'),varid)
-  err = nf90_get_var(ncid,varid,plst_grho1(:))
+  err = nf90_get_var(ncid,varid,rho(:))
 
   ! Toroidal flux
   err = nf90_inq_varid(ncid,trim('phit'),varid)
@@ -202,7 +207,7 @@ subroutine prgen_read_plasmastate
   err = nf90_inq_varid(ncid,trim('ns_bdy'),varid)
   err = nf90_get_var(ncid,varid,plst_ns(nx,1:plst_dp1_nspec_th))
 
-  ! Fast-ion handling ...
+  ! Fast-ion handling
 
   ntop = plst_dp1_nspec_th
   !------------------------------------------------------------------
@@ -223,10 +228,10 @@ subroutine prgen_read_plasmastate
      plst_tb(nx,:)     = plst_tb(nx-1,:)
 
      do i=1,plst_dim_nspec_beam
-         write(*,*) 'Writing beam',i,plst_nb(:,i)
-         ntop = ntop+1
-         plst_ns(:,ntop) = plst_nb(:,i)
-         plst_ts(:,ntop) = plst_tb(:,i)
+        print '(a,i2)','INFO: (prgen_read_plasmastate) Found beam ',i
+        ntop = ntop+1
+        plst_ns(:,ntop) = plst_nb(:,i)
+        plst_ts(:,ntop) = plst_tb(:,i)
      enddo
   else
      plst_nb = 0.0
@@ -301,8 +306,13 @@ subroutine prgen_read_plasmastate
 
   plst_omegat(nx) = dummy
 
-  ! SOURCES
+  !==========================
+  ! SOURCES: powers, currents
+  !==========================
 
+  !------------------------------------------------------------
+  ! Powers
+  !
   ! Total power to electrons
   err = nf90_inq_varid(ncid,trim('pe_trans'),varid)
   err = nf90_get_var(ncid,varid,plst_pe_trans(1:nx-1))
@@ -333,7 +343,7 @@ subroutine prgen_read_plasmastate
   else
      plst_pbi(:) = 0.0
   endif
-  ! ... thermalization
+  ! ... thermalization 
   err = nf90_inq_varid(ncid,trim('pbth'),varid)
   if (err == 0) then
      err = nf90_get_var(ncid,varid,plst_pbth(1:nx-1))
@@ -439,7 +449,7 @@ subroutine prgen_read_plasmastate
   if (idiag == 1) then
      open(unit=11,file='out.prgen.power_e',status='replace')
      do i=1,nx-1
-        write(11,'(14(1pe12.5,2x))') plst_rho(i),& ! 0
+        write(11,'(14(1pe12.5,2x))') rho(i),& ! 0
              plst_pe_trans(i), &     ! 1
              plst_pfuse(i), &        ! 2
              plst_qie(i), &          ! 3
@@ -454,7 +464,30 @@ subroutine prgen_read_plasmastate
      enddo
      close(11)
   endif
+  !------------------------------------------------------------
 
+  !------------------------------------------------------------
+  ! Currents
+  !
+  ! Ohmic current 
+  err = nf90_inq_varid(ncid,trim('curr_ohmic'),varid)
+  err = nf90_get_var(ncid,varid,plst_curr_ohmic(1:nx-1))
+  plst_curr_ohmic(nx) = 0.0
+  !
+  ! Bootstrap current 
+  err = nf90_inq_varid(ncid,trim('curr_bootstrap'),varid)
+  err = nf90_get_var(ncid,varid,plst_curr_bootstrap(1:nx-1))
+  plst_curr_bootstrap(nx) = 0.0
+  !
+  ! Bootstrap current 
+  err = nf90_inq_varid(ncid,trim('curt'),varid)
+  err = nf90_get_var(ncid,varid,plst_curt(1:nx-1))
+  plst_curt(nx) = 0.0
+  !
+  ! Total current (scalar)
+  
+  !------------------------------------------------------------
+  
   ! Angular momentum source torque
   err = nf90_inq_varid(ncid,trim('tq_trans'),varid)
   err = nf90_get_var(ncid,varid,plst_tq_trans(1:nx-1))
@@ -472,7 +505,7 @@ subroutine prgen_read_plasmastate
 
   ! Compute rmin and rmaj based on outer and
   ! inner major radii at midplane (of course,
-  ! this is not correct for elevated plasmas).
+  ! this is not correct for elevated plasmas)
   !
   rmin(:)  = 0.5*(plst_r_midp_out-plst_r_midp_in)
   rmaj(:)  = 0.5*(plst_r_midp_out+plst_r_midp_in)
@@ -484,21 +517,21 @@ subroutine prgen_read_plasmastate
   !----------------------------------------------
   ! Error check for missing/zero boundary (n,T)
   !
-  do i=1,plst_dp1_nspec_th
-     call boundary_fix(plst_rho,plst_ts(:,i),nx)
-     call boundary_fix(plst_rho,plst_ns(:,i),nx)
+  do i=1,plst_dp1_nspec_th     
+     call boundary_fix(rho,plst_ts(:,i),nx)
+     call boundary_fix(rho,plst_ns(:,i),nx)
   enddo
   !----------------------------------------------
 
-  ! No squareness
-  zeta(:) = 0.0
+  ! Compute torflux(a) [will be overwritten by gfile]
+  torfluxa = plst_phit(nx)/(2*pi)
 
 end subroutine prgen_read_plasmastate
 
 !----------------------------------------------------------
 ! boundary_fix
 !
-! Simple routine to correct anomalous boundary point.
+! Simple routine to correct anomalous boundary point
 ! Normally, the issue is that the boundary point is
 ! zero or very close to zero.
 !----------------------------------------------------------
@@ -534,3 +567,4 @@ subroutine boundary_fix(x,f,n)
   endif
 
 end subroutine boundary_fix
+

@@ -59,8 +59,14 @@ tgyro/src/tgyro_main
 le3/src/le3
 le3/profiles_3d/profiles_3d
 quick/src/quick
-gapy/test/test_geo/geo_test
-gapy/test/test_vpro/vpro_test
+gapy/test/test_geo/test
+gapy/test/test_expro/test
+f2py/build
+f2py/gacode.egg-info
+f2py/pygacode.egg-info
+f2py/pygacode/lib
+f2py/dist
+f2py/MANIFEST
 
 # Regression logs and directories
 *.log

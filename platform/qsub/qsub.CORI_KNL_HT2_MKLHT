@@ -4,7 +4,7 @@ echo "-queue: debug [default], regular, premium"
 
 # Default queue
 if [ "$QUEUE" == "null_queue" ] ; then
-   QUEUE=debug
+   QUEUE=low
 fi
 
 bfile=$SIMDIR/batch.src

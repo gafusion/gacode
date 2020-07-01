@@ -218,10 +218,6 @@ subroutine tgyro_flux
         expwd_i_tur(i_ion,i_r) = tglf_ion_expwd_out(i0)
      enddo
 
-     ! Harvest various fluxes 
-     ! NOTE: Requires USE_HARVEST=1 in tgyro/src/Makefile
-     call tgyro_harvest
-
   case (3)  ! Map TGYRO parameters to GLF23
 
      call tgyro_glf23_map

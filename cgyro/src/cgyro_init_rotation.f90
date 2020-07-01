@@ -103,7 +103,7 @@ subroutine cgyro_init_rotation
      enddo
 
      if (j > jmax) then
-        call cgyro_error('ERROR: (CGYRO) Rotation poloidal density computation failed to converge')
+        call cgyro_error('Rotation poloidal density computation failed to converge')
         return
      endif
      

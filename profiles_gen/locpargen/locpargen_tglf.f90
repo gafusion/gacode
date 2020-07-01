@@ -1,8 +1,7 @@
 subroutine locpargen_tglf
 
   use locpargen_globals
-  use EXPRO_interface
-  use EXPRO_locsim_interface
+  use expro_locsim_interface
 
   implicit none
 
@@ -23,8 +22,8 @@ subroutine locpargen_tglf
   write(1,10) 'S_DELTA_LOC=',s_delta_loc
   write(1,10) 'ZETA_LOC=',zeta_loc
   write(1,10) 'S_ZETA_LOC=',s_zeta_loc
-  write(1,10) 'SIGN_BT=',-real(EXPRO_signb)
-  write(1,10) 'SIGN_IT=',-real(EXPRO_signq*EXPRO_signb)
+  write(1,10) 'SIGN_BT=',btccw
+  write(1,10) 'SIGN_IT=',ipccw
   write(1,*)
   write(1,'(a)') '# Collisions and pressure'
   write(1,10) 'ZEFF=',z_eff_loc

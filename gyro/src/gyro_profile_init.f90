@@ -82,7 +82,6 @@ subroutine gyro_profile_init
      ! For local runs, set some unused parameters:
 
      a_meters   = 1.0
-     bt_exp     = 1.0
      n_grid_exp = 0
 
   endif

@@ -10,11 +10,11 @@
 
 subroutine tgyro_write_data(i_print)
 
+  use mpi
   use tgyro_globals
   use tgyro_ped
-  use EXPRO_interface
-  use mpi
   use tgyro_iteration_variables, only : i_tran_loop
+  use expro
 
   implicit none
 
@@ -26,7 +26,7 @@ subroutine tgyro_write_data(i_print)
   real, dimension(2:n_r,loc_n_ion+4) :: res2,relax2
   character(len=2) :: itag
   character(len=6) :: ntag,ttag
-  character(len=50) :: msg_str,date_str,time_str
+  character(len=50) :: date_str,time_str
   logical :: converged
   real :: res_norm(p_max)
   
@@ -50,59 +50,49 @@ subroutine tgyro_write_data(i_print)
   converged = sum(res_norm)/size(res_norm) < tgyro_residual_tol
 
   !====================================================
-  ! input.profiles
+  ! input.gacode
   !====================================================
 
   if (tgyro_write_profiles_flag /= 0 .and. i_print > 0) then 
 
-     call EXPRO_palloc(MPI_COMM_WORLD,'./',1)
-     call EXPRO_pread
+     call expro_read('input.gacode')
 
      call tgyro_profile_reintegrate
 
      ! First, hose the original profiles 
-     EXPRO_ni = 0.0
-     EXPRO_ti = 0.0
+     expro_ni = 0.0
+     expro_ti = 0.0
 
-     EXPRO_ptot = ptot_exp
-     EXPRO_ne   = exp_ne*1e-13
-     EXPRO_te   = exp_te*1e-3
+     expro_ptot = ptot_exp
+     expro_ne   = exp_ne*1e-13
+     expro_te   = exp_te*1e-3
     
-     EXPRO_ni(1:loc_n_ion,:) = exp_ni(1:loc_n_ion,:)*1e-13
-     EXPRO_ti(1:loc_n_ion,:) = exp_ti(1:loc_n_ion,:)*1e-3
-     EXPRO_w0   = exp_w0
-     EXPRO_ptot = ptot_exp ! already in Pa
-     do i_exp=1,EXPRO_n_exp
-        EXPRO_z_eff(i_exp) = sum(exp_ni(1:loc_n_ion,i_exp)*zi_vec(1:loc_n_ion)**2)/&
+     expro_ni(1:loc_n_ion,:) = exp_ni(1:loc_n_ion,:)*1e-13
+     expro_ti(1:loc_n_ion,:) = exp_ti(1:loc_n_ion,:)*1e-3
+     expro_w0   = exp_w0
+     expro_ptot = ptot_exp ! already in Pa
+     do i_exp=1,expro_n_exp
+        expro_z_eff(i_exp) = sum(exp_ni(1:loc_n_ion,i_exp)*zi_vec(1:loc_n_ion)**2)/&
              sum(exp_ni(1:loc_n_ion,i_exp)*zi_vec(1:loc_n_ion))
      enddo
   
      if (i_proc_global == 0) then
 
         call date_and_time(DATE=date_str,TIME=time_str)
-        msg_str = 'Profiles modified by TGYRO '//trim(date_str)//' '//trim(time_str)
-        
+        expro_head_tgyro = '#     tgyro : '//trim(date_str)//' '//trim(time_str)
+
         if (tgyro_write_profiles_flag == -1) then
            ! Output for each iteration
            write(ntag,'(i0)') i_tran
-           call EXPRO_write_original(&
-                1,'input.profiles',&
-                2,'input.profiles.'//trim(ntag),trim(msg_str))
+           call expro_write('input.gacode.'//trim(ntag))
         endif
 
         if (i_tran_loop == tgyro_relax_iterations .or. converged) then
            ! Output for last iteration
-           call EXPRO_write_original(&
-                1,'input.profiles',&
-                2,'input.profiles.new',trim(msg_str))
-
-           call EXPRO_compute_derived
-           call EXPRO_write_derived(1,'input.profiles.extra')
+           call expro_write('input.gacode.new')
         endif
 
      endif
-
-     call EXPRO_palloc(MPI_COMM_WORLD,'./',0)
 
   endif
 
@@ -575,11 +565,11 @@ subroutine tgyro_write_data(i_print)
      close(1)
 
      !====================================================
-     ! Precision 
+     ! Precision (just the total residual)
      !====================================================
 
      open(unit=1,file='out.tgyro.prec',status='old',position='append')
-     write(1,*) sum(abs(eflux_i_tot(:))+abs(eflux_e_tot(:)))
+     write(1,*) sum(res_norm)/size(res_norm)
      close(1)
 
      !====================================================

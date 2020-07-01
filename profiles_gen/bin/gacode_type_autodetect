@@ -4,17 +4,26 @@
 #
 # Types:
 #
-#  GACODE      (input.profiles)
+#  GACODE      (input.gacode)
+#  LEGACY      (legacy input.profiles)
 #  ITERDB      (text iterdb)
 #  ITERDBNC    (netCDF iterdb)
 #  SWIM        (plasmastate)
 #  PFILE       (peqdsk)
-#  CORSICA  
+#  CORSICA
 #  GFILE       (geqdsk equilibrium data)
 #  DSKGATO_OLD (old-type dskgato flux-surface data)
 #  DSKGATO_NEW (new-type dskgato flux-surface data)
 #--------------------------------------------
 
+if [ "$(basename $1)" == "input.gacode" ] ; then
+    echo "GACODE"
+    exit 0
+fi
+if [ "$1" == "input.profiles" ] ; then
+    echo "LEGACY"
+    exit 0
+fi
 if [ "$1" == "UFILE" ] ; then
    echo "UFILE"
    exit 0
@@ -61,8 +70,8 @@ if [[ "$x" == "NetCDF Data Format data" ]] ; then
    y=`ncdump -c $1 | grep -c dim_nrho_eq`
    if [[ $y -gt 0 ]] ; then
       echo "SWIM"
-   fi      
-   exit 0 
+   fi
+   exit 0
 
 else
    # pfile, gfile, iterdb text
@@ -73,42 +82,49 @@ else
       exit 0
    fi
 
-   y=`grep -c BT_EXP $1`
-   if [[ $y -gt 0 ]] ; then
-      echo "GACODE" 
-      exit 0
-   fi 
+#   y=`grep -c BT_EXP $1`
+#   if [[ $y -gt 0 ]] ; then
+#      echo "GACODE"
+#      exit 0
+#   fi
 
    y=`grep -c cxareao $1`
    if [[ $y -gt 0 ]] ; then
-      echo "ITERDB" 
+      echo "ITERDB"
       exit 0
-   fi 
+   fi
 
    y=`grep -c CORSICA $1`
    if [[ $y -gt 0 ]] ; then
-      echo "CORSICA" 
+      echo "CORSICA"
       exit 0
-   fi 
+   fi
 
    # If we get to this point, we are dealing with equilibrium data
    y=`sed -n '2p' < $1 | grep -o E | wc -l`
    if [[ $y -eq 5 ]] ; then
-      echo "GFILE" 
+      echo "GFILE"
       exit 0
-   fi 
+   fi
+
    if [[ $y -eq 4 ]] ; then
-      echo "DSKGATO_OLD" 
+      echo "DSKGATO_OLD"
       exit 0
-   fi 
+   fi
 
    y=`sed -n '4p' < $1 | grep -o E | wc -l`
    if [[ $y -eq 4 ]] ; then
-      echo "DSKGATO_NEW" 
+      echo "DSKGATO_NEW"
       exit 0
-   fi 
+   fi
 
-   echo "UNKNOWN" 
+   # Added a new gfile test
+   y=`head -1 $1 | grep -o E | wc -l`
+   if [[ $y -eq 1 ]] ; then
+      echo "GFILE"
+      exit 0
+   fi
+
+   echo "UNKNOWN"
    exit 1;
 fi
-

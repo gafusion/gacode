@@ -10,9 +10,11 @@ module locpargen_globals
   integer :: qnflag
   integer :: appendflag
   
-  character(len=1) :: tag(5)
+  character(len=2) :: tag(9)
 
   real :: btccw,ipccw
-  real :: cc,loglam,nu_ee,pi,betae_unit
+  real :: pi
+  real :: cc,loglam,nu_ee
+  real :: betae_unit,lambda_star
 
 end module locpargen_globals

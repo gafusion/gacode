@@ -26,19 +26,15 @@ module cgyro_globals
   integer :: n_toroidal
   integer :: n_field
   real    :: e_max
+  real    :: alpha_poly
   integer :: e_method
   integer :: delta_t_method
   real    :: delta_t
-  real    :: delta_t_gk
-  real    :: delta_t_tol
-  integer :: error_mode
-  integer :: delta_gk_method
-  real    :: total_local_error
+  real    :: error_tol
   real    :: max_time
   integer :: print_step
   integer :: restart_step
   real    :: freq_tol
-  integer :: restart_mode
   real    :: up_radial
   real    :: up_theta
   real    :: up_alpha
@@ -67,11 +63,11 @@ module cgyro_globals
   integer :: zf_test_mode 
   integer :: nonlinear_flag 
   integer :: nonlinear_method
-  real :: te_ade
-  real :: ne_ade
-  real :: dlntdre_ade   
-  real :: dlnndre_ade
-  real :: masse_ade
+  real :: temp_ae
+  real :: dens_ae
+  real :: mass_ae
+  real :: dlntdr_ae   
+  real :: dlnndr_ae   
   real :: lambda_star
   integer :: test_flag
   integer :: h_print_flag
@@ -84,8 +80,6 @@ module cgyro_globals
   real :: gamma_p
   real :: mach
   integer :: rotation_model
-  real :: error_tol
-  real :: adapt_tol
   integer :: mpi_rank_order
   integer :: hiprec_flag
   integer :: udsymmetry_flag
@@ -95,9 +89,10 @@ module cgyro_globals
   integer :: psym_flag
   integer :: profile_shear_flag
   integer :: theta_plot
-  integer :: mpiio_small_stripe_factor
-  integer :: mpiio_stripe_factor
   integer :: gpu_bigmem_flag
+  real :: px0
+  integer :: stream_term
+  real :: stream_factor
   !
   ! Geometry input
   !
@@ -114,6 +109,16 @@ module cgyro_globals
   real :: s_zeta
   real :: zmag
   real :: dzmag
+  real :: shape_sin3        
+  real :: shape_s_sin3
+  real :: shape_cos0    
+  real :: shape_s_cos0
+  real :: shape_cos1
+  real :: shape_s_cos1
+  real :: shape_cos2    
+  real :: shape_s_cos2
+  real :: shape_cos3    
+  real :: shape_s_cos3
   real :: betae_unit
   !
   ! Species parameters
@@ -137,12 +142,6 @@ module cgyro_globals
   real :: gamma_e_scale
   real :: gamma_p_scale
   real :: mach_scale
-  real :: q_scale
-  real :: s_scale
-  real :: shift_scale
-  real :: kappa_scale, s_kappa_scale
-  real :: delta_scale, s_delta_scale
-  real :: zeta_scale, s_zeta_scale
   real :: beta_star_scale, betae_unit_scale
   real :: nu_ee_scale
   real, dimension(11) :: dlnndr_scale
@@ -179,7 +178,6 @@ module cgyro_globals
   integer :: CGYRO_COMM_WORLD
   integer :: NEW_COMM_1
   integer :: NEW_COMM_2
-  integer :: NEW_COMM_RESTART_IO
   integer :: nv1,nv2,nc1,nc2
   integer :: nsplit
   integer, dimension(:), allocatable :: recv_status
@@ -231,8 +229,8 @@ module cgyro_globals
   character(len=18) :: binfile_ky_cflux = 'bin.cgyro.ky_cflux'
   character(len=15), dimension(3) :: binfile_fieldb = &
        (/'bin.cgyro.phib ','bin.cgyro.aparb','bin.cgyro.bparb'/)
-  character(len=16), dimension(2) :: binfile_kxky = &
-       (/'bin.cgyro.kxky_n','bin.cgyro.kxky_e'/)
+  character(len=16), dimension(3) :: binfile_kxky = &
+       (/'bin.cgyro.kxky_n','bin.cgyro.kxky_e','bin.cgyro.kxky_v'/)
   character(len=19), dimension(3) :: binfile_kxky_field = &
        (/'bin.cgyro.kxky_phi ','bin.cgyro.kxky_apar','bin.cgyro.kxky_bpar'/)
   character(len=20), dimension(3) :: binfile_lky_flux = &
@@ -251,6 +249,11 @@ module cgyro_globals
   integer :: io_control
   integer :: signal
   integer :: restart_flag
+
+  logical :: printout=.true.
+
+  integer, parameter :: mpiio_small_stripe_factor = 4
+  integer, parameter :: mpiio_stripe_factor = 24
   character(len=2) :: mpiio_small_stripe_str
   character(len=3) :: mpiio_stripe_str
   !
@@ -266,10 +269,14 @@ module cgyro_globals
   integer :: i_time
   integer :: n_time
   integer :: i_current
-  real :: t_current
+  real    :: t_current
+  real    :: gtime
   complex :: freq
   complex :: freq_err
-  real :: gtime
+  !
+  ! adaptive integrator parameters
+  real :: delta_t_gk
+  real :: total_local_error
   !---------------------------------------------------------------
 
   !---------------------------------------------------------------
@@ -312,13 +319,18 @@ module cgyro_globals
   complex, dimension(:,:), allocatable :: dtheta_up
   !
   ! Wavenumber advection
+  integer :: source_flag
+  real, parameter :: tau_ave=50.0
   real, dimension(:), allocatable :: c_wave
+  complex, dimension(:,:), allocatable :: source
+  real :: sa
   !
   ! Distributions
   complex, dimension(:,:,:), allocatable :: rhs
   complex, dimension(:,:), allocatable :: h_x
   complex, dimension(:,:), allocatable :: g_x
   complex, dimension(:,:), allocatable :: h0_x
+  complex, dimension(:,:), allocatable :: h0_old
   complex, dimension(:,:), allocatable :: psi
   complex, dimension(:,:), allocatable :: chi
   complex, dimension(:,:,:), allocatable :: f_nl

@@ -77,7 +77,25 @@ subroutine cgyro_check_memory(datafile)
      write(io,*)
      write(io,*) 'Distribution-like arrays'
      write(io,*)
-     call cgyro_alloc_add(io,4*nc*nv_loc*16.0,'rhs')
+!     call cgyro_alloc_add(io,4*nc*nv_loc*16.0,'rhs')
+
+     ! call cgyro_alloc_add(io,10*nc*nv_loc*16.0,'rhs')
+
+     select case(delta_t_method)
+     case(1)
+        call cgyro_alloc_add(io,nc*nv_loc*16.0,'h0_old')
+        call cgyro_alloc_add(io,6*nc*nv_loc*16.0,'rhs')
+     case(2)
+        call cgyro_alloc_add(io,nc*nv_loc*16.0,'h0_old')
+        call cgyro_alloc_add(io,7*nc*nv_loc*16.0,'rhs')
+     case(5)
+        call cgyro_alloc_add(io,nc*nv_loc*16.0,'h0_old')
+        call cgyro_alloc_add(io,10*nc*nv_loc*16.0,'rhs')
+     case default
+        ! Normal timestep
+        call cgyro_alloc_add(io,4*nc*nv_loc*16.0,'rhs')
+     end select
+
      call cgyro_alloc_add(io,n_field*nc*nv_loc*16.0,'omega_s')
      call cgyro_alloc_add(io,n_field*nc*nv_loc*16.0,'omega_ss')
      call cgyro_alloc_add(io,nc*nv_loc*16.0,'omega_cap_h')

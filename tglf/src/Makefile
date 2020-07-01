@@ -63,12 +63,12 @@ tglf_run_mpi.o: tglf_run.F90
 	$(FC) -o tglf_run_mpi.o $(FMATH) $(FFLAGS) -DMPI_TGLF=1 -c $<
 
 .f90.o:
-	$(FC) $(FMATH) $(FFLAGS) $(NN_LIB) -c $< 
+	$(FC) $(FMATH) $(FFLAGS) $(NN_LIB) -c $<
 .F90.o:
-	$(FC) $(FMATH) $(FFLAGS) $(NN_LIB) -c $< 
+	$(FC) $(FMATH) $(FFLAGS) $(NN_LIB) -c $<
 
 clean:
 	rm -f *.o *.lst $(LLIB).a $(EXEC1) $(EXEC2)
-	rm -f ${GACODE_ROOT}/modules/tglf*.mod 
+	rm -f ${GACODE_ROOT}/modules/tglf*.mod
 
 -include ${GACODE_ROOT}/platform/build/make.inc.${GACODE_PLATFORM}

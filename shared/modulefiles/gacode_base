@@ -37,7 +37,8 @@ prepend-path PATH ${GACODE_ROOT}/le3/bin
 prepend-path PATH ${GACODE_ROOT}/shared/bin
 prepend-path PATH ${GACODE_ROOT}/profiles_gen/bin
 
-prepend-path PYTHONPATH ${GACODE_ROOT}/python
+prepend-path PYTHONPATH ${GACODE_ROOT}/f2py
+prepend-path PYTHONPATH ${GACODE_ROOT}/f2py/pygacode
 
 append-path IDL_PATH ${GACODE_ROOT}/gyro/vugyro
 

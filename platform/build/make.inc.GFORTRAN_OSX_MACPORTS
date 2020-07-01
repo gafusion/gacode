@@ -1,6 +1,6 @@
 #---------------------------------------------------
 # OSX,gfortran+openmpi from MacPorts
-# sudo port install openmpi netcdf-fortran 
+# sudo port install openmpi netcdf-fortran
 # sudo port install fftw-3 +openmpi
 #---------------------------------------------------
 IDENTITY="OSX gfortran+openmpi from MacPorts"
@@ -8,7 +8,7 @@ IDENTITY="OSX gfortran+openmpi from MacPorts"
 MAKE = make
 
 NETCDF_PATH=/opt/local
-MF90 = mpif90
+MF90 = mpif90-openmpi-mp
 
 # Compilers and flags
 #
@@ -16,7 +16,7 @@ MF90 = mpif90
 #
 
 FC  = ${MF90} -std=f2008 -fall-intrinsics -I$(GACODE_ROOT)/modules -J$(GACODE_ROOT)/modules -I/opt/local/include -fPIC
-F77 = ${MF90} 
+F77 = ${MF90}
 
 FOMP	= -fopenmp
 FMATH	= -fdefault-real-8 -fdefault-double-8
@@ -28,7 +28,7 @@ FDEBUG	= -Wall -g -fcheck=all -fbacktrace -fbounds-check -O0 -Wextra -finit-real
 
 LMATH = -L/opt/local/lib -lfftw3
 
-NETCDF = -L${NETCDF_PATH}/lib -lnetcdff -lnetcdf 
+NETCDF = -L${NETCDF_PATH}/lib -lnetcdff -lnetcdf
 NETCDF_INC =${NETCDF_PATH}/include
 
 # Archive

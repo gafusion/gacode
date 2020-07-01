@@ -137,9 +137,9 @@ subroutine tgyro_write_input
      write(1,20) 'LOC_RELAX (conv. relaxation)',loc_relax
 
      if (tgyro_consistent_flag == 0) then
-        write(1,10) 'TGYRO_CONSISTENT_FLAG','Finite-difference gradients used from input.profiles'
+        write(1,10) 'TGYRO_CONSISTENT_FLAG','Finite-difference gradients used from input.gacode'
      else
-        write(1,10) 'TGYRO_CONSISTENT_FLAG','Profile-consistent gradients used from input.profiles'
+        write(1,10) 'TGYRO_CONSISTENT_FLAG','Profile-consistent gradients used from input.gacode'
      endif
 
      write(1,*)

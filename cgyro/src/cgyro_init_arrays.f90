@@ -258,6 +258,8 @@ subroutine cgyro_init_arrays
      ll = 2*l-1
      c_wave(l) = 2.0/pi/ll**2*(-1)**(l-1)
   enddo
+  source = 0.0
+  sa     = 0.0
   !-------------------------------------------------------------------------
 
   !-------------------------------------------------------------------------
@@ -283,7 +285,7 @@ subroutine cgyro_init_arrays
         enddo
      enddo
   enddo
-!$acc enter data copyin(dtheta,dtheta_up,icd_c)
+!$acc enter data copyin(dtheta,dtheta_up,icd_c,c_wave)
 
   ! Streaming coefficients (for speed optimization)
 
@@ -317,12 +319,13 @@ subroutine cgyro_init_arrays
              + omega_cdrift(it,is)*vel(ie)*xi(ix) + omega_rot_drift(it,is) &
              + omega_rot_edrift(it))
         
-        u = (2.0*pi/n_radial)*px(ir)
+        ! Note that we shift the dissipation with px0 (ballooning angle linear mode)
+        u = (2.0*pi/n_radial)*(px(ir)+px0)
 
         ! (d/dr) components from drifts
         
         omega_cap_h(ic,iv_loc) = omega_cap_h(ic,iv_loc) & 
-             - (n_radial/length)*(i_c*u) &
+             - (n_radial/length)*i_c*u &
              * (omega_rdrift(it,is)*energy(ie)*(1.0+xi(ix)**2) &
              + omega_cdrift_r(it,is)*vel(ie)*xi(ix) &
              + omega_rot_drift_r(it,is) &
@@ -344,15 +347,15 @@ subroutine cgyro_init_arrays
         omega_s(:,ic,iv_loc) = carg*jvec_c(:,ic,iv_loc)
 
         ! Profile curvature via wavenumber advection (ix -> d/dp)
-        ! See whiteboard notes 
+        ! See whiteboard notes.
+        ! JC: Re-checked sign and normalization (Oct 2019)
         carg = -k_theta*length*(sdlnndr(is)+sdlntdr(is)*(energy(ie)-1.5))/(2*pi)
 
-        ! This array *not* used by OpenACC
         omega_ss(:,ic,iv_loc) = carg*jvec_c(:,ic,iv_loc)
 
      enddo
   enddo
-!$acc enter data copyin(omega_cap_h,omega_h,omega_s,omega_ss,c_wave)
+!$acc enter data copyin(omega_cap_h,omega_h,omega_s,omega_ss)
   !-------------------------------------------------------------------------
 
 end subroutine cgyro_init_arrays

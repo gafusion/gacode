@@ -108,6 +108,7 @@ subroutine tgyro_allocate_globals
   allocate(dzmag(n_r))
   allocate(zeta(n_r))
   allocate(s_zeta(n_r))
+  allocate(b_ref(n_r))
   allocate(b_unit(n_r))
   allocate(volp(n_r))
   allocate(vol(n_r))

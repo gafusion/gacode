@@ -65,7 +65,7 @@ subroutine tgyro_source
      ! Synchrotron radiation
      ! - Trubnikov, JETP Lett. 16 (1972) 25.
      wpe = sqrt(4*pi*ne(i)*e**2/me)
-     wce = e*abs(b_ref)/(me*c)
+     wce = e*abs(b_ref(i))/(me*c)
      g   = k*te(i)/(me*c**2)
      phi = 60*g**1.5*sqrt((1.0-r_coeff)*(1+1/aspect_rat/sqrt(g))/(r_min*wpe**2/c/wce))
 
@@ -138,7 +138,7 @@ subroutine tgyro_source
      p_e(:) = p_e_in(:) &              ! Total electron input power 
           -(p_exch(:)-p_exch_in(:)) &  ! Consistent e-i exchange
           -p_expwd(:)*tgyro_expwd_flag ! Turbulent exchange
-
+     
   case (3)
 
      ! Reactor with consistent alpha power, exchange and radiation.

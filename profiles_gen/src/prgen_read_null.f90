@@ -13,6 +13,6 @@ subroutine prgen_read_null
 
   nx = n_null
 
-  call allocate_internals
+  call prgen_allocate
  
 end subroutine prgen_read_null

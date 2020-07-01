@@ -75,7 +75,7 @@ subroutine cgyro_read_restart_verify
   recid = recid + 1
   if ( magic /= restart_magic) then
      close(io)
-     call cgyro_error('ERROR: (CGYRO) Wrong magic number in restart header')
+     call cgyro_error('Wrong magic number in restart header')
      return
   endif
    
@@ -83,7 +83,7 @@ subroutine cgyro_read_restart_verify
   recid = recid + 1
   if ( version /= 2) then
      close(io)
-     call cgyro_error('ERROR: (CGYRO) Wrong version in restart header, only v2 supported')
+     call cgyro_error('Wrong version in restart header, only v2 supported')
      return
   endif
 
@@ -103,7 +103,7 @@ subroutine cgyro_read_restart_verify
        (t_n_species/=n_species) .or. (t_n_xi/=n_xi) .or. &
        (t_n_energy/=n_energy) .or. (t_n_toroidal/=n_toroidal) ) then
      close(io)
-     call cgyro_error('ERROR: (CGYRO) Wrong geometry in restart header')
+     call cgyro_error('Wrong geometry in restart header')
      return
   endif
 
@@ -138,7 +138,7 @@ subroutine cgyro_read_restart_one
   integer(KIND=8) :: start_time,cp_time
   integer(KIND=8) :: count_rate, count_max
   real :: cp_dt
-  integer :: statusfd
+  integer :: ic0,j,statusfd
 
   ! use system_clock to be consistent with cgyro_kernel
   call system_clock(start_time,count_rate,count_max)
@@ -155,7 +155,7 @@ subroutine cgyro_read_restart_one
 
   offset1 = size(h_x,kind=MPI_OFFSET_KIND)*(i_proc_1+i_proc_2*n_proc_1) + restart_header_size
   if (offset1 < restart_header_size) then
-     call cgyro_error('ERROR: (CGYRO) overflow detected in cgyro_read_restart_one')
+     call cgyro_error('Overflow detected in cgyro_read_restart_one')
      return
   endif
 
@@ -169,7 +169,7 @@ subroutine cgyro_read_restart_one
           i_err)
 
   if (i_err /= 0) then
-     call cgyro_error('ERROR: (CGYRO) MPI_FILE_OPEN in cgyro_read_restart_one failed')
+     call cgyro_error('MPI_FILE_OPEN in cgyro_read_restart_one failed')
      return
   endif
 
@@ -190,13 +190,26 @@ subroutine cgyro_read_restart_one
           i_err)
 
   if (i_err /= 0) then
-     call cgyro_error('ERROR: (CGYRO) MPI_FILE_READ_AT in cgyro_read_restart_one failed')
+     call cgyro_error('MPI_FILE_READ_AT in cgyro_read_restart_one failed')
      return
   endif
 
   call MPI_FILE_CLOSE(fhv,i_err)
   call MPI_INFO_FREE(finfo,i_err)
 
+  ! Unpack h(0,0) into source 
+  if (source_flag == 1 .and. n == 0) then
+     ic0 = (n_radial/2)*n_theta
+     do j=1,n_theta
+        source(j,:) = h_x(ic0+j,:)
+        h_x(ic0+j,:) = 0.0
+     enddo
+     sa = 0.0
+     do j=1,nint(t_current/delta_t)
+        sa = 1.0+exp(-delta_t/tau_ave)*sa
+     enddo
+  endif
+  
   call system_clock(cp_time,count_rate,count_max)
   if (cp_time > start_time) then
     cp_dt = (cp_time-start_time)/real(count_rate)

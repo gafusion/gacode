@@ -203,9 +203,9 @@
        endif
        if(use_bper_in)then
          if(nbasis.eq.2)then
-           betae_psi = 0.5*betae_in/(ky*ky+(damp_psi_in*vs(2)/(q_unit*width_in))**2)
+           betae_psi = 0.5*betae_s/(ky*ky+(damp_psi_in*vs(2)/(q_unit*width_in))**2)
         else
-           betae_psi = 0.5*betae_in/(ky*ky)
+           betae_psi = 0.5*betae_s/(ky*ky)
         endif
 !       write(*,*)"betae_psi = ",betae_psi
 !         damp_psi = damp_psi_in/MAX(betae_psi*vs(1)*vs(1),0.001)
@@ -225,9 +225,9 @@
        damp_sig = 0.0
        if(use_bpar_in)then
          if(nbasis.eq.2)then
-           betae_psi = 0.5*betae_in/(ky*ky+(damp_sig_in*vs(2)/(q_unit*width_in))**2)
+           betae_psi = 0.5*betae_s/(ky*ky+(damp_sig_in*vs(2)/(q_unit*width_in))**2)
          else
-           betae_psi = 0.5*betae_in/(ky*ky)
+           betae_psi = 0.5*betae_s/(ky*ky)
          endif
 !      damp_sig = damp_sig_in/MAX(betae_sig*vs(1)*vs(1),0.001)
        endif
@@ -302,7 +302,8 @@
 ! xnu_model = 0  version 1.80 large xnu limit = 0.0
 ! xnu_model = 1  version 1.81 used for APS07 , large xnu limit = adiabatic
 ! xnu_model = 2  version 1.85 large xnu_limit = circulating response 
-! xnu_model = 3  retuned trapped boundary term to fit CGYRO with Lorentz operator 2/8/2017
+! xnu_model = 3  retuned trapped boundary term to fit CGYRO with Lorentz operator2/8/2017
+! xnu_model = 4  best fit to response function Phys. Plasmas 17, (2010) 122309.
        k1=0.0
        k2=0.0
        k3=0.0
@@ -400,7 +401,8 @@
 !      write(*,*)xnu_q3_b,xnu_q1_b
 !
       cnuei = 0.0
-      if(xnu_model.eq.2.or.xnu_model.eq.3)cnuei = xnue_in
+!     if(xnu_model.eq.2.or.xnu_model.eq.3)cnuei = xnue_in
+      if(xnu_model.ge.2)cnuei = xnue_in
 !      kparvthe = ABS(k_par0)*vs(1)*xnu_factor_in/sqrt_two
       kparvthe = ABS(k_par0)*vs(1)/sqrt_two
       kparvthe=MAX(kparvthe,1.0E-10)
@@ -477,7 +479,8 @@
       cb5 =0.0
 !recalibrated 8/20/14      cb1 = 0.114*SQRT(kparvthe*cnuei*(1.0 + 0.82*zeff_in))
       cb1 = 0.163*SQRT(kparvthe*cnuei*(1.0 + 0.82*zeff_in))
-      if(xnu_model_in.eq.3)cb1 = 0.50*(kparvthe**0.34)*(cnuei*(1.0 + 0.82*zeff_in))**0.66
+       if(xnu_model_in.eq.3)cb1 = 0.50*(kparvthe**0.34)*(cnuei*(1.0 + 0.82*zeff_in))**0.66
+       if(xnu_model_in.eq.4)cb1 = 0.852*(kparvthe**0.5)*(cnuei*(1.0 + 0.82*zeff_in))**0.5  ! 1.55 for Zeff=1
       cb1 = cb1*xnu_factor_in
       cb2 = cb1
       cb4 = cb1

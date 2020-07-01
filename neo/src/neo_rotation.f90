@@ -114,11 +114,11 @@ module neo_rotation
             sum_zn  = sum_zn  + z(is) * dens(is,ir)
             dsum_zn = dsum_zn + z(is) * dens(is,ir) * dlnndr(is,ir)
          enddo
-         if(adiabatic_ele_model == 1) then
-            sum_zn  = sum_zn - ne_ade(ir)
-            sum_zn  = sum_zn / ne_ade(ir)
-            dsum_zn = dsum_zn - ne_ade(ir) * dlnndre_ade(ir)
-            dsum_zn = dsum_zn / ne_ade(ir)
+         if(ae_flag == 1) then
+            sum_zn  = sum_zn - dens_ae(ir)
+            sum_zn  = sum_zn / dens_ae(ir)
+            dsum_zn = dsum_zn - dens_ae(ir) * dlnndr_ae(ir)
+            dsum_zn = dsum_zn / dens_ae(ir)
          else
             sum_zn   = sum_zn / dens(is_ele,ir)
             dsum_zn  = dsum_zn / dens(is_ele,ir)
@@ -220,10 +220,10 @@ module neo_rotation
                   dsum_zn = dsum_zn - z(is) / temp_para(is,ir) * fac
                enddo
             
-               if(adiabatic_ele_model == 1) then
-                  fac = -ne_ade(ir) * exp(1.0/te_ade(ir) * x)
+               if(ae_flag == 1) then
+                  fac = -dens_ae(ir) * exp(1.0/temp_ae(ir) * x)
                   sum_zn  = sum_zn  + fac
-                  dsum_zn = dsum_zn + 1.0 / te_ade(ir) * fac
+                  dsum_zn = dsum_zn + 1.0 / temp_ae(ir) * fac
                endif
 
                x0 = x
@@ -293,9 +293,9 @@ module neo_rotation
                fac = z(is) * dens(is,ir) * dens_fac(is,it)
                sum_zn = sum_zn + z(is) / temp_para(is,ir) * fac
             enddo
-            if(adiabatic_ele_model == 1) then
-               fac = -ne_ade(ir) * exp(1.0/te_ade(ir) * phi_rot(it))
-               sum_zn = sum_zn - 1.0/te_ade(ir) * fac
+            if(ae_flag == 1) then
+               fac = -dens_ae(ir) * exp(1.0/temp_ae(ir) * phi_rot(it))
+               sum_zn = sum_zn - 1.0/temp_ae(ir) * fac
             endif
             
             do is=1,n_species
@@ -303,11 +303,11 @@ module neo_rotation
                phi_rot_rderiv(it) = phi_rot_rderiv(it) &
                     + fac * (-dlnndr_fac(is,it))
             enddo
-            if(adiabatic_ele_model == 1) then
-               fac = -ne_ade(ir) * exp(1.0/te_ade(ir) * phi_rot(it))
+            if(ae_flag == 1) then
+               fac = -dens_ae(ir) * exp(1.0/temp_ae(ir) * phi_rot(it))
                phi_rot_rderiv(it) = phi_rot_rderiv(it) &
-                    + fac * (-dlnndre_ade(ir) &
-                    + phi_rot(it)/te_ade(ir) * dlntdre_ade(ir))
+                    + fac * (-dlnndr_ae(ir) &
+                    + phi_rot(it)/temp_ae(ir) * dlntdr_ae(ir))
             endif
             phi_rot_rderiv(it) = phi_rot_rderiv(it) / sum_zn
          enddo
@@ -316,11 +316,9 @@ module neo_rotation
          do it=1,n_theta
             phi_rot_deriv(it) = 0.0
             do id=-2,2
-               if (id /= 0) then
-                  jt = thcyc(it+id)
-                  phi_rot_deriv(it) = phi_rot_deriv(it) &
-                       + phi_rot(jt) * cderiv(id) / (12.0*d_theta)
-               endif
+               jt = thcyc(it+id)
+               phi_rot_deriv(it) = phi_rot_deriv(it) &
+                    + phi_rot(jt) * cderiv(id) / (12.0*d_theta)
             enddo
          enddo
 

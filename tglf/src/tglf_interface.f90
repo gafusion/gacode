@@ -43,7 +43,7 @@ module tglf_interface
   integer              :: tglf_test_flag_in  = 0
 
 ! units switch
-  character (len=4) :: tglf_units_in = 'TGLF'
+  character (len=8) :: tglf_units_in = 'GYRO'
 
 ! INPUT PARAMETERS
   logical :: tglf_use_transport_model_in = .true.
@@ -177,9 +177,6 @@ module tglf_interface
   real     :: tglf_Z_elite_in(max_ELITE) 
   real     :: tglf_Bp_elite_in(max_ELITE) 
   
-  ! Extra HARVEST parameters
-  character (len=2000) :: tglf_harvest_extra_in = CHAR(0)
-
   ! TRANSPORT OUTPUT PARAMETERS
   real :: tglf_elec_pflux_out = 0.0
   real :: tglf_elec_eflux_out = 0.0
@@ -192,10 +189,25 @@ module tglf_interface
   real, dimension(nsm-1) :: tglf_ion_eflux_low_out = 0.0
   real, dimension(nsm-1) :: tglf_ion_mflux_out = 0.0
   real, dimension(nsm-1) :: tglf_ion_expwd_out = 0.0
+
+  real, dimension(nsm-1, 3) :: tglf_particle_flux_out = 0.0
+  real, dimension(nsm-1, 3) :: tglf_energy_flux_out = 0.0
+  real, dimension(nsm-1, 3) :: tglf_stress_tor_out = 0.0
+  real, dimension(nsm-1, 3) :: tglf_stress_par_out = 0.0
+  real, dimension(nsm-1, 3) :: tglf_exchange_out = 0.0
   
   ! LINEAR OUTPUT PARAMETERS
   complex :: tglf_eigenvalue_out(maxmodes)
 
+  ! GYRO TGLF input
+  real, allocatable, dimension(:, :, :) :: tglf_eigenvalue_spectrum_out
+  real, allocatable, dimension(:) :: tglf_ky_spectrum_out, tglf_dky_spectrum_out
+
+  real, allocatable, dimension(:, :, :) :: tglf_field_spectrum_out
+  real, allocatable, dimension(:, :, :, :, :) :: tglf_flux_spectrum_out
+  
+  
+  
   ! DIAGNOSTIC OUTPUT PARAMETERS
   real :: interchange_DR = 0.0
   real :: interchange_DM = 0.0
@@ -237,6 +249,7 @@ contains
     write(1,*) '#---------------------------------------------------'
     write(1,*) '# Control parameters:'
     write(1,*) '#---------------------------------------------------'
+    write(1,50) 'UNITS', tglf_units_in
     write(1,20) 'NS',tglf_ns_in
     write(1,10) 'USE_TRANSPORT_MODEL',tglf_use_transport_model_in
     write(1,20) 'GEOMETRY_FLAG',tglf_geometry_flag_in
@@ -374,6 +387,7 @@ contains
 20  format(t2,a,'=',i3)
 30  format(t2,a,'=',1pe12.5)
 40  format(t2,a,i1,'=',1pe12.5)
+50  format(t2,a,'=',a8)
 
   end subroutine tglf_dump_local
 
@@ -401,6 +415,7 @@ contains
     write(1,*) '#---------------------------------------------------'
     write(1,*) '# Control parameters:'
     write(1,*) '#---------------------------------------------------'
+    write(1,50) 'UNITS',tglf_units_in
     write(1,20) 'NS',ns_in
     write(1,10) 'USE_TRANSPORT_MODEL',.TRUE.
     write(1,20) 'GEOMETRY_FLAG',igeo
@@ -538,6 +553,7 @@ contains
 20  format(t2,a,'=',i3)
 30  format(t2,a,'=',1pe12.5)
 40  format(t2,a,i1,'=',1pe12.5)
+50  format(t2,a,'=',a8)
 
   end subroutine tglf_dump_global
 

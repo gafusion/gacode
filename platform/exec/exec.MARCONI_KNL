@@ -1,0 +1,43 @@
+#! /usr/bin/env bash
+#
+# SCRIPT:
+#  gyro.MARCONI
+#
+# FUNCTION:
+#  Parallel execution script
+#---------------------------------------------------
+
+simdir=${1}
+nmpi=${2}
+exec=${3}
+nomp=${4}
+numa=${5}
+mpinuma=${6}
+nidle=${7}
+
+# nmpi = MPI tasks
+# nomp = OpenMP threads per MPI task
+# numa = NUMAs active per node
+# mpinuma = MPI tasks per active NUMA 
+
+. $GACODE_ROOT/shared/bin/gacode_mpi_tool
+#  commented out at the moment.
+# Do not know how to properly run it on broadwell and knl.
+
+
+#cor=$(cpuinfo|grep Cores|head -1)
+#cor=${cor#*:}
+#if (( cor == 36 )) ; then
+#    ppn=32 #broadwell
+#else
+#    ppn=64 #knights landing
+#fi
+
+cd $simdir
+
+export OMP_NUM_THREADS=$nomp
+export KMP_AFFINITY=compact
+#mpirun -ppn $ppn -np $nmpi $exec 
+#using for now 64 instead of 68 processors per node.
+#mostly the processor numbers are actually powers of 2.
+mpirun -ppn 64 -np $nmpi $exec 

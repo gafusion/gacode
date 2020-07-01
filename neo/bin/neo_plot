@@ -22,10 +22,10 @@ then
   echo
   echo "          -e <simdir>"
   echo "          Use data in <simdir>."
-  echo 
+  echo
   echo "          -ie <n>"
   echo "          Energy index (if applicable)"
-  echo 
+  echo
   echo "          -plot <type>"
   echo "          Generate plot of given type."
   echo "          If this keyword is omitted, data will be listed to the screen."
@@ -59,13 +59,13 @@ while [ $# -gt 0 ] ; do
   case "$1" in
 
   -plot) shift ; PLOT_FLAG=1 ; PLOT_TYPE=$1 ;;
- 
+
   -e) shift ; LOCDIR=$1 ;;
 
   -p) shift ; SIMROOT=$1 ;;
 
   -img) shift ; FTYPE=$1 ;;
-  
+
   -ie) shift ; IE=$1 ;;
 
   -n) shift ; N=$1 ;;
@@ -88,12 +88,12 @@ cd $SIMDIR
 #==============================================================================
 case "$PLOT_TYPE" in
 
-   xtsurf)  
+   xtsurf)
 	python $GACODE_ROOT/neo/bin/neo_plot_xtsurf.py $SIMDIR $FTYPE  ;;
 
-   f3x)  
+   f3x)
 	python $GACODE_ROOT/neo/bin/neo_plot_f3x.py $FTYPE $IE $N $LOCDIR ;;
-   
-esac 
+
+esac
 
 exit 0

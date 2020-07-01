@@ -7,15 +7,13 @@ else
 endif
 
 export EXTRA_LIBS = \
-	${GACODE_ROOT}/shared/math/math_lib.a \
-	${GACODE_ROOT}/gapy/EXPRO/EXPRO_lib.a \
-	${GACODE_ROOT}/gapy/src/geo_lib.a \
-	${GACODE_ROOT}/shared/fluxfit/fluxfit_lib.a
+	${GACODE_ROOT}/f2py/expro/expro_lib.a \
+        ${GACODE_ROOT}/f2py/geo/geo_lib.a
 
 EXEC = prgen
 
 OBJECTS = prgen_globals.o \
-          allocate_internals.o \
+          prgen_allocate.o \
           allocate_iterdb_vars.o \
           allocate_plasmastate_vars.o \
 	  allocate_peqdsk_vars.o \
@@ -29,11 +27,9 @@ OBJECTS = prgen_globals.o \
 	  prgen_map_peqdsk.o \
 	  prgen_map_corsica.o \
 	  prgen_map_ufile.o \
-	  prgen_map_inputprofiles.o \
+	  prgen_map_inputgacode.o \
           prgen_read_cer.o \
-          prgen_read_dskgato.o \
           prgen_read_omfit.o \
-          prgen_read_gato.o \
           prgen_read_iterdb.o \
           prgen_read_iterdb_nc.o \
           prgen_read_null.o \
@@ -41,7 +37,9 @@ OBJECTS = prgen_globals.o \
 	  prgen_read_peqdsk.o \
 	  prgen_read_corsica.o \
 	  prgen_read_ufile.o \
+	  prgen_read_inputgacode.o \
 	  prgen_read_inputprofiles.o \
+          prgen_swap.o \
           prgen_write.o
 
 .SUFFIXES : .o .f90

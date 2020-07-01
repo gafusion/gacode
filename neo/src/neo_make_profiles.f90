@@ -13,6 +13,13 @@ subroutine neo_make_profiles
   
   real :: cc
   real :: loglam
+
+  !-------------------------------------------------------------
+  ! Adiabatic-electron logic
+  if (n_species == 1) then
+     ae_flag = 1
+  endif
+  !-------------------------------------------------------------
   
   call PROFILE_SIM_alloc(1)
   
@@ -24,23 +31,6 @@ subroutine neo_make_profiles
         r(ir) = rmin_1_in+(rmin_2_in-rmin_1_in)*(ir-1.0)/(n_radial-1)
      enddo
   endif
-  
-  num_ele = 0
-  do is=1, n_species
-     if(z_in(is) < 0.0) then
-        is_ele = is
-        num_ele = num_ele + 1
-     endif
-  enddo
-  if(num_ele == 0) then
-     adiabatic_ele_model = 1
-     is_ele = n_species+1
-  else if(num_ele == 1) then
-     adiabatic_ele_model = 0
-  else
-     call neo_error('ERROR: (NEO) Only one electron species allowed')
-     return
-  end if
   
   select case (profile_model) 
      
@@ -62,19 +52,29 @@ subroutine neo_make_profiles
      
      ir = 1
      
-     rmaj(ir)      = rmaj_in
-     q(ir)         = abs(q_in) * sign_q
-     rho(ir)       = abs(rho_in) * sign_bunit
-     shear(ir)     = shear_in      
-     shift(ir)     = shift_in     
-     kappa(ir)     = kappa_in     
-     s_kappa(ir)   = s_kappa_in   
-     delta(ir)     = delta_in    
-     s_delta(ir)   = s_delta_in
-     zeta(ir)      = zeta_in    
-     s_zeta(ir)    = s_zeta_in
-     zmag(ir)      = zmag_in    
-     s_zmag(ir)    = s_zmag_in
+     rmaj(ir)         = rmaj_in
+     q(ir)            = abs(q_in) * sign_q
+     rho(ir)          = abs(rho_in) * sign_bunit
+     shear(ir)        = shear_in      
+     shift(ir)        = shift_in
+     zmag(ir)         = zmag_in    
+     s_zmag(ir)       = s_zmag_in
+     kappa(ir)        = kappa_in     
+     s_kappa(ir)      = s_kappa_in   
+     delta(ir)        = delta_in    
+     s_delta(ir)      = s_delta_in
+     zeta(ir)         = zeta_in    
+     s_zeta(ir)       = s_zeta_in
+     shape_sin3(ir)   = shape_sin3_in
+     shape_s_sin3(ir) = shape_s_sin3_in
+     shape_cos0(ir)   = shape_cos0_in
+     shape_s_cos0(ir) = shape_s_cos0_in
+     shape_cos1(ir)   = shape_cos1_in
+     shape_s_cos1(ir) = shape_s_cos1_in
+     shape_cos2(ir)   = shape_cos2_in
+     shape_s_cos2(ir) = shape_s_cos2_in
+     shape_cos3(ir)   = shape_cos3_in
+     shape_s_cos3(ir) = shape_s_cos3_in
      beta_star(ir) = beta_star_in
      
      ! general geometry -- accessible only from interface 
@@ -92,11 +92,11 @@ subroutine neo_make_profiles
      dphi0dr(ir)   = dphi0dr_in
      epar0(ir)     = epar0_in
 
-     te_ade(ir)      = te_ade_in
-     ne_ade(ir)      = ne_ade_in
-     dlntdre_ade(ir) = dlntdre_ade_in
-     dlnndre_ade(ir) = dlnndre_ade_in
-
+     temp_ae(ir)   = temp_ae_in
+     dens_ae(ir)   = dens_ae_in
+     dlntdr_ae(ir) = dlntdr_ae_in
+     dlnndr_ae(ir) = dlnndr_ae_in
+     
      omega_rot(ir)       = omega_rot_in 
      omega_rot_deriv(ir) = omega_rot_deriv_in 
 
@@ -107,8 +107,6 @@ subroutine neo_make_profiles
         dlnndr(is,ir)   = dlnndr_in(is)
         aniso_model(is) = aniso_model_in(is)
         if(aniso_model(is) == 2) then
-           !temp(is,ir)        = temp_in(is)
-           !dlntdr(is,ir)      = dlntdr_in(is)
            temp_para(is,ir)   = temp_para_in(is)
            temp_perp(is,ir)   = temp_perp_in(is)
            dlntdr_para(is,ir) =  dlntdr_para_in(is)
@@ -131,6 +129,21 @@ subroutine neo_make_profiles
              * sqrt(mass(1)/mass(is)) * (temp(1,ir)/temp(is,ir))**1.5
      enddo
 
+     if(ae_flag == 1) then
+        is_ele = -1
+     else
+        is_ele = -1
+        do is=1, n_species
+           if(z(is) < 0.0) then
+              is_ele = is
+              exit
+           endif
+        enddo
+        if(is_ele == -1) then
+           call neo_error('ERROR: (NEO) No electron species specified')
+        endif
+     endif
+     
      do is=1, n_species
         vth(is,ir) = sqrt(temp(is,ir)/mass(is))
         vth_para(is,ir) = sqrt(temp_para(is,ir)/mass(is))
@@ -157,17 +170,6 @@ subroutine neo_make_profiles
      ! EAB: beta_star is presently only used for anisotropic species, which
      ! currently only works in local profile mode
      beta_star(:) = 0.0
-     
-     do is=1,n_species
-        z(is)    = z_in(is)
-        mass(is) = mass_in(is)
-        aniso_model(is) = aniso_model_in(is)
-     enddo
-
-     if (adiabatic_ele_model == 0 .and. Z(n_species) > 0.0) then
-        call neo_error('ERROR: (NEO) For exp. profiles, electron species must be n_species')
-        return
-     endif
 
      udsymmetry_flag   = 0  ! do not enforce up-down symmetry
      quasineutral_flag = 1  ! do enforce quasineutrality
@@ -177,18 +179,23 @@ subroutine neo_make_profiles
         geo_numeq_flag = 0
      endif
 
-     do ir=1, n_radial
-        call EXPRO_locsim_profiles(path,&
-             NEO_COMM_WORLD,&
+     do ir=1,n_radial
+        call EXPRO_locsim_profiles(&
              geo_numeq_flag,&
              udsymmetry_flag,&
              quasineutral_flag,&
-             n_species+adiabatic_ele_model,&
+             n_species+ae_flag,&
              r(ir),&
              btccw_exp,&
              ipccw_exp,&
              a_meters)
-     
+
+        do is=1,n_species
+           z(is)    = z_loc(is)
+           mass(is) = mass_loc(is)/2.0
+           aniso_model(is) = aniso_model_in(is)
+        enddo
+        
         if(btccw_exp > 0.0) then
            sign_bunit = -1.0
         else
@@ -205,14 +212,24 @@ subroutine neo_make_profiles
         q(ir)       = q_loc
         shear(ir)   = s_loc
         shift(ir)   = shift_loc
+        zmag(ir)    = zmag_loc     
+        s_zmag(ir)  = dzmag_loc
         kappa(ir)   = kappa_loc
         s_kappa(ir) = s_kappa_loc
-        delta(ir)   = delta_loc    * profile_delta_scale
-        s_delta(ir) = s_delta_loc  * profile_delta_scale
-        zeta(ir)    = zeta_loc     * profile_zeta_scale
-        s_zeta(ir)  = s_zeta_loc   * profile_zeta_scale
-        zmag(ir)    = zmag_loc     * profile_zmag_scale
-        s_zmag(ir)  = dzmag_loc    * profile_zmag_scale
+        delta(ir)   = delta_loc    
+        s_delta(ir) = s_delta_loc  
+        zeta(ir)    = zeta_loc     
+        s_zeta(ir)  = s_zeta_loc   
+        shape_sin3(ir)   = shape_sin3_loc
+        shape_s_sin3(ir) = shape_s_sin3_loc
+        shape_cos0(ir)   = shape_cos0_loc
+        shape_s_cos0(ir) = shape_s_cos0_loc
+        shape_cos1(ir)   = shape_cos1_loc
+        shape_s_cos1(ir) = shape_s_cos1_loc
+        shape_cos2(ir)   = shape_cos2_loc
+        shape_s_cos2(ir) = shape_s_cos2_loc
+        shape_cos3(ir)   = shape_cos3_loc
+        shape_s_cos3(ir) = shape_s_cos3_loc
         b_unit(ir)  = b_unit_loc
 
         dens(1:n_species,ir)   = dens_loc(1:n_species)     
@@ -227,11 +244,17 @@ subroutine neo_make_profiles
               return
            endif
         enddo
+
+        if(ae_flag == 1) then
+           is_ele = n_species+1
+        else
+           is_ele = n_species
+        endif
         
-        ne_ade(ir)      = dens_loc(is_ele)
-        te_ade(ir)      = temp_loc(is_ele)
-        dlnndre_ade(ir) = dlnndr_loc(is_ele)
-        dlntdre_ade(ir) = dlntdr_loc(is_ele)
+        dens_ae(ir)   = dens_loc(is_ele)
+        temp_ae(ir)   = temp_loc(is_ele)
+        dlnndr_ae(ir) = dlnndr_loc(is_ele)
+        dlntdr_ae(ir) = dlntdr_loc(is_ele)
         
         omega_rot(ir)       = mach_loc/(rmaj(ir)*a_meters)
         omega_rot_deriv(ir) = -gamma_p_loc/(rmaj(ir)*a_meters)
@@ -322,7 +345,7 @@ subroutine neo_make_profiles
            ! Coulomb logarithm
            ! EAB: 03/22/09 redefined this wrt electron species
            ! (was previously defined wrt species 1)
-           loglam = 24.0 - log(sqrt(ne_ade(ir)*1e13)/(te_ade(ir)*1000))
+           loglam = 24.0 - log(sqrt(dens_ae(ir)*1e13)/(temp_ae(ir)*1000))
 
            ! Collision rate (1/sec)
            nu(is,ir) = cc * loglam * dens(is,ir) * z(is)**4 &
@@ -340,8 +363,8 @@ subroutine neo_make_profiles
            dens(is,ir) = dens(is,ir)/dens_norm(ir)
            temp(is,ir) = temp(is,ir)/temp_norm(ir)
            if(is == 1) then
-              te_ade(ir) = te_ade(ir) / temp_norm(ir)
-              ne_ade(ir) = ne_ade(ir) / dens_norm(ir)
+              temp_ae(ir) = temp_ae(ir) / temp_norm(ir)
+              dens_ae(ir) = dens_ae(ir) / dens_norm(ir)
            endif
            ! Normalize vth/a
            vth(is,ir) = vth(is,ir)/vth_norm(ir)
@@ -357,6 +380,28 @@ subroutine neo_make_profiles
      vth_para(:,:)    = vth(:,:)
      
   end select
+
+  ! Check electron species consistency
+  num_ele = 0
+  do is=1, n_species
+     if(z(is) < 0.0) then
+        num_ele = num_ele + 1
+     endif
+  enddo
+  if(num_ele == 0) then
+     if(ae_flag == 0) then
+        call neo_error('ERROR: (NEO) No electron species specified')
+        return
+     endif
+  else if(num_ele == 1) then
+     if(ae_flag == 1) then
+        call neo_error('ERROR: (NEO) Electron species specified with adiabatic electron flag')
+        return
+     endif
+  else
+     call neo_error('ERROR: (NEO) Only one electron species allowed')
+     return
+  endif
   
   if(rotation_model == 2) then
      ! In the strong rotation limit, only use phi_(-1) (set by omega_rot)

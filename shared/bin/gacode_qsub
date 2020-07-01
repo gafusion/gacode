@@ -138,7 +138,7 @@ SIMDIR=$SIMROOT/$LOCDIR
 #=============================================================
 
 # Manage execution on ORNL SUMMIT
-if [ "$GACODE_PLATFORM" = "SUMMIT_JC" ]; then
+if [[ $GACODE_PLATFORM == SUMMI* ]]; then
     . $GACODE_ROOT/platform/qsub/qsub.$GACODE_PLATFORM
     cat $SIMDIR/batch.src
     $GACODE_ROOT/platform/exec/exec.$GACODE_PLATFORM $SIMDIR $nmpi $CODE 0 1 $mpinuma 

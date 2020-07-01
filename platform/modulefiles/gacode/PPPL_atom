@@ -1,0 +1,23 @@
+#%Module1.0
+#
+
+module load gcc/9.1.0 
+module load mpich/3.3   
+module load fftw/3.3.8
+module load lapack/3.8.0
+module load szip/2.1.1
+module load hdf/4.2.14
+module load curl/7.59.0
+module load netcdf-c/4.6.3
+module unload hdf5-serial
+module load hdf5-parallel/1.10.5
+module load netcdf-fortran/4.4.5
+module load git
+
+
+#Currently Loaded Modulefiles:
+#  1) gcc/9.1.0              6) gacode                11) hdf5-parallel/1.10.5
+#  2) mpich/3.3              7) omfit/pygacode        12) curl/7.59.0
+#  3) fftw/3.3.8             8) lapack/3.8.0          13) netcdf-c/4.6.3
+#  4) PPPL_atom              9) szip/2.1.1            14) netcdf-fortran/4.4.5
+#  5) gacode_base           10) hdf/4.2.14

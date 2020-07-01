@@ -5,47 +5,46 @@ DIR TGLF4 1
 
 #-----------------------------------------------------
 # TGLF control
-TGYRO_TGLF_REVISION=2
+TGYRO_TGLF_REVISION=3
 #-----------------------------------------------------
 
 #-----------------------------------------------------
 # NEO control
-TGYRO_NEO_METHOD=1
+TGYRO_NEO_METHOD=2
 #-----------------------------------------------------
 
 #-----------------------------------------------------
 # Profile control
-TGYRO_DEN_METHOD0=0
-LOC_PFLUX_METHOD=2
+TGYRO_DEN_METHOD0=1
+TGYRO_DEN_METHOD1=-1
 LOC_TE_FEEDBACK_FLAG=1
 LOC_TI_FEEDBACK_FLAG=1
-LOC_ER_FEEDBACK_FLAG=0
 #-----------------------------------------------------
 
 #-----------------------------------------------------
-# Physics control
-LOC_SCENARIO=2 (1=static exch, 2=dynamic exch, 3=reactor)
-TGYRO_RMAX=0.84
-LOC_ZEFF_FLAG=1
-LOC_BETAE_SCALE=1.0
-LOC_NU_SCALE=1.0
-TGYRO_ROTATION_FLAG=1
-TGYRO_EXPWD_FLAG=0
+# Scenario (1=static exch, 2=dynamic exch, 3=reactor)
+LOC_SCENARIO=2 
+TGYRO_RMIN=0.2
+TGYRO_RMAX=0.65
+
+LOC_N_ION=2
+LOC_Z=1.0
+LOC_MA1=2.0
+LOC_Z2=6.0
+LOC_MA2=12.0
 #-----------------------------------------------------
 
 #-----------------------------------------------------
 # Iteration control
-TGYRO_ITERATION_METHOD=4
+TGYRO_ITERATION_METHOD=1
 LOC_RESIDUAL_METHOD=2
 
-LOC_BC_OFFSET=0
-LOC_DX=0.02
-LOC_DX_MAX=4.0
+LOC_DX=0.05
+LOC_DX_MAX=1.0
 LOC_RELAX=2.0
-LOC_LOCK_PROFILE_FLAG=1
 
 # TGYRO iterations
-TGYRO_RELAX_ITERATIONS=3
+TGYRO_RELAX_ITERATIONS=4
 
 # Restart (0=new,1=restart)
 LOC_RESTART_FLAG=0

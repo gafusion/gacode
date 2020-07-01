@@ -161,10 +161,6 @@ subroutine gyro_do
   !
   call gyro_set_phase_space(trim(path)//'out.gyro.phase_space',1)
   !
-  do i=1,n_x
-     call gyro_to_geo(i)
-  enddo
-  !
   ! Generate geometry-dependent factors using model or Miller equilibrium:
   !
   call gyro_geometry_arrays

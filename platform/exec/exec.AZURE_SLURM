@@ -1,0 +1,15 @@
+#!/bin/sh
+# GACODE Parallel execution script (Azure)
+
+simdir=${1}
+nmpi=${2}
+exec=${3}
+nomp=${4}
+numa=${5}
+mpinuma=${6}
+
+cd $simdir
+#mpirun -x OMP_NUM_THREADS=$nomp -np $nmpi -x UCX_IB_PKEY=0x0003 $exec
+#srun --mpi=openmpi -n $nmpi $exec
+#mpirun -x OMP_NUM_THREADS=$nomp -np $nmpi --map-by ppr:32:node $exec
+mpirun -x OMP_NUM_THREADS=$nomp -np $nmpi --map-by node $exec

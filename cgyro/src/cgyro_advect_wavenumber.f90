@@ -14,25 +14,20 @@ subroutine cgyro_advect_wavenumber(ij)
 
   integer, intent(in) :: ij
   integer :: ir,l,ll,j,icc,in
-  integer :: irp,irm,irpc,irmc
   complex, dimension(:,:),allocatable :: he
-  complex :: dh
-  real :: scale
 
   if (nonlinear_flag == 0) return
 
-  if (profile_shear_flag == 1 .or. shear_method == 2) then
+  if (source_flag == 1) then
      call timer_lib_in('shear')
      allocate(he(n_theta,1-2*n_wave:n_radial+2*n_wave))
 
-!$omp parallel do private(j,ir,in,icc,l,ll,he) &
-!$omp&            private(scale,irm,irp,irmc,irpc,dh)
+!$omp parallel do private(in,ir,j,icc,l,ll,he)
      do in=1,nv_loc
-        he(:,1-2*n_wave:0) =0.0
-        he(:,n_radial+1:n_radial+2*n_wave) =0.0
+        he(:,1-2*n_wave:0) = 0.0
+        he(:,n_radial+1:n_radial+2*n_wave) = 0.0
 
         ! Wavenumber advection ExB shear
-
         if (shear_method == 2) then
 
            do ir=1,n_radial
@@ -53,10 +48,10 @@ subroutine cgyro_advect_wavenumber(ij)
                  enddo
               enddo
            enddo
+
         endif
 
         ! Wavenumber advection profile shear
-
         if (profile_shear_flag == 1) then
 
            do ir=1,n_radial
@@ -77,41 +72,6 @@ subroutine cgyro_advect_wavenumber(ij)
               enddo
            enddo
 
-           if (n == 0) then
-              scale = nu_global*abs(maxval(sdlnndr)+maxval(sdlntdr))
-
-              irm = -1+1+n_radial/2
-              irp = irm+2
-              irmc = (irm-1)*n_theta
-              irpc = irmc + 2*n_theta
-
-              do j=1,n_theta
-                 ! p = +1
-                 rhs(irpc+j,in,ij) = rhs(irpc+j,in,ij)-scale*h_x(irpc+j,in)
-                 ! p = -1
-                 rhs(irmc+j,in,ij) = rhs(irmc+j,in,ij)-scale*h_x(irmc+j,in)
-              enddo
-
-           endif
-        endif
-
-        ! Zonal damping (to reduce box-size correlation)
-
-        if (n == 0) then
-           scale = nu_global*abs(gamma_e)/2.0
-
-           irm = -1+1+n_radial/2
-           irp = irm+2
-           irmc = (irm-1)*n_theta
-           irpc = irmc + 2*n_theta
-
-           do j=1,n_theta
-              dh = scale*(h_x(irpc+j,in)-h_x(irmc+j,in))
-              ! p = +1
-              rhs(irpc+j,in,ij) = rhs(irpc+j,in,ij)-dh
-              ! p = -1
-              rhs(irmc+j,in,ij) = rhs(irmc+j,in,ij)+dh
-           enddo
         endif
 
      enddo

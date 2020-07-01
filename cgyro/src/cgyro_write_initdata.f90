@@ -15,7 +15,7 @@ subroutine cgyro_write_initdata
   integer :: p,in,is,it
   real :: kymax
   real, external :: spectraldiss
-  
+
   !----------------------------------------------------------------------------
   ! Runfile to give complete summary to user
   ! 
@@ -87,22 +87,22 @@ subroutine cgyro_write_initdata
      write(io,'(t2,3(a,1x,f3.1,2x),t48,a)') &
           'C(theta):',maxval(abs(omega_stream))*maxval(vel)*maxval(xi)*delta_t/d_theta/1.6
 
-
      write(io,*) 
-     write(io,20) '    r/a:',rmin
-     write(io,20) '    R/a:',rmaj, '  shift:',shift,  '  betae:',betae_unit
-     write(io,20) '      q:',q,    '      s:',s,      ' beta_*:',beta_star(0)
-     write(io,20) '  kappa:',kappa,'s_kappa:',s_kappa,' lamb_*:',lambda_star
-     if (nonlinear_flag == 1) then
-        write(io,20) '  delta:',delta,'s_delta:',s_delta,'gamma_e:',gamma_e
-     else
-        write(io,20) '  delta:',delta,'s_delta:',s_delta,'gamma_e:',gamma_e,'[OFF]'
+     write(io,21) '    r/a:',rmin,      '      q:',q,           '     s:',s   
+     write(io,21) '    R/a:',rmaj,      '  shift:',shift,       '  zmag:',zmag,'dzmag:',dzmag
+     write(io,21) '  kappa:',kappa,     '  delta:',delta,       '  zeta:',zeta
+     write(io,21) 's_kappa:',s_kappa,   's_delta:',s_delta,     's_zeta:',s_zeta
+
+     if (udsymmetry_flag == 0) then
+        write(io,*)
+        write(io,21) '   c0:',shape_cos0,  '   c1:',shape_cos1,  '   c2:',shape_cos2,  '   c3:',shape_cos3,  '   s3:',shape_sin3
+        write(io,21) ' s_c0:',shape_s_cos0,' s_c1:',shape_s_cos1,' s_c2:',shape_s_cos2,' s_c3:',shape_s_cos3,' s_s3:',shape_s_sin3
      endif
-     write(io,20) '   zeta:',zeta, ' s_zeta:',s_zeta, 'gamma_p:',gamma_p
-     write(io,20) '   zmag:',zmag, '  dzmag:',dzmag,  '   mach:',mach
 
      write(io,*)
-     write(io,20) '[rho/a]:',rho,'[z_eff]:',z_eff,'[w_E*dt]',(n_toroidal-1)*q/rmin*length*gamma_e/(2*pi)*delta_t
+     write(io,20) 'gamma_e:',gamma_e,   'gamma_p:',gamma_p,     '  mach:',mach,'[rho/a]:',rho
+     write(io,20) '  betae:',betae_unit,' beta_*:',beta_star(0),'lamb_*:',lambda_star,'[z_eff]:',z_eff
+
      write(io,*)
      write(io,'(a)') &
           ' i  z  n/n_norm   T/T_norm   m/m_norm     a/Ln       a/Lt       nu        s(a/Ln)    s(a/Lt)'
@@ -114,7 +114,7 @@ subroutine cgyro_write_initdata
 
      if (profile_model == 2) then
         write(io,*)
-        write(io,10) '           a[m]:',a_meters, '  b_unit[T]:',b_unit,  '     rhos/a:', rhos/a_meters
+        write(io,10) '           a[m]:',a_meters,'  b_unit[T]:',b_unit,  '     rhos/a:',rhos/a_meters,' dn:',rho/(rhos/a_meters)
         write(io,10) 'n_norm[e19/m^3]:',dens_norm,'v_norm[m/s]:',vth_norm,'T_norm[keV]:',temp_norm
      endif
      write(io,*)
@@ -122,6 +122,7 @@ subroutine cgyro_write_initdata
      close(io)
 
   endif
+21 format(t2,5(a,1x,f8.5,2x))
   !----------------------------------------------------------------------------
 
   !----------------------------------------------------------------------------
@@ -143,6 +144,16 @@ subroutine cgyro_write_initdata
      write (io,fmtstr) s_zeta
      write (io,fmtstr) zmag
      write (io,fmtstr) dzmag
+     write (io,fmtstr) shape_sin3
+     write (io,fmtstr) shape_s_sin3
+     write (io,fmtstr) shape_cos0
+     write (io,fmtstr) shape_s_cos0
+     write (io,fmtstr) shape_cos1
+     write (io,fmtstr) shape_s_cos1
+     write (io,fmtstr) shape_cos2
+     write (io,fmtstr) shape_s_cos2
+     write (io,fmtstr) shape_cos3
+     write (io,fmtstr) shape_s_cos3
      write (io,fmtstr) rho
      write (io,fmtstr) ky
      write (io,fmtstr) betae_unit
@@ -180,10 +191,9 @@ subroutine cgyro_write_initdata
   ! Write the initial equilibrium geometry data
   !
   if (silent_flag == 0 .and. i_proc == 0) then
-
      open(unit=io,file=trim(path)//'bin.cgyro.geo',status='replace',access='stream')
      write(io) real(theta,kind=4)
-     write(io) real(w_theta,kind=4)
+     write(io) real(g_theta_geo,kind=4)
      write(io) real(bmag,kind=4)
      write(io) real(omega_stream(:,1),kind=4)
      write(io) real(omega_trap(:,1),kind=4)

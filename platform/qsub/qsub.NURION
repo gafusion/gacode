@@ -1,0 +1,29 @@
+#!/bin/bash
+
+if [ "$QUEUE" == "null_queue" ] ; then
+    QUEUE=normal
+fi
+if [ "$REPO" == "null_repo" ] ; then
+    REPO=etc
+fi
+
+bfile=$SIMDIR/batch.src
+echo "#!/bin/bash -l" > $bfile
+echo "#PBS -N $LOCDIR" >> $bfile
+echo "#PBS -A $REPO" >> $bfile
+echo "#PBS -o $SIMDIR/batch.out" >> $bfile
+echo "#PBS -e $SIMDIR/batch.err" >> $bfile
+echo "#PBS -q $QUEUE" >> $bfile
+echo "#PBS -l select=$nodes:ncpus=$CORES_PER_NODE:mpiprocs=$mpinode:ompthreads=$nomp" >> $bfile
+echo "#PBS -l walltime=$WALLTIME" >> $bfile
+
+echo "module purge" >> $bfile
+echo "module load craype-mic-knl" >> $bfile
+echo "module load intel/18.0.3" >> $bfile
+echo "module load impi/18.0.3" >> $bfile
+echo "module load netcdf/4.6.1" >> $bfile
+echo "module load git/1.8.3.4 python/3.7" >> $bfile
+
+echo "cd $PBS_O_WORKDIR" >> $bfile
+
+echo "$CODE -e $LOCDIR -n $nmpi -nomp $nomp -numa $numa -mpinuma $mpinuma -p $SIMROOT" >> $bfile

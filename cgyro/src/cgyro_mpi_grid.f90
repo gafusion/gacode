@@ -163,7 +163,7 @@ subroutine cgyro_mpi_grid
        NEW_COMM_1, &
        i_err)
   if (i_err /= 0) then
-     call cgyro_error('ERROR: (CGYRO) NEW_COMM_1 not created')
+     call cgyro_error('NEW_COMM_1 not created')
      return
   endif
 
@@ -175,7 +175,7 @@ subroutine cgyro_mpi_grid
        NEW_COMM_2, &
        i_err)
   if (i_err /= 0) then
-     call cgyro_error('ERROR: (CGYRO) NEW_COMM_2 not created')
+     call cgyro_error('NEW_COMM_2 not created')
      return
   endif
   !

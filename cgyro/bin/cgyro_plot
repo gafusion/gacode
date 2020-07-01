@@ -27,10 +27,14 @@ then
   echo "         Output file type (and optional prefix)"
   echo "         <filetype>=eps, pdf, png, svg, dump"
   echo
+  echo "         -notex"
+  echo "         Disable latex fonts"
+  echo
   echo "PLOT MODE"
   echo 
   echo "         -plot <type>"
   echo "         <type> = text     (text summary of fluxes)"
+  echo "                = distill  (data distillation)"
   echo "                = freq     (frequency versus time)"
   echo "                = ky_freq  (frequency versus ky)"
   echo "                = ball     (ballooning modes OR ZF test)"
@@ -48,6 +52,9 @@ then
   echo "                = kxky_phi (kx-ky spectra of ave(|phi|))"
   echo "                = rcorr_phi (time-average radial correlation function)"
   echo "                = xflux    (radial profile of fluxes for all species)"
+  echo "                = low      (long-wavelength moments versus time)"
+  echo "                = corrug   (time-averaged profile corrugations)"
+  echo "                = shift    (spectral shift)"
   echo "                = fluct    (x-y fluctuation contours at fixed timeslice)"
   echo "                = rt       (x-t fluctuation contours)"
   echo "                = vid      (create video from png files)"
@@ -75,7 +82,7 @@ then
   echo "         Selector for central flux (on=on,off=off,auto=select based on gamma_e"
   echo
   echo "         -moment <value>"
-  echo "         Specify moment to be plotted [n,e,m,s]."
+  echo "         Specify moment to be plotted [n,e,v]."
   echo
   echo "         -w <float>"
   echo "         Width of time-average window min (1.0 is entire time history)."
@@ -135,6 +142,12 @@ then
   echo "         -diss"
   echo "         Toggle plotting of dissipation curve"  
   echo
+  echo "         -norm <int>"
+  echo "         Species index for normalization (starts at 0)"  
+  echo
+  echo "         -rms"
+  echo "         Toggle RMS normalization (rather than abs) in -plot phi"  
+  echo
   echo "OPTIONS FOR -plot fluct, -vis"
   echo
   echo "         -nomp <threads>"
@@ -170,11 +183,17 @@ then
   echo "         -land"
   echo "         Use landscape mode (ly,lx) for -plot fluct"  
   echo
-  echo "         -dn"
-  echo "         Modify value of CGYRO delta n_toroidal (simulation runs with dn=1)"  
+  echo "         -dn <int>"
+  echo "         Modify value of delta n_toroidal (simulation runs with dn=1) (default 1)"  
+  echo
+  echo "         -mag <float>"
+  echo "         Magnify radial direction (or set '-mag 0' to plot shape functions) (default 1.0)"  
   echo
   echo "         -nozonal"
   echo "         Remove zonal (n=0) component of the fluctuations (-vis torcut only)"  
+  echo
+  echo "         -onlyzonal"
+  echo "         Remove nonzonal (n>0) component of the fluctuations (-vis torcut only)"  
   echo
   echo "OPTIONS FOR -plot vid"
   echo
@@ -212,7 +231,7 @@ then
   echo "VISUALIZATIONS [*requires Mayavi*]"
   echo "  $ cyro_plot -vis torcut -moment n -nx 256 -nz 512"
   echo "  $ cyro_plot -vis wheel  -moment n -land -nx 256 -ny 256 -nz 256"
-  
+
   exit 1
 fi
 #==============================================================================
@@ -224,6 +243,7 @@ fi
 LOCDIR=.
 SIMROOT=$PWD
 
+TEX=1
 FONTSIZE=18
 LX=12
 LY=6
@@ -263,15 +283,19 @@ LAND_FLAG=0
 PX=800
 PY=800
 DISS=0
+NORM='elec'
+RMS=0
+
 CFLUX=auto
 DN=1
-LOVERA=0.5
+MAG=1.0
 IE=0
 NOZONAL=0
+ONLYZONAL=0
 
 PRE=
 FRAMERATE=20
-QUALITY=20 
+QUALITY=20
 #==============================================================================
 
 #==============================================================================
@@ -294,6 +318,9 @@ while [ $# -gt 0 ] ; do
   -fc) FC=1 ;;
 
   -diss) DISS=1 ;;
+  -notex) TEX=0 ;;
+  -rms) RMS=1 ;;
+  -norm) shift ; NORM=$1 ;;
 
   -moment) shift ; MOMENT=$1 ;;
   -ie) shift ; IE=$1 ;;
@@ -340,8 +367,9 @@ while [ $# -gt 0 ] ; do
   -legacy) LEGACY_FLAG=1 ;;
   -land) LAND_FLAG=1 ;;
   -dn) shift ; DN=$1 ;;
-  -lovera) shift ; LOVERA=$1 ;;
+  -mag) shift ; MAG=$1 ;;
   -nozonal) NOZONAL=1 ;;
+  -onlyzonal) ONLYZONAL=1 ;;
 
   -pre) shift ; PRE=$1 ;;
   -q)  shift ; QUALITY=$1 ;;
@@ -364,24 +392,24 @@ fi
 SIMDIR=$SIMROOT/$LOCDIR
 cd $SIMDIR
 
-PYROOT=$GACODE_ROOT/python/cgyro
+PYROOT=$GACODE_ROOT/f2py/pygacode/cgyro
 
 #==============================================================================
-PLT="$PYROOT/data_plot_single.py $FONTSIZE $LX $LY"
+PLT="-m pygacode.cgyro.data_plot_single $TEX $FONTSIZE $LX $LY"
 
 case "$VIS_TYPE" in
 
    null) ;;
-	
+   
    slices)
 	python $PYROOT/vis_slices.py ;;
-	
+
    torcut)
-	export OMP_NUM_THREADS=$NOMP ; python $PYROOT/vis_torcut.py $EXT $MOMENT $SPECIES $NX $NZ $TIME $FMIN $FMAX $CMAP $FONTSIZE $LEGACY_FLAG $DN $LOVERA $NOZONAL ;;
+	export OMP_NUM_THREADS=$NOMP ; python $PYROOT/vis_torcut.py $EXT $MOMENT $SPECIES $NX $NZ $TIME $FMIN $FMAX $CMAP $FONTSIZE $LEGACY_FLAG $DN $MAG $NOZONAL $ONLYZONAL ;;
 
    wheel)
 	export OMP_NUM_THREADS=$NOMP ; python $PYROOT/vis_wheel.py $EXT $MOMENT $SPECIES $NX $NY $NZ $TIME $FMIN $FMAX $CMAP $FONTSIZE ;;
-	   
+
     *)
         echo "Unrecognized argument to -vis" ; exit 1 ;;
 esac
@@ -389,7 +417,10 @@ esac
 case "$PLOT_TYPE" in
 
    null) ;;
-	
+
+   distill)
+       python -m pygacode.cgyro.data_distill $W $THETA ;;
+
    ball)
 	python $PLT $PLOT_TYPE $TIME $FIELD $TMAX $EXT ;;
 
@@ -402,11 +433,8 @@ case "$PLOT_TYPE" in
    hball)
 	python $PLT $PLOT_TYPE $TIME $SPECIES $YMIN $YMAX $TMAX $N $IE $EXT ;;
 
-   freq)
-	python $PLT $PLOT_TYPE $W $WMAX $EXT ;;
-
-   ky_freq)
-	python $PLT $PLOT_TYPE $W $WMAX $EXT ;;
+   freq | ky_freq )
+	python $PLT $PLOT_TYPE $W $WMAX $NORM $EXT ;;
 
    error)
 	python $PLT $PLOT_TYPE $EXT ;;
@@ -415,25 +443,28 @@ case "$PLOT_TYPE" in
 	python $PLT $PLOT_TYPE $W $WMAX $MOMENT $YMIN $YMAX $EXT $NSCALE ;;
 
    flux)
-        python $PLT $PLOT_TYPE $W $WMAX $FIELD $MOMENT $YMIN $YMAX $FC $EXT $LOC $NSCALE $CFLUX ;;
+        python $PLT $PLOT_TYPE $W $WMAX $FIELD $MOMENT $YMIN $YMAX $FC $EXT $LOC $NSCALE $CFLUX $NORM ;;
 
    ky_flux)
 	python $PLT $PLOT_TYPE $W $WMAX $FIELD $MOMENT $YMIN $YMAX $FC $EXT $DISS $CFLUX ;;
 
    phi)
-	python $PLT $PLOT_TYPE $W $WMAX $FIELD $EXT ;;
+	python $PLT $PLOT_TYPE $W $WMAX $FIELD $THETA $YMIN $YMAX $RMS $EXT ;;
+
+   low | corrug)
+       python $PLT $PLOT_TYPE $W $WMAX $SPECIES $MOMENT $EXT $YMIN $YMAX ;;
+
+   shift )
+	python $PLT $PLOT_TYPE $W $WMAX $EXT $YMIN $YMAX ;;
 
    ky_phi)
-	python $PLT $PLOT_TYPE $FIELD $THETA $YMIN $YMAX $N $EXT ;;
+	python $PLT $PLOT_TYPE $FIELD $THETA $YMIN $YMAX $N $NORM $EXT ;;
 
    kx_phi)
 	python $PLT $PLOT_TYPE $FIELD $THETA $W $WMAX $YMIN $YMAX $N $EXT $DISS ;;
 
-   kxky_phi)
+   kxky_phi | rcorr_phi)
 	python $PLT $PLOT_TYPE $FIELD $THETA $W $WMAX $EXT ;;
-
-   rcorr_phi)
-        python $PLT $PLOT_TYPE $FIELD $THETA $W $WMAX $EXT ;;
 
    zf)
 	python $PLT $PLOT_TYPE $W $WMAX $FIELD $EXT ;;
@@ -456,7 +487,7 @@ case "$PLOT_TYPE" in
 	      $EXT $MOMENT $SPECIES $YMIN $YMAX $NX $ND $TIME $FMIN $FMAX $CMAP $FONTSIZE $THETA ;;
 
    text)
-   	python $PYROOT/plot_text.py $W $WMAX $EXT ;;
+   	python -m pygacode.cgyro.plot_text $W $WMAX $EXT ;;
 
    fix)
    	python $PYROOT/fix.py ;;

@@ -68,9 +68,12 @@ subroutine cgyro_error_estimate
 
   call timer_lib_out('str_comm')
 
+  ! 1: total (field) error
+  ! 2: collisionless error
   integration_error = integration_error/norm
 
-  if (integration_error(2) > error_tol .and. i_time > 2) then
+  ! Trigger code shutdown on large collisionless error
+  if (integration_error(2) > 5e2*error_tol .and. i_time > 2) then
      call cgyro_error('Integration error exceeded limit.')
   endif
 

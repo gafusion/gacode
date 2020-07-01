@@ -1,10 +1,14 @@
+! NOTES
+! - negative ion density check (part of sanity checker)
+
+
 !------------------------------------------------------------------------
 ! vgen.f90
 !
 ! PURPOSE: 
 !  Driver for the vgen (velocity-generation) capability of NEO.  This 
-!  will write a new input.profiles with NEO-computed electric field 
-!  and/or velocities. A new input.profiles.extra will also be generated.
+!  will write a new input.gacode with NEO-computed electric field 
+!  and/or velocities. 
 !------------------------------------------------------------------------
 
 program vgen
@@ -12,7 +16,7 @@ program vgen
   use mpi
   use vgen_globals
   use neo_interface
-  use EXPRO_interface
+  use expro
 
   implicit none
 
@@ -28,8 +32,13 @@ program vgen
   real :: omega
   real :: omega_deriv
   integer :: simntheta
+  integer :: iteration_flag
   real :: cpu_tot_in, cpu_tot_out
-
+  character(len=14) :: er_tag
+  character(len=17) :: vel_tag
+  character(len=7)  :: ix_tag
+  character(len=15) :: j_tag
+  
   real, dimension(:), allocatable :: er_exp
 
   !---------------------------------------------------------------------
@@ -56,6 +65,7 @@ program vgen
   read(1,*) er_method
   read(1,*) vel_method
   read(1,*) erspecies_indx
+  read(1,*) epar_flag
   read(1,*) nth_min
   read(1,*) nth_max
   read(1,*) nn_flag
@@ -65,14 +75,22 @@ program vgen
   case(1)
      if(i_proc == 0) then
         print '(a)','INFO: (VGEN) Computing omega0 (Er)  from force balance'
+        er_tag=' -er 1 (FB)'
+        write(ix_tag,'(i0)') erspecies_indx
+        ix_tag=' -ix ' // trim(ix_tag)
      endif
   case(2)
      if(i_proc == 0) then
         print '(a)', 'INFO: (VGEN) Computing omega0 (Er) from NEO (weak rotation limit)'
+        er_tag=' -er 2 (NEO)'
+        write(ix_tag,'(i0)') erspecies_indx
+        ix_tag=' -ix ' // trim(ix_tag)
      endif
   case(4)
      if(i_proc == 0) then
         print '(a)','INFO: (VGEN) Returning given omega0 (Er)'
+        er_tag=' -er 4 (given)'
+        ix_tag=''
      endif
   case default
      if(i_proc == 0) then
@@ -86,10 +104,12 @@ program vgen
   case(1)
      if (i_proc == 0) then
         print '(a)','INFO: (VGEN) Computing velocities from NEO (weak rotation limit)'
+        vel_tag=' -vel 1 (weak)'
      endif
   case(2)
      if (i_proc == 0) then
         print '(a)','INFO: (VGEN) Computing velocities from NEO (strong rotation limit)'
+        vel_tag=' -vel 2 (strong)'
      endif
   case default
      if (i_proc == 0) then
@@ -98,19 +118,6 @@ program vgen
      call MPI_finalize(i_err)
      stop
   end select
-
-  if (i_proc == 0) then
-     if(nn_flag == 1) then
-        print '(a)','INFO: (VGEN) Using NEO NN for bootstrap current'
-     else
-        print '(a)','INFO: (VGEN) Using NEO DKE for bootstrap current'
-     endif
-  endif
-  
-  if (i_proc == 0) then
-     print '(a,i2,a,i2)','INFO: (VGEN) Using NEO Theta Resolution: ',nth_min,'-',nth_max
-     print '(a,i2)','INFO: (VGEN) MPI tasks: ',n_proc
-  endif
 
   !---------------------------------------------------------------------
   ! Initialize vgen parameters
@@ -123,6 +130,62 @@ program vgen
      EXPRO_w0p(:) = 0.0
   endif
   !---------------------------------------------------------------------
+  
+  select case(neo_sim_model_in)
+  case(0)
+     if (i_proc == 0) then
+        print '(a)','INFO: (VGEN) Bootstrap current from Sauter'
+        j_tag=' -jbs (Sauter)'
+     endif
+  case(1)
+     if (i_proc == 0) then
+        print '(a)','INFO: (VGEN) Bootstrap current from NEO'
+        j_tag=' -jbs (NEO)'
+     endif
+  case(2)
+     if (i_proc == 0) then
+        print '(a)','INFO: (VGEN) Bootstrap current from NEO'
+        j_tag=' -jbs (NEO)'
+     endif
+  case(3)
+     if (i_proc == 0) then
+        print '(a)','INFO: (VGEN) Bootstrap current from Sauter'
+        j_tag=' -jbs (Sauter)'
+     endif
+  case(4)
+     if (i_proc == 0) then
+        print '(a)','INFO: (VGEN) Bootstrap current from NEO NN'
+        j_tag=' -jbs (NEO NN)'
+     endif
+  case default
+     if (i_proc == 0) then
+        print '(a)','ERROR: Invalid neo_sim_model'
+     endif
+     call MPI_finalize(i_err)
+     stop
+  end select
+  
+  select case(epar_flag)
+  case(0)
+     if (i_proc == 0) then
+        print '(a)','INFO: (VGEN) Do not include conductivity calculation'
+     endif
+  case(1)
+     if (i_proc == 0) then
+        print '(a)','INFO: (VGEN) Include conductivity calculation'
+     endif
+  case default
+     if (i_proc == 0) then
+        print '(a)','ERROR: Invalid epar_flag'
+     endif
+     call MPI_finalize(i_err)
+     stop
+  end select
+  
+  if (i_proc == 0) then
+     print '(a,i2,a,i2)','INFO: (VGEN) Using NEO Theta Resolution: ',nth_min,'-',nth_max
+     print '(a,i2)','INFO: (VGEN) MPI tasks: ',n_proc
+  endif
 
   !---------------------------------------------------------------------
   ! Distribution scheme.
@@ -212,7 +275,8 @@ program vgen
         omega = EXPRO_w0(i) 
         omega_deriv = EXPRO_w0p(i) 
 
-        call vgen_compute_neo(i,vtor_diff,rotation_model,er0,omega,omega_deriv, simntheta)
+        iteration_flag = 1
+        call vgen_compute_neo(i,vtor_diff,rotation_model,er0,omega,omega_deriv, simntheta,iteration_flag)
 
         print 10,EXPRO_rho(i),&
              er_exp(i),EXPRO_vpol(1,i)/1e3,simntheta,i_proc
@@ -239,8 +303,15 @@ program vgen
         omega = 0.0
         omega_deriv = 0.0
 
+        if (vel_method == 2 .and. epar_flag == 1) then
+           iteration_flag=2
+        else
+           iteration_flag=1
+        endif
+        
         call vgen_compute_neo(i,vtor_diff, rotation_model, er0, omega, &
-             omega_deriv, simntheta)
+             omega_deriv, simntheta,iteration_flag)
+        iteration_flag=1
 
         ! omega = (vtor_measured - vtor_neo_ater0) / R
 
@@ -298,7 +369,7 @@ program vgen
            omega = EXPRO_w0(i) 
            omega_deriv = EXPRO_w0p(i) 
            call vgen_compute_neo(i,vtor_diff, rotation_model, er0, omega, &
-                omega_deriv, simntheta)
+                omega_deriv, simntheta,iteration_flag)
 
            print 10,EXPRO_rho(i),&
                 er_exp(i),EXPRO_vpol(1,i)/1e3,simntheta,i_proc
@@ -320,8 +391,8 @@ program vgen
   call vgen_reduce(pflux_sum(2:EXPRO_n_exp-1),EXPRO_n_exp-2)
   call vgen_reduce(jbs_neo(2:EXPRO_n_exp-1),EXPRO_n_exp-2)
   call vgen_reduce(jbs_sauter(2:EXPRO_n_exp-1),EXPRO_n_exp-2)
-  call vgen_reduce(jbs_nclass(2:EXPRO_n_exp-1),EXPRO_n_exp-2)
-  call vgen_reduce(jbs_koh(2:EXPRO_n_exp-1),EXPRO_n_exp-2)
+  call vgen_reduce(jsigma_neo(2:EXPRO_n_exp-1),EXPRO_n_exp-2)
+  call vgen_reduce(jsigma_sauter(2:EXPRO_n_exp-1),EXPRO_n_exp-2)
   call vgen_reduce(jtor_neo(2:EXPRO_n_exp-1),EXPRO_n_exp-2)
   call vgen_reduce(jtor_sauter(2:EXPRO_n_exp-1),EXPRO_n_exp-2)
   
@@ -365,12 +436,12 @@ program vgen
   call bound_extrap(ya,yb,jbs_sauter,EXPRO_rmin,EXPRO_n_exp)
   jbs_sauter(1)           = ya
   jbs_sauter(EXPRO_n_exp) = yb
-  call bound_extrap(ya,yb,jbs_koh,EXPRO_rmin,EXPRO_n_exp)
-  jbs_koh(1)           = ya
-  jbs_koh(EXPRO_n_exp) = yb
-  call bound_extrap(ya,yb,jbs_nclass,EXPRO_rmin,EXPRO_n_exp)
-  jbs_nclass(1)           = ya
-  jbs_nclass(EXPRO_n_exp) = yb
+  call bound_extrap(ya,yb,jsigma_neo,EXPRO_rmin,EXPRO_n_exp)
+  jsigma_neo(1)           = ya
+  jsigma_neo(EXPRO_n_exp) = yb
+  call bound_extrap(ya,yb,jsigma_sauter,EXPRO_rmin,EXPRO_n_exp)
+  jsigma_sauter(1)           = ya
+  jsigma_sauter(EXPRO_n_exp) = yb
   call bound_extrap(ya,yb,jtor_neo,EXPRO_rmin,EXPRO_n_exp)
   jtor_neo(1)           = ya
   jtor_neo(EXPRO_n_exp) = yb
@@ -381,7 +452,19 @@ program vgen
   pflux_sum(1)           = ya
   pflux_sum(EXPRO_n_exp) = yb
   !------------------------------------------------------------------------
-
+  
+  if(neo_sim_model_in == 0 .or. neo_sim_model_in == 3) then
+     EXPRO_jbs(:)      = jbs_sauter(:)
+     EXPRO_jbstor(:)   = jtor_sauter(:)
+     EXPRO_sigmapar(:) = jsigma_sauter(:)
+  else
+     EXPRO_jbs(:)      = jbs_neo(:)
+     EXPRO_jbstor(:)   = jtor_neo(:)
+     EXPRO_sigmapar(:) = jsigma_neo(:)
+  endif
+  
+  !------------------------------------------------------------------------
+  
   ! Write output on processor 0
 
   if (i_proc == 0) then
@@ -427,32 +510,33 @@ program vgen
      close(1)
      
      !----------------------------------------------------------------------
-     ! Generate new input.profiles.* files
+     ! Generate new input.gacode.* files
 
-     ! 1. input.profiles
-     call EXPRO_write_original(1,'input.profiles',2,'input.profiles.new',' ')
+     ! 1. input.gacode
+     !call expro_write_original('input.gacode','input.gacode.new',' ')
 
-     ! 2. input.profiles.extra
-     call EXPRO_compute_derived
-     call EXPRO_write_derived(1,'input.profiles.extra')
+     ! NEW APPROACH
+     expro_head_vgen = '#      vgen : ' //  trim(er_tag) // trim(ix_tag) // trim(vel_tag) // trim(j_tag)
+     call expro_write('input.gacode')
+     print '(a)', 'INFO: (VGEN) Created vgen/input.gacode [new data]'
 
      ! 3. input.profiles.jbs
-     open(unit=1,file='input.profiles.jbs',status='replace')
+     open(unit=1,file='out.vgen.jbs',status='replace')
      write(1,'(a)') '#'
      write(1,'(a)') '# expro_rho'
      write(1,'(a)') '# sum z*pflux_neo/(c_s n_e) /(rho_s/a_norm)**2'
      write(1,'(a)') '# jbs_neo    (MA/m^2)'
      write(1,'(a)') '# jbs_sauter (MA/m^2)'
-     write(1,'(a)') '# jbs_nclass (MA/m^2)'
-     write(1,'(a)') '# jbs_koh    (MA/m^2)'
+     write(1,'(a)') '# jsigma_neo    (MS/m)'
+     write(1,'(a)') '# jsigma_sauter (MS/m)'
      write(1,'(a)') '# jtor_neo    (MA/m^2)'
-     write(1,'(a)') '# jtor_sauter (MA/m^2)'
+     write(1,'(a)') '# jtor_sauter (MA/m^2)' 
      write(1,'(a)') '# where jbs = < j_parallel B > / B_unit'
      write(1,'(a)') '# where jtor = < j_tor/R > / <1/R>'
      write(1,'(a)') '#'
      do i=1,EXPRO_n_exp
         write(1,'(8(1pe14.7,2x))') EXPRO_rho(i), pflux_sum(i), &
-             jbs_neo(i), jbs_sauter(i), jbs_nclass(i), jbs_koh(i), &
+             jbs_neo(i), jbs_sauter(i), jsigma_neo(i), jsigma_sauter(i), &
              jtor_neo(i), jtor_sauter(i)
      enddo
      close(1)
@@ -466,12 +550,12 @@ program vgen
   deallocate(vtor_measured)
   deallocate(jbs_neo)
   deallocate(jbs_sauter)
-  deallocate(jbs_koh)
-  deallocate(jbs_nclass)
+  deallocate(jsigma_neo)
+  deallocate(jsigma_sauter)
+  deallocate(jtor_neo)
+  deallocate(jtor_sauter)
   deallocate(pflux_sum)
   deallocate(i_glob)
-
-  call EXPRO_palloc(MPI_COMM_WORLD,path,0)
 
   cpu_tot_out = MPI_Wtime()
 

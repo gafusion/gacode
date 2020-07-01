@@ -1,10 +1,10 @@
 subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
-     omega, omega_deriv, simntheta)
+     omega, omega_deriv, simntheta,iteration_flag)
 
+  use mpi
   use vgen_globals
   use neo_interface
-  use EXPRO_interface
-  use mpi
+  use expro
 
   implicit none
 
@@ -15,9 +15,10 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   real, intent(in)    :: omega_deriv    ! 1/(m s)
   real, intent(out)   :: vtor_diff      ! vtor_exp - vtor_neo (m/s) 
   integer, intent(out) :: simntheta
+  integer, intent(in)  :: iteration_flag
 
   integer :: j, n, is
-  real :: cc, loglam
+  real :: cc, loglam, etemp
 
   integer :: nmin, nmax, nth
   real :: cpu_in, cpu_out
@@ -49,17 +50,27 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   
   ! Geometry parameters
   
-  neo_rmin_over_a_in = EXPRO_rmin(i)/EXPRO_rmin(EXPRO_n_exp)
-  neo_rmaj_over_a_in = EXPRO_rmaj(i)/EXPRO_rmin(EXPRO_n_exp)
-  neo_q_in           = abs(EXPRO_q(i))
-  neo_shear_in       = EXPRO_s(i)
-  neo_shift_in       = EXPRO_drmaj(i)
-  neo_kappa_in       = EXPRO_kappa(i)
-  neo_s_kappa_in     = EXPRO_skappa(i)
-  neo_delta_in       = EXPRO_delta(i)
-  neo_s_delta_in     = EXPRO_sdelta(i)
-  neo_zeta_in        = EXPRO_zeta(i) 
-  neo_s_zeta_in      = EXPRO_szeta(i) 
+  neo_rmin_over_a_in  = EXPRO_rmin(i)/EXPRO_rmin(EXPRO_n_exp)
+  neo_rmaj_over_a_in  = EXPRO_rmaj(i)/EXPRO_rmin(EXPRO_n_exp)
+  neo_q_in            = abs(EXPRO_q(i))
+  neo_shear_in        = EXPRO_s(i)
+  neo_shift_in        = EXPRO_drmaj(i)
+  neo_kappa_in        = EXPRO_kappa(i)
+  neo_s_kappa_in      = EXPRO_skappa(i)
+  neo_delta_in        = EXPRO_delta(i)
+  neo_s_delta_in      = EXPRO_sdelta(i)
+  neo_zeta_in         = EXPRO_zeta(i) 
+  neo_s_zeta_in       = EXPRO_szeta(i)
+  neo_shape_sin3_in   = EXPRO_shape_sin3(i) 
+  neo_shape_s_sin3_in = EXPRO_shape_ssin3(i)
+  neo_shape_cos0_in   = EXPRO_shape_cos0(i) 
+  neo_shape_s_cos0_in = EXPRO_shape_scos0(i)
+  neo_shape_cos1_in   = EXPRO_shape_cos1(i) 
+  neo_shape_s_cos1_in = EXPRO_shape_scos1(i)
+  neo_shape_cos2_in   = EXPRO_shape_cos2(i) 
+  neo_shape_s_cos2_in = EXPRO_shape_scos2(i)
+  neo_shape_cos3_in   = EXPRO_shape_cos3(i) 
+  neo_shape_s_cos3_in = EXPRO_shape_scos3(i)
   neo_zmag_over_a_in = EXPRO_zmag(i)/EXPRO_rmin(EXPRO_n_exp)
   neo_s_zmag_in      = EXPRO_dzmag(i) 
   
@@ -81,8 +92,8 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
   
   ! Species-dependent parameters
   
-  neo_ne_ade_in = EXPRO_ne(i) / dens_norm
-  neo_te_ade_in = EXPRO_te(i) / temp_norm
+  neo_dens_ae_in = EXPRO_ne(i) / dens_norm
+  neo_temp_ae_in = EXPRO_te(i) / temp_norm
   
   loglam = 24.0 - log(sqrt(EXPRO_ne(i)*1e13)/(EXPRO_te(i)*1000))
   
@@ -207,18 +218,40 @@ subroutine vgen_compute_neo(i,vtor_diff, rotation_model, er0, &
      EXPRO_vtor(j,i) = neo_vtor_dke_out(j) &
           * vth_norm * EXPRO_rmin(EXPRO_n_exp)
   enddo
+  
   jbs_norm = charge_norm_fac*dens_norm*vth_norm &
        *EXPRO_rmin(EXPRO_n_exp)/1e6
   jbs_neo(i)     = neo_jpar_dke_out*jbs_norm
   jbs_sauter(i)  = neo_jpar_thS_out*jbs_norm
-  jbs_koh(i)     = neo_jpar_thK_out*jbs_norm
-  jbs_nclass(i)  = neo_jpar_thN_out*jbs_norm
   jtor_neo(i)    = neo_jtor_dke_out*jbs_norm
   jtor_sauter(i) = neo_jtor_thS_out*jbs_norm
   pflux_sum(i)   = 0.0
   do j=1,neo_n_species_in
-     pflux_sum(i) = pflux_sum(i) + zfac(j)*neo_pflux_dke_out(j)
+     pflux_sum(i) = pflux_sum(i) + neo_z_in(j)*neo_pflux_dke_out(j)
   enddo
   pflux_sum(i) = pflux_sum(i) / neo_rho_star_in**2
+
+  ! For conductivity, need to call NEO again
+  if(epar_flag == 1 .and. iteration_flag == 1) then
+
+     ! Set <epar B>=1 and all density and temperature gradients to zero
+     etemp = neo_epar0_in
+     neo_epar0_in = 1.0
+     neo_dlnndr_in(1:neo_n_species_in) = 0.0
+     neo_dlntdr_in(1:neo_n_species_in) = 0.0
+
+     call neo_run()
+
+     if (neo_error_status_out > 0) then
+        print *,neo_error_message_out
+        stop
+     endif
+
+     jsigma_neo(i)     = neo_jpar_dke_out*jbs_norm
+     jsigma_sauter(i)  = neo_jpar_thS_out*jbs_norm
+     
+     neo_epar0_in = etemp
+     
+  endif
   
 end subroutine vgen_compute_neo

@@ -17,9 +17,12 @@ reg14: c1+f1+lin+ie +pro+mil+frot
 reg15: c4+f2+lin+ie +loc+mil+frot [GPU_BIGMEM]
 reg16: c1+f1+lin+i  +loc+mil+ rot [negative shear]
 
-Tiny nonlinear test case:
+Nonlinear cases:
 
-nl00: GA standard case adiabatic electons
+nl00:    4x48  16( 8,4,1) Tiny version of standard case
+
+stda:  16x180  26(16,8,2) GA std case adiab. electrons  (200x126)
+stdk:  16x128  28(16,8,2) GA std case kinetic electrons (90x94)
 
 Performance testing and scaling templates:
 
@@ -29,8 +32,4 @@ nl03:   64x512  32(24,8,3) nl timing  (Simple)
 nl04:  128x512  48(24,8,4) nl timing  (Simple)
 sh01:   16x144  16(16,8,2) nl timing  (Simple,shear)
 sh02:   32x288  32(16,8,2) nl timing  (Simple,shear)
-weak1: 384x1200 24(16,8,1) weak scale (Simple) 
-weak2: 384x1200 24(16,8,2) weak scale (Simple) 
-weak3: 384x1200 24(16,8,3) weak scale (Simple) 
-weak4: 384x1200 24(16,8,4) weak scale (Simple) 
 

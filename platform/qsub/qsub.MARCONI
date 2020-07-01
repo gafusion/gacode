@@ -1,0 +1,15 @@
+#!/bin/bash
+
+bfile=$SIMDIR/batch.src
+echo "#!/bin/bash" > $bfile
+echo "#PBS -N $LOCDIR" >> $bfile
+echo "#PBS -A $REPO" >> $bfile
+echo "#PBS -o $SIMDIR/batch.out" >> $bfile
+echo "#PBS -e $SIMDIR/batch.err" >> $bfile
+echo "#PBS -V" >> $bfile
+echo "#PBS -q $QUEUE" >> $bfile
+echo "#PBS -l walltime=$WALLTIME" >> $bfile
+echo "#PBS -l select=$nodes_requested:ncpus=$CORES_PER_NODE:mpiprocs=$CORES_PER_NODE" >> $bfile
+#echo "#PBS -l select=$nodes_requested:ncpus=32:mpiprocs=32" >> $bfile
+# echo "module load python" >> $bfile
+echo "$CODE -e $LOCDIR -n $nmpi -nomp $nomp -numa $numa -mpinuma $mpinuma -p $SIMROOT" >> $bfile

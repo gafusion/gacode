@@ -18,8 +18,8 @@ LMATH =
 
 # NetCDF libraries
 
-NETCDF = -L/opt/netcdf/lib -lnetcdff -lnetcdf -lm -lz -lcurl 
-NETCDF_INC = /opt/netcdf/include
+NETCDF = -L/opt/local/lib -lnetcdff -lnetcdf -lm -lz -lcurl 
+NETCDF_INC = /opt/local/include
  
 # Archive
 

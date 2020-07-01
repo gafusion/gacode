@@ -1,0 +1,43 @@
+#!/bin/bash
+
+bfile=$SIMDIR/batch.src
+# Copy appropriate commands to batch directory:
+
+# Repository selection
+#getnim -U `whoami`
+#repo=`gresource -L| tail -1`
+#repo=
+#read -p "Specify a repository [0 for default] " repo
+
+echo "#!/bin/bash" > $bfile
+echo "#SBATCH -J $LOCDIR" >> $bfile
+echo "#SBATCH -A ${REPO}" >> $bfile
+echo "#SBATCH -N $nodes_requested" >> $bfile
+echo "#SBATCH -n $nmpi" >> $bfile
+echo "#SBATCH -o $SIMDIR/batch.out " >> $bfile
+echo "#SBATCH -e $SIMDIR/batch.err" >> $bfile
+echo "#SBATCH -p $QUEUE" >> $bfile
+echo "#SBATCH -t $WALLTIME" >> $bfile
+echo "#SBATCH --export=ALL" >> $bfile
+echo "env" >> $bfile
+echo "$CODE -e $LOCDIR -n $nmpi -nomp $nomp -numa $numa -mpinuma $mpinuma -p $SIMROOT" >> $bfile
+
+#echo "#SBATCH -l mppwidth=$cores_requested" >> $bfile
+#echo "module load python/2.7.8" >> $bfile
+
+# gacode_qsub -s -e . -code cgyro -w 23:59:00 -n 4096 -queue xfuasklprod@skl1 -repo FUA22_InZights
+
+# gacode_qsub -s -e . -code cgyro -w 23:59:00 -n 4096 -queue skl_fua_prod -repo FUA32_InZights
+
+#echo "#!/bin/bash" > $bfile
+#echo "#PBS -N $LOCDIR" >> $bfile
+#echo "#PBS -A $REPO" >> $bfile
+#echo "#PBS -o $SIMDIR/batch.out" >> $bfile
+#echo "#PBS -e $SIMDIR/batch.err" >> $bfile
+#echo "#PBS -V" >> $bfile
+#echo "#PBS -q $QUEUE" >> $bfile
+#echo "#PBS -l walltime=$WALLTIME" >> $bfile
+#echo "#PBS -l select=$nodes_requested:ncpus=$CORES_PER_NODE:mpiprocs=$CORES_PER_NODE" >> $bfile
+##echo "#PBS -l select=$nodes_requested:ncpus=32:mpiprocs=32" >> $bfile
+## echo "module load python" >> $bfile
+
