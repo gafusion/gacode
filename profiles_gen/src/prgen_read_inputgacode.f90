@@ -25,4 +25,7 @@ subroutine prgen_read_inputgacode
   rmin(:) = expro_rmin(:)
   rmaj(:) = expro_rmaj(:)
 
+  ! Needed for some calculations
+  rho(:) = expro_rho(:)
+
 end subroutine prgen_read_inputgacode
