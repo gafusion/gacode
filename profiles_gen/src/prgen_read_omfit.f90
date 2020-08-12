@@ -2,7 +2,7 @@
 ! prgen_read_omfit.f90
 !
 ! PURPOSE:
-!  Read data from OMFIT/GACODE flux-surface mapper 
+!  Read data from OMFIT/GACODE flux-surface mapper
 !----------------------------------------------------------------
 
 subroutine prgen_read_omfit
@@ -15,7 +15,7 @@ subroutine prgen_read_omfit
   integer :: npsi,nf,i,j,ip
   real, dimension(:,:), allocatable :: efit_si,efit_ci
   real, dimension(:), allocatable :: efit_rho,efit_psi,efit_q,efit_p
-  real, dimension(:), allocatable :: efit_rmin,efit_rmaj,efit_kappa,efit_zmaj  
+  real, dimension(:), allocatable :: efit_rmin,efit_rmaj,efit_kappa,efit_zmaj
   real, dimension(:,:,:), allocatable :: g3vec
   real, dimension(:,:,:), allocatable :: g3rho
 
@@ -60,6 +60,7 @@ subroutine prgen_read_omfit
 
   if (format_type /= 3) then
      ! We have rho on statefile grid
+     rho = expro_rho
      call cub_spline(efit_rho,efit_psi,npsi,rho,dpsi,nx)
   else
      ! We have psinorm on statefile grid (peqdsk)
@@ -112,7 +113,7 @@ subroutine prgen_read_omfit
      write(1,'(a)') '# File format:'
      write(1,'(a)') '#-------------------'
      write(1,'(a)') '# nfourier'
-     write(1,'(a)') '# a[4,0:nfourier,nx]'  
+     write(1,'(a)') '# a[4,0:nfourier,nx]'
      write(1,'(a)') '#-------------------'
      write(1,'(a)') '#'
      write(1,'(a)') '# NOTE: nx=EXPRO_n_exp is defined in input.gacode'
@@ -134,4 +135,3 @@ subroutine prgen_read_omfit
   endif
 
 end subroutine prgen_read_omfit
-
