@@ -25,4 +25,9 @@ subroutine prgen_read_inputgacode
   rmin(:) = expro_rmin(:)
   rmaj(:) = expro_rmaj(:)
 
+  ! Needed for gfile parsing
+  rho(:) = expro_rho(:)
+
+  ! Other prgen_globals may need to be defined here
+
 end subroutine prgen_read_inputgacode

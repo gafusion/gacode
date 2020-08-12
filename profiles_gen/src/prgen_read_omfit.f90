@@ -59,11 +59,10 @@ subroutine prgen_read_omfit
   call prgen_get_chi(npsi,efit_q,efit_psi,efit_rho,torfluxa)
 
   if (format_type /= 3) then
-     ! We have rho on statefile grid
-     rho = expro_rho
+     ! We have rho on input grid from prgen_globals
      call cub_spline(efit_rho,efit_psi,npsi,rho,dpsi,nx)
   else
-     ! We have psinorm on statefile grid (peqdsk)
+     ! We have psinorm on input grid (peqdsk) from prgen_globals
      dpsi = dpsi*dpsi_efit
      call cub_spline(efit_psi,efit_q,npsi,dpsi,q,nx)
      call prgen_get_chi(nx,q,dpsi,rho,torfluxa)
