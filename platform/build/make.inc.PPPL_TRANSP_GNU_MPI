@@ -14,7 +14,7 @@ NUMAS_PER_NODE=1
 
 # Compilers (intel) and flags 
 
-FC     = mpif90 -gen-interfaces -nowarn -ftz -traceback -align dcommons  -fPIC -fexceptions -fp-model precise -fp-speculation=safe -module ${GACODE_ROOT}/modules -I${GACODE_ROOT}/modules -I${MKLROOT}/include/fftw -I$(NETCDF_FORTRAN_HOME)/include
+FC     = mpif90 -ffpe-trap=invalid,zero,overflow -fno-range-check -fdollar-ok -fno-common -J ${GACODE_ROOT}/modules -I${GACODE_ROOT}/modules -I${MKLROOT}/include/fftw -I$(NETCDF_FORTRAN_HOME)/include
 F77    = ${FC}
 
 FOMP   = -qopenmp
@@ -22,14 +22,10 @@ FMATH  =  -real-size 64
 FOPT   = -O2
 FDEBUG = -check all -traceback
 F2PY   = f2py
-CFLAGS = -fpic
-FPP    = -fpp
+FPP = -cpp
 
 # NCLASS will conflict with other NCLASS version in TRANSP
 NO_NCLASS_NEO = 1
-
-# Exclude MPI calls from expro
-EXPRO_NOMPI = 1
 
 # System math libraries
 LMATH = -mkl
