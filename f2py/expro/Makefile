@@ -20,7 +20,7 @@ all: expro_lib.a
 expro_lib.a: $(OBJECTS)
 	$(ARCH) expro_lib.a $(OBJECTS)
 
-.f90.o :
+.f90.o .F90.o :
 	$(FC) $(FFLAGS) $(FMATH) -c $<
 
 clean:
