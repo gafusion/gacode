@@ -13,21 +13,20 @@ CORES_PER_NODE=1
 NUMAS_PER_NODE=1
 
 # Compilers (intel) and flags 
-
-FC     = mpif90 -ffpe-trap=invalid,zero,overflow -fno-range-check -fdollar-ok -fno-common -J ${GACODE_ROOT}/modules -I${GACODE_ROOT}/modules -I${MKLROOT}/include/fftw -I$(NETCDF_FORTRAN_HOME)/include
+FC     = mpif90 -ffpe-trap=invalid,zero,overflow -fno-range-check -fdollar-ok -fPIC -J ${GACODE_ROOT}/modules -I${GACODE_ROOT}/modules -I${MKLROOT}/include/fftw -I$(NETCDF_FORTRAN_HOME)/include
 F77    = ${FC}
 
-FOMP   = -qopenmp
-FMATH  =  -real-size 64
+FOMP   = -fopenmp
+FMATH  = -fdefault-real-8 -fdefault-double-8
 FOPT   = -O2
-FDEBUG = -check all -traceback
+FDEBUG  = -Wall -g -fcheck=all -fbacktrace -fbounds-check -O0 -Wextra -finit-real=nan -Wunderflow -ffpe-trap=invalid,zero,overflow
 F2PY   = f2py
 
 # NCLASS will conflict with other NCLASS version in TRANSP
 NO_NCLASS_NEO = 1
 
 # System math libraries
-LMATH = -mkl
+LMATH = -lblas -llapack
 
 # NetCDF
 NETCDF = -L${NETCDF_FORTRAN_HOME}/lib -lnetcdff -L${NETCDF_C_HOME}/lib -lnetcdf
