@@ -21,6 +21,7 @@ FMATH  = -fdefault-real-8 -fdefault-double-8
 FOPT   = -O2
 FDEBUG  = -Wall -g -fcheck=all -fbacktrace -fbounds-check -O0 -Wextra -finit-real=nan -Wunderflow -ffpe-trap=invalid,zero,overflow
 F2PY   = f2py
+CFLAGS = -fPic
 
 # NCLASS will conflict with other NCLASS version in TRANSP
 NO_NCLASS_NEO = 1
