@@ -23,6 +23,7 @@ FOPT   = -O2
 FDEBUG = -check all -traceback
 F2PY   = f2py
 FPP    = -fpp
+CFLAGS = -fpic
 
 # NCLASS will conflict with other NCLASS version in TRANSP
 NO_NCLASS_NEO = 1

@@ -33,6 +33,9 @@ LMATH = -lblas -llapack
 # Exclude MPI calls from expro
 EXPRO_NOMPI = 1
 
+# System math libraries
+LMATH =  -lblas -llapack 
+
 # NetCDF
 NETCDF = -L${NETCDF_FORTRAN_HOME}/lib -lnetcdff -L${NETCDF_C_HOME}/lib -lnetcdf
 NETCDF_INC =-I${NETCDF_FORTRAN_HOME}/include -I${NETCDF_C_HOME}/include

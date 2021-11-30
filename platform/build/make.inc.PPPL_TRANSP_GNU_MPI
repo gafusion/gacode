@@ -23,6 +23,7 @@ FDEBUG = -Wall -g -fcheck=all -fbacktrace -fbounds-check -O0 -Wextra -finit-real
 F2PY   = f2py
 CFLAGS = -fpic
 FPP    = -cpp
+CFLAGS = -fPic
 
 # NCLASS will conflict with other NCLASS version in TRANSP
 NO_NCLASS_NEO = 1
