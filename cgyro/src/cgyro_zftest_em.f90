@@ -19,98 +19,175 @@ subroutine cgyro_zftest_em
   real :: arg
   real, dimension(n_species,n_theta) :: ansum,adsum,alphah,sum_loc
 
-  sum_loc(:,:) = 0.0
+  if (zf_test_mode == 1) then
+     
+     sum_loc(:,:) = 0.0
 
-  ! Calculating the species and theta dependent function, alphah, that ensures
-  !   no B|| fluctuation at t=0. It is a fraction of two integrals, 
-  !   ansum and adsum, which are calculated first.  
-
-!$omp parallel private(iv_loc,is,ix,ie,ic,it,arg)
+!$omp parallel private(iv_loc,is,ic,it)
 !$omp do reduction(+:sum_loc)
-  do iv=nv1,nv2
-     iv_loc = iv-nv1+1
-     is = is_v(iv)
-     ix = ix_v(iv) 
-     ie = ie_v(iv)
-     do ic=1,nc
-        it = it_c(ic)
-
-        arg = k_perp(ic)*rho*vth(is)*mass(is)/(z(is)*bmag(it)) &
-             *sqrt(2.0*energy(ie))*sqrt(1.0-xi(ix)**2)
-
-        sum_loc(is,it) = sum_loc(is,it) & 
-             + w_xi(ix)*w_e(ie)*energy(ie)*(1.0-xi(ix)**2) &
-             *(2.0*(bessel_j1(arg)/arg)*(2.0-bessel_j0(arg)) -1.0)
+     do iv=nv1,nv2
+        iv_loc = iv-nv1+1
+        is = is_v(iv)
+        ix = ix_v(iv)
+        ie = ie_v(iv)
+        do ic=1,nc
+           it = it_c(ic)
+           sum_loc(is,it) = sum_loc(is,it)+w_xi(ix)*w_e(ie)&
+                * (1.0 - jvec_c(1,ic,iv_loc)**2)
+        enddo
      enddo
-  enddo
 !$omp end do
 !$omp end parallel
 
-  call MPI_ALLREDUCE(sum_loc,&
-       ansum,&
-       size(ansum),&
-       MPI_DOUBLE_PRECISION,&
-       MPI_SUM,&
-       NEW_COMM_1,&
-       i_err)
+     call MPI_ALLREDUCE(sum_loc,&
+          ansum,&
+          size(ansum),&
+          MPI_DOUBLE_PRECISION,&
+          MPI_SUM,&
+          NEW_COMM_1,&
+          i_err)
 
-  sum_loc(:,:) = 0.0
-
-!$omp parallel private(iv_loc,is,ix,ie,ic,it,arg)
+     sum_loc(:,:) = 0.0
+     
+!$omp parallel private(iv_loc,is,ic,it)
 !$omp do reduction(+:sum_loc)
-  do iv=nv1,nv2
-     iv_loc = iv-nv1+1
-     is = is_v(iv)
-     ix = ix_v(iv) 
-     ie = ie_v(iv)
-     do ic=1,nc
-        it = it_c(ic)
-
-        arg = k_perp(ic)*rho*vth(is)*mass(is)/(z(is)*bmag(it)) &
-             *sqrt(2.0*energy(ie))*sqrt(1.0-xi(ix)**2)
-
-        sum_loc(is,it) = sum_loc(is,it) & 
-             + w_xi(ix)*w_e(ie)*energy(ie)*(1.0-xi(ix)**2) &
-             *2.0*(bessel_j1(arg)/arg)*(2.0-bessel_j0(arg))*(energy(ie)-1.5)
+     do iv=nv1,nv2
+        iv_loc = iv-nv1+1
+        is = is_v(iv)
+        ix = ix_v(iv)
+        ie = ie_v(iv)
+        do ic=1,nc
+           it = it_c(ic)
+           sum_loc(is,it) = sum_loc(is,it)+w_xi(ix)*w_e(ie)*jvec_c(1,ic,iv_loc)**2 
+        enddo
      enddo
-  enddo
 !$omp end do
 !$omp end parallel
 
-  call MPI_ALLREDUCE(sum_loc,&
-       adsum,&
-       size(adsum),&
-       MPI_DOUBLE_PRECISION,&
-       MPI_SUM,&
-       NEW_COMM_1,&
-       i_err)
-
-  alphah(:,:) = ansum(:,:) / adsum(:,:) 
-
-  ! Constructing the h_x initial condition
-  do ic=1,nc
-
-     ir = ir_c(ic) 
-     it = it_c(ic)
-
+     call MPI_ALLREDUCE(sum_loc,&
+          adsum,&
+          size(adsum),&
+          MPI_DOUBLE_PRECISION,&
+          MPI_SUM,&
+          NEW_COMM_1,&
+          i_err)
+     
      do iv=nv1,nv2
 
         iv_loc = iv-nv1+1
         is = is_v(iv)
-        ix = ix_v(iv)       
+        ix = ix_v(iv)
         ie = ie_v(iv)
+        
+        do ic=1,nc
+           
+           ir = ir_c(ic) 
+           it = it_c(ic)
+           
+           if (px(ir) /= 0) then
+              h_x(ic,iv_loc) = 1e-6*z(is)/temp(is)*jvec_c(1,ic,iv_loc)&
+                   *ansum(is,it)/adsum(is,it)
 
-        if (px(ir) /= 0) then
-           arg = k_perp(ic)*rho*vth(is)*mass(is)/(z(is)*bmag(it)) &
-                *sqrt(2.0*energy(ie))*sqrt(1.0-xi(ix)**2)           
-
-
-           h_x(ic,iv_loc) = z(is)/temp(is) * (2.0 - bessel_j0(arg)) &
-                *(1.0 - alphah(is,it)*(energy(ie) - 1.5)) &
-                - z(is)/temp(is) * bessel_j0(arg)
-
-        endif
+           endif
+        enddo
      enddo
-  enddo
+     
+  else 
+  
+     sum_loc(:,:) = 0.0
 
+     ! Calculating the species and theta dependent function, alphah, that ensures
+     !   no B|| fluctuation at t=0. It is a fraction of two integrals, 
+     !   ansum and adsum, which are calculated first.  
+
+!$omp parallel private(iv_loc,is,ix,ie,ic,it,arg)
+!$omp do reduction(+:sum_loc)
+     do iv=nv1,nv2
+        iv_loc = iv-nv1+1
+        is = is_v(iv)
+        ix = ix_v(iv) 
+        ie = ie_v(iv)
+        do ic=1,nc
+           it = it_c(ic)
+           
+           arg = k_perp(ic)*rho*vth(is)*mass(is)/(z(is)*bmag(it)) &
+                *sqrt(2.0*energy(ie))*sqrt(1.0-xi(ix)**2)
+           
+           sum_loc(is,it) = sum_loc(is,it) & 
+                + w_xi(ix)*w_e(ie)*energy(ie)*(1.0-xi(ix)**2) &
+                *(2.0*(bessel_j1(arg)/arg)*(2.0-bessel_j0(arg)) -1.0)
+        enddo
+     enddo
+!$omp end do
+!$omp end parallel
+
+     call MPI_ALLREDUCE(sum_loc,&
+          ansum,&
+          size(ansum),&
+          MPI_DOUBLE_PRECISION,&
+          MPI_SUM,&
+          NEW_COMM_1,&
+          i_err)
+     
+     sum_loc(:,:) = 0.0
+     
+!$omp parallel private(iv_loc,is,ix,ie,ic,it,arg)
+!$omp do reduction(+:sum_loc)
+     do iv=nv1,nv2
+        iv_loc = iv-nv1+1
+        is = is_v(iv)
+        ix = ix_v(iv) 
+        ie = ie_v(iv)
+        do ic=1,nc
+           it = it_c(ic)
+           
+           arg = k_perp(ic)*rho*vth(is)*mass(is)/(z(is)*bmag(it)) &
+                *sqrt(2.0*energy(ie))*sqrt(1.0-xi(ix)**2)
+           
+           sum_loc(is,it) = sum_loc(is,it) & 
+                + w_xi(ix)*w_e(ie)*energy(ie)*(1.0-xi(ix)**2) &
+                *2.0*(bessel_j1(arg)/arg)*(2.0-bessel_j0(arg))*(energy(ie)-1.5)
+        enddo
+     enddo
+!$omp end do
+!$omp end parallel
+
+     call MPI_ALLREDUCE(sum_loc,&
+          adsum,&
+          size(adsum),&
+          MPI_DOUBLE_PRECISION,&
+          MPI_SUM,&
+          NEW_COMM_1,&
+          i_err)
+
+     alphah(:,:) = ansum(:,:) / adsum(:,:) 
+     
+     ! Constructing the h_x initial condition
+     do ic=1,nc
+
+        ir = ir_c(ic) 
+        it = it_c(ic)
+        
+        do iv=nv1,nv2
+           
+           iv_loc = iv-nv1+1
+           is = is_v(iv)
+           ix = ix_v(iv)       
+           ie = ie_v(iv)
+           
+           if (px(ir) /= 0) then
+              arg = k_perp(ic)*rho*vth(is)*mass(is)/(z(is)*bmag(it)) &
+                   *sqrt(2.0*energy(ie))*sqrt(1.0-xi(ix)**2)           
+              
+              
+              h_x(ic,iv_loc) = z(is)/temp(is) * (2.0 - bessel_j0(arg)) &
+                   *(1.0 - alphah(is,it)*(energy(ie) - 1.5)) &
+                   - z(is)/temp(is) * bessel_j0(arg)
+              
+           endif
+        enddo
+     enddo
+
+  endif
+     
 end subroutine cgyro_zftest_em

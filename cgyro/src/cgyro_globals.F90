@@ -235,6 +235,8 @@ module cgyro_globals
   character(len=18) :: binfile_ky_cflux = 'bin.cgyro.ky_cflux'
   character(len=15), dimension(3) :: binfile_fieldb = &
        (/'bin.cgyro.phib ','bin.cgyro.aparb','bin.cgyro.bparb'/)
+  character(len=19), dimension(3) :: binfile_fieldb_zf0 = &
+       (/'bin.cgyro.phib_zf0 ','bin.cgyro.aparb_zf0','bin.cgyro.bparb_zf0'/)
   character(len=16), dimension(3) :: binfile_kxky = &
        (/'bin.cgyro.kxky_n','bin.cgyro.kxky_e','bin.cgyro.kxky_v'/)
   character(len=19), dimension(3) :: binfile_kxky_field = &

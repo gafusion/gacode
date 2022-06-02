@@ -101,6 +101,13 @@ class cgyrodata:
       #-----------------------------------------------------------------
       # Ballooning potentials
       #
+      nd = 2*self.n_theta*self.n_radial
+      f='.cgyro.phib_zf0'
+      t,fmt,data = self.extract(f)
+      if fmt != 'null':
+         self.phib_zf0 = np.reshape(data[0:nd],(2,self.n_theta*self.n_radial),'F')
+         print('INFO: (data.py) Read data in '+fmt+f+'  '+t)
+      
       nd = 2*self.n_theta*self.n_radial*nt
       f='.cgyro.phib'
       t,fmt,data = self.extract(f)

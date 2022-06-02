@@ -6,8 +6,9 @@ subroutine cgyro_init_h
 
   implicit none
 
-  integer :: ir,it,is,ie,ix
+  integer :: ir,it,is,ie,ix, i_field, io_temp
   real :: arg, ang
+  complex :: ftemp(n_theta,n_radial)
 
   !---------------------------------------------------------------------------
   ! Check to see if we have restart data available
@@ -76,23 +77,23 @@ subroutine cgyro_init_h
      if (zf_test_mode == 1) then
 
         ! 1. ZONAL-FLOW TEST
+        call cgyro_zftest_em
+        !do iv=nv1,nv2
 
-        do iv=nv1,nv2
+           !iv_loc = iv-nv1+1
+           !is = is_v(iv)
+           !ix = ix_v(iv)
+           !ie = ie_v(iv)
 
-           iv_loc = iv-nv1+1
-           is = is_v(iv)
-           ix = ix_v(iv)
-           ie = ie_v(iv)
+           !do ic=1,nc
 
-           do ic=1,nc
+              !ir = ir_c(ic) 
+              !it = it_c(ic)
 
-              ir = ir_c(ic) 
-              it = it_c(ic)
-
-              if (is == 1 .and. px(ir) /= 0) then
-                 arg = k_perp(ic)*rho*vth(is)*mass(is)/(z(is)*bmag(it)) &
-                      *sqrt(2.0*energy(ie))*sqrt(1.0-xi(ix)**2)
-                 h_x(ic,iv_loc) = 1e-6*bessel_j0(abs(arg))
+              !if (is == 1 .and. px(ir) /= 0) then
+                 !arg = k_perp(ic)*rho*vth(is)*mass(is)/(z(is)*bmag(it)) &
+                  !    *sqrt(2.0*energy(ie))*sqrt(1.0-xi(ix)**2)
+                 !h_x(ic,iv_loc) = 1e-6*bessel_j0(abs(arg))
 
                  ! J0 here for the ions is equivalent to having
                  ! the electrons deviate in density.
@@ -100,9 +101,9 @@ subroutine cgyro_init_h
                  ! gyroaveraging after the deposition of particles in
                  ! a certain k_radial mode.
 
-              endif
-           enddo
-        enddo
+              !endif
+           !enddo
+        !enddo
 
      else if (zf_test_mode >= 2) then
 
@@ -172,6 +173,29 @@ subroutine cgyro_init_h
 
   call cgyro_field_c
 
+  if(zf_test_mode > 0 .and. restart_flag /= 1) then
+     io_temp = io_control
+     io_control = 1
+     ftemp(:,:) = 0.0
+     do i_field=1,n_field
+        call write_binary(trim(path)//binfile_fieldb_zf0(i_field),&
+             ftemp(:,:),size(ftemp))
+     enddo
+     io_control = 2
+     do i_field=1,n_field
+        do ir=1,n_radial
+           do it=1,n_theta
+              ftemp(it,ir) = field(i_field,ic_c(ir,it))
+              !print*, ftemp(it,ir)
+           enddo
+        enddo
+        call write_binary(trim(path)//binfile_fieldb_zf0(i_field),&
+             ftemp(:,:),size(ftemp))
+     enddo
+     io_control = io_temp
+  endif
+  !stop
+  
   ! Initialize time-history of fields (-3,-2,-1) to initial field.
   field_old  = field
   field_old2 = field

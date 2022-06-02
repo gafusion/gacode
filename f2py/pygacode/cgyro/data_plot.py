@@ -505,9 +505,14 @@ class cgyrodata_plot(data.cgyrodata):
          f = self.bparb[0,self.n_theta/3,:]
 
       # Initialization in CGYRO is with 1e-6*besselj0 # phic[0]
-      gfactor = 1e6*(1-np.i0(k0**2)*np.exp(-k0**2))/(np.i0(k0**2)*np.exp(-k0**2))
+      #gfactor = 1e6*(1-np.i0(k0**2)*np.exp(-k0**2))/(np.i0(k0**2)*np.exp(-k0**2))
 
-      y = f*gfactor
+      #y = f*gfactor
+      y = self.phib[0,self.n_theta//2,:]/self.phib_zf0[0,self.n_theta//2]
+      #print(1.0/gfactor)
+      print(f[0])
+      print(self.phib_zf0[0,self.n_theta//2])
+      print(self.phib[0,:,-1])
       
       #----------------------------------------------------
       # Average calculations
