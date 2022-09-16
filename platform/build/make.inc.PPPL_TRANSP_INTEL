@@ -18,7 +18,7 @@ FC     = mpif90 -gen-interfaces -nowarn -ftz -traceback -align dcommons  -fPIC -
 F77    = ${FC}
 
 FOMP   = -qopenmp
-FMATH  = -real-size 64
+FMATH  =  -real-size 64
 FOPT   = -O2
 FDEBUG = -check all -traceback
 F2PY   = f2py
@@ -26,9 +26,6 @@ CFLAGS = -fpic
 
 # NCLASS will conflict with other NCLASS version in TRANSP
 NO_NCLASS_NEO = 1
-
-# Exclude MPI calls from expro
-EXPRO_NOMPI = 1
 
 # System math libraries
 LMATH = -mkl

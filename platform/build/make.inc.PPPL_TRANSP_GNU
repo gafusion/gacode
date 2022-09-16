@@ -19,18 +19,15 @@ F77    = ${FC}
 FOMP   = -fopenmp
 FMATH  = -fdefault-real-8 -fdefault-double-8
 FOPT   = -O2
-FDEBUG	= -Wall -g -fcheck=all -fbacktrace -fbounds-check -O0 -Wextra -finit-real=nan -Wunderflow -ffpe-trap=invalid,zero,overflow
+FDEBUG  = -Wall -g -fcheck=all -fbacktrace -fbounds-check -O0 -Wextra -finit-real=nan -Wunderflow -ffpe-trap=invalid,zero,overflow
 F2PY   = f2py
-CFLAGS = -fpic
+CFLAGS = -fPic
 
 # NCLASS will conflict with other NCLASS version in TRANSP
 NO_NCLASS_NEO = 1
 
-# Exclude MPI calls from expro
-EXPRO_NOMPI = 1
-
 # System math libraries
-LMATH =  -lblas -llapack 
+LMATH = -lblas -llapack
 
 # NetCDF
 NETCDF = -L${NETCDF_FORTRAN_HOME}/lib -lnetcdff -L${NETCDF_C_HOME}/lib -lnetcdf
