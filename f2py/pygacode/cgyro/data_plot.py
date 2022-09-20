@@ -465,13 +465,17 @@ class cgyrodata_plot(data.cgyrodata):
 
       f,ft = self.kxky_select(theta,0,'phi',0)
 
-      #y1,y2 = shift_fourier(f,imin,imax)
-      #ax.plot(ky,k0*y1,color='k')
-      #ax.plot(ky,-k0*y2,linestyle='--',color='k')
+      y1,y2 = shift_fourier(f,imin,imax)
+      ax.plot(ky,k0*y1,color='k')
+      ax.plot(ky,-k0*y2,linestyle='--',color='k')
+      ax.plot(ky,k0*y1+k0*y2,color='red')
 
-      y1,y2 = shift_legendre(f,imin,imax)
-      ax.plot(ky,k0*y1,color='m')
-      ax.plot(ky,-k0*y2,linestyle='--',color='m')
+      for i in range(len(y1)):
+         print(ky[i],k0*y1[i],k0*y2[i])
+
+      #y1,y2 = shift_legendre(f,imin,imax)
+      #ax.plot(ky,k0*y1,color='m')
+      #ax.plot(ky,-k0*y2,linestyle='--',color='m')
       # EAB print
       #for i in range(len(ky)):
       #   print(ky[i],k0*y1[i],-k0*y2[i])
@@ -510,9 +514,11 @@ class cgyrodata_plot(data.cgyrodata):
       #y = f*gfactor
       y = self.phib[0,self.n_theta//2,:]/self.phib_zf0[0,self.n_theta//2]
       #print(1.0/gfactor)
-      print(f[0])
+      print(self.phib[0,self.n_theta//2,0])
       print(self.phib_zf0[0,self.n_theta//2])
-      print(self.phib[0,:,-1])
+      #print(sum(abs(self.phib[0,:,-1]))/sum(abs(self.phib_zf0[0,:])))
+      print(sum(abs(self.phib[0,:,-1]+1j*self.phib[1,:,-1]))/sum(abs(self.phib_zf0[0,:])))
+      print(self.phib_zf0[0,:])
       
       #----------------------------------------------------
       # Average calculations

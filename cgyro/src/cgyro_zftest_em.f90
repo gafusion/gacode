@@ -33,7 +33,7 @@ subroutine cgyro_zftest_em
         do ic=1,nc
            it = it_c(ic)
            sum_loc(is,it) = sum_loc(is,it)+w_xi(ix)*w_e(ie)&
-                * (1.0 - jvec_c(1,ic,iv_loc)**2)
+               * (1.0 - jvec_c(1,ic,iv_loc)**2)
         enddo
      enddo
 !$omp end do
@@ -89,6 +89,7 @@ subroutine cgyro_zftest_em
                    *ansum(is,it)/adsum(is,it)
 
            endif
+           
         enddo
      enddo
      
