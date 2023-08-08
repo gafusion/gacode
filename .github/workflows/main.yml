@@ -62,10 +62,10 @@ jobs:
       shell: bash -l {0}
       run: |
         conda activate gacode
-        echo "TODO"
+        echo "TODO2"
 
     - name: Sanity checks
       shell: bash -l {0}
       run: |
         conda activate gacode
-        echo "TODO"
+        echo "TODO2"
