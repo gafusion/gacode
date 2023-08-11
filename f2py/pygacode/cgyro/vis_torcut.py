@@ -7,7 +7,13 @@ from matplotlib import rc
 from matplotlib import cm
 from ..gacodefuncs import *
 from .data import cgyrodata
-from mayavi import mlab
+try:
+    from mayavi import mlab
+except ModuleNotFoundError:
+   print("WARNING: (vis_torcut) Mayavi module not found - will use matplotlib")
+   no_mayavi = True 
+   import matplotlib.tri as tri
+   from matplotlib.colors import Normalize
 try:
    from pygacode import vis
    from pygacode import geo
@@ -39,13 +45,19 @@ nn = sim.n_n
 ns = sim.n_species
 nth = sim.theta_plot
 
+print(f'INFO: (vis_torcut) dn = {dn} (cf. dn in out.cgyro.info')
 print('HINT: adjust -dn to match experimental dn (rho/a and Lx/a will shrink)')
 print('Lx/rho = {:.2f}'.format(sim.length))
 print('rho/a  = {:.4f}'.format(sim.rho/dn))
 lovera = sim.length*sim.rho/dn*mag
 print('Lx/a   = {:.4f}'.format(lovera))
 
+# To calculate dn we could use the following formula given rhosunit,
+# However, rhosunit is not an attribute of sim.
+#dn = sim.ky[1]/sim.q * sim.rmin/sim.rhosunit
+
 ivec = time_vector(istr,nt)
+print(f"INFO: (vis_torcut) will produce {len(ivec)} frames")
 
 s=ext.split('.')
 if len(s) == 2:
@@ -178,6 +190,25 @@ if isfield:
     n_chunk = 2*nr*nn*nth
 else:
     n_chunk = 2*nr*ns*nn*nth
+
+# If we use matplotlib instead of mayavi, triangulate outside of frame() routine for efficiency
+if no_mayavi:
+    x = xp.flatten()
+    y = yp.flatten()
+    triang = tri.Triangulation(x,y)
+    triangles = triang.triangles
+    # Remove large triangles that reach across the flux tube.
+    dR = np.max(np.diff(xp[:, nz//2])) # theta = 0 mesh spacing in dR
+    dZ = np.max(np.diff(yp[-1,:])) # outer flux surface dZ around theta.
+    max_length = 2*max([dR, dZ])
+    print(f"INFO: (vis_torcut) triangulation max side length [/a] = {max_length:.3f}")
+    # Mask off unwanted triangles.
+    xtri = x[triangles] - np.roll(x[triangles], 1, axis=1)
+    ytri = y[triangles] - np.roll(y[triangles], 1, axis=1)
+    maxi = np.max(np.sqrt(xtri**2 + ytri**2), axis=1)
+    mask = maxi < max_length
+    triang.set_mask(~mask)
+    print(f"INFO: (vis_torcut) mesh contains {len(triangles)} triangles")
    
 # This is the logic to generate a frame
 def frame():
@@ -186,8 +217,16 @@ def frame():
       a = np.reshape(aa,(2,nr,nth,nn),order='F')
    else:
       a = np.reshape(aa,(2,nr,nth,ns,nn),order='F')
-      
-   mlab.figure(size=(900,900),bgcolor=(1,1,1))
+   if no_mayavi:
+       fig, ax = plt.subplots(1,1,figsize=(8,8),clear=True)
+       ax.plot(xp[0,:],yp[0,:],'k-')
+       ax.plot(xp[-1,:],yp[-1,:],'k-')
+       ax.set_aspect("equal")
+       ax.set_ylabel("Z/a")
+       ax.set_xlabel("R/a")
+   else:
+       mlab.figure(size=(900,900),bgcolor=(1,1,1))
+       
    if isfield:
       c = a[0,:,:,:]+1j*a[1,:,:,:]
    else:
@@ -207,21 +246,33 @@ def frame():
    else:
       f0=float(fmin)
       f1=float(fmax)
-
-   image = mlab.mesh(xp,yp,zp,scalars=f,colormap=colormap,vmin=f0,vmax=f1,opacity=1.0)
-   # View from positive z-axis
-   mlab.view(azimuth=0, elevation=0)
+      
+   if no_mayavi:
+       norm = Normalize(f0, f1)
+       cmap = plt.get_cmap(colormap)
+       ax.tripcolor(triang, f.flatten(), shading='gouraud',norm=norm,cmap=cmap)
+   else:
+       image = mlab.mesh(xp,yp,zp,scalars=f,colormap=colormap,vmin=f0,vmax=f1,opacity=1.0)
+       # View from positive z-axis
+       mlab.view(azimuth=0, elevation=0)
+   
    print('INFO: (vis_torcut) min={:.3f} | max={:.3f}'.format(f0,f1))
    
    if ftype == 'screen':
-      mlab.show()
+      if no_mayavi:
+          plt.show()
+      else:
+          mlab.show()
    else:
-      # Filename uses frame number 
-      mlab.savefig(pre+str(i)+'.'+ftype)
-      # Close each time to prevent memory accumulation
-      mlab.close()
+       if no_mayavi:
+           plt.savefig(pre+str(i)+'.'+ftype)
+           plt.close("all")
+       else:
+          # Filename uses frame number 
+          mlab.savefig(pre+str(i)+'.'+ftype)
+          # Close each time to prevent memory accumulation
+          mlab.close()
                 
-
 PREC='f' ; BIT=4
 
 # Open binary file
