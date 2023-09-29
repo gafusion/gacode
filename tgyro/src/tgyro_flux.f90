@@ -237,6 +237,31 @@ subroutine tgyro_flux
        endif
      enddo 
      mflux_i_tur(1,i_r) =  (-mmm_chi_phi*w0p(i_r) + mmm_vgx_phi*w0(i_r))*r_min/c_s(i_r)/chi_gb(i_r) 
+
+
+  case (8)
+
+     ! Map TGYRO parameters to QLGYRO (TGLF+CGYRO)
+     call tgyro_cgyro_map
+
+     call qlgyro_run(lpath, gyro_comm)
+
+     call tgyro_trap_component_error(tglf_error_status,tglf_error_message)
+
+     pflux_e_tur(i_r) = tglf_elec_pflux_out
+     eflux_e_tur(i_r) = tglf_elec_eflux_out
+     mflux_e_tur(i_r) = -tglf_sign_It_in*tglf_elec_mflux_out
+     expwd_e_tur(i_r) = tglf_elec_expwd_out
+
+     i0 = 0
+     do i_ion=1,loc_n_ion
+        if (calc_flag(i_ion) == 0) cycle
+        i0 = i0+1
+        pflux_i_tur(i_ion,i_r) = tglf_ion_pflux_out(i0)
+        eflux_i_tur(i_ion,i_r) = tglf_ion_eflux_out(i0)
+        mflux_i_tur(i_ion,i_r) = -tglf_sign_It_in*tglf_ion_mflux_out(i0)
+        expwd_i_tur(i_ion,i_r) = tglf_ion_expwd_out(i0)
+     enddo
           
   case default
 

@@ -253,8 +253,6 @@ class ManagerInput:
                    code='glf23'
                elif os.path.isfile(basedir+'/input.etg'):
                    code='etg'
-               elif os.path.isfile(basedir+'/input.mmm'):
-                   code='mmm'
                else:
                    code='unknown'
                    self.error=1
@@ -267,9 +265,6 @@ class ManagerInput:
                    continue
                if code == 'ifs':
                    print('INFO: (gacodeinput.py) Found ifs input in '+basedir)
-                   continue
-               elif code == 'mmm':
-                   print('INFO: (gacodeinput.py) Found mmm input in '+basedir)
                    continue
                else:
                    print('INFO: (gacodeinput.py) Found '+code+' input in '+basedir)

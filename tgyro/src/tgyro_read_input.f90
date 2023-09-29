@@ -221,7 +221,7 @@ subroutine tgyro_read_input
        ierr)
 
   call MPI_BCAST(code,&
-       n_inst*5,&
+       n_inst*6,&
        MPI_CHARACTER,&
        0,&
        MPI_COMM_WORLD,&
