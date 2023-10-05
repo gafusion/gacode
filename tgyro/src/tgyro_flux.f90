@@ -244,7 +244,7 @@ subroutine tgyro_flux
      ! Map TGYRO parameters to QLGYRO (TGLF+CGYRO)
      call tgyro_cgyro_map
 
-     call qlgyro_run(lpath, gyro_comm)
+     call qlgyro_run(lpath, gyro_comm, i_tran)
 
      call tgyro_trap_component_error(tglf_error_status,tglf_error_message)
 
