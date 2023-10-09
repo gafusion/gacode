@@ -27,6 +27,9 @@ subroutine cgyro_init_rotation
   if (rotation_model == 1) then
      ! O(M) terms only
      dens_rot(:,:)          = 1.0
+     do is=1,n_species
+       dens2_rot(:,is)         = dens(is) ! * dens_rot(:,is)
+     enddo
      dens_ele_rot(:)        = 1.0
      dens_avg_rot(:)        = 1.0
      do is=1,n_species
@@ -58,6 +61,7 @@ subroutine cgyro_init_rotation
      do it=1,n_theta
         dens_rot(it,is) = exp(0.5 * (mach/vth(is))**2 &
              * (bigr(it)**2 - bigr_th0**2) / rmaj**2) 
+        dens2_rot(it,is) = dens(is) * dens_rot(it,is)
      enddo
   enddo
 
@@ -80,7 +84,7 @@ subroutine cgyro_init_rotation
         sum_zn  = 0.0
         dsum_zn = 0.0
         do is=1, n_species
-           fac = z(is) * dens(is) * dens_rot(it,is) &
+           fac = z(is) * dens2_rot(it,is) &
                 * exp(-x * z(is)/temp(is))
            sum_zn  = sum_zn  + fac
            dsum_zn = dsum_zn - fac * z(is)/temp(is) 
@@ -147,6 +151,7 @@ subroutine cgyro_init_rotation
   do is=1,n_species
      do it=1,n_theta
         dens_rot(it,is) = dens_rot(it,is) * exp(-z(is)/temp(is)*phi_rot(it))
+        dens2_rot(it,is) = dens(is) * dens_rot(it,is)
      enddo
   enddo
   dens_ele_rot(:) = dens_ele_rot(:) * exp(1.0/temp_ele*phi_rot(:))
@@ -158,7 +163,7 @@ subroutine cgyro_init_rotation
      ! sum_a z^2/T n(theta)
      sum_zn = 0.0
      do is=1,n_species
-        sum_zn = sum_zn + z(is)*z(is)/temp(is)*dens(is)*dens_rot(it,is)
+        sum_zn = sum_zn + z(is)*z(is)/temp(is)*dens2_rot(it,is)
      enddo
      if (ae_flag == 1) then
         sum_zn = sum_zn + 1.0/temp_ele*dens_ele*dens_ele_rot(it)
@@ -169,7 +174,7 @@ subroutine cgyro_init_rotation
      do is=1,n_species
 
         phi_rot_rderiv(it) = phi_rot_rderiv(it) &
-             + z(is)*dens(is)*dens_rot(it,is)*(-dlnndr(is) &
+             + z(is)*dens2_rot(it,is)*(-dlnndr(is) &
              - dlntdr(is)*(z(is)/temp(is)*phi_rot(it) &
              - 0.5*(mach/rmaj/vth(is))**2 * (bigr(it)**2 - bigr_th0**2)) &
              + (mach/rmaj/vth(is))**2 * (bigr(it) * bigr_r(it) &
@@ -178,7 +183,7 @@ subroutine cgyro_init_rotation
         
         ! effective pressure gradient
         pr_r(it) = pr_r(it) &
-             + temp(is)*dens(is)*dens_rot(it,is)*(-dlnndr(is) &
+             + temp(is)*dens2_rot(it,is)*(-dlnndr(is) &
              - dlntdr(is)*(1.0 + z(is)/temp(is)*phi_rot(it) &
              - 0.5*(mach/rmaj/vth(is))**2 * (bigr(it)**2 - bigr_th0**2)) &
              - (mach/rmaj/vth(is))**2 * (bigr_th0 * bigr_r_th0) &
@@ -305,6 +310,9 @@ subroutine cgyro_init_rotation
      mach_one_fac = 0.0
      
      dens_rot(:,:)         = 1.0
+     do is=1,n_species
+       dens2_rot(:,is)         = dens(is) ! * dens_rot(:,is)
+     enddo
      dens_ele_rot(:)       = 1.0
      phi_rot(:)            = 0.0
      phi_rot_tderiv(:)     = 0.0
@@ -327,7 +335,7 @@ subroutine cgyro_init_rotation
      enddo
      do is=1,n_species
         do it=1,n_theta
-           write(io,'(es16.9,1x)') dens(is)*dens_rot(it,is)
+           write(io,'(es16.9,1x)') dens2_rot(it,is)
         enddo
      enddo
      close(io)
@@ -394,7 +402,7 @@ subroutine cgyro_init_rotation
      dens_avg_rot(is) = sum1
      ! A: dn/dr = n d (ln n(theta0))/dr + A
      do it=1,n_theta
-        dens_deriv(it) = dens(is)*dens_rot(it,is) &
+        dens_deriv(it) = dens2_rot(it,is) &
              * (- z(is)/temp(is)*phi_rot_rderiv(it) &
              - dlntdr(is)*(z(is)/temp(is)*phi_rot(it) &
              - 0.5*(mach/rmaj/vth(is))**2 * (bigr(it)**2 - bigr_th0**2)) &
@@ -407,9 +415,9 @@ subroutine cgyro_init_rotation
      sum3 = 0.0
      sum4 = 0.0
      do it=1,n_theta
-        sum2 = sum2 + jacob_r(it) * dens(is)*dens_rot(it,is) * d_theta ! int jr n
+        sum2 = sum2 + jacob_r(it) * dens2_rot(it,is) * d_theta ! int jr n
         sum3 = sum3 + jacob(1,it) * dens_deriv(it) * d_theta           ! int j nr
-        sum4 = sum4 + jacob(1,it) * dens(is)*dens_rot(it,is) * d_theta ! int j n
+        sum4 = sum4 + jacob(1,it) * dens2_rot(it,is) * d_theta ! int j n
      enddo
      dlnndr_avg_rot(is) = (dlnndr(is)*dens(is)*sum1*sum_j+sum2+sum3)/sum4-sum_jr/sum_j
   enddo

@@ -9,6 +9,7 @@ module prgen_globals
   character (len=70) :: raw_data_type
   character (len=70) :: file_g
   character (len=70) :: file_cer
+  character (len=70) :: file_ti
 
   !----------------------------------------------------------
   ! Internal control variables

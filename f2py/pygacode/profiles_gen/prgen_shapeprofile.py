@@ -55,19 +55,15 @@ for i in range(1,npsi):
 
 # Repair functions near origin
 
-xi[0,:] = zero(rnorm,xi[0,:]) # rmin
+xi[0,0] = 0.0                   # rmin
 xi[1,:] = extrap(pnorm,xi[1,:]) # rmaj
 xi[2,:] = extrap(rnorm,xi[2,:]) # kappa
 xi[3,:] = extrap(rnorm,xi[3,:]) # zmaj
 
 ci[0,:] = extrap(pnorm,ci[0,:]) # tilt
 
-si[1,:] = zero(rnorm,si[1,:]) # delta
-ci[1,:] = zero(rnorm,ci[1,:]) # c1
-
-for i in np.arange(2,nf+1):
-   si[i,:] = zero(pnorm,si[i,:]) 
-   ci[i,:] = zero(pnorm,ci[i,:])
+si[1:,0] = 0.0 # delta
+ci[1:,0] = 0.0 # c1
 
 with open('out.dim','w') as f:
    f.write(str(npsi)+'\n')

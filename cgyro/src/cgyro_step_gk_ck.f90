@@ -26,7 +26,12 @@ subroutine cgyro_step_gk_ck
 
   tol = error_tol
 
+  ! total iteration counter
   itrk = 0
+
+  ! good step counter
+  istep = 0
+
   conv = 1
 
   scale_x = 0.0
@@ -162,7 +167,11 @@ subroutine cgyro_step_gk_ck
      call timer_lib_out('str_comm')
 
      if (var_error < tol) then
+
         call cgyro_field_c
+
+        istep = istep+1
+        deltah2_vec(istep) = deltah2
 
         delta_t_tot = delta_t_tot + deltah2
         total_local_error = total_local_error + rel_error*rel_error
@@ -209,6 +218,7 @@ subroutine cgyro_step_gk_ck
   endif
   
   delta_t_gk = min(delta_t,delta_t_gk)
+  
   total_local_error = var_error
 
 end subroutine cgyro_step_gk_ck

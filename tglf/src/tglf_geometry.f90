@@ -68,7 +68,7 @@ SUBROUTINE xgrid_functions_sa
      endif
      kx0_e = -(0.36*vexb_shear_kx0/gamma_reference_kx0(1) + 0.38*wE*TANH((0.69*wE)**6))
      if(sat_rule_in.ge.1)kx0_e = -(0.53*vexb_shear_kx0/gamma_reference_kx0(1) + 0.25*wE*TANH((0.69*wE)**6))
-     if(sat_rule_in.eq.2)then
+     if(sat_rule_in.eq.2 .OR. sat_rule_in.eq.3)then
        if(ABS(kymax_out*vzf_out*vexb_shear_kx0).gt.small)then
          kx0_e = -0.32*((ky/kymax_out)**0.3)*vexb_shear_kx0/(ky*vzf_out)
        else
@@ -79,7 +79,7 @@ endif
 
      a0 = 1.3
      if(sat_rule_in.eq.1)a0=1.45
-     if(sat_rule_in.eq.2)a0=1.6
+     if(sat_rule_in.eq.2 .OR. sat_rule_in.eq.3)a0=1.6
      if(ABS(kx0_e).gt.a0)kx0_e = a0*kx0_e/ABS(kx0_e)
 !     a0 = alpha_e_in*2.0
 !     if(alpha_e_in.ne.0.0)then
@@ -280,7 +280,7 @@ SUBROUTINE xgrid_functions_geo
 !write(*,*)"grad_r0_out = ",grad_r0_out
      kx0_e = -(0.36*vexb_shear_kx0/gamma_reference_kx0(1) + 0.38*wE*TANH((0.69*wE)**6))
      if(sat_rule_in.eq.1)kx0_e = -(0.53*vexb_shear_kx0/gamma_reference_kx0(1) + 0.25*wE*TANH((0.69*wE)**6))
-     if(sat_rule_in.eq.2)then
+     if(sat_rule_in.eq.2 .OR. sat_rule_in.eq.3)then
        if(ABS(kymax_out*vzf_out*vexb_shear_kx0).gt.small)then
          kx0_e = -0.32*((ky/kymax_out)**0.3)*vexb_shear_kx0/(ky*vzf_out)
        else
@@ -296,13 +296,13 @@ SUBROUTINE xgrid_functions_geo
 !     endif
      a0 = 1.3
      if(sat_rule_in.eq.1)a0=1.45
-     if(sat_rule_in.eq.2)a0=1.6
+     if(sat_rule_in.eq.2 .OR. sat_rule_in.eq.3)a0=1.6
      if(ABS(kx0_e).gt.a0)kx0_e = a0*kx0_e/ABS(kx0_e)
      if(units_in.eq.'GYRO')then
         kx0 = sign_Bt_in*kx0_e ! cancel the sign_Bt_in factor in kxx below
      else
        if(sat_rule_in.eq.1)kx0 = sign_Bt_in*kx0_e/(2.1)  ! goes with xnu_model=2
-       if(sat_rule_in.eq.2)kx0 = sign_Bt_in*kx0_e*0.7/grad_r0_out**2     ! goes with xnu_model=3, the factor 0.7/grad_r0_out**2 is needed for stress_tor
+       if(sat_rule_in.eq.2 .OR. sat_rule_in.eq.3)kx0 = sign_Bt_in*kx0_e*0.7/grad_r0_out**2     ! goes with xnu_model=3, the factor 0.7/grad_r0_out**2 is needed for stress_tor
        ! note kx0 = alpha_e*gamma_ExB_HB/gamma Hahm - Burrell form of gamma_ExB
        ! The 2.1 effectively increases ay0 & ax0 and reduces toroidal stress to agree with CGYRO
      endif
@@ -472,7 +472,7 @@ SUBROUTINE xgrid_functions_geo
   else
  ! Nov 2019     SAT_geo0_out = 0.946/qrat_geo(0) ! normed to GASTD with CGYRO
     SAT_geo0_out = 0.946/qrat_geo(0)          ! normed to GASTD with CGYRO
-    if(sat_rule_in.eq.2)SAT_geo0_out = 1.0
+    if(sat_rule_in.eq.2 .OR. sat_rule_in.eq.3)SAT_geo0_out = 1.0
 !    write(*,*)"SAT_geo0_out = ",SAT_geo0_out
     grad_r0_out = B_geo(0)/qrat_geo(0)
     B_geo0_out = b_geo(0)

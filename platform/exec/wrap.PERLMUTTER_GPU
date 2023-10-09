@@ -11,6 +11,7 @@ let l4="$SLURM_LOCALID-($r4*4)"
 # GPU3 is connected to CPU0
 let ACC_DEVICE_NUM=3-${l4}
 export ACC_DEVICE_NUM
+export OMP_DEFAULT_DEVICE=${ACC_DEVICE_NUM}
 
 echo "`uname -n` $SLURM_PROCID $SLURM_LOCALID $ACC_DEVICE_NUM `taskset -pc $$`"
 #ecno "uname -n` $SLURM_LOCALID LL $LD_LIBRARY_PATH"

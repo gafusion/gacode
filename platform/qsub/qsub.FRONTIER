@@ -1,10 +1,8 @@
 #!/bin/bash
 
-echo "-queue: default [default], debug, premium"
-
 # Default queue
 if [ "$QUEUE" == "null_queue" ] ; then
-   QUEUE=default
+   QUEUE=batch
 fi
 
 bfile=$SIMDIR/batch.src

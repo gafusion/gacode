@@ -1,0 +1,49 @@
+#! /usr/bin/env bash
+# GACODE Parallel execution script (PERLMUTTER_GPU)
+
+#env 1>&2
+
+
+let r4=SLURM_LOCALID/4
+let l4="$SLURM_LOCALID-($r4*4)"
+
+#echo "$SLURM_PROCID `nvidia-smi -L` $SLURM_PROCID"
+#echo "$SLURM_PROCID `nvidia-smi topo -m` $SLURM_PROCID"
+
+let ACC_DEVICE_NUM=${l4}
+export ACC_DEVICE_NUM
+
+echo "`uname -n` $SLURM_PROCID $SLURM_LOCALID $ACC_DEVICE_NUM `taskset -pc $$`"
+
+if [ ${NTASKS_PER_GPU} -gt 1 ]; then
+    # use MPS
+    # https://docs.nvidia.com/deploy/mps/index.html
+    export CUDA_MPS_PIPE_DIRECTORY=/tmp/nvidia-mps
+    export CUDA_MPS_LOG_DIRECTORY=/tmp/nvidia-log
+    
+    NODE_RANK=$((SLURM_PROCID % (NTASKS_PER_GPU*NUMA)))
+    
+    if [ $NODE_RANK -eq 0 ]; then
+	echo $SLURM_PROCID starting nvidia-cuda-mps-control on $(hostname)
+	# Ensure host GPU can see all GPUs
+	nvidia-cuda-mps-control -d
+    fi
+
+    sleep 5
+    
+    if [ $NODE_RANK -eq 0 ]; then
+	echo "`uname -n` $SLURM_PROCID $SLURM_LOCALID mps ready: $(date --iso-8601=seconds)"
+    fi
+    
+    "$@"
+  
+    if [ $NODE_RANK -eq 0 ]; then
+	echo "`uname -n` $SLURM_PROCID $SLURM_LOCALID stopping nvidia-cuda-mps-control: $(date --iso-8601=seconds)"
+	echo quit | nvidia-cuda-mps-control
+	echo "`uname -n` $SLURM_PROCID $SLURM_LOCALID stopped nvidia-cuda-mps-control: $(date --iso-8601=seconds)"
+    fi
+else
+    # no need for MPS
+    exec "$@"
+fi
+

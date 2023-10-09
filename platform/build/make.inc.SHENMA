@@ -19,7 +19,7 @@ FDEBUG	= -Wall -fcheck=all -O -W -finit-real=nan -fbounds-check
 
 # System math libraries
 
-LMATH = /usr/lib64/liblapack.a /usr/lib64/libblas.a $(FFTW_DIR)/lib/libfftw3.a
+LMATH = /usr/lib64/liblapack.a /usr/lib64/libblas.a -L$(FFTW_DIR)/lib -lfftw3 -lfftw3_threads
 FFTW_INC=$(FFTW_DIR)/include
 
 # GotoBLAS2 gives incorrect results
@@ -28,6 +28,8 @@ FFTW_INC=$(FFTW_DIR)/include
 # NetCDF:
 NETCDF=-L$(NETCDF_DIR)/lib -lnetcdff -lnetcdf
 NETCDF_INC=$(NETCDF_DIR)/include
+#to avoide compiling error in profiles_3d
+NETCDFF_INC=$(NETCDF_DIR)/include
 
 # Archive 
 

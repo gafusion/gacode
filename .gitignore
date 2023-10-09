@@ -26,6 +26,7 @@ cgyro/src/*.h
 .\#*
 
 # Version tags
+.VERSION
 gyro/.VERSION
 cgyro/.VERSION
 le3/.VERSION

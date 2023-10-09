@@ -1,0 +1,41 @@
+#---------------------------------------------------
+# CSD3 [AMPERE GPU component]
+#
+# SYSTEM INFO:
+# - 2x AMD EPYC 7763 64-Core Processor 1.8GHz (128 cores in total)
+# - 1000 GiB RAM
+# - 4x NVIDIA A100-SXM-80GB GPUs with 6912 FP32 CUDA Cores
+# - Dual-rail Mellanox HDR200 InfiniBand interconnect
+#   
+#---------------------------------------------------
+$(info Compiling for CSD3 AMPERE GPU)
+
+#  FIXED Hardware parameters
+
+IDENTITY="CSD3 Ampere"
+CORES_PER_NODE=128
+NUMAS_PER_NODE=4
+
+# Compilers and flags
+
+FC     = mpif90 -module ${GACODE_ROOT}/modules -Mpreprocess -DUSE_INLINE -Mdefaultunit
+F77    = ${FC}
+#CC     = gcc
+
+FACC   =-acc -Minfo=accel -Mcudalib=cufft
+FOMP   =-mp -Mstack_arrays 
+FMATH  =-r8 
+FOPT   =-fast -fastsse -Mvect
+FDEBUG =-g -Kieee -Ktrap=fp,divz -Mbounds -Mchkptr -Mchkstk -traceback -Minform=inform
+
+
+# System math libraries
+LMATH=-llapack -lblas
+
+
+GATOFLAGS = -r8 -i8
+
+# Archive 
+ARCH = ar cr
+
+

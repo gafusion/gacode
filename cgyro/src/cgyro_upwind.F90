@@ -18,7 +18,7 @@
 subroutine cgyro_upwind_r64
 
   use cgyro_globals
-  use mpi
+  use parallel_lib
   use timer_lib
 
   implicit none
@@ -28,7 +28,10 @@ subroutine cgyro_upwind_r64
 
   call timer_lib_in('str')
 
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd collapse(3) &
+!$omp&         private(res_loc,iv,iv_loc) 
+#elif defined(_OPENACC)
 !$acc parallel loop collapse(3) gang vector independent &
 !$acc&         private(res_loc,iv,iv_loc) &
 !$acc&         present(g_x,upfac1,is_v,upwind_res_loc) &
@@ -56,34 +59,19 @@ subroutine cgyro_upwind_r64
 
   call timer_lib_in('str_comm')
 
-#ifdef DISABLE_GPUDIRECT_MPI
-!$acc update host(upwind_res_loc)
-#else
-!$acc host_data use_device(upwind_res_loc,upwind_res)
-#endif
-
-  call MPI_ALLREDUCE(upwind_res_loc(:,:,:),&
-       upwind_res(:,:,:),&
-       size(upwind_res(:,:,:)),&
-       MPI_DOUBLE_COMPLEX,&
-       MPI_SUM,&
-       NEW_COMM_3,&
-       i_err)
-
-#ifdef DISABLE_GPUDIRECT_MPI
-!$acc update device(upwind_res)
-#else
-!$acc end host_data
-#endif
+  call parallel_clib_sum_upwind(upwind_res_loc,upwind_res)
 
   call timer_lib_out('str_comm')
 
   call timer_lib_in('str')
 
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd collapse(3) &
+!$omp&         private(iv_loc,is,ix,ie,ic)
+#elif defined(_OPENACC)
 !$acc parallel loop collapse(3) independent gang vector &
 !$acc&         present(is_v,ix_v,ie_v,xi,vel,upfac2,g_x,upwind_res) &
-!$acc&         private(iv_loc,is,ix,ie) present(nt1,nt2,nv1,nv2,nc) default(none)
+!$acc&         private(iv_loc,is,ix,ie,ic) present(nt1,nt2,nv1,nv2,nc) default(none)
 #else
 !$omp parallel do collapse(2) private(iv_loc,is,ix,ie,ic)
 #endif
@@ -108,7 +96,7 @@ subroutine cgyro_upwind_r32
 
   use, intrinsic :: iso_fortran_env
   use cgyro_globals
-  use mpi
+  use parallel_lib
   use timer_lib
 
   implicit none
@@ -118,7 +106,10 @@ subroutine cgyro_upwind_r32
 
   call timer_lib_in('str')
 
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd collapse(3) &
+!$omp&         private(res_loc,iv,iv_loc) 
+#elif defined(_OPENACC)
 !$acc parallel loop collapse(3) gang vector independent &
 !$acc&         private(res_loc,iv,iv_loc) &
 !$acc&         present(g_x,upfac1,is_v,upwind32_res_loc) &
@@ -147,34 +138,19 @@ subroutine cgyro_upwind_r32
 
   call timer_lib_in('str_comm')
 
-#ifdef DISABLE_GPUDIRECT_MPI
-!$acc update host(upwind32_res_loc)
-#else
-!$acc host_data use_device(upwind32_res_loc,upwind32_res)
-#endif
-
-  call MPI_ALLREDUCE(upwind32_res_loc(:,:,:),&
-       upwind32_res(:,:,:),&
-       size(upwind32_res(:,:,:)),&
-       MPI_COMPLEX,&
-       MPI_SUM,&
-       NEW_COMM_3,&
-       i_err)
-
-#ifdef DISABLE_GPUDIRECT_MPI
-!$acc update device(upwind32_res)
-#else
-!$acc end host_data
-#endif
+  call parallel_clib_sum_upwind32(upwind32_res_loc,upwind32_res)
 
   call timer_lib_out('str_comm')
 
   call timer_lib_in('str')
 
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd collapse(3) &
+!$omp&         private(iv_loc,is,ix,ie,ic)
+#elif defined(_OPENACC)
 !$acc parallel loop collapse(3) independent gang vector &
 !$acc&         present(is_v,ix_v,ie_v,xi,vel,upfac2,g_x,upwind32_res) &
-!$acc&         private(iv_loc,is,ix,ie) &
+!$acc&         private(iv_loc,is,ix,ie,ic) &
 !$acc&         present(nt1,nt2,nv1,nv2,nc) default(none)
 #else
 !$omp parallel do collapse(2) private(iv_loc,is,ix,ie,ic)

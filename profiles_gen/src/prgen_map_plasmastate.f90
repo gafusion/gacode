@@ -228,6 +228,19 @@ subroutine prgen_map_plasmastate
      endif
   enddo
 
+  !---------------------------------------------------
+  ! Read the Ti file and overlay
+  !
+  if (file_ti /= "null") then
+     call prgen_read_ti
+     do i=1,expro_n_ion
+        if (expro_type(i) == type_therm) then
+           expro_ti(i,:) = ti_kev(:)
+        endif
+     enddo
+  endif
+  !---------------------------------------------------
+
   !--------------------------------------------------------------------
   ! Convert SWIM integrated powers (W) to densities (W/m^3)
   do i=2,nx

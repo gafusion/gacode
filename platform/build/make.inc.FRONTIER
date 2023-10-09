@@ -15,7 +15,11 @@ FC = ftn -J ${GACODE_ROOT}/modules
 F77 = ${FC}
 
 # Compiler options/flags
+ifneq ($(GACODE_OMPGPU),1)
 FACC   =-hacc -DHIPGPU -I${HIPFORT_DIR}/include/hipfort/amdgcn -hacc_model=auto_async_none:no_fast_addr:no_deep_copy
+else
+FACC = -DOMPGPU -DHIPGPU -I${HIPFORT_DIR}/include/hipfort/amdgcn
+endif
 FOMP   =-homp
 FMATH  =-s real64
 FOPT   =-Ofast

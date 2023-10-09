@@ -250,7 +250,7 @@ subroutine cgyro_write_initdata
      enddo
      do is=1,n_species
         do it=1,n_theta
-           write (io,fmtstr) dens(is)*dens_rot(it,is)
+           write (io,fmtstr) dens2_rot(it,is)
         enddo
      enddo
      close(io)

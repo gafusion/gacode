@@ -103,8 +103,9 @@ subroutine cgyro_nl_fftw(ij)
      do j=1,nsplit
         i_omp = omp_get_thread_num()+1
 
-        fx(:,:,i_omp) = 0.0
-        fy(:,:,i_omp) = 0.0
+        ! zero elements not otherwise set below
+        fx(0:ny2,nx2:nx0-1,i_omp) = 0.0
+        fy(0:ny2,nx2:nx0-1,i_omp) = 0.0
 
         ! Array mapping
         do ir=1,n_radial
@@ -128,6 +129,8 @@ subroutine cgyro_nl_fftw(ij)
              fx(0,ix   ,i_omp) = f0
              fx(0,nx-ix,i_omp) = conjg(f0)
            endif
+           fx(n_toroidal:ny2,ix,i_omp) = 0.0
+           fy(n_toroidal:ny2,ix,i_omp) = 0.0
         enddo
 
         call fftw_execute_dft_c2r(plan_c2r,fx(:,:,i_omp),uxmany(:,:,j))
@@ -145,7 +148,8 @@ subroutine cgyro_nl_fftw(ij)
 
            select case(o)
            case (1)
-              fx(:,:,i_omp) = 0.0
+              ! zero elements not otherwise set below
+              fx(0:ny2,nx2:nx0-1,i_omp) = 0.0
 
               ! Array mapping
               do ir=1,n_radial
@@ -167,13 +171,15 @@ subroutine cgyro_nl_fftw(ij)
                     f0 = 0.5*( fx(0,ix,i_omp)+conjg(fx(0,nx-ix,i_omp)) )
                     fx(0,ix   ,i_omp) = f0
                     fx(0,nx-ix,i_omp) = conjg(f0)
-                  endif
+                 endif
+                 fx(n_toroidal:ny2,ix,i_omp) = 0.0
               enddo
 
               call fftw_execute_dft_c2r(plan_c2r,fx(:,:,i_omp),uxmany(:,:,j))
 
            case (2)
-              fy(:,:,i_omp) = 0.0
+              ! zero elements not otherwise set below
+              fy(0:ny2,nx2:nx0-1,i_omp) = 0.0
 
               ! Array mapping
               do ir=1,n_radial
@@ -188,12 +194,14 @@ subroutine cgyro_nl_fftw(ij)
                     fy(iy,ix,i_omp) = iy*f0
                    enddo
                  enddo
+                 fy(n_toroidal:ny2,ix,i_omp) = 0.0
               enddo
 
               call fftw_execute_dft_c2r(plan_c2r,fy(:,:,i_omp),uymany(:,:,j))
 
            case (3)
-              gx(:,:,i_omp) = 0.0
+              ! zero elements not otherwise set below
+              gx(0:ny2,nx2:nx0-1,i_omp) = 0.0
 
               ! Array mapping
               do ir=1,n_radial
@@ -226,12 +234,14 @@ subroutine cgyro_nl_fftw(ij)
                     gx(0,ix   ,i_omp) = g0
                     gx(0,nx-ix,i_omp) = conjg(g0)
                   endif
+                 gx(n_toroidal:ny2,ix,i_omp) = 0.0
               enddo
 
               call fftw_execute_dft_c2r(plan_c2r,gx(:,:,i_omp),vx(:,:,i_omp))
 
            case (4)
-              gy(:,:,i_omp) = 0.0
+              ! zero elements not otherwise set below
+              gy(0:ny2,nx2:nx0-1,i_omp) = 0.0
 
               ! Array mapping
               do ir=1,n_radial
@@ -256,6 +266,7 @@ subroutine cgyro_nl_fftw(ij)
                     gy(iy,ix,i_omp) = iy*g0
                   enddo
                  enddo
+                 gy(n_toroidal:ny2,ix,i_omp) = 0.0
               enddo
 
               call fftw_execute_dft_c2r(plan_c2r,gy(:,:,i_omp),vy(:,:,i_omp))
@@ -284,8 +295,9 @@ subroutine cgyro_nl_fftw(ij)
      do j=1,nsplit
         i_omp = omp_get_thread_num()+1
 
-        gx(:,:,i_omp) = 0.0
-        gy(:,:,i_omp) = 0.0
+        ! zero elements not otherwise set below
+        gx(0:ny2,nx2:nx0-1,i_omp) = 0.0
+        gy(0:ny2,nx2:nx0-1,i_omp) = 0.0
 
         ! Array mapping
         do ir=1,n_radial
@@ -318,7 +330,9 @@ subroutine cgyro_nl_fftw(ij)
               g0 = 0.5*( gx(0,ix,i_omp)+conjg(gx(0,nx-ix,i_omp)) )
               gx(0,ix   ,i_omp) = g0
               gx(0,nx-ix,i_omp) = conjg(g0)
-            endif
+           endif
+           gx(n_toroidal:ny2,ix,i_omp) = 0.0
+           gy(n_toroidal:ny2,ix,i_omp) = 0.0
         enddo
 
         call fftw_execute_dft_c2r(plan_c2r,gx(:,:,i_omp),vx(:,:,i_omp))
@@ -335,7 +349,8 @@ subroutine cgyro_nl_fftw(ij)
               i_omp = j ! j<n_omp in this branch, so we can do it
 
               if (o == 1) then
-                 gx(:,:,i_omp) = 0.0
+                 ! zero elements not otherwise set below
+                 gx(0:ny2,nx2:nx0-1,i_omp) = 0.0
 
                  ! Array mapping
                  do ir=1,n_radial
@@ -367,12 +382,14 @@ subroutine cgyro_nl_fftw(ij)
                        g0 = 0.5*( gx(0,ix,i_omp)+conjg(gx(0,nx-ix,i_omp)) )
                        gx(0,ix   ,i_omp) = g0
                        gx(0,nx-ix,i_omp) = conjg(g0)
-                     endif
+                    endif
+                    gx(n_toroidal:ny2,ix,i_omp) = 0.0
                  enddo
 
                  call fftw_execute_dft_c2r(plan_c2r,gx(:,:,i_omp),vx(:,:,i_omp))
               else
-                 gy(:,:,i_omp) = 0.0
+                 ! zero elements not otherwise set below
+                 gy(0:ny2,nx2:nx0-1,i_omp) = 0.0
 
                  ! Array mapping
                  do ir=1,n_radial
@@ -397,6 +414,7 @@ subroutine cgyro_nl_fftw(ij)
                        gy(iy,ix,i_omp) = iy*g0
                      enddo
                     enddo
+                    gy(n_toroidal:ny2,ix,i_omp) = 0.0
                  enddo
 
                  call fftw_execute_dft_c2r(plan_c2r,gy(:,:,i_omp),vy(:,:,i_omp))

@@ -278,14 +278,17 @@ subroutine cgyro_equilibrium
    end select
   enddo
 
-#ifdef _OPENACC
-!$acc enter data copyin(xi,vel,omega_stream)
+#if defined(OMPGPU)
+!$omp target enter data map(to:xi,omega_stream)
+#elif defined(_OPENACC)
+!$acc enter data copyin(xi,omega_stream)
+#endif
 
+#if defined(OMPGPU) || defined(_OPENACC)
   if (explicit_trap_flag == 1) then
      call cgyro_error("explicit_trap_flag=1 not supported in GPU code.")
      return
   endif
-
 #endif
 
 end subroutine cgyro_equilibrium

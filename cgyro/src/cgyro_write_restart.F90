@@ -76,13 +76,22 @@ subroutine cgyro_write_restart_one
   ! Pack source into h(0,0)
   if (source_flag == 1 .and. nt1 == 0) then
      ic0 = (n_radial/2)*n_theta
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd
+#elif defined(_OPENACC)
 !$acc parallel loop present(h_x,source)
+#endif
      do j=1,n_theta
         h_x(ic0+j,:,0) = source(j,:,0)
      enddo
   endif
 
+#if defined(OMPGPU)
+  ! no async for OMPGPU for now
+!$omp target update from(h_x)
+#elif defined(_OPENACC)
 !$acc update host(h_x) async(2)
+#endif
 
   offset1 = size(h_x,kind=MPI_OFFSET_KIND)*(i_proc_1+i_proc_2*n_proc_1) + restart_header_size
   if (offset1 < restart_header_size) then
@@ -116,7 +125,11 @@ subroutine cgyro_write_restart_one
           i_err)
 
   ! need h_x here
+#if defined(OMPGPU)
+  ! no async for OMPGPU for now
+#elif defined(_OPENACC)
 !$acc wait(2)
+#endif
 
   call MPI_FILE_WRITE_AT(fhv,&
           offset1,&
@@ -186,7 +199,11 @@ subroutine cgyro_write_restart_one
   ! Re-set h(0,0)=0
   if (source_flag == 1 .and. nt1 == 0) then
      ic0 = (n_radial/2)*n_theta
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd
+#elif defined(_OPENACC)
 !$acc parallel loop present(h_x)
+#endif
      do j=1,n_theta
         h_x(ic0+j,:,0) = 0.0
      enddo

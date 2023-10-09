@@ -1,0 +1,3 @@
+wxpython
+pyqt5
+mayavi

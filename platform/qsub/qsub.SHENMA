@@ -9,4 +9,7 @@ echo "#PBS -q $QUEUE" >> $bfile
 echo "#PBS -V" >> $bfile
 echo "#PBS -S /bin/bash" >> $bfile
 echo "#PBS -l nodes=$nodes:ppn=$mpinode" >> $bfile
+echo "module purge"  >> $bfile
+echo "module load compiler/gcc/7.2.0  mpi/openmpi/1.10.7  hdf5/1.8.19-parallel  netcdf/4.6.1 fftw/3.3.8-parallel "  >> $bfile
+echo "export LD_LIBRARY_PATH=/opt/mellanox/fca/lib/:\$LD_LIBRARY_PATH "  >> $bfile
 echo "$CODE -e $LOCDIR -n $nmpi -nomp $nomp -p $SIMROOT" >> $bfile

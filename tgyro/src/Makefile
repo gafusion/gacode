@@ -19,8 +19,8 @@ endif
 
 ifdef MMM_HOME
   MMM_OBJ += tgyro_mmm_map.o
-  MMM_LIB = -L$(MMM_HOME)/src -lmmm
-  FFLAGS += -DMMM -I$(MMM_HOME)/src
+  MMM_LIB = -L$(MMM_HOME)/lib -lmmm
+  FFLAGS += -DMMM -I$(MMM_HOME)/include
 else
   OBJECTS += tgyro_mmm_dummy.o
 endif

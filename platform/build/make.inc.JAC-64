@@ -11,7 +11,7 @@ F77	= mpif90
 
 FOMP    = -mp
 FMATH	= -r8 
-FOPT	= -O2 -fastsse -tp=sandybridge-64,haswell-64
+FOPT	= -O1 # Issue #243: DO NOT USE -O2 -fastsse -tp=sandybridge-64,haswell-64
 FDEBUG	= -g -Ktrap=fp -Mbounds -Minform=warn
 
 # System math libraries

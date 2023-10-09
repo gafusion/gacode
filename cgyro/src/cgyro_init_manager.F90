@@ -20,7 +20,11 @@ subroutine cgyro_init_manager
 
   use cgyro_io
 
-#ifdef _OPENACC
+#if defined(_OPENACC) || defined(OMPGPU)
+#define CGYRO_GPU_FFT
+#endif
+
+#ifdef CGYRO_GPU_FFT
 
 #ifdef HIPGPU
   use hipfort_hipfft, only : hipfftPlanMany, &
@@ -30,15 +34,15 @@ subroutine cgyro_init_manager
        CUFFT_C2R,CUFFT_Z2D,CUFFT_R2C,CUFFT_D2Z
 #endif
 
-#endif !_OPENACC
+#endif !CGYRO_GPU_FFT
 
   implicit none
 
-#ifndef _OPENACC
+#ifndef CGYRO_GPU_FFT
   include 'fftw3.f03'
 #endif
 
-#ifdef _OPENACC
+#ifdef CGYRO_GPU_FFT
   integer :: howmany,istatus
   integer, parameter :: irank = 2
   integer, dimension(irank) :: ndim,inembed,onembed
@@ -47,7 +51,7 @@ subroutine cgyro_init_manager
 #endif
 
   character(len=128) :: msg
-  integer :: ie
+  integer :: ie,ix
 
   if (hiprec_flag == 1) then
      fmtstr  = '(es16.9)'
@@ -72,6 +76,7 @@ subroutine cgyro_init_manager
   call timer_lib_in('str_init')
   allocate(energy(n_energy))
   allocate(vel(n_energy))
+  allocate(vel2(n_energy))
   allocate(w_e(n_energy))
   allocate(e_deriv1_mat(n_energy,n_energy))
   allocate(e_deriv1_rot_mat(n_energy,n_energy))
@@ -98,6 +103,13 @@ subroutine cgyro_init_manager
   n_low_energy = 0
 
   vel(:) = sqrt(energy(:))
+  vel2(:) = sqrt(2.0*energy(:))
+
+#if defined(OMPGPU)
+!$omp target enter data map(to:vel,vel2)
+#elif defined(_OPENACC)
+!$acc enter data copyin(vel,vel2)
+#endif
 
   e_deriv1_rot_mat(:,:) = e_deriv1_mat(:,:)
   if (e_fix == 2) then
@@ -115,6 +127,13 @@ subroutine cgyro_init_manager
   ! Construct xi (pitch-angle) nodes and weights
   call pseudo_legendre(n_xi,xi,w_xi,xi_deriv_mat,xi_lor_mat)
   w_xi = 0.5*w_xi
+
+  allocate(w_exi(n_energy,n_xi))
+  do ix=1,n_xi
+     do ie=1,n_energy
+        w_exi(ie,ix) = w_e(ie)*w_xi(ix)
+     enddo
+  enddo
 
   allocate(theta(n_theta))
   allocate(thetab(n_theta,n_radial/box_size))
@@ -142,6 +161,7 @@ subroutine cgyro_init_manager
   allocate(lambda_rot(n_theta,n_species))
   allocate(dlambda_rot(n_theta,n_species))
   allocate(dens_rot(n_theta,n_species))
+  allocate(dens2_rot(n_theta,n_species))
   allocate(dens_ele_rot(n_theta))
   allocate(dens_avg_rot(n_species))
   allocate(dlnndr_avg_rot(n_species))
@@ -192,7 +212,11 @@ subroutine cgyro_init_manager
      allocate(dtheta_up(-nup_theta:nup_theta, nc,nt1:nt2))
      allocate(source(n_theta,nv_loc,nt1:nt2))
 
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:fcoef,gcoef,field,field_loc,source)
+#elif defined(_OPENACC)
 !$acc enter data create(fcoef,gcoef,field,field_loc,source)
+#endif
 
      ! Velocity-distributed arrays
 
@@ -200,25 +224,45 @@ subroutine cgyro_init_manager
      case(1)
         allocate(h0_old(nc,nv_loc,nt1:nt2))
         allocate(rhs(nc,nv_loc,nt1:nt2,6))
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:rhs,h0_old)
+#elif defined(_OPENACC)
 !$acc enter data create(rhs,h0_old)
+#endif
      case(2)
         allocate(h0_old(nc,nv_loc,nt1:nt2))
         allocate(rhs(nc,nv_loc,nt1:nt2,7))
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:rhs,h0_old)
+#elif defined(_OPENACC)
 !$acc enter data create(rhs,h0_old)
+#endif
      case(3)
         allocate(h0_old(nc,nv_loc,nt1:nt2))
         allocate(rhs(nc,nv_loc,nt1:nt2,9))
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:rhs,h0_old)
+#elif defined(_OPENACC)
 !$acc enter data create(rhs,h0_old)
+#endif
      case default
         ! Normal timestep
         allocate(rhs(nc,nv_loc,nt1:nt2,4))
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:rhs)
+#elif defined(_OPENACC)
 !$acc enter data create(rhs)
+#endif
      end select 
      
      allocate(h_x(nc,nv_loc,nt1:nt2))
      allocate(g_x(nc,nv_loc,nt1:nt2))
      allocate(h0_x(nc,nv_loc,nt1:nt2))
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:h_x,g_x,h0_x)
+#elif defined(_OPENACC)
 !$acc enter data create(h_x,g_x,h0_x)
+#endif
 
      allocate(cap_h_c(nc,nv_loc,nt1:nt2))
      allocate(cap_h_c_dot(nc,nv_loc,nt1:nt2))
@@ -238,17 +282,30 @@ subroutine cgyro_init_manager
      allocate(upfac1(nc,nv_loc,nt1:nt2))
      allocate(upfac2(nc,nv_loc,nt1:nt2))
 
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:cap_h_c,cap_h_ct,cap_h_c_dot,cap_h_c_old,cap_h_c_old2)
+!$omp target enter data map(alloc:cap_h_v,dvjvec_c,dvjvec_v)
+#elif defined(_OPENACC)
 !$acc enter data create(cap_h_c,cap_h_ct,cap_h_c_dot,cap_h_c_old,cap_h_c_old2)
 !$acc enter data create(cap_h_v,dvjvec_c,dvjvec_v)
+#endif
 
      if (upwind_single_flag == 0) then
        allocate(upwind_res_loc(nc,ns1:ns2,nt1:nt2))
        allocate(upwind_res(nc,ns1:ns2,nt1:nt2))
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:upwind_res,upwind_res_loc)
+#elif defined(_OPENACC)
 !$acc enter data create(upwind_res,upwind_res_loc)
+#endif
      else
        allocate(upwind32_res_loc(nc,ns1:ns2,nt1:nt2))
        allocate(upwind32_res(nc,ns1:ns2,nt1:nt2))
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:upwind32_res,upwind32_res_loc)
+#elif defined(_OPENACC)
 !$acc enter data create(upwind32_res,upwind32_res_loc)
+#endif
      endif
 
      ! Nonlinear arrays
@@ -258,7 +315,11 @@ subroutine cgyro_init_manager
         allocate(fpack(n_radial,nt_loc,nsplit*n_toroidal_procs))
         allocate(gpack(n_field,n_radial,n_jtheta,n_toroidal))
         allocate(jvec_c_nl(n_field,n_radial,n_jtheta,nv_loc,n_toroidal))
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:fpack,gpack,f_nl,g_nl,jvec_c_nl)
+#elif defined(_OPENACC)
 !$acc enter data create(fpack,gpack,f_nl,g_nl,jvec_c_nl)
+#endif
      endif
 
      if (collision_model == 5) then
@@ -291,7 +352,7 @@ subroutine cgyro_init_manager
      return
   endif
 
-#ifndef _OPENACC
+#ifndef CGYRO_GPU_FFT
   gpu_bigmem_flag = 0
 #endif
 
@@ -319,10 +380,16 @@ subroutine cgyro_init_manager
   nx0 = n_radial
   ny0 = 2*n_toroidal-1
 
+  ! +1 to properly handle odd n_radial
+  nx2 = (nx0+1)/2
+
   ! 3/2-rule for dealiasing the nonlinear product
   nx = (3*nx0)/2
-  !ny = (3*ny0)/2
-  ny = (3*(ny0+1))/2
+  ! old, obsolete defintion: ny = (3*ny0)/2
+  ! new definiton: ny = (3*(ny0+1))/2
+  ny = 3*n_toroidal
+
+  ny2 = ny/2
 
   call cgyro_check_memory(trim(path)//runfile_memory)
 
@@ -353,13 +420,17 @@ subroutine cgyro_init_manager
   ! Initialize nonlinear dimensions and arrays 
   call timer_lib_in('nl_init')
 
-!$acc enter data copyin(nx0,ny0,nx,ny)
+#if defined(OMPGPU)
+!$omp target enter data map(to:nx0,ny0,nx,ny,nx2,ny2)
+#elif defined(_OPENACC)
+!$acc enter data copyin(nx0,ny0,nx,ny,nx2,ny2)
+#endif
 
-#ifndef _OPENACC
-  allocate(fx(0:ny/2,0:nx-1,n_omp))
-  allocate(gx(0:ny/2,0:nx-1,n_omp))
-  allocate(fy(0:ny/2,0:nx-1,n_omp))
-  allocate(gy(0:ny/2,0:nx-1,n_omp))
+#ifndef CGYRO_GPU_FFT
+  allocate(fx(0:ny2,0:nx-1,n_omp))
+  allocate(gx(0:ny2,0:nx-1,n_omp))
+  allocate(fy(0:ny2,0:nx-1,n_omp))
+  allocate(gy(0:ny2,0:nx-1,n_omp))
 
   allocate(uxmany(0:ny-1,0:nx-1,nsplit))
   allocate(uymany(0:ny-1,0:nx-1,nsplit))
@@ -372,13 +443,13 @@ subroutine cgyro_init_manager
   plan_r2c = fftw_plan_dft_r2c_2d(nx,ny,uv(:,:,1),fx(:,:,1),FFTW_PATIENT)
 #endif
 
-#ifdef _OPENACC
+#ifdef CGYRO_GPU_FFT
   call cgyro_info('GPU-aware code triggered.')
 
-  allocate( fxmany(0:ny/2,0:nx-1,nsplit) )
-  allocate( fymany(0:ny/2,0:nx-1,nsplit) )
-  allocate( gxmany(0:ny/2,0:nx-1,nsplit) )
-  allocate( gymany(0:ny/2,0:nx-1,nsplit) )
+  allocate( fxmany(0:ny2,0:nx-1,nsplit) )
+  allocate( fymany(0:ny2,0:nx-1,nsplit) )
+  allocate( gxmany(0:ny2,0:nx-1,nsplit) )
+  allocate( gymany(0:ny2,0:nx-1,nsplit) )
 
   allocate( uxmany(0:ny-1,0:nx-1,nsplit) )
   allocate( uymany(0:ny-1,0:nx-1,nsplit) )
@@ -389,8 +460,13 @@ subroutine cgyro_init_manager
   write (msg, "(A,I7)") "NL using FFT batching of ",nsplit
   call cgyro_info(msg)
 
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:fxmany,fymany,gxmany,gymany) &
+!$omp&                  map(alloc:uxmany,uymany,vxmany,vymany,uvmany)
+#elif defined(_OPENACC)
 !$acc enter data create(fxmany,fymany,gxmany,gymany) &
 !$acc&           create(uxmany,uymany,vxmany,vymany,uvmany)
+#endif
 
   !-------------------------------------------------------------------
   ! 2D
@@ -474,7 +550,7 @@ subroutine cgyro_init_manager
        nsplit)
 #endif
 
-#endif ! _OPENACC
+#endif ! CGYRO_GPU_FFT
 
   call timer_lib_out('nl_init')
 

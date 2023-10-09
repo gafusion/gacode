@@ -267,6 +267,7 @@ PLOTPNG=0
 # Extra datafiles
 GFILE=null
 CER_FILE=null
+TI_FILE=null
 
 # VGEN mode variables
 VGEN_IN=null
@@ -311,6 +312,8 @@ while [ $# -gt 0 ] ; do
 
   -cer) shift ; CER_FILE="$1" ;
         echo "INFO: (profiles_gen) Will merge data from $CER_FILE" ;;
+  -ti ) shift ; TI_FILE="$1" ;
+        echo "INFO: (profiles_gen) Will merge data from $TI_FILE" ;;
 
   -ipccw) shift ; IPCCW="$1" ;;
   -btccw) shift ; BTCCW="$1" ;;
@@ -610,6 +613,7 @@ echo $itype >> $CONFIG
 # Optional data files
 echo $GFILE ${harr[1]} ${harr[5]} ${harr[6]} >> $CONFIG
 echo $CER_FILE >> $CONFIG
+echo $TI_FILE >> $CONFIG
 
 # EFIT data control
 echo $EFIT >> $CONFIG

@@ -136,7 +136,7 @@ class cgyrodata:
    def getflux(self,cflux='auto'):
 
       if cflux == 'auto':
-         if abs(self.gamma_e) > 0.0:
+         if abs(self.gamma_e) > 0.0 and self.n_n > 1:
             usec = True
          else:
             usec = False
@@ -237,10 +237,12 @@ class cgyrodata:
       self.lky_flux_ave = np.zeros((ns,2))
       #--------------------------------------------
 
+      imin,imax=time_index(self.t,w)
+      
       for ispec in range(ns):
          for l in range(ng):
-            self.lky_xr[ispec,l] = average(z[0,l,ispec,:],self.t,w,0.0)*sc[ispec]
-            self.lky_xi[ispec,l] = average(z[1,l,ispec,:],self.t,w,0.0)*sc[ispec]
+            self.lky_xr[ispec,l] = time_average(z[0,l,ispec,:],self.t,imin,imax)*sc[ispec]
+            self.lky_xi[ispec,l] = time_average(z[1,l,ispec,:],self.t,imin,imax)*sc[ispec]
 
          # Flux partial average over [-e,e]
          g0 = self.lky_xr[ispec,0]
@@ -355,7 +357,7 @@ class cgyrodata:
       #
       # NOTE: Grid data is packed, so unpack into sensible bits
       #
-      data = np.fromfile(self.dir+'out.cgyro.grids',dtype='float32',sep=' ')
+      data = np.fromfile(self.dir+'out.cgyro.grids',sep=' ')
 
       self.n_n       = int(data[0])
       self.n_species = int(data[1])
@@ -365,14 +367,14 @@ class cgyrodata:
       self.n_energy  = int(data[5])
       self.n_xi      = int(data[6])
       self.m_box     = int(data[7])
-      self.length    = float(data[8])
+      self.length    = float(data[8]) # L/rho
       self.n_global  = int(data[9])
       self.theta_plot= int(data[10])
       # Set l to last data index plus one.
       l=11
 
       self.p = np.array(data[l:l+self.n_radial],dtype=int)
-      # Ignore leftmost "special" element
+      # kx*rho (ignore leftmost "special" element)
       self.kx = 2*np.pi*self.p[1:]/self.length
 
       mark = l+self.n_radial
@@ -411,6 +413,7 @@ class cgyrodata:
             self.thetap[i] = self.theta[m*i]
 
       # Construct k_perp
+      # NOTE: kx,ky and kperp are kx*rho, ky*rho, kperp*rho
       nx = self.n_radial-1
       ny = self.n_n
       self.kperp = np.sqrt(np.outer(self.kx[:]**2,np.ones(ny))+
@@ -424,7 +427,7 @@ class cgyrodata:
       nshape = 7
       ns = self.n_species
       p = 0
-      data = np.fromfile(self.dir+'out.cgyro.equilibrium',dtype='float32',sep=' ')
+      data = np.fromfile(self.dir+'out.cgyro.equilibrium',sep=' ')
       self.rmin,p    = self.eget(data,p)
       self.rmaj,p    = self.eget(data,p)        
       self.q,p       = self.eget(data,p)           
@@ -488,11 +491,11 @@ class cgyrodata:
          self.nu[i],p     = self.eget(data,p) 
 
       if p == -1:
-         print('ERROR: (data.py) Data format outdated. Please run cgyro -t')
+         print('ERROR: (getgrid) Data format outdated. Please run cgyro -t')
          sys.exit()
          
       if not self.silent:
-         print('INFO: (data.py) Read {:d} entries out.cgyro.equilibrium.'.format(p))
+         print('INFO: (getgrid) Read {:d} entries out.cgyro.equilibrium.'.format(p))
 
       #-----------------------------------------------------------------
 
@@ -506,17 +509,21 @@ class cgyrodata:
          self.tstr   = TIME
 
          self.fnorm  = self.freq 
-         self.fstr   = [r'$(a/c_{sD})\, \omega$',r'$(a/c_{sD})\, \gamma$']
+         self.fstr   = [r'$(a/c_s)\, \omega$',r'$(a/c_s)\, \gamma$']
 
          self.rhonorm = self.rho
-         self.rhostr = r'$\rho_{sD}$'
+         self.rhoi    = r'\rho_s'
 
+         self.kxnorm = self.kx
          self.kynorm = self.ky
-         self.kstr   = r'$k_y \rho_{sD}$'
+         self.kxstr  = r'$k_x \rho_s$'
+         self.kystr  = r'$k_\theta \rho_s$'
 
          self.qc     = 1.0
          self.gbnorm = '_\mathrm{GBD}'
-         
+
+         print('INFO: (getnorm) Using deuterium norm (rho_s = rho_sD, c_s = c_sD, etc)')
+
       else:
 
          # Species-i normalizations
@@ -541,12 +548,97 @@ class cgyrodata:
          rhoc = vc/(self.z[i]/self.mass[i])
 
          self.rhonorm = self.rho*rhoc
-         self.rhostr  = r'$\rho_'+str(i)+'$'
+         self.rhoi = r'\rho_'+str(i)
 
+         self.kxnorm = self.kx*rhoc
          self.kynorm = self.ky*rhoc
-         self.kstr   = r'$k_y \rho_'+str(i)+'$'
+         self.kxstr  = r'$k_x \rho_'+str(i)+'$'
+         self.kystr  = r'$k_\theta \rho_'+str(i)+'$'
 
           # Convert Q_GBD to Q_GBi
          self.qc = vc*(self.temp[i]/te)*rhoc**2
          self.gbnorm = '_\mathrm{GB'+str(i)+'}'
 
+         print('INFO: (getnorm) Using species '+norm+' norm')
+
+      return self.tnorm
+
+      
+   def kxky_select(self,theta,field,moment,species,gbnorm=False):
+
+      itheta,thetapi = indx_theta(theta,self.theta_plot)
+
+      # Set norm if unset
+      if 'self.rhonorm' not in locals():
+         self.getnorm('elec')
+
+      if moment == 'phi':
+         if field == 0:
+            f  = self.kxky_phi[0,1:,itheta,:,:]+1j*self.kxky_phi[1,1:,itheta,:,:]
+            ft = TEXPHI
+         elif field == 1:
+            f  = self.kxky_apar[0,1:,itheta,:,:]+1j*self.kxky_apar[1,1:,itheta,:,:]
+            ft = TEXAPAR
+         else:
+            f  = self.kxky_bpar[0,1:,itheta,:,:]+1j*self.kxky_bpar[1,1:,itheta,:,:]
+            ft = TEXBPAR
+      elif moment == 'k':
+            f  = self.kxky_phi[0,1:,itheta,:,:]+1j*self.kxky_phi[1,1:,itheta,:,:]
+            for i in range(self.n_time):
+               # self.kperp -> kperp*rhos 
+               f[:,:,i] = self.kperp[:,:]*f[:,:,i]*self.rhonorm/self.rho
+            ft = r'k_\perp'+self.rhoi+r'\, \phi'
+      elif moment == 'n':
+         f  = self.kxky_n[0,1:,itheta,species,:,:]+1j*self.kxky_n[1,1:,itheta,species,:,:]
+         ft = TEXDN
+      elif moment == 'e':
+         f  = self.kxky_e[0,1:,itheta,species,:,:]+1j*self.kxky_e[1,1:,itheta,species,:,:]
+         ft = TEXDE
+      elif moment == 'v':
+         f  = self.kxky_v[0,1:,itheta,species,:,:]+1j*self.kxky_v[1,1:,itheta,species,:,:]
+         ft = TEXDV
+
+      # 3D structure: f[r,n,time]
+
+      if gbnorm:
+         # gyrBohm normalization
+         f[:,:,:] = f[:,:,:]/self.rhonorm
+      
+      return f,ft
+
+   def ylabeler(self,sub,ft,abs=True,sq=False,tave=False,sqrt=False,d=False):
+
+      if sub == '+' or sub == 'null':
+         z = 'n'
+      else:
+         z = sub
+
+      # add subscript
+      u = ft+'_'+z
+
+      if d:
+         u = u+r'^\prime'
+         
+      # gyroBohm norm
+      u = u+'/'+self.rhoi
+
+      # Absolute value
+      if abs:
+         u = r'\left|'+u+r'\right|'
+
+      if sub == '+':
+         u = r'\sum_{n>0}'+u
+      if sub == 'null':
+         u = r'\sum_{n}'+u
+
+      # Squared?
+      if sq:
+         u = u+'^2'
+
+      if tave:
+         u = r'\left\langle'+u+r'\right\rangle'
+
+      if sqrt:
+         u = r'\sqrt{'+u+'}'
+         
+      return '$'+u+'$'

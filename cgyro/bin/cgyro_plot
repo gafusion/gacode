@@ -33,8 +33,7 @@ then
   echo "PLOT MODE"
   echo 
   echo "         -plot <type>"
-  echo "         <type> = distill  (data distillation)"
-  echo "                = freq     (frequency versus time)"
+  echo "         <type> = freq     (frequency versus time)"
   echo "                = ky_freq  (frequency versus ky)"
   echo "                = ball     (ballooning modes OR ZF test)"
   echo "                = hball    (ballooning distribution; use -n for l and -ie for e)"
@@ -48,6 +47,7 @@ then
   echo "                = phi      (time-dependent ZF vs. finite-n intensities)"
   echo "                = ky_phi   (time-dependent ky-phi intensities)"
   echo "                = kx_phi   (average kx-phi intensities)"
+  echo "                = kx_shift (kx-phi intensities in both domains)"
   echo "                = poly_phi (average Legendre intensities)"
   echo "                = kxky_phi (kx-ky spectra of ave(|phi|))"
   echo "                = rcorr_phi (time-average radial correlation function)"
@@ -58,6 +58,9 @@ then
   echo "                = fluct    (x-y fluctuation contours at fixed timeslice)"
   echo "                = rt       (x-t fluctuation contours)"
   echo "                = vid      (create video from png files)"
+  echo "                -----------------------------------------------------"
+  echo "                = distill  (data distillation) [GENERATES OUTPUT]"
+  echo "                = gs2      (print some GS2 outputs)"
   echo "                = template (create simple template file to read data)"
   echo
   echo "VISUALIZATION MODE (requires Mayavi)"
@@ -84,23 +87,20 @@ then
   echo "         -moment <value>"
   echo "         Specify moment to be plotted [n,e,v]."
   echo
-  echo "         -w <float>"
-  echo "         Width of time-average window min (1.0 is entire time history)."
-  echo
-  echo "         -wmax <float>"
-  echo "         Width of time-average window max (0.0 is entire time history)."
+  echo "         -w <float> OR <float>,<float>"
+  echo "         Width of time-average window"
+  echo "         NOTE: -w 0.5 averages over last 50%; -w 100,200 averages over 100a/cs < t < 200a/cs"
   echo 
   echo "         -mesh"
   echo "         Add theta-xi mesh"
   echo "         *Affects: hb" 
   echo
-  echo "         -ymin <float>"
-  echo "         Minimum value of vertical axis (where applicable)."
+  echo "         -ymin | -ymax <float>"
+  echo "         Minimum | Maximum value of vertical axis (where applicable)."
   echo "         *Affects: flux, ky_flux"
   echo
-  echo "         -ymax <float>"
-  echo "         Maximum value of vertical axis (where applicable)."
-  echo "         *Affects: flux, ky_flux"
+  echo "         -kxmin | -kxmax <float>"
+  echo "         Minimum | Maximum value of kx axis (where applicable)."
   echo
   echo "         -lx <float>"
   echo "         Plot width (default 12)"
@@ -115,9 +115,8 @@ then
   echo "         Scale the fluxes with ne/ni factor"
   echo "         *Affects: flux"
   echo
-  echo "         -theta <value>"
-  echo "         Value of theta/pi used in hbcut"
-  echo "         *Affects: hbcut"
+  echo "         -theta <int>"
+  echo "         Theta index to select"
   echo
   echo "         -tmax <float>"
   echo "         Maximum value of ballooning angle."
@@ -139,21 +138,14 @@ then
   echo "         -loc <loc>"
   echo "         Legend location (1-4)"  
   echo
-  echo "         -diss"
-  echo "         Toggle plotting of dissipation curve"  
-  echo
   echo "         -norm <int>"
   echo "         Species index for normalization (starts at 0)"  
   echo
-  echo "         -norms"
+  echo "         -abs"
   echo "         Toggle ABS rather than RMS normalization in -plot phi"  
   echo
   echo "         -nobar"
-  echo "         Don't use barplot for -plot ky_flux"  
-  echo
-  echo "         -deriv"
-  echo "         Plot second derivative"  
-  echo "         *Affects: kx_phi and kxky_phi"  
+  echo "         Don't use barplot for -plot ky_flux/kx_phi"  
   echo
   echo "OPTIONS FOR -plot fluct, -vis"
   echo
@@ -264,7 +256,6 @@ LY=6
 
 PLOT_TYPE=null
 VIS_TYPE=null
-CONV_TYPE=null
 EXT=screen
 
 SPECIES=0
@@ -274,11 +265,13 @@ TIME=-1
 TMAX=-1.0
 YMIN=auto
 YMAX=auto
+KXMIN=auto
+KXMAX=auto
 W=0.5
-WMAX=0.0
+win=null
 MOMENT=phi
 INDX=1
-THETA=0.0
+THETA=-1
 N=null
 MESH=0
 NX=-1
@@ -299,10 +292,9 @@ LEGACY_FLAG=0
 LAND_FLAG=0
 PX=800
 PY=800
-DISS=0
 NORM='elec'
-NO_RMS=0
-BAR=1
+ABS=0
+BAR=0
 
 CFLUX=auto
 DN=1
@@ -324,7 +316,6 @@ while [ $# -gt 0 ] ; do
 
   -plot) shift ; PLOT_TYPE=$1 ;;
   -vis)  shift ; VIS_TYPE=$1 ;;
-  -conv) shift ; CONV_TYPE=$1 ;;
 
   -e) shift ; LOCDIR=$1 ;;
 
@@ -336,10 +327,9 @@ while [ $# -gt 0 ] ; do
 
   -fc) FC=1 ;;
 
-  -diss) DISS=1 ;;
-  -nobar) BAR=0 ;;
+  -bar) BAR=1 ;;
   -notex) TEX=0 ;;
-  -norms) NO_RMS=1 ;;
+  -abs) ABS=1 ;;
   -norm) shift ; NORM=$1 ;;
 
   -moment) shift ; MOMENT=$1 ;;
@@ -360,6 +350,8 @@ while [ $# -gt 0 ] ; do
 
   -ymax) shift ; YMAX=$1 ;;
   -ymin) shift ; YMIN=$1 ;;
+  -kxmax) shift ; KXMAX=$1 ;;
+  -kxmin) shift ; KXMIN=$1 ;;
   -lx) shift ; LX=$1 ;;
   -ly) shift ; LY=$1 ;;
   -px) shift ; PX=$1 ;;
@@ -367,7 +359,6 @@ while [ $# -gt 0 ] ; do
   -fontsize) shift ; FONTSIZE=$1 ;;
 
   -w) shift ; W=$1 ;;
-  -wmax) shift ; WMAX=$1 ;;
   -loc) shift ; LOC=$1 ;;
 
   -start) shift ; START=$1 ;;
@@ -417,26 +408,15 @@ cd $SIMDIR
 PYROOT=$GACODE_ROOT/f2py/pygacode/cgyro
 
 #==============================================================================
-PLT="-m pygacode.cgyro.data_plot_single $TEX $FONTSIZE $LX $LY"
 
-case "$CONV_TYPE" in
+PLT="-m pygacode.cgyro.data_plot_single $TEX $FONTSIZE"
 
-   null) ;;
-   
-   gs2)
-	python -m pygacode.cgyro.conv_gs2 ;;
-   
-    *)
-        echo "Unrecognized argument to -conv" ; exit 1 ;;
-esac
+PFLAGS="$PLOT_TYPE $LX $LY $W $NORM $EXT $TIME $FIELD $MOMENT $TMAX $THETA $YMIN $YMAX $KXMIN $KXMAX $N $ABS $FC $LOC $NSCALE $CFLUX $SPECIES $BAR $IE $MESH"
 
 case "$VIS_TYPE" in
 
    null) ;;
    
-   slices)
-	python -m pygacode.cgyro.vis_slices ;;
-
    torcut)
 	export OMP_NUM_THREADS=$NOMP ; python -m pygacode.cgyro.vis_torcut $EXT $MOMENT $SPECIES $NX $NZ $TIME $FMIN $FMAX $CMAP $FONTSIZE $LEGACY_FLAG $DN $MAG $NOZONAL $ONLYZONAL ;;
    
@@ -457,82 +437,24 @@ case "$PLOT_TYPE" in
    distill)
        python -m pygacode.cgyro.data_distill $W $THETA ;;
 
-   ball)
-	python $PLT $PLOT_TYPE $TIME $FIELD $TMAX $EXT ;;
+   gs2)
+       python -m pygacode.cgyro.conv_gs2 ;;
 
-   hb)
-	python $PLT $PLOT_TYPE $TIME $SPECIES $TMAX $MESH $EXT ;;
+   template)
+       cp $PYROOT/plot_template.py . ;;
 
-   hbcut)
-	python $PLT $PLOT_TYPE $TIME $SPECIES $TMAX $THETA $EXT ;;
-
-   hball)
-	python $PLT $PLOT_TYPE $TIME $SPECIES $YMIN $YMAX $TMAX $N $IE $EXT ;;
-
-   freq | ky_freq )
-	python $PLT $PLOT_TYPE $W $WMAX $NORM $EXT ;;
-
-   error)
-	python $PLT $PLOT_TYPE $EXT ;;
-
-   xflux)
-	python $PLT $PLOT_TYPE $W $WMAX $MOMENT $YMIN $YMAX $EXT $NSCALE ;;
-
-   flux)
-        python $PLT $PLOT_TYPE $W $WMAX $FIELD $MOMENT $YMIN $YMAX $FC $EXT $LOC $NSCALE $CFLUX $NORM ;;
-
-   ky_flux)
-	python $PLT $PLOT_TYPE $W $WMAX $FIELD $MOMENT $YMIN $YMAX $FC $EXT $DISS $BAR $CFLUX ;;
-
-   phi)
-	python $PLT $PLOT_TYPE $W $WMAX $FIELD $THETA $YMIN $YMAX $NO_RMS $EXT ;;
-
-   low | corrug)
-       python $PLT $PLOT_TYPE $W $WMAX $SPECIES $MOMENT $EXT $YMIN $YMAX ;;
-
-   shift )
-	python $PLT $PLOT_TYPE $W $WMAX $EXT $YMIN $YMAX ;;
-
-   ky_phi)
-	python $PLT $PLOT_TYPE $FIELD $THETA $YMIN $YMAX $N $NORM $EXT ;;
-
-   kx_phi)
-	python $PLT $PLOT_TYPE $FIELD $THETA $W $WMAX $YMIN $YMAX $N $EXT $DISS $MOMENT ;;
-
-   kx_shift)
-	python $PLT $PLOT_TYPE $FIELD $THETA $W $WMAX $YMIN $YMAX $N $EXT $MOMENT ;;
-
-   poly_phi)
-        python $PLT $PLOT_TYPE $FIELD $THETA $W $WMAX $YMIN $YMAX $N $EXT $DISS ;;
-
-   rcorr_phi)
-       python $PLT $PLOT_TYPE $FIELD $MOMENT $SPECIES $THETA $W $WMAX $EXT ;;
-   
-   kxky_phi)
-       python $PLT $PLOT_TYPE $FIELD $MOMENT $SPECIES $THETA $W $WMAX $EXT ;;    
-
-   zf)
-	python $PLT $PLOT_TYPE $W $WMAX $FIELD $EXT ;;
-
-   geo)
-       python $PLT $PLOT_TYPE $EXT ;;
-
+   freq | ky_freq | error | geo | ball | ky_phi | phi | flux | rcorr_phi | low | zf | ky_flux | shift | corrug | kx_phi | kxky_phi | kx_shift | poly_phi | xflux | hb | hbcut | hball )
+       python $PLT $PFLAGS ;;
+  
    fluct)
        export OMP_NUM_THREADS=$NOMP ; \
        python -m pygacode.cgyro.plot_fluct \
 	      $EXT $MOMENT $SPECIES $PX $PY $NX $NY $TIME $FMIN $FMAX $CMAP $FONTSIZE $LAND_FLAG $THETA ;;
 
-   fluct_mpi)
-       mpiexec -np $NMPI python -m pygacode.cgyro.plot_fluct_mpi \
-	       $EXT $MOMENT $SPECIES $PX $PY $NX $NY $TIME $FMIN $FMAX $CMAP $FONTSIZE $LAND_FLAG $THETA ;;
-
    rt)
        export OMP_NUM_THREADS=$NOMP ; \
        python -m pygacode.cgyro.plot_rt \
 	      $EXT $MOMENT $SPECIES $YMIN $YMAX $NX $ND $TIME $FMIN $FMAX $CMAP $FONTSIZE $THETA ;;
-
-   template)
-   	cp $PYROOT/plot_template.py . ;;
 
    vid)
    	$PYROOT/avconv_wrapper $START $FRAMERATE $QUALITY $PRE ;;

@@ -134,6 +134,7 @@ subroutine cgyro_read_input
   call cgyro_readbc_real(beta_star_scale)
   call cgyro_readbc_real(betae_unit_scale)
   call cgyro_readbc_real(nu_ee_scale)
+  call cgyro_readbc_real(zf_scale)
 
   if (i_proc == 0) close(1)
 

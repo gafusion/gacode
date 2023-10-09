@@ -9,7 +9,11 @@
 module cgyro_globals
 
   use, intrinsic :: iso_c_binding
-#ifdef _OPENACC
+#if defined(_OPENACC) || defined(OMPGPU)
+#define CGYRO_GPU_FFT
+#endif
+
+#ifdef CGYRO_GPU_FFT
 
 #ifdef HIPGPU
   use hipfort_hipfft
@@ -150,6 +154,7 @@ module cgyro_globals
   real :: mach_scale
   real :: beta_star_scale, betae_unit_scale
   real :: nu_ee_scale
+  real :: zf_scale
   real, dimension(11) :: dlnndr_scale
   real, dimension(11) :: dlntdr_scale
 
@@ -279,7 +284,7 @@ module cgyro_globals
   !----------------------------------------------------
 
   !---------------------------------------------------------------
-  ! Time stepping
+  ! Time stepping (see detailed parameters in cgyro_step)
   integer :: i_time
   integer :: n_time
   integer :: i_current
@@ -288,10 +293,6 @@ module cgyro_globals
   complex, dimension(:), allocatable :: freq
   complex, dimension(:), allocatable :: freq_err
   integer(KIND=8) :: kernel_start_time, kernel_exit_time, kernel_count_rate, kernel_count_max
-  !
-  ! adaptive integrator parameters
-  real :: delta_t_gk
-  real :: total_local_error
   !---------------------------------------------------------------
 
   !---------------------------------------------------------------
@@ -321,8 +322,9 @@ module cgyro_globals
   !
   ! Velocity space 
   integer, dimension(:), allocatable :: px
-  real, dimension(:), allocatable :: energy, vel, w_e
+  real, dimension(:), allocatable :: energy, vel, vel2, w_e
   real, dimension(:), allocatable :: xi, w_xi
+  real, dimension(:,:), allocatable :: w_exi
   real, dimension(:,:), allocatable :: xi_deriv_mat, xi_lor_mat
   real, dimension(:,:), allocatable :: e_deriv1_mat, e_deriv1_rot_mat
   !
@@ -392,7 +394,7 @@ module cgyro_globals
   integer :: nflux
   !
   ! Nonlinear plans
-#ifndef _OPENACC
+#ifndef CGYRO_GPU_FFT
   ! CPU-FFTW plans
   type(C_PTR) :: plan_r2c
   type(C_PTR) :: plan_c2r
@@ -416,9 +418,10 @@ module cgyro_globals
   ! 2D FFT dimensions 
   integer :: nx,ny
   integer :: nx0,ny0
+  integer :: nx2,ny2
   !
   ! 2D FFT work arrays
-#ifndef _OPENACC
+#ifndef CGYRO_GPU_FFT
   real, dimension(:,:,:), allocatable :: uxmany
   real, dimension(:,:,:), allocatable :: uymany
   real, dimension(:,:,:), allocatable :: vx
@@ -491,7 +494,7 @@ module cgyro_globals
   ! for centrifugal rotation
   real, dimension(:,:), allocatable :: lambda_rot
   real, dimension(:,:), allocatable :: dlambda_rot
-  real, dimension(:,:), allocatable :: dens_rot
+  real, dimension(:,:), allocatable :: dens_rot,dens2_rot
   real, dimension(:),   allocatable :: dens_ele_rot
   real, dimension(:),   allocatable :: dens_avg_rot
   real, dimension(:),   allocatable :: dlnndr_avg_rot

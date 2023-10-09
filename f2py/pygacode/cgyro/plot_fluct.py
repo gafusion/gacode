@@ -30,7 +30,7 @@ fmax = sys.argv[10]
 colormap = sys.argv[11]
 font = int(sys.argv[12])
 land = int(sys.argv[13])
-theta = float(sys.argv[14])
+theta = int(sys.argv[14])
 
 # Use first 3 args to define plot and font size
 rc('text',usetex=False)
@@ -47,7 +47,7 @@ ns = sim.n_species
 nth = sim.theta_plot
 
 ivec = time_vector(istr,nt)
-itheta = theta_indx(theta,nth)
+itheta,thetapi = indx_theta(theta,nth)
 
 if nx < 0 or ny < 0:
    nx = nr+1

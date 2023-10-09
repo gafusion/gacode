@@ -11,85 +11,57 @@ import time
 # Useful labels
 TIME=r'$(c_s/a)\,t$'
 
+TEXPHI  = r'\delta\phi'
+TEXAPAR = r'{A_\parallel}'
+TEXBPAR = r'{B_\parallel}'
+TEXDN   = r'\delta n'
+TEXDE   = r'\delta E'
+TEXDV   = r'\delta v'
+
 #---------------------------------------------------------------
-# Generalization of average routine to include variance
-def variance(f,t,wmin,wmax):
-
-    n_time = len(t)
-
-    # Manage case with 2 time points (eigenvalue)
-    if len(t) == 2:
-        tmin = t[-1]
-        tmax = tmin
-        ave  = f[-1]
-        return ave
-
-    tmin = (1.0-wmin)*t[-1]
-    tmax = (1.0-wmax)*t[-1]
-
-    t_window = 0.0
-    ave      = 0.0 ; av2 = 0.0
-    for i in range(n_time-1):
-        if t[i] >= tmin and t[i] <= tmax:
-            ave = ave+0.5*(f[i]+f[i+1])*(t[i+1]-t[i])
-            av2 = av2+0.5*(f[i]**2+f[i+1]**2)*(t[i+1]-t[i])
-            t_window = t_window+t[i+1]-t[i]
-
-    ave = ave/t_window
-    var = np.sqrt((av2/t_window-ave**2))
-
-    return ave,var
+# Legacy average function (should go away eventually)
+def average(f,t,w,wmax):
+    imin,imax = time_index(t,str(w))
+    return time_average(f,t,imin,imax)
 #---------------------------------------------------------------
-#---------------------------------------------------------------
-def average(f,t,wmin,wmax):
 
-    t0 = time.time()
-    
-    n_time = len(t)
-    tmin = (1.0-wmin)*t[-1]
-    tmax = (1.0-wmax)*t[-1]
-
-    t_window = 0.0
-    ave      = 0.0
-    for i in range(n_time-1):
-        if t[i] >= tmin and t[i] <= tmax:
-            ave = ave+0.5*(f[i]+f[i+1])*(t[i+1]-t[i])
-            t_window = t_window+t[i+1]-t[i]
-
-    ave = ave/t_window
-    
-    return ave
-#---------------------------------------------------------------
-#---------------------------------------------------------------
-def average_n(f,t,wmin,wmax,n):
-
-    ave = np.zeros(n)
-
-    n_time = len(t)
-    tmin = (1.0-wmin)*t[-1]
-    tmax = (1.0-wmax)*t[-1]
-
-    t_window = 0.0
-    for i in range(n_time-1):
-        if t[i] >= tmin and t[i] <= tmax:
-            ave[:] = ave[:]+0.5*(f[:,i]+f[:,i+1])*(t[i+1]-t[i])
-            t_window = t_window+t[i+1]-t[i]
-
-    ave = ave/t_window
-
-    return ave
-#---------------------------------------------------------------
 #---------------------------------------------------------------
 # Determine index imin,imax for time-averaging window
-def iwindow(t,wmin,wmax):
+def time_index(t,w):
 
-    for i in range(len(t)):
-        if t[i] < (1.0-wmin)*t[-1]:
-            imin = i+1
-        if t[i] <= (1.0-wmax)*t[-1]:
-            imax = i
+    tvec = np.array(w.split(',')).astype(float)
 
+    if len(tvec) == 1:
+        imax = len(t)-1
+        imin = np.argmin(abs(t-t[-1]*(1-tvec[0])))
+    else:
+        imax = np.argmin(abs(t-tvec[1]))
+        imin = np.argmin(abs(t-tvec[0]))
+    
     return imin,imax
+#---------------------------------------------------------------
+
+#---------------------------------------------------------------
+# Compute time average (of 1D, 2D or 3D array)
+def time_average(f,t,imin,imax):
+    
+    T = t[imax]-t[imin]
+    dt = np.diff(t)[imin:imax]/T
+
+    if f.ndim == 1:
+        # 1D array
+        sf = 0.5*(f[imin:imax]+f[imin+1:imax+1])
+        ave = np.sum(sf*dt)
+    elif f.ndim ==2:
+        # 2D array (average over last dimension)
+        sf = 0.5*(f[:,imin:imax]+f[:,imin+1:imax+1])
+        ave = np.sum(sf*dt,axis=-1)
+    else:
+        # 3D array (average over last dimension)
+        sf = 0.5*(f[:,:,imin:imax]+f[:,:,imin+1:imax+1])
+        ave = np.sum(sf*dt,axis=-1)
+        
+    return ave
 #---------------------------------------------------------------
 
 #------------------------------------------------------
@@ -166,9 +138,37 @@ def specmap(m_in,z_in):
      name = '?'
 
   return name
-#---------------------------------------------------------------
 
 #---------------------------------------------------------------
+# Generate time window text string
+def wintxt(imin,imax,t,usec=0,fc=0,field=0):
+
+    if usec:
+        cstr = 'domain/half'
+    else:
+        cstr = 'domain/full'
+
+    if fc == 0:
+        fstr = 'field/all'
+    elif field == 0:
+        fstr = '\phi'
+    elif field == 1:
+        fstr = 'A_\parallel'
+    else:
+        fstr = 'B_\parallel'
+
+    pre = '['+cstr+','+fstr+']'
+    win = '[{:.1f} < (c_s/a) t < {:.1f}]'.format(t[imin],t[imax])
+   
+    mpre = r'$\mathrm{'+pre+'}$'
+    mwin = r'$'+win+'$'
+
+    print('INFO: (wintxt.py) Average Window: '+win)
+      
+    return mpre,mwin
+
+#---------------------------------------------------------------
+# Generate smooth profile using exponential integration
 def smooth_pro(x,z,p,n,type='log'):
 
     nx = len(x)
@@ -244,43 +244,6 @@ def extract(d,sd,key,w,spec,moment,norm=False,wmax=0.0,cflux='auto',dovar=False)
 
    # return (scan parameter, flux, variance)
    return np.array(x),np.array(f)
-#---------------------------------------------------------------
-
-#---------------------------------------------------------------
-# Determine species name (returnval) from mass and charge
-def specmap(m_in,z_in):
-
-  # Assume Deuterium normalization
-  m = int(m_in*2)
-  z = int(z_in)
-
-  if z < 0:
-    name = 'e'
-  elif m == 1:
-     name = 'H'
-  elif m == 2:
-      name = 'D'
-  elif m == 3:
-     if z == 1:
-        name = 'T'
-     elif z == 2:
-        name = 'He3'
-     else:
-        name = '?'
-  elif m == 4:
-     name = 'He'
-  elif m == 7:
-     name = 'Li'
-  elif m == 9:
-     name = 'Be'
-  elif m == 12:
-     name = 'C'
-  elif m > 180:
-     name = 'W'
-  else:
-     name = '?'
-
-  return name
 #---------------------------------------------------------------
 
 #---------------------------------------------------------------
@@ -374,29 +337,23 @@ def quadratic_max(x,g):
 #---------------------------------------------------------------
 
 #---------------------------------------------------------------
-def theta_index(theta,n_theta):
-    # Compute index for theta value in pitch angle and energy plots
-    i0 = int(round((1.0+theta)*n_theta/2.0))
-    if i0 > n_theta-1:
-        i0 = n_theta-1
-
-    return i0
-
-#---------------------------------------------------------------
-def theta_indx(theta,theta_plot):
+def indx_theta(i,n):
 
    # Select theta index
-   if theta_plot == 1:
+   if n == 1:
       itheta = 0
+      thetapi = 0.0
+   elif i == -1:
+      itheta = n//2
+      thetapi = 0.0
    else:
-       # theta=0 check just to be safe
-       if theta == 0.0:
-           itheta = theta_plot//2
-       else:
-           itheta = int((theta+1.0)/2.0*theta_plot)
+      itheta = i
+      thetapi = -1+2.0*itheta/n
 
-   print('INFO: (theta_indx) Selected index',itheta+1,'of',theta_plot)
-   return itheta
+   print('INFO: (indx_theta) Selected theta index {:d} of {:d}-{:d} : theta={:.2f}pi'.
+         format(itheta,0,n-1,thetapi))
+
+   return itheta,thetapi
 #---------------------------------------------------------------
 
 def shift_fourier(f,imin,imax):
@@ -438,12 +395,13 @@ def shift_fourier(f,imin,imax):
         phi_T = np.fft.ifft(np.fft.ifftshift(ephi,axes=0),axis=0)
         phip_T = np.fft.ifft(np.fft.ifftshift(ephip,axes=0),axis=0)
 
+        # Not quite correct time-average (correct only for fixed dt)
         pn_t = np.zeros([2*nx])
         pd_t = np.zeros([2*nx])
         for jt in np.arange(imin,imax+1):
             pn_t[:] = pn_t[:] + np.real(np.conj(phi_T[:,jt])*phip_T[:,jt])
             pd_t[:] = pd_t[:] + np.real(np.conj(phi_T[:,jt])*phi_T[:,jt])
-
+    
         # Shift in -gamma domain (standard order: p=0 is 0th index)
         pn = np.sum(pn_t[:]*wneg[:])
         pd = np.sum(pd_t[:]*wneg[:])

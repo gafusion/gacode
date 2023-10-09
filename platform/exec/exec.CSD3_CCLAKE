@@ -29,6 +29,7 @@ cd $simdir
 
 export OMP_NUM_THREADS=$nomp
 export KMP_AFFINITY=compact
+export KMP_STACKSIZE=400MB
 #mpirun -ppn $ppn -np $nmpi $exec 
 #Using for now ... instead of 48 processors per node.
 #mostly the processor numbers are actually powers of 2.

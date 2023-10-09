@@ -25,18 +25,19 @@ subroutine cgyro_cmpl_copy(sz, left, r1)
     !
     integer :: i
     !-------------------------------------------------------
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd &
+!$omp&         map(from:left(1:sz)) &
+!$omp&         map(to:r1(1:sz))
+#elif defined(_OPENACC)
 !$acc parallel loop independent gang vector &
 !$acc&         present(left,r1)
-    do i=1,sz
-       left(i) = r1(i)
-    enddo
 #else
 !$omp parallel do 
+#endif
     do i=1,sz
        left(i) = r1(i)
     enddo
-#endif
 end subroutine cgyro_cmpl_copy
 
 subroutine cgyro_cmpl_copy2(sz, left1, left2, r1)
@@ -51,22 +52,22 @@ subroutine cgyro_cmpl_copy2(sz, left1, left2, r1)
     integer :: i
     complex :: tmp
     !-------------------------------------------------------
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd &
+!$omp&         private(tmp) &
+!$omp&         map(from:left1(1:sz),left2(1:sz)) &
+!$omp&         map(to:r1(1:sz))
+#elif defined(_OPENACC)
 !$acc parallel loop independent gang vector &
 !$acc&         present(left1,left2,r1) private(tmp)
-    do i=1,sz
-       tmp = r1(i)
-       left1(i) = tmp
-       left2(i) = tmp
-    enddo
 #else
 !$omp parallel do private(tmp)
+#endif
     do i=1,sz
        tmp = r1(i)
        left1(i) = tmp
        left2(i) = tmp
     enddo
-#endif
 end subroutine cgyro_cmpl_copy2
 
   !=========================================================
@@ -90,7 +91,13 @@ subroutine cgyro_cmpl_fma2(sz, left, r1, c2, r2, abssum)
     !-------------------------------------------------------
     if (present(abssum)) then
       s = 0.0
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd &
+!$omp&         private(tmp) &
+!$omp&         map(from:left(1:sz)) &
+!$omp&         map(to:r1(1:sz),r2(1:sz)) &
+!$omp&         reduction(+:s)
+#elif defined(_OPENACC)
 !$acc parallel loop independent gang vector &
 !$acc&         present(left,r1,r2) private(tmp) reduction(+:s)
 #else
@@ -103,7 +110,11 @@ subroutine cgyro_cmpl_fma2(sz, left, r1, c2, r2, abssum)
       enddo
       abssum = s
     else
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd &
+!$omp&         map(from:left(1:sz)) &
+!$omp&         map(to:r1(1:sz),r2(1:sz))
+#elif defined(_OPENACC)
 !$acc parallel loop independent gang vector &
 !$acc&         present(left,r1,r2)
 #else
@@ -134,7 +145,13 @@ subroutine cgyro_cmpl_fma3(sz, left, r1, c2, r2, c3, r3, abssum)
     !-------------------------------------------------------
     if (present(abssum)) then
       s = 0.0
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd &
+!$omp&         private(tmp) &
+!$omp&         map(from:left(1:sz)) &
+!$omp&         map(to:r1(1:sz),r2(1:sz),r3(1:sz)) &
+!$omp&         reduction(+:s)
+#elif defined(_OPENACC)
 !$acc parallel loop independent gang vector &
 !$acc&         present(left,r1,r2,r3) private(tmp) reduction(+:s)
 #else
@@ -147,7 +164,11 @@ subroutine cgyro_cmpl_fma3(sz, left, r1, c2, r2, c3, r3, abssum)
       enddo
       abssum = s
     else
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd &
+!$omp&         map(from:left(1:sz)) &
+!$omp&         map(to:r1(1:sz),r2(1:sz),r3(1:sz)) 
+#elif defined(_OPENACC)
 !$acc parallel loop independent gang vector &
 !$acc&         present(left,r1,r2,r3)
 #else
@@ -180,7 +201,14 @@ subroutine cgyro_cmpl_fma4(sz, left, r1, c2, r2, c3, r3, c4, r4, abssum)
     !-------------------------------------------------------
     if (present(abssum)) then
       s = 0.0
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd &
+!$omp&         private(tmp) &
+!$omp&         map(from:left(1:sz)) &
+!$omp&         map(to:r1(1:sz),r2(1:sz),r3(1:sz)) &
+!$omp&         map(to:r4(1:sz)) &
+!$omp&         reduction(+:s)
+#elif defined(_OPENACC)
 !$acc parallel loop independent gang vector &
 !$acc&         present(left,r1,r2,r3,r4) private(tmp) reduction(+:s)
 #else
@@ -193,7 +221,12 @@ subroutine cgyro_cmpl_fma4(sz, left, r1, c2, r2, c3, r3, c4, r4, abssum)
       enddo
       abssum = s
     else
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd &
+!$omp&         map(from:left(1:sz)) &
+!$omp&         map(to:r1(1:sz),r2(1:sz),r3(1:sz)) &
+!$omp&         map(to:r4(1:sz)) 
+#elif defined(_OPENACC)
 !$acc parallel loop independent gang vector &
 !$acc&         present(left,r1,r2,r3,r4)
 #else
@@ -228,7 +261,14 @@ subroutine cgyro_cmpl_fma5(sz, left, r1, c2, r2, c3, r3, c4, r4, c5, r5, abssum)
     !-------------------------------------------------------
     if (present(abssum)) then
       s = 0.0
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd &
+!$omp&         private(tmp) &
+!$omp&         map(from:left(1:sz)) &
+!$omp&         map(to:r1(1:sz),r2(1:sz),r3(1:sz)) &
+!$omp&         map(to:r4(1:sz),r5(1:sz)) &
+!$omp&         reduction(+:s)
+#elif defined(_OPENACC)
 !$acc parallel loop independent gang vector &
 !$acc&         present(left,r1,r2,r3,r4,r5) private(tmp) reduction(+:s)
 #else
@@ -241,7 +281,12 @@ subroutine cgyro_cmpl_fma5(sz, left, r1, c2, r2, c3, r3, c4, r4, c5, r5, abssum)
       enddo
       abssum = s
     else
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd &
+!$omp&         map(from:left(1:sz)) &
+!$omp&         map(to:r1(1:sz),r2(1:sz),r3(1:sz)) &
+!$omp&         map(to:r4(1:sz),r5(1:sz))
+#elif defined(_OPENACC)
 !$acc parallel loop independent gang vector &
 !$acc&         present(left,r1,r2,r3,r4,r5)
 #else
@@ -278,7 +323,14 @@ subroutine cgyro_cmpl_fma6(sz, left, r1, c2, r2, c3, r3, c4, r4, c5, r5, c6, r6,
     !-------------------------------------------------------
     if (present(abssum)) then
       s = 0.0
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd &
+!$omp&         private(tmp) &
+!$omp&         map(from:left(1:sz)) &
+!$omp&         map(to:r1(1:sz),r2(1:sz),r3(1:sz)) &
+!$omp&         map(to:r4(1:sz),r5(1:sz),r6(1:sz)) &
+!$omp&         reduction(+:s)
+#elif defined(_OPENACC)
 !$acc parallel loop independent gang vector &
 !$acc&         present(left,r1,r2,r3,r4,r5,r6) private(tmp) reduction(+:s)
 #else
@@ -291,7 +343,12 @@ subroutine cgyro_cmpl_fma6(sz, left, r1, c2, r2, c3, r3, c4, r4, c5, r5, c6, r6,
       enddo
       abssum = s
     else
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd &
+!$omp&         map(from:left(1:sz)) &
+!$omp&         map(to:r1(1:sz),r2(1:sz),r3(1:sz)) &
+!$omp&         map(to:r4(1:sz),r5(1:sz),r6(1:sz))
+#elif defined(_OPENACC)
 !$acc parallel loop independent gang vector &
 !$acc&         present(left,r1,r2,r3,r4,r5,r6)
 #else
@@ -322,7 +379,13 @@ subroutine cgyro_cmpl_fmaN(sz, nr, left, r1, cN, rN, abssum)
     !-------------------------------------------------------
     if (present(abssum)) then
       s = 0.0
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd &
+!$omp&         private(tmp,j) &
+!$omp&         map(from:left(1:sz))  map(to:r1(1:sz)) &
+!$omp&         map(to:rN(1:sz*nr),cN(1:nr)) &
+!$omp&         reduction(+:s)
+#elif defined(_OPENACC)
 !$acc parallel loop independent gang vector &
 !$acc&         present(left,r1,rN) copyin(cN) private(tmp,j) reduction(+:s)
 #else
@@ -330,7 +393,9 @@ subroutine cgyro_cmpl_fmaN(sz, nr, left, r1, cN, rN, abssum)
 #endif
       do i=1,sz
         tmp = r1(i)
+#if (!defined(OMPGPU)) && defined(_OPENACC)
 !$acc loop seq
+#endif
         do j=1,nr
            tmp = tmp + cN(j) * rN((j-1)*sz+i)
         enddo
@@ -339,7 +404,12 @@ subroutine cgyro_cmpl_fmaN(sz, nr, left, r1, cN, rN, abssum)
       enddo
       abssum = s
     else
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd &
+!$omp&         private(tmp,j) &
+!$omp&         map(from:left(1:sz))  map(to:r1(1:sz)) &
+!$omp&         map(to:rN(1:sz*nr),cN(1:nr))
+#elif defined(_OPENACC)
 !$acc parallel loop independent gang vector &
 !$acc&         present(left,r1,rN) copyin(cN) private(tmp,j)
 #else
@@ -347,7 +417,9 @@ subroutine cgyro_cmpl_fmaN(sz, nr, left, r1, cN, rN, abssum)
 #endif
       do i=1,sz
         tmp = r1(i)
+#if (!defined(OMPGPU)) && defined(_OPENACC)
 !$acc loop seq
+#endif
         do j=1,nr
            tmp = tmp + cN(j) * rN((j-1)*sz+i)
         enddo
@@ -384,7 +456,13 @@ subroutine cgyro_cmpl_solution_werror(sz, nr, left, r0, c1, m1, cN, rN, ec1, ecN
     !-------------------------------------------------------
     sl = 0.0
     sm = 0.0
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd &
+!$omp&         private(tmp,tmpl,tmpm,j) &
+!$omp&         map(from:left(1:sz)) map(tofrom:m1(1:sz)) &
+!$omp&         map(to:rN(1:sz*nr),r0(1:sz),cN(1:nr),ecN(1:nr)) &
+!$omp&         reduction(+:sl,sm)
+#elif defined(_OPENACC)
 !$acc parallel loop independent gang vector &
 !$acc&         present(left,r0,m1,rN) copyin(cN,ecN) private(tmp,tmpl,tmpm,j) &
 !$acc&         reduction(+:sl,sm)
@@ -397,7 +475,9 @@ subroutine cgyro_cmpl_solution_werror(sz, nr, left, r0, c1, m1, cN, rN, ec1, ecN
        tmp = m1(i)
        tmpl = r0(i) + c1 * tmp
        tmpm = ec1*tmp
+#if (!defined(OMPGPU)) && defined(_OPENACC)
 !$acc loop seq private(tmp)
+#endif
        do j=1,nr
           tmp = rN((j-1)*sz+i)
           tmpl = tmpl +  cN(j) * tmp

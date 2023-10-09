@@ -25,7 +25,7 @@ fmin = sys.argv[9]
 fmax = sys.argv[10]
 colormap = sys.argv[11]
 font = int(sys.argv[12])
-theta = float(sys.argv[13])
+theta = int(sys.argv[13])
 
 sim = cgyrodata('./')
 nt = sim.n_time
@@ -43,7 +43,7 @@ else:
 epx = np.zeros([nx,nr],dtype=complex)
 x = np.zeros([nx])
 
-itheta = theta_indx(theta,nth)
+itheta,thetapi = indx_theta(theta,nth)
 
 #------------------------------------------------------------------------
 # Some setup

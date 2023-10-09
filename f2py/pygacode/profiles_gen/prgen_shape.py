@@ -9,7 +9,6 @@ from ..gacodefuncs import *
 def prgen_shape(r,z,narc,nf,xplot):
 
    # Number of theta-points for plotting
-   dx = np.zeros(narc)
    ur = np.zeros(narc) ; uz = np.zeros(narc)
    vr = np.zeros(narc) ; vz = np.zeros(narc)
 
@@ -25,28 +24,31 @@ def prgen_shape(r,z,narc,nf,xplot):
       # Reverse order (may be needed)
       r = np.flip(r,0) ; z = np.flip(z,0)
 
-   # Compute generalized angles
-   eps = 1.0-1e-10
-   for i in range(narc):
-      # (ur,uz): principle angles (discontinuous)
-      uz[i] = np.arcsin(eps*(z[i]-zmaj)/zmin)
-      ur[i] = np.arccos(eps*(r[i]-rmaj)/rmin)
-      # (vr,vz): proper (continuous) branches
-      if i > 4:
-         if uz[i] > uz[i-1] and ur[i] > ur[i-1]:
-            vz[i] = uz[i] ; vr[i] = ur[i]
-         elif uz[i] < uz[i-1] and ur[i] > ur[i-1]:
-            vz[i] = np.pi-uz[i] ; vr[i] = ur[i]
-         elif uz[i] < uz[i-1] and ur[i] < ur[i-1]:
-            vz[i] = np.pi-uz[i] ; vr[i] = 2*np.pi-ur[i]
-         elif uz[i] > uz[i-1] and ur[i] < ur[i-1]:
-            vz[i] = 2*np.pi+uz[i] ; vr[i] = 2*np.pi-ur[i]
-      else:
-         vz[i] = uz[i] ; vr[i] = ur[i]
+   # Compute generalized angles (new method July 2023)
+   eps = 1.0-1e-11
+   # (ur,uz): principle angles (discontinuous)
+   uz[:] = np.arcsin(eps*(z[:]-zmaj)/zmin)
+   ur[:] = np.arccos(eps*(r[:]-rmaj)/rmin)
+   
+   # Determine correct branches (vr,vz) via extrema
+   i0 = np.zeros(4,dtype=int)
+
+   i0[0] = np.argmin(ur)
+   i0[1] = np.argmax(uz)
+   i0[2] = np.argmax(ur)
+   i0[3] = np.argmin(uz)
+  
+   j1 = i0[1] ; j2 = i0[2] ; j3 = i0[3]
+
+   # Array notation for speed
+   vz[:j1]   = uz[:j1]         ; vr[:j1]   = ur[:j1]
+   vz[j1:j2] = np.pi-uz[j1:j2] ; vr[j1:j2] = ur[j1:j2]
+   vz[j2:j3] = np.pi-uz[j2:j3] ; vr[j2:j3] = 2*np.pi-ur[j2:j3]
+   vz[j3:]   = 2*np.pi+uz[j3:] ; vr[j3:]   = 2*np.pi-ur[j3:]
 
    # Define vr as deviation from vz
-   vr = vr-vz ; vr[-1] = vr[0]
-
+   vr[:] = vr[:]-vz[:] ; vr[-1] = vr[0]
+   
    x = vz
    # Now:
    #
@@ -61,10 +63,7 @@ def prgen_shape(r,z,narc,nf,xplot):
    xr[2] = zmin/rmin
    xr[3] = zmaj
 
-   for i in range(narc-1):
-      dx[i] = x[i+1]-x[i]
-
-   dx[-1] = dx[0]
+   dx = np.diff(x)
 
    # Compute expansion coefficients (cr):
    #  vr = sum cr*cos(nx)+sr*sin(nx)
@@ -78,7 +77,7 @@ def prgen_shape(r,z,narc,nf,xplot):
 
    if xplot > 0.0:
       outfile = '{:.3f}'.format(xplot)
-      plot_ang(r,z,x,vr,xr,cr,sr,outfile)
+      plot_ang(r,z,x,vr,xr,cr,sr,i0,outfile)
 
    return cr,sr,xr
 
@@ -124,10 +123,10 @@ def oldfourier(ri,zi,nf,rnorm):
    # Repair origin
    ari[0,:] = extrap(rnorm,ari[0,:])
    azi[0,:] = extrap(rnorm,azi[0,:])
-   for i in range(1,nf+1):
-      ari[i,:] = zero(rnorm,ari[i,:]) ; bri[i,:] = zero(rnorm,bri[i,:])
-      azi[i,:] = zero(rnorm,azi[i,:]) ; bzi[i,:] = zero(rnorm,bzi[i,:])
 
+   ari[1:,0] = 0.0 ; bri[1:,0] = 0.0
+   azi[1:,0] = 0.0 ; bzi[1:,0] = 0.0
+      
    u = ari
    u = np.append(u,bri)
    u = np.append(u,azi)
@@ -140,8 +139,8 @@ def oldfourier(ri,zi,nf,rnorm):
 # f,w are periodic
 def moment(n,f,w,d):
 
-   s0 = np.sum((f[:-1]*w[:-1]+f[1:]*w[1:])*d[:-1])
-   s1 = np.sum((w[:-1]*w[:-1]+w[1:]*w[1:])*d[:-1])
+   s0 = np.sum((f[:-1]*w[:-1]+f[1:]*w[1:])*d[:])
+   s1 = np.sum((w[:-1]*w[:-1]+w[1:]*w[1:])*d[:])
    
    return s0/s1
     
@@ -152,11 +151,7 @@ def extrap(x,u):
     u[0] = b
     return u
 
-def zero(x,u):
-    u[0] = 0.0
-    return u
-
-def plot_ang(r,z,x,vr,xr,cr,sr,outfile):
+def plot_ang(r,z,x,vr,xr,cr,sr,i0,outfile):
 
     nf = len(cr)-1
     
@@ -175,7 +170,7 @@ def plot_ang(r,z,x,vr,xr,cr,sr,outfile):
     #rc('text',usetex=True)
     rc('font',size=18)
 
-    fig = plt.figure(figsize=(18,9))
+    fig = plt.figure(figsize=(18,10))
 
     # PLOT contour
     ax = fig.add_subplot(121,aspect='equal')
@@ -185,12 +180,14 @@ def plot_ang(r,z,x,vr,xr,cr,sr,outfile):
     ax.grid(which="both",ls=":")
 
     # Data
-    ax.plot(r,z,'--k',linewidth=1)
+    ax.plot(r,z,'--k',linewidth=1,label='data')
+    ax.plot(r[i0],z[i0],'o')
     
     # Parameterized contour
     rp = rmaj+rmin*np.cos(x+pr)
     zp = zmaj+zmin*np.sin(x)
-    ax.plot(rp,zp,'-g',linewidth=1)
+    ax.plot(rp,zp,'-m',linewidth=1,label='mapped')
+    ax.legend()
     #-------------------------------------------------------
     
     # PLOT angle 
@@ -201,10 +198,6 @@ def plot_ang(r,z,x,vr,xr,cr,sr,outfile):
     ax.grid(which="both",ls=":")
 
     x=x/(2*np.pi)
-
-    ax.set_xlim([0,1])
-
-    ax.plot(x,pr,'-m',linewidth=1)
 
     # Shift elements so that x<1.0
     s=-2
@@ -222,8 +215,13 @@ def plot_ang(r,z,x,vr,xr,cr,sr,outfile):
         if x[n_arc-2-i] > x[n_arc-1-i]:
             x[n_arc-2-i] = x[n_arc-2-i]-1.0
 
-    # Angles from data
+    # Angle from data
     ax.plot(x,vr,'-k',linewidth=2,alpha=0.3)
+
+    # Angle from parameterization
+    ax.plot(x,pr,'-m',linewidth=1)
+
+    ax.set_xlim([0,1])
 
     plt.tight_layout()
     ofile = 'pnorm_'+outfile+'.pdf'
@@ -231,6 +229,9 @@ def plot_ang(r,z,x,vr,xr,cr,sr,outfile):
     plt.savefig(ofile)
     plt.close()
 
+    err = 100*np.average(abs(vr-pr))
+
+    print('INFO: (prgen_shape) Mapper error (%) = {:.4f}'.format(err)) 
     return
 
 def plot_coef(pnorm,ci,si,xi):

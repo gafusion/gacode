@@ -1,0 +1,71 @@
+name: gacode CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build-and-test:
+    strategy:
+      matrix:
+        os: [linux-gpu-cuda]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v3
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        miniconda-version: "latest"
+        auto-update-conda: true
+    - name: Install 
+      shell: bash -l {0}
+      run: |
+        df -h .
+        conda create -q --yes --strict-channel-priority -n gacode -c conda-forge gxx_linux-64 gfortran_linux-64 make curl
+        conda clean --yes -t
+        df -h .
+        conda activate gacode
+        echo "$(uname -s)"
+        if [[ "$(uname -s)" == "Linux" ]];
+        then
+          which x86_64-conda-linux-gnu-gcc
+          x86_64-conda-linux-gnu-gcc -v
+          x86_64-conda-linux-gnu-g++ -v
+        else
+          which clang
+          clang -v
+        fi
+        conda install --strict-channel-priority -c conda-forge fftw openblas
+        if [[ "$(uname -s)" == "Linux" ]];
+        then
+          conda install --strict-channel-priority -c conda-forge mpich
+          # TODO: install PGI but do not source it
+          # the makefile will do it automatically
+          #./scripts/install_hpc_sdk.sh </dev/null
+        fi
+        df -h .
+        export GACODE_PLATFORM=CONDA_CPU
+        export GACODE_ROOT=$PWD
+        . $GACODE_ROOT/shared/bin/gacode_setup
+        source $GACODE_ROOT/platform/env/env.${GACODE_PLATFORM}
+        echo "======= begin env ====="
+        env
+        echo "=======  end env  ====="
+        # build the code
+        (cd cgyro && make)
+            
+    - name: Tests
+      shell: bash -l {0}
+      run: |
+        conda activate gacode
+        echo "TODO"
+
+    - name: Sanity checks
+      shell: bash -l {0}
+      run: |
+        conda activate gacode
+        echo "TODO"

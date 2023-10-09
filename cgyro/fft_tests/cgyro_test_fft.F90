@@ -1,11 +1,16 @@
 program cgyro_test_fft
 
   use, intrinsic :: iso_c_binding
+#if defined(_OPENACC) || defined(OMPGPU)
+#define CGYRO_GPU_FFT
+#endif
+
 #ifdef TEST_MPI
   use mpi
 #endif
   implicit none
-#ifdef _OPENACC
+
+#ifdef CGYRO_GPU_FFT
   
 #ifdef HIPGPU
   ! HIP
@@ -47,39 +52,76 @@ program cgyro_test_fft
   n1 = i_proc*nloc+1
   n2 = (i_proc+1)*nloc
 
-!$acc enter data create(fxmany,uvmany, exp_uxmany, exp_fvmany) &
-!$acc&           create(comp_uxmany, comp_fvmany)
+#if defined(OMPGPU)
+!$omp target enter data map(to:fxmany,uvmany, exp_uxmany, exp_fvmany)
+!$omp target enter data map(to:comp_uxmany, comp_fvmany)
+#elif defined(_OPENACC)
+!$acc enter data create(fxmany,uvmany, exp_uxmany, exp_fvmany)
+!$acc enter data create(comp_uxmany, comp_fvmany)
+#endif
 
   open(unit=1,file="data/bin.fxmany.raw",form='unformatted',access='direct',recl=size(fxmany)*16)
   read(1,rec=1) fxmany
   close(1)
+#if defined(OMPGPU)
+!$omp target update to(fxmany)
+#else
 !$acc update device(fxmany) async
+#endif
   open(unit=1,file="data/bin.uvmany.raw",form='unformatted',access='direct',recl=size(uvmany)*8)
   read(1,rec=1) uvmany
   close(1)
+#if defined(OMPGPU)
+!$omp target update to(uvmany)
+#else
 !$acc update device(uvmany) async
+#endif
   open(unit=1,file="data/bin.uxmany.raw",form='unformatted',access='direct',recl=size(exp_uxmany)*8)
   read(1,rec=1) exp_uxmany
   close(1)
+#if defined(OMPGPU)
+!$omp target update to(exp_uxmany)
+#else
 !$acc update device(exp_uxmany) async
+#endif
   open(unit=1,file="data/bin.final.raw",form='unformatted',access='direct',recl=size(exp_fvmany)*16)
   read(1,rec=1) exp_fvmany
   close(1)
+#if defined(OMPGPU)
+!$omp target update to(exp_fvmany)
+#else
 !$acc update device(exp_fvmany) async
+#endif
 
+#if !defined(OMPGPU)
+  ! no async for omp target
 !$acc wait
+#endif
+
   call cgyro_setup_fft(n_proc,plan_c2r_many,plan_r2c_many,fxmany,uvmany,comp_uxmany,comp_fvmany)
 
   open(unit=1,file="data/bin.fxmany.raw",form='unformatted',access='direct',recl=size(fxmany)*16)
   read(1,rec=1) fxmany
   close(1)
+#if defined(OMPGPU)
+!$omp target update to(fxmany)
+#else
 !$acc update device(fxmany) async
+#endif
   open(unit=1,file="data/bin.uvmany.raw",form='unformatted',access='direct',recl=size(uvmany)*8)
   read(1,rec=1) uvmany
   close(1)
+#if defined(OMPGPU)
+!$omp target update to(uvmany)
+#else
 !$acc update device(uvmany) async
+#endif
 
+#if !defined(OMPGPU)
+  ! no async for omp target
 !$acc wait
+#endif
+
   call cgyro_do_fft(plan_c2r_many,plan_r2c_many,&
                     fxmany(:,:,n1:n2),uvmany(:,:,n1:n2),comp_uxmany(:,:,n1:n2),comp_fvmany(:,:,n1:n2))
 
@@ -89,7 +131,11 @@ program cgyro_test_fft
   open(unit=1,file="data/bin.fxmany.raw",form='unformatted',access='direct',recl=size(fxmany)*16)
   read(1,rec=1) fxmany
   close(1)
+#if defined(OMPGPU)
+!$omp target update to(fxmany)
+#else
 !$acc update device(fxmany)
+#endif
 
   do j=1,5
    call SYSTEM_CLOCK(start_count, count_rate, count_max)
@@ -110,12 +156,16 @@ contains
      implicit none
      !-----------------------------------
      integer, intent(in) :: i_proc,nels
-     real, dimension(*), intent(in) :: comp_many,exp_many
+     real, dimension(1:nels), intent(in) :: comp_many,exp_many
      !-----------------------------------
      integer :: n
      real :: comp_val,exp_val
 
+#ifdef OMPGPU
+!$omp target teams distribute parallel do private(comp_val,exp_val)
+#else
 !$acc parallel loop present(comp_many,exp_many) copyin(nels) private(comp_val,exp_val)
+#endif
      do n=1,nels
        comp_val=comp_many(n)
        exp_val=exp_many(n)
@@ -137,12 +187,16 @@ contains
      implicit none
      !-----------------------------------
      integer, intent(in) :: i_proc,nels
-     complex, dimension(*), intent(in) :: comp_many,exp_many
+     complex, dimension(1:nels), intent(in) :: comp_many,exp_many
      !-----------------------------------
      integer :: n
      real :: comp_val,exp_val
 
+#ifdef OMPGPU
+!$omp target teams distribute parallel do private(comp_val,exp_val)
+#else
 !$acc parallel loop present(comp_many,exp_many) copyin(nels) private(comp_val,exp_val)
+#endif
      do n=1,nels
        comp_val=real(comp_many(n))
        exp_val=real(exp_many(n))
@@ -174,7 +228,7 @@ contains
   subroutine cgyro_ident_fft(plan_c2r_many,plan_r2c_many,fxmany,uxmany)
 
      use, intrinsic :: iso_c_binding
-#ifdef _OPENACC
+#ifdef CGYRO_GPU_FFT
 #ifdef HIPGPU
      use hipfort_hipfft
 #else
@@ -184,11 +238,11 @@ contains
 
      implicit none
      !-----------------------------------
-#ifndef _OPENACC
+#ifndef CGYRO_GPU_FFT
      include 'fftw3.f03'
 #endif
 
-#ifdef _OPENACC
+#ifdef CGYRO_GPU_FFT
   
 #ifdef HIPGPU
      type(C_PTR), intent(inout) :: plan_c2r_many
@@ -211,11 +265,14 @@ contains
      ! --------------------------------------
      ! Forward
      ! --------------------------------------
+#ifdef OMPGPU
+!$omp target data use_device_ptr(fxmany,uxmany)
+#else
 !$acc wait
-!$acc  host_data &
-!$acc& use_device(fxmany,uxmany) 
+!$acc  host_data use_device(fxmany,uxmany) 
+#endif
 
-#ifdef _OPENACC
+#ifdef CGYRO_GPU_FFT
   
 #ifdef HIPGPU
      rc = hipfftExecZ2D(plan_c2r_many,c_loc(fxmany),c_loc(uxmany))
@@ -233,16 +290,25 @@ contains
         call abort
      endif
 
+#ifdef OMPGPU
+!$omp end target data
+#else
 !$acc wait
 !$acc end host_data
+#endif
 
      ! --------------------------------------
      ! Backward
      ! --------------------------------------
 
+#ifdef OMPGPU
+!$omp target data use_device_ptr(uxmany,fxmany)
+#else
 !$acc wait
 !$acc host_data use_device(uxmany,fxmany)
-#ifdef _OPENACC
+#endif
+
+#ifdef CGYRO_GPU_FFT
   
 #ifdef HIPGPU
      rc = hipfftExecD2Z(plan_r2c_many,c_loc(uxmany),c_loc(fxmany))
@@ -256,8 +322,12 @@ contains
      rc = 0
 #endif
 
+#ifdef OMPGPU
+!$omp end target data
+#else
 !$acc wait
 !$acc end host_data
+#endif
      if (rc/=0) then
         write(*,*) "ERROR: fftExec Z2D failed! ", rc
         call abort
@@ -270,7 +340,7 @@ contains
   subroutine cgyro_do_fft(plan_c2r_many,plan_r2c_many,fxmany,uvmany,uxmany,fvmany)
 
      use, intrinsic :: iso_c_binding
-#ifdef _OPENACC
+#ifdef CGYRO_GPU_FFT
 #ifdef HIPGPU
      use hipfort_hipfft
 #else
@@ -280,11 +350,11 @@ contains
 
      implicit none
      !-----------------------------------
-#ifndef _OPENACC
+#ifndef CGYRO_GPU_FFT
      include 'fftw3.f03'
 #endif
 
-#ifdef _OPENACC
+#ifdef CGYRO_GPU_FFT
   
 #ifdef HIPGPU
      type(C_PTR), intent(inout) :: plan_c2r_many
@@ -309,11 +379,14 @@ contains
      ! --------------------------------------
      ! Forward
      ! --------------------------------------
+#ifdef OMPGPU
+!$omp target data use_device_ptr(fxmany,uxmany)
+#else
 !$acc wait
-!$acc  host_data &
-!$acc& use_device(fxmany,uxmany) 
+!$acc  host_data use_device(fxmany,uxmany) 
+#endif
 
-#ifdef _OPENACC
+#ifdef CGYRO_GPU_FFT
   
 #ifdef HIPGPU
      rc = hipfftExecZ2D(plan_c2r_many,c_loc(fxmany),c_loc(uxmany))
@@ -334,16 +407,25 @@ contains
         call flush(6)
      endif
 
+#ifdef OMPGPU
+!$omp end target data
+#else
 !$acc wait
 !$acc end host_data
+#endif
 
      ! --------------------------------------
      ! Backward
      ! --------------------------------------
 
+#ifdef OMPGPU
+!$omp target data use_device_ptr(uvmany,fvmany)
+#else
 !$acc wait
 !$acc host_data use_device(uvmany,fvmany)
-#ifdef _OPENACC
+#endif
+
+#ifdef CGYRO_GPU_FFT
   
 #ifdef HIPGPU
      rc = hipfftExecD2Z(plan_r2c_many,c_loc(uvmany),c_loc(fvmany))
@@ -357,8 +439,13 @@ contains
      rc = 0
 #endif
 
+#ifdef OMPGPU
+!$omp end target data
+#else
 !$acc wait
 !$acc end host_data
+#endif
+
      if (rc/=0) then
         write(*,*) "ERROR: fftExec Z2D failed! ", rc
         call abort
@@ -375,7 +462,7 @@ contains
 
   use, intrinsic :: iso_c_binding
   use, intrinsic :: iso_fortran_env
-#ifdef _OPENACC
+#ifdef CGYRO_GPU_FFT
 #ifdef HIPGPU
   use hipfort_hipfft
 #else
@@ -383,13 +470,13 @@ contains
 #endif
 #endif
   implicit none
-#ifndef _OPENACC
+#ifndef CGYRO_GPU_FFT
      include 'fftw3.f03'
      integer, external :: omp_get_max_threads
 #endif
   !-----------------------------------
    integer, intent(in) :: n_proc
-#ifdef _OPENACC
+#ifdef CGYRO_GPU_FFT
   
 #ifdef HIPGPU
   type(C_PTR), intent(inout) :: plan_c2r_many
@@ -414,7 +501,7 @@ contains
   integer, dimension(irank) :: ndim,inembed,onembed
   integer :: idist,odist,istride,ostride,nsplit
 
-#ifndef _OPENACC
+#ifndef CGYRO_GPU_FFT
      istatus = fftw_init_threads()
      call fftw_plan_with_nthreads(omp_get_max_threads())
 #endif
@@ -431,7 +518,7 @@ contains
      inembed = 96
      onembed = 190
 
-#ifdef _OPENACC
+#ifdef CGYRO_GPU_FFT
   
 #ifdef HIPGPU
      plan_c2r_many = c_null_ptr
@@ -493,7 +580,7 @@ contains
      onembed = 96
      istride = 1
      ostride = 1
-#ifdef _OPENACC
+#ifdef CGYRO_GPU_FFT
   
 #ifdef HIPGPU
      plan_r2c_many = c_null_ptr

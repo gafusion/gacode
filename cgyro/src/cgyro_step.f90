@@ -7,16 +7,25 @@
 
 module cgyro_step
   
-  integer :: itrk,conv
+  integer, parameter :: itrk_max = 1000
+  real, parameter :: eps = 2e-12
 
-  real :: tol
+  integer :: itrk,istep,conv
+  
+  ! adaptive timesteps
+  real :: delta_t_gk
   real :: delta_t_last,delta_t_last_step
   real :: deltah2
   real :: deltah2_max,deltah2_min
   real :: delta_x,delta_x_min,delta_x_max
+  real :: delta_t_tot
+  real, dimension(itrk_max) :: deltah2_vec
+
+  ! errors
+  real :: tol
   real :: local_max_error
   real :: rel_error,var_error,scale_x
-  real :: delta_t_tot
+  real :: total_local_error
 
   !---------------------------------
   ! GPU-only
@@ -24,10 +33,7 @@ module cgyro_step
   !---------------------------------
 
   real, dimension(2) :: error_sum,error_x
-  
-  integer, parameter :: itrk_max = 1000
-  real, parameter :: eps = 2e-12
-  
+
 end module cgyro_step
 
   

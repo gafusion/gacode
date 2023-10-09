@@ -103,14 +103,24 @@ program cgyro_test_alltotall
     enddo
   enddo
 
+#ifdef OMPGPU
+!$omp target enter data map(to:t2)
+!$omp target enter data map(to:t1)
+!$omp target enter data map(to:t3)
+#else
 !$acc enter data copyin(t2)
 !$acc enter data copyin(t1)
 !$acc enter data copyin(t3)
+#endif
 
+#ifdef OMPGPU
+!$omp target teams distribute parallel do collapse(2)
+#else
 #ifdef _OPENACC
 !$acc parallel loop collapse(2) gang vector independent present(t1,t2,t3)
 #else
 !$omp parallel do collapse(2)
+#endif
 #endif
 do n=1, n_proc
     do i=(1+bufsize/2),bufsize
@@ -120,17 +130,30 @@ do n=1, n_proc
     enddo
   enddo
 
+#ifdef OMPGPU
+!$omp target
+#else
 !$acc kernels present(t1)
+#endif
   if (abs(t1(1+bufsize/2,n_proc/2) - (c100*i_proc + (1+bufsize/2) + m100*n_proc/2)) .gt. 0.00001) then
     write(*,*) i_proc, "WARNING: Initial t1(bufsize,n_proc) validation failed!", &
                t1(1+bufsize/2,n_proc/2), (c100*i_proc + (1+bufsize/2)+ m100*n_proc/2)
   endif
+#ifdef OMPGPU
+!$omp end target
+#else
 !$acc end kernels
+#endif
   call flush(6)
 
   m1 = MPI_Wtime()
 
+#ifdef OMPGPU
+!$omp target data use_device_ptr(t1,t2)
+#else
 !$acc host_data use_device(t1,t2)
+#endif
+
 #ifdef NO_ASYNC_MPI
     call MPI_ALLTOALL(t1, &
          bufsize, &
@@ -156,14 +179,28 @@ do n=1, n_proc
          istat, &
          i_err)
 #endif
-!$acc end host_data
 
+#ifdef OMPGPU
+!$omp end target data
+#else
+!$acc end host_data
+#endif
+
+#ifdef OMPGPU
+!$omp target
+#else
 !$acc kernels present(t2)
+#endif
   if (abs(t2(1+bufsize/2,n_proc/2) - (c100*(n_proc/2-1) + (1+bufsize/2) + m100*(i_proc+1))) .gt. 0.00001) then
     write(*,*) i_proc, "WARNING: Initial t2(bufsize,n_proc) validation failed!", &
                t2(1+bufsize/2,n_proc/2), (c100*(n_proc/2-1) + (1+bufsize/2)+ m100*(i_proc+1))
   endif
+#ifdef OMPGPU
+!$omp end target
+#else
 !$acc end kernels
+#endif
+
   call flush(6)
 
   if (i_proc==0) then
@@ -172,7 +209,12 @@ do n=1, n_proc
      call flush(6)
   endif
 
+#ifdef OMPGPU
+!$omp target data use_device_ptr(t2,t3)
+#else
 !$acc host_data use_device(t2,t3)
+#endif
+
 #ifdef NO_ASYNC_MPI
     call MPI_ALLTOALL(t2, &
          bufsize, &
@@ -198,13 +240,22 @@ do n=1, n_proc
          istat, &
          i_err)
 #endif
+
+#ifdef OMPGPU
+!$omp end target data
+#else
 !$acc end host_data
+#endif
 
   cnt_err = 0
+#ifdef OMPGPU
+!$omp target teams distribute parallel do collapse(2) reduction(+:cnt_err)
+#else
 #ifdef _OPENACC
 !$acc parallel loop collapse(2) gang vector independent present(t1,t3) copy(cnt_err) reduction(+:cnt_err)
 #else
-!$omp parallel do collapse(2) copy(cnt_err) reduction(+:cnt_err)
+!$omp parallel do collapse(2) reduction(+:cnt_err)
+#endif
 #endif
 do n=1, n_proc
     do i=1,bufsize
@@ -237,10 +288,15 @@ do n=1, n_proc
       write(*,*) m1, "j=", j, "dt=", m1-m2
       call flush(6)
     endif
+
+#ifdef OMPGPU
+!$omp target teams distribute parallel do private(n)
+#else
 #ifdef _OPENACC
 !$acc parallel loop gang vector independent present(t2) private(n)
 #else
 !$omp parallel do private(n)
+#endif
 #endif
     do i=1,bufsize
 !$acc loop seq
@@ -249,7 +305,12 @@ do n=1, n_proc
       enddo
     enddo
 
+#ifdef OMPGPU
+!$omp target data use_device_ptr(t1,t2)
+#else
 !$acc host_data use_device(t1,t2)
+#endif
+
 #ifdef NO_ASYNC_MPI
       call MPI_ALLTOALL(t2, &
            bufsize, &
@@ -275,12 +336,21 @@ do n=1, n_proc
          istat, &
          i_err)
 #endif
-!$acc end host_data
 
+#ifdef OMPGPU
+!$omp end target data
+#else
+!$acc end host_data
+#endif
+
+#ifdef OMPGPU
+!$omp target teams distribute parallel do private(n)
+#else
 #ifdef _OPENACC
 !$acc parallel loop gang vector independent present(t1) private(n)
 #else
 !$omp parallel do private(n)
+#endif
 #endif
     do i=1,bufsize
 !$acc loop seq
@@ -289,7 +359,12 @@ do n=1, n_proc
       enddo
     enddo
 
+#ifdef OMPGPU
+!$omp target data use_device_ptr(t1,t2)
+#else
 !$acc host_data use_device(t1,t2)
+#endif
+
 #ifdef NO_ASYNC_MPI
       call MPI_ALLTOALL(t1, &
            bufsize, &
@@ -315,7 +390,12 @@ do n=1, n_proc
          istat, &
          i_err)
 #endif
+
+#ifdef OMPGPU
+!$omp end target data
+#else
 !$acc end host_data
+#endif
 
   enddo
   m3 = MPI_Wtime()
@@ -325,9 +405,13 @@ do n=1, n_proc
      call flush(6)
   endif
 
+#ifdef OMPGPU
+!$omp target exit data map(from:t2)
+!$omp target exit data map(delete:t1)
+#else
 !$acc exit data delete(t1)
-
 !$acc exit data copyout(t2)
+#endif
   write(*,*) i_proc, "Success", t2(1,i_proc+1), "dt=", m3-m2
 
 end program

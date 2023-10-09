@@ -4,4 +4,3 @@ scipy
 matplotlib
 fortranformat
 scikit-image
-wxpython

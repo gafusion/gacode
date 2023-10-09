@@ -116,10 +116,17 @@ program cgyro_test_alltotall
     redt2(i) = 0.0
   enddo
 
+#if defined(OMPGPU)
+!$omp target enter data map(to:redt2)
+!$omp target enter data map(to:redt1)
+#elif defined(_OPENACC)
 !$acc enter data copyin(redt2)
 !$acc enter data copyin(redt1)
+#endif
 
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do
+#elif defined(_OPENACC)
 !$acc parallel loop gang vector independent present(redt1,redt2)
 #else
 !$omp parallel do
@@ -129,7 +136,11 @@ program cgyro_test_alltotall
     redt2(i) = 0.0
   enddo
 
+#if defined(OMPGPU)
+!$omp target update from(redt1)
+#elif defined(_OPENACC)
 !$acc update host(redt1)
+#endif
   if (abs(redt1(1+redbufsize/2) - (1.0*i_proc_1 + 0.5*(1+redbufsize/2) + 0.01*i_proc_2)) .gt. 0.01) then
     write(*,*) i_proc, "WARNING: Initial redt1(redbufsize) validation failed!", &
                redt1(1+redbufsize/2), (1.0*i_proc_1 + 0.5*(1+redbufsize/2)+ 0.01*i_proc_2)
@@ -165,10 +176,17 @@ program cgyro_test_alltotall
     enddo
   enddo
 
+#if defined(OMPGPU)
+!$omp target enter data map(to:t2)
+!$omp target enter data map(to:t1)
+#elif defined(_OPENACC)
 !$acc enter data copyin(t2)
 !$acc enter data copyin(t1)
+#endif
 
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do
+#elif defined(_OPENACC)
 !$acc parallel loop collapse(2) gang vector independent present(t1,t2)
 #else
 !$omp parallel do collapse(2)
@@ -180,7 +198,11 @@ do n=1, n_proc_2
     enddo
   enddo
 
+#if defined(OMPGPU)
+!$omp target update from(t1)
+#elif defined(_OPENACC)
 !$acc update host(t1)
+#endif
   if (abs(t1(1+bufsize/2,n_proc_2/2) - (100.0*i_proc_2 + 1+bufsize/2 + 0.01*n_proc_2/2)) .gt. 0.01) then
     write(*,*) i_proc, "WARNING: Initial t1(bufsize,n_proc_2) validation failed!", &
                t1(1+bufsize/2,n_proc_2/2), (100.0*i_proc_2 + 1+bufsize/2+ 0.01*n_proc_2/2)
@@ -189,7 +211,11 @@ do n=1, n_proc_2
 
   m1 = MPI_Wtime()
 
+#ifdef OMPGPU
+!$omp target data use_device_ptr(redt1,redt2)
+#else
 !$acc host_data use_device(redt1,redt2)
+#endif
   call MPI_ALLREDUCE(redt1,&
        redt2,&
        redbufsize,&
@@ -197,16 +223,28 @@ do n=1, n_proc_2
        MPI_SUM,&
        NEW_COMM_1,&
        i_err)
+#ifdef OMPGPU
+!$omp end target data
+#else
 !$acc end host_data
+#endif
 
+#if defined(OMPGPU)
+!$omp target update from(redt2)
+#elif defined(_OPENACC)
 !$acc update host(redt2)
+#endif
   if (abs(redt2(1+redbufsize/2) - (0.5*1.0*n_proc_1*(n_proc_1-1) + n_proc_1*(0.5*(1+redbufsize/2) + 0.01*i_proc_2))) .gt. 0.01) then
     write(*,*) i_proc, "WARNING: Initial redt2(redbufsize) validation failed!", &
                redt2(1+redbufsize/2), (0.5*1.0*n_proc_1*(n_proc_1-1) + n_proc_1*(0.5*(1+redbufsize/2) + 0.01*i_proc_2))
     call flush(6)
   endif
 
+#ifdef OMPGPU
+!$omp target data use_device_ptr(t1,t2)
+#else
 !$acc host_data use_device(t1,t2)
+#endif
     call MPI_ALLTOALL(t1, &
          bufsize, &
          MPI_DOUBLE, &
@@ -215,9 +253,17 @@ do n=1, n_proc_2
          MPI_DOUBLE, &
          NEW_COMM_2, &
          i_err)
+#ifdef OMPGPU
+!$omp end target data
+#else
 !$acc end host_data
+#endif
 
+#if defined(OMPGPU)
+!$omp target update from(t2)
+#elif defined(_OPENACC)
 !$acc update host(t2)
+#endif
   if (abs(t2(1+bufsize/2,n_proc_2/2) - (100.0*(n_proc_2/2-1) + 1+bufsize/2 + 0.01*(i_proc_2+1))) .gt. 0.01) then
     write(*,*) i_proc, "WARNING: Initial t2(bufsize,n_proc_2) validation failed!", &
                t2(1+bufsize/2,n_proc_2/2), (100.0*(n_proc_2/2-1) + 1+bufsize/2+ 0.01*(i_proc_2+1))
@@ -241,7 +287,9 @@ do n=1, n_proc_2
       call flush(6)
     endif
 
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do private(n)
+#elif defined(_OPENACC)
 !$acc parallel loop gang vector independent present(t2) private(n)
 #else
 !$omp parallel do private(n)
@@ -253,7 +301,11 @@ do n=1, n_proc_2
       enddo
     enddo
 
+#ifdef OMPGPU
+!$omp target data use_device_ptr(t1,t2)
+#else
 !$acc host_data use_device(t1,t2)
+#endif
       call MPI_ALLTOALL(t2, &
            bufsize, &
            MPI_DOUBLE, &
@@ -262,9 +314,15 @@ do n=1, n_proc_2
            MPI_DOUBLE, &
            NEW_COMM_2, &
            i_err)
+#ifdef OMPGPU
+!$omp end target data
+#else
 !$acc end host_data
+#endif
 
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do private(n)
+#elif defined(_OPENACC)
 !$acc parallel loop gang vector independent present(redt2,redt1) private(n)
 #else
 !$omp parallel do private(n)
@@ -273,7 +331,11 @@ do n=1, n_proc_2
     redt1(i) = redt1(i) +  redt2(((i-1)/2)+1)/128
   enddo
 
+#ifdef OMPGPU
+!$omp target data use_device_ptr(redt1,redt2)
+#else
 !$acc host_data use_device(redt1,redt2)
+#endif
   call MPI_ALLREDUCE(redt1,&
        redt2,&
        redbufsize,&
@@ -281,9 +343,15 @@ do n=1, n_proc_2
        MPI_SUM,&
        NEW_COMM_1,&
        i_err)
+#ifdef OMPGPU
+!$omp end target data
+#else
 !$acc end host_data
+#endif
 
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do private(n)
+#elif defined(_OPENACC)
 !$acc parallel loop gang vector independent present(t1) private(n)
 #else
 !$omp parallel do private(n)
@@ -295,7 +363,11 @@ do n=1, n_proc_2
       enddo
     enddo
 
+#ifdef OMPGPU
+!$omp target data use_device_ptr(t1,t2)
+#else
 !$acc host_data use_device(t1,t2)
+#endif
       call MPI_ALLTOALL(t1, &
            bufsize, &
            MPI_DOUBLE, &
@@ -304,7 +376,11 @@ do n=1, n_proc_2
            MPI_DOUBLE, &
            NEW_COMM_2, &
            i_err)
+#ifdef OMPGPU
+!$omp end target data
+#else
 !$acc end host_data
+#endif
 
   enddo
   m3 = MPI_Wtime()
@@ -314,9 +390,13 @@ do n=1, n_proc_2
      call flush(6)
   endif
 
+#if defined(OMPGPU)
+!$omp target exit data map(release:t1,redt1)
+!$omp target exit data map(from:t2,redt2)
+#elif defined(_OPENACC)
 !$acc exit data delete(t1,redt1)
-
 !$acc exit data copyout(t2,redt2)
+#endif
   write(*,*) i_proc, "Success", redt2(i_proc_1), t2(1,i_proc_2+1), "dt=", m3-m2
 
 end program

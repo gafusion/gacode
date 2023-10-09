@@ -23,9 +23,9 @@ subroutine cgyro_error_estimate
 
   real :: norm_loc_s,error_loc_s,h_s,r_s
 
-#ifdef _OPENACC
-  ! launch Estimate of collisionless error via 3rd-order linear estimate async ahead of time on GPU
-  ! CPU-only code will work on it later
+#if (!defined(OMPGPU)) && defined(_OPENACC)
+  ! launch Estimate of collisionless error via 3rd-order linear estimate async ahead of time on GPU/ACC
+  ! CPU-only and OMPGPU code will work on it later
   ! NOTE: If I have multiple itor, sum them all together
   h_s=0.0
   r_s=0.0
@@ -77,7 +77,10 @@ subroutine cgyro_error_estimate
   norm_loc(1)  = norm_loc_s
   error_loc(1) = error_loc_s
 
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd collapse(3) &
+!$omp&   private(iv_loc)
+#elif defined(_OPENACC)
 !$acc parallel loop collapse(3) gang vector private(iv_loc) &
 !$acc&         present(cap_h_c_dot,cap_h_c,cap_h_c_old,cap_h_c_old2) &
 !$acc&         present(nt1,nt2,nv1,nv2,nc) copyin(delta_t) default(none)
@@ -103,14 +106,20 @@ subroutine cgyro_error_estimate
 
   call timer_lib_in('str')
 
-#ifdef _OPENACC
+#if (!defined(OMPGPU)) && defined(_OPENACC)
   ! wait for the async GPU compute to be completed
 !$acc wait(2)
 #else
   ! NOTE: If I have multiple itor, sum them all together
   h_s=0.0
   r_s=0.0
+#if defined(OMPGPU)
+  ! no async for OMPG{U for now
+!$omp target teams distribute parallel do simd collapse(3) &
+!$omp&    reduction(+:h_s,r_s)
+#else
 !$omp parallel do collapse(3) reduction(+:h_s,r_s)
+#endif
   do itor=nt1,nt2
    do iv_loc=1,nv_loc
      do ic=1,nc
@@ -119,6 +128,7 @@ subroutine cgyro_error_estimate
      enddo
    enddo
   enddo
+
 #endif
 
   pair_loc(1) = h_s

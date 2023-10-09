@@ -31,13 +31,18 @@ subroutine cgyro_source
      icm = (ir-1-1)*n_theta
      icp = (ir-1+1)*n_theta
 
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd &
+!$omp&  private(j)
+#elif defined(_OPENACC)
 !$acc parallel loop gang vector private(j) present(h_x,source)
 #else
 !$omp parallel do private(j)
 #endif
      do iv_loc=1,nv_loc
+#if (!defined(OMPGPU)) && defined(_OPENACC)
 !$acc loop seq
+#endif
       do j=1,n_theta
         ! Recursive update of p=+1 source 
         source(j,iv_loc,0) = source(j,iv_loc,0) + &

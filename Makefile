@@ -1,4 +1,8 @@
 all:
+	printf "GACODE BRANCH: %s\n" `git branch | cut -d' ' -f2` > .VERSION
+	gacode_getversion >> .VERSION
+#	printf "GACODE HASH: %s\n" `git rev-parse \`git branch | cut -d' ' -f2\`` >> GACODE_BUILD_INFO
+#	printf 'COMPILE DATE: %(%a %b %e %H:%M:%S %Z %Y)T\n' >> GACODE_BUILD_INFO
 	cd shared ; make
 #	cd le3 ; make
 	cd neo ; make
@@ -13,6 +17,7 @@ all:
 	@echo "GACODE build done"
 
 clean:
+	rm -f .VERSION
 	cd shared ; make clean
 #	cd le3 ; make clean
 	cd neo ; make clean
@@ -40,7 +45,7 @@ distclean:
 	cd neo ; make clean
 	cd tglf ; make clean
 	cd cgyro ; make clean
-	cd gyro ; make distclean
+	cd gyro ; make clean
 	cd tgyro ; make clean
 	cd profiles_gen ; make clean
 	cd f2py ; make clean

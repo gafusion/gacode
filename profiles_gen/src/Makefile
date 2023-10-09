@@ -27,6 +27,7 @@ OBJECTS = prgen_globals.o \
 	  prgen_map_genf.o \
 	  prgen_map_inputgacode.o \
           prgen_read_cer.o \
+          prgen_read_ti.o \
           prgen_read_iterdb.o \
           prgen_read_iterdb_nc.o \
           prgen_read_plasmastate.o \

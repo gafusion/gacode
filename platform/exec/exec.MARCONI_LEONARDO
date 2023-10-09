@@ -1,0 +1,37 @@
+#! /usr/bin/env bash 
+# GACODE Parallel execution script
+
+simdir=${1}
+nmpi=${2}
+exec=${3}
+nomp=${4}
+numa=${5}
+mpinuma=${6}
+
+# nmpi = MPI tasks
+# nomp = OpenMP threads per MPI task
+# numa = NUMAs active per node
+# mpinuma = MPI tasks per active NUMA 
+
+. $GACODE_ROOT/shared/bin/gacode_mpi_tool
+
+cd $simdir
+
+let ntasks_per_gpu=$nmpi/$numa/$SLURM_NNODES
+
+if [ ${ntasks_per_gpu} -lt 1 ]; then
+    let ntasks_per_gpu=1
+fi
+
+export MPICH_MAX_THREAD_SAFETY=funneled
+export OMP_NUM_THREADS=$nomp
+export OMP_STACKSIZE=400M
+export MPICH_GPU_SUPPORT_ENABLED=1
+export NTASKS_PER_GPU=$ntasks_per_gpu
+export NGPU=$ngpu
+export NUMA=$numa
+
+export SLURM_CPU_BIND="cores"
+
+echo "> srun --cpu-bind=cores -n $nmpi -c $nomp $GACODE_ROOT/platform/exec/wrap.${GACODE_PLATFORM} $exec"
+srun --cpu-bind=cores -n $nmpi -c $nomp $GACODE_ROOT/platform/exec/wrap.${GACODE_PLATFORM} $exec

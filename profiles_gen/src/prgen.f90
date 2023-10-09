@@ -39,6 +39,7 @@ program prgen
   read(1,'(a)') raw_data_type
   read(1,'(a)') file_g
   read(1,'(a)') file_cer
+  read(1,'(a)') file_ti
   read(1,*) efit_method
   read(1,*) verbose_flag
   read(1,*) ipccw

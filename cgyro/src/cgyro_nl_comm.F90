@@ -34,7 +34,10 @@ subroutine cgyro_nl_fftw_comm1_async
 
   call timer_lib_in('nl_mem')
 
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd collapse(4) &
+!$omp&         private(iexch)
+#elif defined(_OPENACC)
 !$acc parallel loop collapse(4) gang vector independent private(iexch) &
 !$acc&         present(ic_c,h_x,fpack) &
 !$acc&         present(n_theta,nv_loc,nt1,nt2,n_radial) default(none)
@@ -52,13 +55,17 @@ subroutine cgyro_nl_fftw_comm1_async
    enddo
   enddo
 
-#ifdef _OPENACC
+  if ( (nv_loc*n_theta) < (nsplit*n_toroidal_procs) ) then
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd
+#elif defined(_OPENACC)
 !$acc parallel loop independent gang vector &
-!$acc&         present(fpack) if ( (nv_loc*n_theta) < (nsplit*n_toroidal_procs) )
+!$acc&         present(fpack)
 #endif
-  do iexch=nv_loc*n_theta+1,nsplit*n_toroidal_procs
+    do iexch=nv_loc*n_theta+1,nsplit*n_toroidal_procs
       fpack(1:n_radial,1:nt_loc,iexch) = (0.0,0.0)
-  enddo
+    enddo
+  endif
 
   call parallel_slib_f_nc_async(fpack,f_nl,f_req)
 
@@ -101,9 +108,12 @@ subroutine cgyro_nl_fftw_comm1_r(ij)
 
   psi_mul = (q*rho/rmin)*(2*pi/length)
 
-#ifdef _OPENACC
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd collapse(4) &
+!$omp&         private(iexch,ic_loc_m,my_psi)
+#elif defined(_OPENACC)
 !$acc parallel loop collapse(4) gang vector independent private(iexch,ic_loc_m,my_psi) &
-!$acc&         present(ic_c,px,rhs,fpack) copyin(psi_mul) &
+!$acc&         present(ic_c,px,rhs,fpack) copyin(psi_mul,zf_scale) &
 !$acc&         present(nt1,nt2,nv_loc,n_theta,n_radial) copyin(ij) default(none)
 #else
 !$omp parallel do collapse(4) private(iexch,ic_loc_m,my_psi)
@@ -119,7 +129,11 @@ subroutine cgyro_nl_fftw_comm1_r(ij)
               my_psi = (0.0,0.0)
            else
               my_psi = fpack(ir,itor-nt1+1,iexch)
+           endif           
+           if (itor == 0) then
+              my_psi = my_psi*zf_scale
            endif
+           
            ! RHS -> -[f,g] = [f,g]_{r,-alpha}
            rhs(ic_loc_m,iv_loc_m,itor,ij) = rhs(ic_loc_m,iv_loc_m,itor,ij)+psi_mul*my_psi
         enddo
@@ -148,37 +162,45 @@ subroutine cgyro_nl_fftw_comm2_async
 
   implicit none
 
-  integer :: ir,it,it_loc,itm,itl
+  integer :: ir,it,it_loc,itm,itl,itf
   integer :: itor,mytor
   integer :: iltheta_min
+  complex :: gval
 
   call timer_lib_in('nl_mem')
 
-#ifdef _OPENACC
-!$acc parallel loop gang collapse(3) independent private(itor,it,iltheta_min,mytor) &
-!$acc&         present(ic_c,field,gpack) &
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd collapse(5) &
+!$omp&         private(itor,it,iltheta_min,mytor,gval)
+#elif defined(_OPENACC)
+!$acc parallel loop gang vector collapse(5) independent &
+!$acc&         private(itor,it,iltheta_min,mytor,gval) &
+!$acc&         present(field,gpack) &
 !$acc&         present(n_toroidal_procs,nt_loc,n_jtheta,nv_loc,nt1) &
 !$acc&         present(n_theta,n_radial,n_field,nsplit) &
 !$acc&         default(none)
 #else
-!$omp parallel do collapse(2) private(it_loc,itor,mytor,it,iltheta_min)
+!$omp parallel do collapse(3) &
+!$omp&         private(it_loc,itor,mytor,it,ir,iltheta_min,gval)
 #endif
   do itm=1,n_toroidal_procs
    do itl=1,nt_loc
     do it_loc=1,n_jtheta
-     iltheta_min = 1+((itm-1)*nsplit)/nv_loc
-     it = it_loc+iltheta_min-1
-     itor = itl+(itm-1)*nt_loc
-     if (it > n_theta) then
-        ! just padding
-        gpack(1:n_field,1:n_radial,it_loc,itor) = (0.0,0.0)
-     else
-        mytor = nt1+itl-1
-!$acc loop vector
-        do ir=1,n_radial
-           gpack(1:n_field,ir,it_loc,itor) = field(1:n_field,ic_c(ir,it),mytor)
-        enddo
-     endif
+     do ir=1,n_radial
+      do itf=1,n_field
+       iltheta_min = 1+((itm-1)*nsplit)/nv_loc
+       it = it_loc+iltheta_min-1
+       itor = itl+(itm-1)*nt_loc
+       gval = (0.0,0.0)
+       if (it <= n_theta) then
+         mytor = nt1+itl-1
+         ! ic_c(ir,it) = (ir-1)*n_theta+it
+         gval = field(itf,(ir-1)*n_theta+it,mytor)
+       endif
+       ! else just padding
+       gpack(itf,ir,it_loc,itor) = gval
+      enddo
+     enddo
     enddo
    enddo
   enddo

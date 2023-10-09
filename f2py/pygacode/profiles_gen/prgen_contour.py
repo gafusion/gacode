@@ -179,7 +179,8 @@ def prgen_contour(g,mag,nc,psinorm,narc):
 
    if plot:      
    
-      # Flux contours
+      # 1. Flux contours
+      
       asp = ly/lx*(nx/ny)
       fig,ax = plt.subplots(figsize=(8*lx/ly,6))
       ax.imshow(g['PSIRZ'],cmap=plt.cm.hsv,aspect=asp,origin='lower')
@@ -212,8 +213,9 @@ def prgen_contour(g,mag,nc,psinorm,narc):
       ofile = 'prgen_efit.pdf'
       print('INFO: (prgen_contour) Writing '+ofile)
       plt.savefig(ofile)
-      
-      # q-profiles
+
+      # 2. q-profiles
+
       fig,ax = plt.subplots(figsize=(8,5))
       x = np.sqrt((psic-psi0)/(psi1-psi0))
       if ier <= 0:

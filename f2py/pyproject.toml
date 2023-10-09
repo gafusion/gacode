@@ -1,0 +1,13 @@
+[build-system]
+requires = ['setuptools','wheel','numpy']
+
+[project]
+name = 'pygacode'
+version = '1.0.0'
+description = 'Python-GACODE'
+license = {text = 'MIT'}
+requires-python = ">=3.8"
+
+[project.urls]
+Homepage = "https://gacode.io"
+

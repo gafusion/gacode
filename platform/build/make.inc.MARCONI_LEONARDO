@@ -1,0 +1,41 @@
+#---------------------------------------------------
+# MARCONI [Leonardo component]
+#
+# SYSTEM INFO:
+# - 32-core Intel(R) Xeon(R) Platinum 8358 CPU @ 2.60GHz
+# - 4 x NVIDIA Ampere GPUs A100, 64GB HBM2
+#   
+#---------------------------------------------------
+$(info Compiling for MARCONI Skylake)
+
+#  FIXED Hardware parameters
+
+IDENTITY="MARCONI Leonardo"
+CORES_PER_NODE=32
+NUMAS_PER_NODE=4
+
+# Compilers and flags
+
+FC     = mpifort -module ${GACODE_ROOT}/modules -I ${GACODE_ROOT}/modules -Mpreprocess -DUSE_INLINE -Mdefaultunit
+F77    = ${FC}
+
+FACC   =-acc -gpu all -Minfo=accel -Mcudalib=cufft
+
+FOMP   =-mp -Mstack_arrays
+FMATH  =-r8 
+FOPT   =-fast -fastsse -Mvect
+FDEBUG =-g -Kieee -Ktrap=fp,divz -Mbounds -Mchkptr -Mchkstk -traceback -Minform=inform
+
+
+# System math libraries
+
+LMATH = -llapack -lblas
+
+# NetCDF
+NETCDF  = -L${NETCDF_C_LIB} -lnetcdf -L${NETCDF_FORTRAN_LIB} -lnetcdff
+NETCDF_INC = ${NETCDF_FORTRAN_INCLUDE}
+
+# Archive 
+ARCH = ar cr
+
+

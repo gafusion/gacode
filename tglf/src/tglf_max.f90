@@ -74,7 +74,7 @@
       if(nbasis_min_in.ne.0)then
         nbasis = nbasis_min_in
       endif
-      if(sat_rule_in.eq.2)then
+      if(sat_rule_in.eq.2 .OR. sat_rule_in.eq.3)then
         use_bper_in = .false.
         use_bpar_in = .false.
       endif
@@ -259,7 +259,7 @@
        if(gamma_max.ne.0.0)then
 ! refine eigenvalue with more basis functions
          nbasis = save_nbasis
-         if(sat_rule_in.eq.2)then
+         if(sat_rule_in.eq.2 .OR. sat_rule_in.eq.3)then
           use_bper_in = save_bper
           use_bpar_in = save_bpar
          endif
@@ -308,7 +308,7 @@
 !
        if(gamma_max.eq.0.0)then
          width_in=save_width
-         if(sat_rule_in.eq.2)then
+         if(sat_rule_in.eq.2 .OR. sat_rule_in.eq.3)then
           use_bper_in = save_bper
           use_bpar_in = save_bpar
          endif
