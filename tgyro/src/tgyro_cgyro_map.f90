@@ -17,6 +17,8 @@ subroutine tgyro_cgyro_map
   real :: gamma_eb0
   real :: gamma_p0
 
+  integer :: qn_spec
+  real :: delta_n, delta_dn
   ! call cgyro_init(lpath, gyro_comm)
 
   cgyro_profile_model_in = 1
@@ -39,6 +41,11 @@ subroutine tgyro_cgyro_map
   !----------------------------------------------------------------
   ! Species loop:
   !
+  ! Quasieutrality enforcing
+  delta_n = 0.0
+  delta_dn = 0.0
+  qn_spec = -1
+
   ! Charges: e,i,z
   cgyro_z_in(1) = -1.0
   !
@@ -57,6 +64,12 @@ subroutine tgyro_cgyro_map
   !
   ! Temperature ratios: Te/Te,Ti(1)/Te,Ti(2)/Te
   cgyro_temp_in(1) = 1.0
+  if (evo_e(0) /= -1) then
+     delta_n = delta_n - 1.0
+     delta_dn = delta_dn - 1.0*r_min*dlnnedr(i_r)
+  else
+     qn_spec = 1
+  endif
 
   i0 = 1
 
@@ -69,7 +82,20 @@ subroutine tgyro_cgyro_map
      cgyro_dlnndr_in(i0) = r_min*dlnnidr(i_ion,i_r)
      cgyro_dlntdr_in(i0) = r_min*dlntidr(i_ion,i_r)
      cgyro_temp_in(i0) = ti(i_ion,i_r)/te(i_r)
-  enddo
+
+     if (evo_e(i_ion) /= -1) then
+        delta_n = delta_n + zi_vec(i_ion) * ni(i_ion, i_r) / ne(i_r)
+        delta_dn = delta_dn + zi_vec(i_ion) * ni(i_ion, i_r) / ne(i_r) * r_min * dlnnidr(i_ion,i_r)
+     else
+        qn_spec = i0
+     end if
+  end do
+
+  ! Force quasineutrality
+  if (qn_spec .gt. 0) then
+     cgyro_dens_in(qn_spec) = -delta_n
+     cgyro_dlnndr_in(qn_spec) = delta_dn / delta_n
+  end if
 
   ! Setting density gradient artificially to zero to compute D and v
   if (tgyro_zero_dens_grad_flag /= 0) then
