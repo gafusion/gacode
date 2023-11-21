@@ -9,7 +9,7 @@
 subroutine tgyro_cgyro_map
 
   use tgyro_globals
-  use cgyro_interface
+  use qlgyro_cgyro_interface
 
   implicit none
 
@@ -77,7 +77,7 @@ subroutine tgyro_cgyro_map
      if (calc_flag(i_ion) == 0) cycle
      i0 = i0+1 
      cgyro_z_in(i0)   = zi_vec(i_ion)
-     cgyro_mass_in(i0) = mi(i_ion)/md
+     cgyro_mass_in(i0) = mi_vec(i_ion)
      cgyro_dens_in(i0)   = ni(i_ion,i_r)/ne(i_r) 
      cgyro_dlnndr_in(i0) = r_min*dlnnidr(i_ion,i_r)
      cgyro_dlntdr_in(i0) = r_min*dlntidr(i_ion,i_r)
