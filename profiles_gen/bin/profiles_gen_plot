@@ -31,7 +31,7 @@ then
    echo "          -i <input.gacode file>"
    echo
    echo "          -r <flux-surface coordinate for plotting>"
-   echo "          Choices are r,r/a,rho"
+   echo "          Choices are r,rho,pflux (normalized)"
    echo
    echo "          -rmin <min plot radius>"
    echo "          -rmax <max plot radius>"
@@ -64,7 +64,7 @@ EXT=screen
 LOC=1
 
 # Plot options
-RVAR="r"
+RVAR='r'
 RMIN=auto
 RMAX=auto
 DOT=0

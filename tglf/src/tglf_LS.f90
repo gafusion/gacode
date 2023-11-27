@@ -630,7 +630,7 @@ if(new_matrix)then
           u_par(is,i) = v(j+nbasis+i)
           p_par(is,i) = v(j+nbasis*2+i)
           p_tot(is,i) = v(j+nbasis*3+i)
-          q_par(is,i) = v(j+nbasis*4+1)
+          q_par(is,i) = v(j+nbasis*4+i)
           q_tot(is,i) = v(j+nbasis*5+i)
           if(nroot.gt.6)then
             n(is,i) = n(is,i) -v(j+nbasis*6+i)+v(j+nbasis*12+i)

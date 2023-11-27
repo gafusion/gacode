@@ -53,7 +53,7 @@ subroutine prgen_read_inputprofiles
 
   nx = expro_n_exp
 
-  call prgen_allocate
+  call prgen_allocate('')
 
   ! 1
   do i=1,nexp

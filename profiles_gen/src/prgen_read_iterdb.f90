@@ -52,8 +52,7 @@ subroutine prgen_read_iterdb
   read(1,*) t ; read(1,*) x ! Te0
   read(1,*) t ; read(1,*) x ! Ti0
 
-  call prgen_allocate
-  call allocate_iterdb_vars
+  call prgen_allocate('iterdb')
 
   allocate(xv(nx))
 

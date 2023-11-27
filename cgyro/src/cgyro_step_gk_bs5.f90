@@ -67,6 +67,8 @@ subroutine cgyro_step_gk_bs5
   real, parameter :: e5 = 243.d0/12800.d0
   real, parameter :: e6 = -1.d0/95.d0
 
+  logical :: is_first
+
   tol = error_tol
 
   itrk = 0
@@ -92,6 +94,8 @@ subroutine cgyro_step_gk_bs5
   call cgyro_vel_copy(h0_old, h_x)
   call timer_lib_out('str_mem')
 
+  is_first = .TRUE.
+
   do while (delta_t_tot < delta_t .and. itrk <= itrk_max)
     
      call timer_lib_in('str')
@@ -112,15 +116,23 @@ subroutine cgyro_step_gk_bs5
      endif
      call timer_lib_out('str')
 
-     call cgyro_field_c
-     call cgyro_rhs(1)
+     call cgyro_rhs_comm_async_hx
+     if (is_first) then
+        ! fields already in good shape in the beginning
+        call cgyro_rhs(1,.FALSE.)
+        is_first = .FALSE.
+     else
+        call cgyro_field_c(.FALSE.)
+        call cgyro_rhs(1,.TRUE.)
+     endif
 
      call timer_lib_in('str')
      call cgyro_vel_fma2(h_x, h0_x, a21*deltah2, rhs(:,:,:,1))
      call timer_lib_out('str')
 
-     call cgyro_field_c
-     call cgyro_rhs(2)
+     call cgyro_rhs_comm_async_hx
+     call cgyro_field_c(.FALSE.)
+     call cgyro_rhs(2,.TRUE.)
 
      call timer_lib_in('str')
      call cgyro_vel_fmaN(2,h_x, &
@@ -129,8 +141,9 @@ subroutine cgyro_step_gk_bs5
             rhs(:,:,:,1:2))
      call timer_lib_out('str')
 
-     call cgyro_field_c
-     call cgyro_rhs(3)
+     call cgyro_rhs_comm_async_hx
+     call cgyro_field_c(.FALSE.)
+     call cgyro_rhs(3,.TRUE.)
 
      call timer_lib_in('str')
      call cgyro_vel_fmaN(3,h_x, &
@@ -139,8 +152,9 @@ subroutine cgyro_step_gk_bs5
             rhs(:,:,:,1:3))
      call timer_lib_out('str')
 
-     call cgyro_field_c
-     call cgyro_rhs(4)
+     call cgyro_rhs_comm_async_hx
+     call cgyro_field_c(.FALSE.)
+     call cgyro_rhs(4,.TRUE.)
      
      call timer_lib_in('str')
      call cgyro_vel_fmaN(4,h_x, &
@@ -149,8 +163,9 @@ subroutine cgyro_step_gk_bs5
             rhs(:,:,:,1:4))
      call timer_lib_out('str')
 
-     call cgyro_field_c
-     call cgyro_rhs(5)
+     call cgyro_rhs_comm_async_hx
+     call cgyro_field_c(.FALSE.)
+     call cgyro_rhs(5,.TRUE.)
 
      call timer_lib_in('str')
      call cgyro_vel_fmaN(5,h_x, &
@@ -159,8 +174,9 @@ subroutine cgyro_step_gk_bs5
             rhs(:,:,:,1:5))
      call timer_lib_out('str')
 
-     call cgyro_field_c
-     call cgyro_rhs(6)
+     call cgyro_rhs_comm_async_hx
+     call cgyro_field_c(.FALSE.)
+     call cgyro_rhs(6,.TRUE.)
 
      call timer_lib_in('str')
      call cgyro_vel_fmaN(6,h_x, &
@@ -170,8 +186,9 @@ subroutine cgyro_step_gk_bs5
             rhs(:,:,:,1:6))
      call timer_lib_out('str')
 
-     call cgyro_field_c
-     call cgyro_rhs(7)
+     call cgyro_rhs_comm_async_hx
+     call cgyro_field_c(.FALSE.)
+     call cgyro_rhs(7,.TRUE.)
 
      !-------------------
      ! SOLUTION and ERROR
@@ -203,8 +220,6 @@ subroutine cgyro_step_gk_bs5
      var_error = sqrt(total_local_error+rel_error*rel_error)
     
      if (var_error < tol) then
-        call cgyro_field_c
-        
         conv = 1
         
         delta_t_tot = delta_t_tot+deltah2
@@ -235,6 +250,9 @@ subroutine cgyro_step_gk_bs5
      endif
      
   enddo
+
+  ! caller expects the fields to be updated on exit
+  call cgyro_field_c(.TRUE.)
   
   delta_t_gk = max(delta_t_last,4.0/5.0*deltah2)
   

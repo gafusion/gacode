@@ -465,7 +465,8 @@ subroutine cgyro_calc_collision_gpu_fp32(nj_loc)
 !$acc parallel loop collapse(4) gang vector &
 !$acc& private(b_re,b_im,cval,ivp,iv) firstprivate(nproc,nj_loc,nv) &
 !$acc& present(cmat_fp32,cmat_stripes,cmat_e1,cap_h_v,fsendf,ie_v,is_v,ix_v) &
-!$acc& private(k,ic,j,ic_loc,ie,is,ix)
+!$acc& private(k,ic,j,ic_loc,ie,is,ix) &
+!$acc& private(cval,iep,isp,ixp,h_re,h_im)
 #endif
   do itor=nt1,nt2
    do ic=nc1,nc2
@@ -479,7 +480,7 @@ subroutine cgyro_calc_collision_gpu_fp32(nj_loc)
            is = is_v(iv)
            ix = ix_v(iv)
 #if (!defined(OMPGPU)) && defined(_OPENACC)
-!$acc loop seq private(cval,iep,isp,ixp,h_re,h_im)
+!$acc loop seq
 #endif
            do ivp=1,nv
               cval = cmat_fp32(iv,ivp,ic_loc,itor)
@@ -895,7 +896,7 @@ subroutine cgyro_step_collision
 #endif
 
   if (collision_field_model == 0) then
-     call cgyro_field_c
+     call cgyro_field_c(.TRUE.)
   else if (nt1 == 0 .and. ae_flag == 1) then
      call cgyro_field_c_ae
   endif
@@ -915,7 +916,7 @@ subroutine cgyro_step_collision_simple
   call cgyro_step_collision_cpu(.TRUE.)
 #endif
 
-  call cgyro_field_c
+  call cgyro_field_c(.TRUE.)
 
 end subroutine cgyro_step_collision_simple
 

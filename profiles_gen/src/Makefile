@@ -14,9 +14,6 @@ EXEC = prgen
 
 OBJECTS = prgen_globals.o \
           prgen_allocate.o \
-          allocate_iterdb_vars.o \
-          allocate_plasmastate_vars.o \
-	  allocate_peqdsk_vars.o \
           prgen_get_chi.o \
           prgen_geometry.o \
           prgen_ion_name.o \

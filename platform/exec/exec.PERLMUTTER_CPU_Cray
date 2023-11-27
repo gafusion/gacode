@@ -1,0 +1,30 @@
+#! /usr/bin/env bash 
+# GACODE Parallel execution script
+
+simdir=${1}
+nmpi=${2}
+exec=${3}
+nomp=${4}
+numa=${5}
+mpinuma=${6}
+
+# nmpi = MPI tasks
+# nomp = OpenMP threads per MPI task
+# numa = NUMAs active per node
+# mpinuma = MPI tasks per active NUMA 
+
+. $GACODE_ROOT/shared/bin/gacode_mpi_tool
+
+cd $simdir
+
+let proc_per_node=$CORES_PER_NODE/$nomp
+
+export MPICH_MAX_THREAD_SAFETY=funneled
+export OMP_NUM_THREADS=$nomp
+export OMP_STACKSIZE=400M
+
+export SLURM_CPU_BIND="cores"
+ulimit -c unlimited
+
+echo "> srun -C cpu --cpu_bind=cores -n $nmpi -c $nomp $exec"
+srun -C cpu --cpu_bind=cores -n $nmpi -c $nomp $exec

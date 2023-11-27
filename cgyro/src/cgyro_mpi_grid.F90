@@ -308,6 +308,9 @@ subroutine cgyro_mpi_grid
   ! Nonlinear parallelization dimensions (returns nsplit)
 
   call parallel_slib_init(n_toroidal_procs,nv_loc*n_theta,n_radial,nsplit,NEW_COMM_2)
+  ! we will move the big fpack in two independent pieces
+  nsplitA = (nsplit+1)/2
+  nsplitB = nsplit-nsplitA
 
   n_jtheta = 0
   if (nonlinear_flag == 1) then
@@ -323,10 +326,16 @@ subroutine cgyro_mpi_grid
   endif
 
 #if defined(OMPGPU)
-!$omp target enter data map(to:nt1,nt2,nt_loc,nv1,nv2,nv_loc,ns1,ns2,ns_loc,nc1,nc2,nc_loc,n_jtheta,nsplit)
+!$omp target enter data map(to:nt1,nt2,nt_loc,nv1,nv2,nv_loc,ns1,ns2,ns_loc)
+!$omp target enter data map(to:nc1,nc2,nc_loc,n_jtheta,nsplit,nsplitA,nsplitB)
 #elif defined(_OPENACC)
-!$acc enter data copyin(nt1,nt2,nt_loc,nv1,nv2,nv_loc,ns1,ns2,ns_loc,nc1,nc2,nc_loc,n_jtheta,nsplit)
+!$acc enter data copyin(nt1,nt2,nt_loc,nv1,nv2,nv_loc,ns1,ns2,ns_loc)
+!$acc enter data copyin(nc1,nc2,nc_loc,n_jtheta,nsplit,nsplitA,nsplitB)
 #endif
+
+  fA_req_valid = .FALSE.
+  fB_req_valid = .FALSE.
+  g_req_valid = .FALSE.
 
   ! OMP code
   n_omp = omp_get_max_threads()

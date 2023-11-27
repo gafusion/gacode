@@ -67,7 +67,7 @@ subroutine prgen_geometry
   ! Deal with null statefile
   if (format_type == 0) then
      nx = npsi
-     call prgen_allocate
+     call prgen_allocate('')
      dpsi = efit_psi
   endif
 

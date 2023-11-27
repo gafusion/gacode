@@ -95,8 +95,7 @@ subroutine prgen_read_iterdb_nc
      endif
   endif
   
-  call prgen_allocate
-  call allocate_iterdb_vars
+  call prgen_allocate('iterdb')
 
   allocate(work(onetwo_npsi))
 

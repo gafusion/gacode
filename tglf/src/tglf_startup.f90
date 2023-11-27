@@ -48,8 +48,8 @@
           xnu_model_in=3
           wdia_trapped_in = 1.0
           if(units_in.eq."GYRO")units_in = "CGYRO"
-          if(igeo .ne. 1)then
-            write(*,*)"SAT_RULE=2 requires Miller geometry, set GEOMETRY_FLAG=1"
+          if(igeo .eq. 0)then
+            write(*,*)"GEOMETRY_FLAG=0 cannot be used with SAT_RULE=2"
             STOP
           endif
         endif

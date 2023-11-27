@@ -229,13 +229,15 @@ end subroutine cgyro_field_v_notae_gpu
 !-----------------------------------------------------------------
 ! Configuration (velocity-distributed) field solve
 !-----------------------------------------------------------------
-subroutine cgyro_field_c_cpu
+subroutine cgyro_field_c_cpu(update_cap)
 
   use parallel_lib
   use timer_lib
   use cgyro_globals
 
   implicit none
+
+  logical, intent(in) :: update_cap
 
   integer :: is,itor
   complex :: my_psi
@@ -294,17 +296,19 @@ subroutine cgyro_field_c_cpu
    endif
   enddo
 
+  if (update_cap) then
 !$omp parallel do collapse(2) private(iv_loc,is,ic,my_psi)
-  do itor=nt1,nt2
-   do iv=nv1,nv2
+   do itor=nt1,nt2
+    do iv=nv1,nv2
      iv_loc = iv-nv1+1
      is = is_v(iv)
      do ic=1,nc
         my_psi = sum( jvec_c(:,ic,iv_loc,itor)*field(:,ic,itor))
         cap_h_c(ic,iv_loc,itor) = h_x(ic,iv_loc,itor)+my_psi*z(is)/temp(is)
      enddo
+    enddo
    enddo
-  enddo
+  endif
 
   call timer_lib_out('field')
 
@@ -378,11 +382,14 @@ subroutine cgyro_field_c_ae_cpu
 end subroutine cgyro_field_c_ae_cpu
 
 #if defined(OMPGPU) || defined(_OPENACC)
-subroutine cgyro_field_c_gpu
+subroutine cgyro_field_c_gpu(update_cap)
   use parallel_lib
   use timer_lib
   use cgyro_globals
   implicit none
+
+  logical, intent(in) :: update_cap
+
   integer :: is,i_f,itor
   integer :: itor1,itor2
   complex :: tmp,field_loc_l
@@ -502,6 +509,7 @@ subroutine cgyro_field_c_gpu
      endif
   endif
 
+  if (update_cap) then
 #if defined(OMPGPU)
 !$omp target teams distribute parallel do simd collapse(3) &
 !$omp&   private(iv_loc,is,my_psi)
@@ -509,16 +517,17 @@ subroutine cgyro_field_c_gpu
 !$acc parallel loop collapse(3) gang vector private(iv_loc,is,my_psi) &
 !$acc&         present(jvec_c,z,temp,is_v) present(nt1,nt2,nv1,nv2,nc) default(none)
 #endif
-  do itor=nt1,nt2
-   do iv=nv1,nv2
+   do itor=nt1,nt2
+    do iv=nv1,nv2
      do ic=1,nc
         iv_loc = iv-nv1+1
         is = is_v(iv)
         my_psi = sum( jvec_c(:,ic,iv_loc,itor)*field(:,ic,itor))
         cap_h_c(ic,iv_loc,itor) = h_x(ic,iv_loc,itor)+my_psi*z(is)/temp(is)
      enddo
+    enddo
    enddo
-  enddo
+  endif
 
 #if (!defined(OMPGPU)) && defined(_OPENACC)
 !$acc end data
@@ -634,12 +643,15 @@ end subroutine cgyro_field_c_ae_gpu
 #endif
 
 
-subroutine cgyro_field_c
+subroutine cgyro_field_c(update_cap)
   implicit none
+
+  logical, intent(in) :: update_cap
+
 #if defined(OMPGPU) || defined(_OPENACC)
-   call cgyro_field_c_gpu
+   call cgyro_field_c_gpu(update_cap)
 #else
-   call cgyro_field_c_cpu
+   call cgyro_field_c_cpu(update_cap)
 #endif
 end subroutine cgyro_field_c
 

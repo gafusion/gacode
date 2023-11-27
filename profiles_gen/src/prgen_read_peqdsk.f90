@@ -24,8 +24,9 @@ subroutine prgen_read_peqdsk
   open(unit=1,file='pfile.ne',status='old')
   read(1,*) i
   nx = i
-  call prgen_allocate
-  call allocate_peqdsk_vars
+  
+  call prgen_allocate('pfile')
+
   allocate(xv(ncol,i))
   read(1,*) xv
   peqdsk_psi(:) = xv(1,:)

@@ -447,15 +447,16 @@ subroutine cgyro_cmpl_solution_werror(sz, nr, left, r0, c1, m1, cN, rN, ec1, ecN
     complex, intent(in), dimension(*) :: rN
     real, intent(in) :: ec1
     real, intent(in), dimension(nr) :: ecN
-    real, intent(inout) :: abssum_left
-    real, intent(inout) :: abssum_m
+    real, intent(inout), optional :: abssum_left
+    real, intent(inout), optional :: abssum_m
     !
     integer :: i,j
     complex :: tmp, tmpl, tmpm
     real :: sl,sm
     !-------------------------------------------------------
-    sl = 0.0
-    sm = 0.0
+    if (present(abssum_left) .AND. present(abssum_m)) then
+     sl = 0.0
+     sm = 0.0
 #if defined(OMPGPU)
 !$omp target teams distribute parallel do simd &
 !$omp&         private(tmp,tmpl,tmpm,j) &
@@ -469,7 +470,7 @@ subroutine cgyro_cmpl_solution_werror(sz, nr, left, r0, c1, m1, cN, rN, ec1, ecN
 #else
 !$omp parallel do private(tmp,tmpl,tmpm,j) reduction(+:sl,sm)
 #endif
-    do i=1,sz
+     do i=1,sz
        ! compute solution using FMA of r0,m1 and rN using c -> left
        ! also FMA of m1 and rN using ec -> m1
        tmp = m1(i)
@@ -487,9 +488,39 @@ subroutine cgyro_cmpl_solution_werror(sz, nr, left, r0, c1, m1, cN, rN, ec1, ecN
        m1(i) = tmpm
        sl = sl + abs(tmpl)
        sm = sm + abs(tmpm)
-    enddo
-    abssum_left = sl
-    abssum_m = sm
+     enddo
+     abssum_left = sl
+     abssum_m = sm
+    else
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd &
+!$omp&         private(tmp,tmpl,tmpm,j) &
+!$omp&         map(from:left(1:sz)) map(tofrom:m1(1:sz)) &
+!$omp&         map(to:rN(1:sz*nr),r0(1:sz),cN(1:nr),ecN(1:nr))
+#elif defined(_OPENACC)
+!$acc parallel loop independent gang vector &
+!$acc&         present(left,r0,m1,rN) copyin(cN,ecN) private(tmp,tmpl,tmpm,j)
+#else
+!$omp parallel do private(tmp,tmpl,tmpm,j)
+#endif
+     do i=1,sz
+       ! compute solution using FMA of r0,m1 and rN using c -> left
+       ! also FMA of m1 and rN using ec -> m1
+       tmp = m1(i)
+       tmpl = r0(i) + c1 * tmp
+       tmpm = ec1*tmp
+#if (!defined(OMPGPU)) && defined(_OPENACC)
+!$acc loop seq private(tmp)
+#endif
+       do j=1,nr
+          tmp = rN((j-1)*sz+i)
+          tmpl = tmpl +  cN(j) * tmp
+          tmpm = tmpm + ecN(j) * tmp
+       enddo
+       left(i) = tmpl
+       m1(i) = tmpm
+     enddo
+    endif
 end subroutine cgyro_cmpl_solution_werror
 
 end module cgyro_math

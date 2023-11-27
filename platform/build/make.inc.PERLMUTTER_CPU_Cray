@@ -1,0 +1,35 @@
+#----------------------------------------------------------
+# Cray EX (perlmutter.nersc.gov) [GPU nodes]
+#
+# - 2 CPUs (4 chipplets (16 cores x 2 HT)) (AMD Epyc)
+#----------------------------------------------------------
+
+IDENTITY="NERSC Perlmutter CPU"
+CORES_PER_NODE=256
+NUMAS_PER_NODE=8
+
+# Fortran 90/95 compiler
+FC = ftn -J ${GACODE_ROOT}/modules
+
+# Fortran 77 compiler
+F77 = ${FC}
+
+# Compiler options/flags
+FACC   =
+FOMP   =-homp -hnoacc
+FMATH  =-s real64
+FOPT   =-Ofast
+FDEBUG =-O0 -g
+F2PY   = f2py --fcompiler=pg
+
+
+# System math libraries
+LMATH=-lfftw3_threads -lfftw3f_threads -lfftw3 -lfftw3f -llapack -lblas
+
+# NetCDF
+NETCDF=-L${NETCDF_DIR}/lib -lnetcdff -lnetcdf
+NETCDF_INC = ${NETCDF_DIR}/include
+
+# Archive 
+ARCH = ar cr
+

@@ -2278,7 +2278,46 @@ SUBROUTINE write_tglf_ave_p0_spectrum
   CLOSE(33)
 !
  END SUBROUTINE write_tglf_scalar_saturation_parameters
-
-
+!-----------------------------------------------------------------
+!
+ SUBROUTINE write_tglf_QL_intensity_spectrum
+  !
+    USE tglf_dimensions
+    USE tglf_global
+    USE tglf_species
+    USE tglf_kyspectrum
+  ! 
+    IMPLICIT NONE
+    CHARACTER(30) :: fluxfile="out.tglf.QL_intensity_spectrum"
+    INTEGER :: i,j,k,is,m
+    REAL,PARAMETER :: small=1.0E-10
+  !
+    if(new_start)then
+       write(*,*)"error: tglf_TM must be called before write_tglf_QL_intensity_spectrum"
+       write(*,*)"       NN doesn't compute spectra -> if needed set tglf_nn_max_error_in=-1"
+    endif
+  !
+    OPEN(unit=33,file=fluxfile,status='replace')
+  !
+    write(33,*)"QL weights per mode:"
+    write(33,*)"type: 1=density,2=temperature,3=U,4=Q"
+    write(33,*)"QL_intensity_spectrum_out(type,nspecies,ky,mode)"
+    write(33,*)"index limits: type,ns,nky,nmodes"
+    write(33,*)4,ns,nky,nmodes_in
+  !
+    do is=ns0,ns
+      write(33,*)"species = ",is
+      do m=1,nmodes_in
+        write(33,*)"mode = ",m
+        do i=1,nky
+          write(33,*)(QL_intensity_spectrum_out(k,is,i,m),k=1,4)
+        enddo  ! i
+      enddo ! m
+    enddo  ! is
+  !
+    CLOSE(33)
+  !
+   END SUBROUTINE write_tglf_QL_intensity_spectrum
+  !-----------------------------------------------------------------
 
 

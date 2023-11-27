@@ -22,7 +22,7 @@ FC     = mpif90 -module ${GACODE_ROOT}/modules -Mpreprocess -DUSE_INLINE -Mdefau
 F77    = ${FC}
 #CC     = gcc
 
-FACC   =-acc -Minfo=accel -Mcudalib=cufft
+FACC   =-acc -Minfo=accel -Mcudalib=cufft -ta=nvidia,cc80
 FOMP   =-mp -Mstack_arrays 
 FMATH  =-r8 
 FOPT   =-fast -fastsse -Mvect

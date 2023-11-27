@@ -310,15 +310,17 @@ subroutine cgyro_init_manager
 
      ! Nonlinear arrays
      if (nonlinear_flag == 1) then
-        allocate(f_nl(n_radial,nt_loc,nsplit,n_toroidal_procs))
+        allocate(fA_nl(n_radial,nt_loc,nsplitA,n_toroidal_procs))
+        allocate(fB_nl(n_radial,nt_loc,nsplitB,n_toroidal_procs))
         allocate(g_nl(n_field,n_radial,n_jtheta,n_toroidal))
-        allocate(fpack(n_radial,nt_loc,nsplit*n_toroidal_procs))
+        allocate(fpackA(n_radial,nt_loc,nsplitA*n_toroidal_procs))
+        allocate(fpackB(n_radial,nt_loc,nsplitB*n_toroidal_procs))
         allocate(gpack(n_field,n_radial,n_jtheta,n_toroidal))
         allocate(jvec_c_nl(n_field,n_radial,n_jtheta,nv_loc,n_toroidal))
 #if defined(OMPGPU)
-!$omp target enter data map(alloc:fpack,gpack,f_nl,g_nl,jvec_c_nl)
+!$omp target enter data map(alloc:fpackA,fpackB,gpack,fA_nl,fB_nl,g_nl,jvec_c_nl)
 #elif defined(_OPENACC)
-!$acc enter data create(fpack,gpack,f_nl,g_nl,jvec_c_nl)
+!$acc enter data create(fpackA,fpackB,gpack,fA_nl,fB_nl,g_nl,jvec_c_nl)
 #endif
      endif
 
@@ -432,32 +434,36 @@ subroutine cgyro_init_manager
   allocate(fy(0:ny2,0:nx-1,n_omp))
   allocate(gy(0:ny2,0:nx-1,n_omp))
 
-  allocate(uxmany(0:ny-1,0:nx-1,nsplit))
-  allocate(uymany(0:ny-1,0:nx-1,nsplit))
-  allocate(vx(0:ny-1,0:nx-1,n_omp))
-  allocate(vy(0:ny-1,0:nx-1,n_omp))
+  ! Note: Assuming nsplitA>=nsplitB
+  !       So we can use the same buffers for both
+  allocate(vxmany(0:ny-1,0:nx-1,nsplit))
+  allocate(vymany(0:ny-1,0:nx-1,nsplit))
+  allocate(uxmany(0:ny-1,0:nx-1,nsplitA))
+  allocate(uymany(0:ny-1,0:nx-1,nsplitA))
   allocate(uv(0:ny-1,0:nx-1,n_omp))
 
   ! Create plans once and for all, with global arrays fx,ux
-  plan_c2r = fftw_plan_dft_c2r_2d(nx,ny,gx(:,:,1),vx(:,:,1),FFTW_PATIENT)
+  plan_c2r = fftw_plan_dft_c2r_2d(nx,ny,fx(:,:,1),uxmany(:,:,1),FFTW_PATIENT)
   plan_r2c = fftw_plan_dft_r2c_2d(nx,ny,uv(:,:,1),fx(:,:,1),FFTW_PATIENT)
 #endif
 
 #ifdef CGYRO_GPU_FFT
   call cgyro_info('GPU-aware code triggered.')
 
-  allocate( fxmany(0:ny2,0:nx-1,nsplit) )
-  allocate( fymany(0:ny2,0:nx-1,nsplit) )
+  ! Note: Assuming nsplitA>=nsplitB
+  !       So we can use the same buffers for both
+  allocate( fxmany(0:ny2,0:nx-1,nsplitA) )
+  allocate( fymany(0:ny2,0:nx-1,nsplitA) )
   allocate( gxmany(0:ny2,0:nx-1,nsplit) )
   allocate( gymany(0:ny2,0:nx-1,nsplit) )
 
-  allocate( uxmany(0:ny-1,0:nx-1,nsplit) )
-  allocate( uymany(0:ny-1,0:nx-1,nsplit) )
+  allocate( uxmany(0:ny-1,0:nx-1,nsplitA) )
+  allocate( uymany(0:ny-1,0:nx-1,nsplitA) )
   allocate( vxmany(0:ny-1,0:nx-1,nsplit) )
   allocate( vymany(0:ny-1,0:nx-1,nsplit) )
-  allocate( uvmany(0:ny-1,0:nx-1,nsplit) )
+  allocate( uvmany(0:ny-1,0:nx-1,nsplitA) )
 
-  write (msg, "(A,I7)") "NL using FFT batching of ",nsplit
+  write (msg, "(A,I5,A,I5,A,I5)") "NL using FFT batching of ",nsplit,",",nsplitA," and ",nsplitB
   call cgyro_info(msg)
 
 #if defined(OMPGPU)
@@ -487,9 +493,37 @@ subroutine cgyro_init_manager
   onembed = size(uxmany,1)
 
 #ifdef HIPGPU
-  hip_plan_c2r_many = c_null_ptr
+  hip_plan_c2r_manyA = c_null_ptr
   istatus = hipfftPlanMany(&
-       hip_plan_c2r_many, &
+       hip_plan_c2r_manyA, &
+       irank, &
+       ndim, &
+       inembed, &
+       istride, &
+       idist, &
+       onembed, &
+       ostride, &
+       odist, &
+       merge(HIPFFT_C2R,HIPFFT_Z2D,kind(uxmany) == singlePrecision), &
+       nsplitA)
+
+  hip_plan_c2r_manyB = c_null_ptr
+  istatus = hipfftPlanMany(&
+       hip_plan_c2r_manyB, &
+       irank, &
+       ndim, &
+       inembed, &
+       istride, &
+       idist, &
+       onembed, &
+       ostride, &
+       odist, &
+       merge(HIPFFT_C2R,HIPFFT_Z2D,kind(uxmany) == singlePrecision), &
+       nsplitB)
+
+  hip_plan_c2r_manyG = c_null_ptr
+  istatus = hipfftPlanMany(&
+       hip_plan_c2r_manyG, &
        irank, &
        ndim, &
        inembed, &
@@ -502,7 +536,33 @@ subroutine cgyro_init_manager
        nsplit)
 #else
   istatus = cufftPlanMany(&
-       cu_plan_c2r_many, &
+       cu_plan_c2r_manyA, &
+       irank, &
+       ndim, &
+       inembed, &
+       istride, &
+       idist, &
+       onembed, &
+       ostride, &
+       odist, &
+       merge(CUFFT_C2R,CUFFT_Z2D,kind(uxmany) == singlePrecision), &
+       nsplitA)
+
+  istatus = cufftPlanMany(&
+       cu_plan_c2r_manyB, &
+       irank, &
+       ndim, &
+       inembed, &
+       istride, &
+       idist, &
+       onembed, &
+       ostride, &
+       odist, &
+       merge(CUFFT_C2R,CUFFT_Z2D,kind(uxmany) == singlePrecision), &
+       nsplitB)
+
+  istatus = cufftPlanMany(&
+       cu_plan_c2r_manyG, &
        irank, &
        ndim, &
        inembed, &
@@ -522,9 +582,9 @@ subroutine cgyro_init_manager
   istride = 1
   ostride = 1
 #ifdef HIPGPU
-  hip_plan_r2c_many = c_null_ptr
+  hip_plan_r2c_manyA = c_null_ptr
   istatus = hipfftPlanMany(&
-       hip_plan_r2c_many, &
+       hip_plan_r2c_manyA, &
        irank, &
        ndim, &
        inembed, &
@@ -534,10 +594,24 @@ subroutine cgyro_init_manager
        ostride, &
        odist, &
        merge(HIPFFT_R2C,HIPFFT_D2Z,kind(uxmany) == singlePrecision), &
-       nsplit)
+       nsplitA)
+
+  hip_plan_r2c_manyB = c_null_ptr
+  istatus = hipfftPlanMany(&
+       hip_plan_r2c_manyB, &
+       irank, &
+       ndim, &
+       inembed, &
+       istride, &
+       idist, &
+       onembed, &
+       ostride, &
+       odist, &
+       merge(HIPFFT_R2C,HIPFFT_D2Z,kind(uxmany) == singlePrecision), &
+       nsplitB)
 #else
   istatus = cufftPlanMany(&
-       cu_plan_r2c_many, &
+       cu_plan_r2c_manyA, &
        irank, &
        ndim, &
        inembed, &
@@ -547,7 +621,20 @@ subroutine cgyro_init_manager
        ostride, &
        odist, &
        merge(CUFFT_R2C,CUFFT_D2Z,kind(uxmany) == singlePrecision), &
-       nsplit)
+       nsplitA)
+
+  istatus = cufftPlanMany(&
+       cu_plan_r2c_manyB, &
+       irank, &
+       ndim, &
+       inembed, &
+       istride, &
+       idist, &
+       onembed, &
+       ostride, &
+       odist, &
+       merge(CUFFT_R2C,CUFFT_D2Z,kind(uxmany) == singlePrecision), &
+       nsplitB)
 #endif
 
 #endif ! CGYRO_GPU_FFT

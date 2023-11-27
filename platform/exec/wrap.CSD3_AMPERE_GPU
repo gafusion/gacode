@@ -3,18 +3,17 @@
 
 export MPICH_GPU_SUPPORT_ENABLED=1
 
-#env 1>&2
+MEMS=(1 5 3 7)
+DEVICE_NUM=(0 1 2 3)
+CPUS=(48-63 16-31 112-127 80-95)
+NICS=(mlx5_0:1 mlx5_0:1 mlx5_1:1 mlx5_1:1)
 
-#echo $SLURM_LOCALID
-let r4=SLURM_LOCALID/4
-let l4="$SLURM_LOCALID-($r4*4)"
-#echo "$SLURM_PROCID `nvidia-smi topo -m` $SLURM_PROCID"
-let ACC_DEVICE_NUM=${l4}
-export ACC_DEVICE_NUM
+export ACC_DEVICE_NUM=${DEVICE_NUM[${SLURM_LOCALID}]}
+export UCX_NET_DEVICES=${NICS[${SLURM_LOCALID}]}
 
-echo "`uname -n` $SLURM_PROCID $SLURM_LOCALID $ACC_DEVICE_NUM `taskset -pc $$`"
+echo "`uname -n` $SLURM_PROCID $SLURM_LOCALID `taskset -pc $$`"
 
-#ecno "uname -n` $SLURM_LOCALID LL $LD_LIBRARY_PATH"
+export OMP_NUM_THREADS=$NOMP
 
 NTASKS_PER_NODE=$((SLURM_NTASKS / SLURM_NNODES))
 
@@ -46,6 +45,6 @@ if [ ${NTASKS_PER_NODE} -gt 4 ]; then
   fi
 else
   # no need for MPS
-  exec  "$@"
+  $@
 fi
 

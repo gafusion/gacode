@@ -622,15 +622,16 @@ contains
 
 !=========================================================
 
-  subroutine parallel_slib_f_nc(x,xt)
+  subroutine parallel_slib_f_nc(nsx,x,xt)
 
     use mpi
 
     !-------------------------------------------------------
     implicit none
     !
-    complex, intent(in), dimension(nkeep,nk_loc,nsplit*nn) :: x
-    complex, intent(inout), dimension(nkeep,nk_loc,nsplit,nn) :: xt
+    integer, intent(in) :: nsx
+    complex, intent(in), dimension(nkeep,nk_loc,nsx*nn) :: x
+    complex, intent(inout), dimension(nkeep,nk_loc,nsx,nn) :: xt
     !
     integer :: ierr
     !-------------------------------------------------------
@@ -638,10 +639,10 @@ contains
     cpl_use_device(x,xt)
 
     call MPI_ALLTOALL(x, &
-         nkeep*nk_loc*nsplit, &
+         nkeep*nk_loc*nsx, &
          MPI_DOUBLE_COMPLEX, &
          xt, &
-         nkeep*nk_loc*nsplit, &
+         nkeep*nk_loc*nsx, &
          MPI_DOUBLE_COMPLEX, &
          slib_comm, &
          ierr)
@@ -650,30 +651,31 @@ contains
 
   end subroutine parallel_slib_f_nc
 
-  subroutine parallel_slib_f_nc_async(x,xt,req)
+  subroutine parallel_slib_f_nc_async(nsx,x,xt,req)
     use mpi
     !-------------------------------------------------------
     implicit none
     !
-    complex, intent(in), dimension(nkeep,nk_loc,nsplit*nn) :: x
-    complex, intent(inout), dimension(nkeep,nk_loc,nsplit,nn) :: xt
+    integer, intent(in) :: nsx
+    complex, intent(in), dimension(nkeep,nk_loc,nsx*nn) :: x
+    complex, intent(inout), dimension(nkeep,nk_loc,nsx,nn) :: xt
     integer, intent(inout) :: req
     !
     integer :: ierr
     !-------------------------------------------------------
 
 #ifdef NO_ASYNC_MPI
-   call parallel_slib_f_nc(x,xt)
+   call parallel_slib_f_nc(nsx,x,xt)
 
 #else
 
     cpl_use_device(x,xt)
 
    call MPI_IALLTOALL(x, &
-         nkeep*nk_loc*nsplit, &
+         nkeep*nk_loc*nsx, &
          MPI_DOUBLE_COMPLEX, &
          xt, &
-         nkeep*nk_loc*nsplit, &
+         nkeep*nk_loc*nsx, &
          MPI_DOUBLE_COMPLEX, &
          slib_comm, &
          req, &
@@ -686,13 +688,14 @@ contains
   end subroutine parallel_slib_f_nc_async
 
   ! require x and xt to ensure they exist until this finishes
-  subroutine parallel_slib_f_nc_wait(x,xt,req)
+  subroutine parallel_slib_f_nc_wait(nsx,x,xt,req)
     use mpi
     !-------------------------------------------------------
     implicit none
     !
-    complex, intent(in), dimension(nkeep,nk_loc,nsplit*nn) :: x
-    complex, intent(inout), dimension(nkeep,nk_loc,nsplit,nn) :: xt
+    integer, intent(in) :: nsx
+    complex, intent(in), dimension(nkeep,nk_loc,nsx*nn) :: x
+    complex, intent(inout), dimension(nkeep,nk_loc,nsx,nn) :: xt
     integer, intent(inout) :: req
     !
     integer :: ierr
@@ -714,13 +717,14 @@ contains
 
  !=========================================================
 
-  subroutine parallel_slib_r_nc (xt,x)
+  subroutine parallel_slib_r_nc (nsx,xt,x)
     use mpi
     !-------------------------------------------------------
     implicit none
     !
-    complex, intent(in), dimension(nkeep,nk_loc,nsplit,nn) :: xt
-    complex, intent(inout), dimension(nkeep,nk_loc,nsplit*nn) :: x
+    integer, intent(in) :: nsx
+    complex, intent(in), dimension(nkeep,nk_loc,nsx,nn) :: xt
+    complex, intent(inout), dimension(nkeep,nk_loc,nsx*nn) :: x
     !
     integer :: ierr
     !-------------------------------------------------------
@@ -728,10 +732,10 @@ contains
     cpl_use_device(xt,x)
 
     call MPI_ALLTOALL(xt, &
-         nkeep*nk_loc*nsplit, &
+         nkeep*nk_loc*nsx, &
          MPI_DOUBLE_COMPLEX, &
          x, &
-         nkeep*nk_loc*nsplit, &
+         nkeep*nk_loc*nsx, &
          MPI_DOUBLE_COMPLEX, &
          slib_comm, &
          ierr)
@@ -739,6 +743,69 @@ contains
     cpl_release_device(xt,x)
 
   end subroutine parallel_slib_r_nc
+
+  subroutine parallel_slib_r_nc_async (nsx,xt,x,req)
+    use mpi
+    !-------------------------------------------------------
+    implicit none
+    !
+    integer, intent(in) :: nsx
+    complex, intent(in), dimension(nkeep,nk_loc,nsx,nn) :: xt
+    complex, intent(inout), dimension(nkeep,nk_loc,nsx*nn) :: x
+    integer, intent(inout) :: req
+    !
+    integer :: ierr
+    !-------------------------------------------------------
+
+#ifdef NO_ASYNC_MPI
+   call parallel_slib_r_nc(nsx,xt,x)
+
+#else
+
+    cpl_use_device(xt,x)
+
+    call MPI_IALLTOALL(xt, &
+         nkeep*nk_loc*nsx, &
+         MPI_DOUBLE_COMPLEX, &
+         x, &
+         nkeep*nk_loc*nsx, &
+         MPI_DOUBLE_COMPLEX, &
+         slib_comm, &
+         req, &
+         ierr)
+
+    cpl_unbind_device(xt,x)
+#endif
+
+  end subroutine parallel_slib_r_nc_async
+
+  ! require x and xt to ensure they exist until this finishes
+  subroutine parallel_slib_r_nc_wait(nsx,xt,x,req)
+    use mpi
+    !-------------------------------------------------------
+    implicit none
+    !
+    integer, intent(in) :: nsx
+    complex, intent(inout), dimension(nkeep,nk_loc,nsx,nn) :: xt
+    complex, intent(in), dimension(nkeep,nk_loc,nsx*nn) :: x
+    integer, intent(inout) :: req
+    !
+    integer :: ierr
+    integer :: istat(MPI_STATUS_SIZE)
+    !-------------------------------------------------------
+
+#ifndef NO_ASYNC_MPI
+
+    call MPI_WAIT(req, &
+         istat, &
+         ierr)
+
+    cpl_finalize_device(xt,x)
+
+#endif
+   !else, noop
+
+  end subroutine parallel_slib_r_nc_wait
 
 !=========================================================
 

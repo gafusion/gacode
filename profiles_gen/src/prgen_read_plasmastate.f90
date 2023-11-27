@@ -88,8 +88,7 @@ subroutine prgen_read_plasmastate
 
   nx = plst_dim_nrho
 
-  call prgen_allocate
-  call allocate_plasmastate_vars
+  call prgen_allocate('swim')
 
   ! Species names (abridged)
   plst_tag = 'ALLA_name'

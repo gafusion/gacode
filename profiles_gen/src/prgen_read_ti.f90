@@ -13,13 +13,10 @@ subroutine prgen_read_ti
 
   ! number of columns in Ti file
 
-  character (len=1) :: a
   integer :: n_in
   integer :: i
   integer :: ierr
   integer :: count
-  real :: xa,xb
-  real :: ta,tb
   real, dimension(2) :: x
   real, dimension(:), allocatable :: rho_in
   real, dimension(:), allocatable :: t_in

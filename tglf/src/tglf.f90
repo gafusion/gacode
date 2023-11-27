@@ -121,7 +121,10 @@ program tglf
 
      ! write QL flux (weight) spectrum per mode to file out.tglf.QL_weight_spectrum
      CALL write_tglf_QL_flux_spectrum
-
+     
+     ! write QL intensity (weight) spectrum per mode to file out.tglf.QL_intensity_spectrum
+     CALL write_tglf_QL_intensity_spectrum
+     
      ! write kx/ky-spectral shift spectrum to file out.tglf.spectral_shift
      CALL write_tglf_spectral_shift_spectrum
 

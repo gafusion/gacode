@@ -227,9 +227,9 @@
        damp_sig = 0.0
        if(use_bpar_in)then
          if(nbasis.eq.2)then
-           betae_psi = 0.5*betae_s/(ky*ky+(damp_sig_in*vs(2)/(q_unit*width_in))**2)
+           betae_sig = 0.5*betae_s/(ky*ky+(damp_sig_in*vs(2)/(q_unit*width_in))**2)
          else
-           betae_psi = 0.5*betae_s/(ky*ky)
+           betae_sig = 0.5*betae_s/(ky*ky)
          endif
 !      damp_sig = damp_sig_in/MAX(betae_sig*vs(1)*vs(1),0.001)
        endif
@@ -979,7 +979,7 @@
           kpar_gp1p0 = k_par0*ave_kpargp1p0(is,ib,jb)
           kpar_gp3p0 = k_par0*ave_kpargp3p0(is,ib,jb)
           if(use_bper_in)then
-            kpar_gp1b0 = k_par0*ave_kpargp1p0(is,ib,jb)
+            kpar_gp1b0 = k_par0*ave_kpargp1b0(is,ib,jb)
             kpar_gr11b0 = k_par0*ave_kpargr11b0(is,ib,jb)
             kpar_gr13b0 = k_par0*ave_kpargr13b0(is,ib,jb)
             if(vpar_model_in.eq.0)then

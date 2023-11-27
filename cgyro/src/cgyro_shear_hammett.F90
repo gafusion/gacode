@@ -92,7 +92,7 @@ subroutine cgyro_shear_hammett
   call timer_lib_out('shear')
 
   if (n_changes > 0) then
-     call cgyro_field_c
+     call cgyro_field_c(.TRUE.)
   endif
 
 end subroutine cgyro_shear_hammett

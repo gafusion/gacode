@@ -1297,7 +1297,7 @@
        ave_wdhr13p0(is,ib,jb) = wdhr13p0
        ave_wdhp1b0(is,ib,jb) = wdhp1b0
        ave_wdhr11b0(is,ib,jb) = wdhr11b0
-       ave_wdhr13b0(is,ib,jb) = wdhr13bp
+       ave_wdhr13b0(is,ib,jb) = wdhr13b0
        ave_wdhp1bp(is,ib,jb) = wdhp1bp
        ave_wdhr11bp(is,ib,jb) = wdhr11bp
        ave_wdhr13bp(is,ib,jb) = wdhr13bp
@@ -1544,7 +1544,7 @@
         ave_kparhp3bp(is,ib,jb) = kp_hp3bp
         ave_kparhp1bp(is,ib,jb) = kp_hp1bp
         ave_kparhr11bp(is,ib,jb) = kp_hr11bp
-        ave_kparhr13bp(is,ib,jb) = kp_hr13b0
+        ave_kparhr13bp(is,ib,jb) = kp_hr13bp
         ave_kparhu1(is,ib,jb) = kp_hu1
         ave_kparhu3(is,ib,jb) = kp_hu3
         ave_kparht1(is,ib,jb) = kp_ht1

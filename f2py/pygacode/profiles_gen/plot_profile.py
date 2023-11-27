@@ -38,7 +38,8 @@ alls = not bool(therm)
 expro.expro_read(infile,0)
 
 def plotit(ax,x,y,ystr):
-   global m1,m2,dot
+
+   global m1,m2,dot,rvar
    
    ax.plot(x[m1:m2],y[m1:m2],label=r'$'+ystr+'$')
    if dot:
@@ -46,9 +47,20 @@ def plotit(ax,x,y,ystr):
    return
 
 def plot_select(ax,tag):
-   global m1,m2
-   
-   x = expro.expro_rmin ; x = x/max(x)
+
+   global m1,m2,dot,rvar
+
+   if rvar == 'r':
+      x = expro.expro_rmin
+      xlabel = r'$r/a$'
+   elif rvar == 'rho':
+      x = expro.expro_rho
+      xlabel = r'$\rho$'
+   elif rvar == 'pflux':
+      x = abs(expro.expro_polflux)
+      xlabel = r'$\psi_\mathrm{pol}$'
+
+   x = x/max(x)
    n = expro.expro_n_ion
    
    # normalization
@@ -73,8 +85,7 @@ def plot_select(ax,tag):
       m1 = np.argmin(np.abs(x-float(rmin)))
       
    ax.set_xlim([x[m1],x[m2-1]])
-
-   ax.set_xlabel(r'$r/a$')
+   ax.set_xlabel(xlabel)
 
    m=m2
    if tag == 'Bunit':

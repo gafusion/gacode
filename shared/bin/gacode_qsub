@@ -19,6 +19,9 @@ then
   echo "         -s"
   echo "         Submit generated batch script.  Otherwise just print diagnostics."
   echo
+  echo "         -nologin"
+  echo "         Remove -l bash option from generated batch script (depends on GACODE_PLATFORM)."
+  echo
   echo "         -p <path>"
   echo "         Set optional path to simulation directory."
   echo "         [The default path is the current directory]"
@@ -61,6 +64,7 @@ fi
 user=`whoami`
 CODE=cgyro
 SUB_FLAG=0
+NO_LOGIN=0
 QUEUE=null_queue
 WALLTIME=0:59:00
 if hash getnim 2> /dev/null; then
@@ -98,6 +102,8 @@ while [[ $# -gt 0 ]] ; do
   case "$1" in
 
   -s) SUB_FLAG=1 ;;
+
+  -nologin) NO_LOGIN=1 ;;
 
   -p) shift ; SIMROOT=$1 ;;
 
@@ -164,6 +170,15 @@ echo " OpenMP threads/MPI task : $nomp"
 echo " MPI tasks per numa node : $mpinuma"
 echo
 . $GACODE_ROOT/platform/qsub/qsub.$GACODE_PLATFORM
+
+# Some GACODE_PLATFORM files use the --login bash option (-l)
+# This will not preserve user-defined run envs on these machines.
+# Option to remove -l by in-place editing on the batch file using sed
+if [[ $NO_LOGIN -eq 1 ]] ; then
+    if [ $(head -n 1 $bfile | grep -c '\-l') -gt 0 ] ; then
+       sed -i '1 s/:*-l\s*//' $bfile
+    fi
+fi
 
 if [[ $SUB_FLAG -eq 0 ]] ; then
     # Query NERSC/ORNL repositories

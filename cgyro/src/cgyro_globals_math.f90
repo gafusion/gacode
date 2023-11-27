@@ -158,7 +158,33 @@ subroutine cgyro_vel_fmaN(nr, left, r1, cN, rN, abssum)
     complex, intent(in), dimension(nc,nv_loc,nt_loc,nr) :: rN
     real, intent(inout), optional :: abssum
     !-------------------------------------------------------
-    call cgyro_cmpl_fmaN(nc*nv_loc*nt_loc, nr, left,r1,cN,rN,abssum)
+    integer :: real_nr
+
+    ! allow for tail-end zeros
+    real_nr = nr
+    do while ((real_nr>1) .AND. (cN(real_nr) == 0.d0 ))
+      real_nr = real_nr -1
+    enddo
+
+    select case (real_nr)
+    case(1)
+       call cgyro_vel_fma2(left,r1,cN(1),rN(:,:,:,1),abssum)
+    case(2)
+       call cgyro_vel_fma3(left,r1,cN(1),rN(:,:,:,1),cN(2),rN(:,:,:,2),abssum)
+    case(3)
+       call cgyro_vel_fma4(left,r1,cN(1),rN(:,:,:,1),cN(2),rN(:,:,:,2), &
+                           cN(3),rN(:,:,:,3),abssum)
+    case(4)
+       call cgyro_vel_fma5(left,r1,cN(1),rN(:,:,:,1),cN(2),rN(:,:,:,2), &
+                           cN(3),rN(:,:,:,3),cN(4),rN(:,:,:,4),abssum)
+    case(5)
+       call cgyro_vel_fma6(left,r1,cN(1),rN(:,:,:,1),cN(2),rN(:,:,:,2), &
+                           cN(3),rN(:,:,:,3),cN(4),rN(:,:,:,4), &
+                           cN(5),rN(:,:,:,5),abssum)
+    case default
+       ! use the generic implementation
+       call cgyro_cmpl_fmaN(nc*nv_loc*nt_loc, real_nr, left,r1,cN,rN,abssum)
+   end select
 end subroutine cgyro_vel_fmaN
 
   !=========================================================
@@ -181,8 +207,8 @@ subroutine cgyro_vel_solution_werror(nr, left, r0, c1, &
     complex, intent(in), dimension(nc,nv_loc,nt_loc,nr) :: rN
     real, intent(in) :: ec1
     real, intent(in), dimension(nr) :: ecN
-    real, intent(inout) :: abssum_left
-    real, intent(inout) :: abssum_m
+    real, intent(inout), optional :: abssum_left
+    real, intent(inout), optional :: abssum_m
     !-------------------------------------------------------
     call cgyro_cmpl_solution_werror(nc*nv_loc*nt_loc ,nr, &
             left,r0,c1,m1,cN,rN,ec1,ecN,abssum_left,abssum_m)
