@@ -23,7 +23,7 @@ subroutine cgyro_upwind_prepare_async_r64
 
   implicit none
 
-  integer :: is,ie,itor
+  integer :: is,itor
   complex :: res_loc
   complex :: g_val
 
@@ -121,7 +121,7 @@ subroutine cgyro_upwind_prepare_async_r32
 
   implicit none
 
-  integer :: is,ie,itor
+  integer :: is,itor
   complex(KIND=REAL32) :: res_loc
   complex :: g_val
 

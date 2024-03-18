@@ -141,11 +141,15 @@ class ManagerInput:
            with open(datafile,'r') as fdata:
               datalines = fdata.readlines()
 
+           adata = []
            for line in datalines:
                line_s = line.strip()
-
+               
                # Look for occurence of tag and put item in list.
-               if (line_s[0:3] == 'DIR'):   
+               if (line_s[0:3] == 'ALL'):
+                   # ALL overlay is applied to all DIR entries 
+                   adata = line_s.split(' ')
+               elif (line_s[0:3] == 'DIR'):
                    n = n+1
                    data = line_s.split(' ')
 
@@ -181,6 +185,8 @@ class ManagerInput:
                    self.overlayfile.append('overlay.'+str(n))
                    with open('overlay.'+str(n),'w') as file_overlay:
 
+                      for j in range(len(adata)-1):
+                          file_overlay.write(adata[j+1]+'\n')
                       #----------------------------------------------------------
                       # This loop writes each overlay parameter list to overlay.*
                       for j in range(nover):

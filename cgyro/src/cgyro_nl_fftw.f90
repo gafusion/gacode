@@ -19,7 +19,7 @@ subroutine cgyro_nl_fftw_stepr(g_j, f_j, nl_idx, i_omp)
   implicit none
 
   integer, intent(in) :: g_j, f_j
-  integer,intent(in) :: nl_idx
+  integer,intent(in) :: nl_idx ! 1=>A, 2=>B
   integer,intent(in) :: i_omp
   integer :: ix,iy
   integer :: ir,itm,itl,itor
@@ -233,19 +233,23 @@ subroutine cgyro_nl_fftw(ij)
   call parallel_slib_r_nc_async(nsplitA,fA_nl,fpackA,fA_req)
   fA_req_valid = .TRUE.
 
-  ! time to wait for the 2nd half of F_nl to become avaialble
-  call parallel_slib_f_nc_wait(nsplitB,fpackB,fB_nl,fB_req)
-  fB_req_valid = .FALSE.
+  if (nsplitB > 0) then
+    ! time to wait for the 2nd half of F_nl to become avaialble
+    call parallel_slib_f_nc_wait(nsplitB,fpackB,fB_nl,fB_req)
+    fB_req_valid = .FALSE.
+  endif
+
   ! make sure reqs progress
   call cgyro_nl_fftw_comm_test()
   call timer_lib_out('nl_comm')
 
-  call timer_lib_in('nl')
+  if (nsplitB > 0) then
+   call timer_lib_in('nl')
 
 ! f_nl is (radial, nt_loc, theta, nv_loc1, toroidal_procs)
 ! where nv_loc1 * toroidal_procs >= nv_loc
 !$omp parallel do schedule(dynamic,1) private(itm,itl,itor,iy,ir,p,ix,f0,i_omp,j)
-  do j=1,nsplitB
+   do j=1,nsplitB
         i_omp = omp_get_thread_num()+1
 
         ! zero elements not otherwise set below
@@ -296,17 +300,18 @@ subroutine cgyro_nl_fftw(ij)
         endif
 
         call cgyro_nl_fftw_stepr(nsplitA+j, j, 2, i_omp)
-  enddo ! j
+   enddo ! j
 
-  call timer_lib_out('nl')
+   call timer_lib_out('nl')
 
-  call timer_lib_in('nl_comm')
-  ! start the async reverse comm
-  ! can reuse the same req, no overlap with forward fB_req
-  call parallel_slib_r_nc_async(nsplitB,fB_nl,fpackB,fB_req)
-  fB_req_valid = .TRUE.
-  ! make sure reqs progress
-  call cgyro_nl_fftw_comm_test()
-  call timer_lib_out('nl_comm')
+   call timer_lib_in('nl_comm')
+   ! start the async reverse comm
+   ! can reuse the same req, no overlap with forward fB_req
+   call parallel_slib_r_nc_async(nsplitB,fB_nl,fpackB,fB_req)
+   fB_req_valid = .TRUE.
+   ! make sure reqs progress
+   call cgyro_nl_fftw_comm_test()
+   call timer_lib_out('nl_comm')
+  endif ! if nsplitB>0
 
 end subroutine cgyro_nl_fftw

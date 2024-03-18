@@ -221,7 +221,10 @@ subroutine cgyro_write_distributed_bcomplex(datafile,n_fn,fn)
 
      call MPI_INFO_CREATE(finfo,i_err)
 
-     call MPI_INFO_SET(finfo,"striping_factor",mpiio_small_stripe_str,i_err)
+     if (mpiio_small_stripe_factor > 0) then
+        ! user asked us to explicitly set the MPI IO striping factor
+        call MPI_INFO_SET(finfo,"striping_factor",mpiio_small_stripe_str,i_err)
+     endif
 
      call MPI_FILE_OPEN(NEW_COMM_2,&
           datafile,&
@@ -364,7 +367,10 @@ subroutine cgyro_write_distributed_breal(datafile,n_fn,fn)
 
      call MPI_INFO_CREATE(finfo,i_err)
 
-     call MPI_INFO_SET(finfo,"striping_factor",mpiio_small_stripe_str,i_err)
+     if (mpiio_small_stripe_factor > 0) then
+        ! user asked us to explicitly set the MPI IO striping factor
+        call MPI_INFO_SET(finfo,"striping_factor",mpiio_small_stripe_str,i_err)
+     endif
 
      call MPI_FILE_OPEN(NEW_COMM_2,&
           datafile,&

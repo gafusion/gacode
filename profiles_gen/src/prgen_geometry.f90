@@ -57,13 +57,21 @@ subroutine prgen_geometry
   read(1) efit_zmaj
   close(1)
 
+  ! Get rho on efit mesh (so have psi,rho,q)
+  call prgen_get_chi(npsi,efit_q,efit_psi,efit_rho,torfluxa)
+
+  efit_psi = efit_psi-efit_psi(1)
+
   ! PFILE only contains normalized flux
   if (format_type == 3) then
      dpsi = (psi1-psi0)*dpsi
   endif
-  
-  efit_psi = efit_psi-efit_psi(1)
 
+  ! manual method needs dpsi on statefile grid
+  if (format_type == 5) then
+     call bound_interp(efit_rho,efit_psi,npsi,rho,dpsi,nx)
+  endif
+ 
   ! Deal with null statefile
   if (format_type == 0) then
      nx = npsi
@@ -90,13 +98,11 @@ subroutine prgen_geometry
   endif
   !--------------------------------------------------------------------------------------
 
-  ! Get rho on efit mesh (so have psi,rho,q)
-  call prgen_get_chi(npsi,efit_q,efit_psi,efit_rho,torfluxa)
   ! Get q
   call cub_spline(efit_psi,efit_q,npsi,dpsi,q,nx)
   ! Get rho
   call prgen_get_chi(nx,q,dpsi,rho,torfluxa)
-
+   
   call bound_interp(efit_rho,efit_rmin,npsi,rho,rmin,nx)
   call bound_interp(efit_psi,efit_q,npsi,dpsi,q,nx)
   call bound_interp(efit_psi,efit_p,npsi,dpsi,p_tot,nx)

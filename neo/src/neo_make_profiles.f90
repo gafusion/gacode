@@ -440,6 +440,14 @@ subroutine neo_make_profiles
         write (io,*)
      enddo
      close(io)
+
+     ! JC: New file, introduced in Dec 2023 for neo_nice
+     open(unit=io,file=trim(path)//'out.neo.species',status='replace')
+     do is=1,n_species
+        write (io,'(e16.8)',advance='no') mass(is)
+        write (io,'(e16.8)',advance='no') z(is)
+     enddo
+     close(io)
      
      if(profile_model >= 2) then
         

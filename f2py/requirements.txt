@@ -4,3 +4,4 @@ scipy
 matplotlib
 fortranformat
 scikit-image
+build

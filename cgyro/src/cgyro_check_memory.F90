@@ -139,12 +139,14 @@ subroutine cgyro_check_memory(datafile)
      if(collision_model == 5) then
         call cgyro_alloc_add(io,(8.0*n_xi)*n_xi*n_species*n_energy*n_theta*nt_loc,'cmat')
      else
-        if (collision_precision_mode == 0) then
-           call cgyro_alloc_add_4d(io,nv,nv,nc_loc,nt_loc,8,'cmat')
-        else
+        if (collision_precision_mode == 1) then
            call cgyro_alloc_add_4d(io,nv,nv,nc_loc,nt_loc,4,'cmat_fp32')
            call cgyro_alloc_add(io,4.0*n_xi*n_species*(n_energy-n_low_energy)*n_xi*nc_loc*nt_loc,'cmat_stripes')
            call cgyro_alloc_add(io,4.0*n_xi*n_species*nv*nc_loc*n_low_energy*nt_loc,'cmat_e1')
+        else if (collision_precision_mode == 32) then
+           call cgyro_alloc_add_4d(io,nv,nv,nc_loc,nt_loc,4,'cmat_fp32')
+        else
+           call cgyro_alloc_add_4d(io,nv,nv,nc_loc,nt_loc,8,'cmat')
         endif
 #if defined(OMPGPU) || defined(_OPENACC)
         if (gpu_bigmem_flag /= 1) then

@@ -311,23 +311,30 @@ subroutine cgyro_init_manager
      ! Nonlinear arrays
      if (nonlinear_flag == 1) then
         allocate(fA_nl(n_radial,nt_loc,nsplitA,n_toroidal_procs))
-        allocate(fB_nl(n_radial,nt_loc,nsplitB,n_toroidal_procs))
         allocate(g_nl(n_field,n_radial,n_jtheta,n_toroidal))
         allocate(fpackA(n_radial,nt_loc,nsplitA*n_toroidal_procs))
-        allocate(fpackB(n_radial,nt_loc,nsplitB*n_toroidal_procs))
         allocate(gpack(n_field,n_radial,n_jtheta,n_toroidal))
         allocate(jvec_c_nl(n_field,n_radial,n_jtheta,nv_loc,n_toroidal))
 #if defined(OMPGPU)
-!$omp target enter data map(alloc:fpackA,fpackB,gpack,fA_nl,fB_nl,g_nl,jvec_c_nl)
+!$omp target enter data map(alloc:fpackA,gpack,fA_nl,g_nl,jvec_c_nl)
 #elif defined(_OPENACC)
-!$acc enter data create(fpackA,fpackB,gpack,fA_nl,fB_nl,g_nl,jvec_c_nl)
+!$acc enter data create(fpackA,gpack,fA_nl,g_nl,jvec_c_nl)
 #endif
+        if (nsplitB > 0) then ! nsplitB can be zero at large MPI
+          allocate(fB_nl(n_radial,nt_loc,nsplitB,n_toroidal_procs))
+          allocate(fpackB(n_radial,nt_loc,nsplitB*n_toroidal_procs))
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:fpackB,fB_nl)
+#elif defined(_OPENACC)
+!$acc enter data create(fpackB,fB_nl)
+#endif
+        endif
      endif
 
      if (collision_model == 5) then
         allocate(cmat_simple(n_xi,n_xi,n_energy,n_species,n_theta,nt1:nt2))
      else
-        if (collision_precision_mode /= 0) then
+        if (collision_precision_mode == 1) then
            ! the lowest energy(s) has the most spread, so treat differently
            n_low_energy = 1
            do ie=2,n_energy
@@ -341,6 +348,8 @@ subroutine cgyro_init_manager
 
            write (msg, "(A,I1,A)") "Using fp32 collision precision except e<=",n_low_energy," or same e&s."
            call cgyro_info(msg)
+        else if (collision_precision_mode == 32) then
+           allocate(cmat_fp32(nv,nv,nc_loc,nt1:nt2))
         else
            allocate(cmat(nv,nv,nc_loc,nt1:nt2))
         endif
@@ -507,8 +516,9 @@ subroutine cgyro_init_manager
        merge(HIPFFT_C2R,HIPFFT_Z2D,kind(uxmany) == singlePrecision), &
        nsplitA)
 
-  hip_plan_c2r_manyB = c_null_ptr
-  istatus = hipfftPlanMany(&
+  if (nsplitB > 0) then ! no fft if nsplitB==0
+    hip_plan_c2r_manyB = c_null_ptr
+    istatus = hipfftPlanMany(&
        hip_plan_c2r_manyB, &
        irank, &
        ndim, &
@@ -520,6 +530,7 @@ subroutine cgyro_init_manager
        odist, &
        merge(HIPFFT_C2R,HIPFFT_Z2D,kind(uxmany) == singlePrecision), &
        nsplitB)
+  endif
 
   hip_plan_c2r_manyG = c_null_ptr
   istatus = hipfftPlanMany(&
@@ -548,7 +559,8 @@ subroutine cgyro_init_manager
        merge(CUFFT_C2R,CUFFT_Z2D,kind(uxmany) == singlePrecision), &
        nsplitA)
 
-  istatus = cufftPlanMany(&
+  if (nsplitB > 0) then ! no fft if nsplitB==0
+    istatus = cufftPlanMany(&
        cu_plan_c2r_manyB, &
        irank, &
        ndim, &
@@ -560,6 +572,7 @@ subroutine cgyro_init_manager
        odist, &
        merge(CUFFT_C2R,CUFFT_Z2D,kind(uxmany) == singlePrecision), &
        nsplitB)
+  endif
 
   istatus = cufftPlanMany(&
        cu_plan_c2r_manyG, &
@@ -596,8 +609,9 @@ subroutine cgyro_init_manager
        merge(HIPFFT_R2C,HIPFFT_D2Z,kind(uxmany) == singlePrecision), &
        nsplitA)
 
-  hip_plan_r2c_manyB = c_null_ptr
-  istatus = hipfftPlanMany(&
+  if (nsplitB > 0) then ! no fft if nsplitB==0
+    hip_plan_r2c_manyB = c_null_ptr
+    istatus = hipfftPlanMany(&
        hip_plan_r2c_manyB, &
        irank, &
        ndim, &
@@ -609,6 +623,7 @@ subroutine cgyro_init_manager
        odist, &
        merge(HIPFFT_R2C,HIPFFT_D2Z,kind(uxmany) == singlePrecision), &
        nsplitB)
+  endif
 #else
   istatus = cufftPlanMany(&
        cu_plan_r2c_manyA, &
@@ -623,7 +638,8 @@ subroutine cgyro_init_manager
        merge(CUFFT_R2C,CUFFT_D2Z,kind(uxmany) == singlePrecision), &
        nsplitA)
 
-  istatus = cufftPlanMany(&
+  if (nsplitB > 0) then ! no fft if nsplitB==0
+    istatus = cufftPlanMany(&
        cu_plan_r2c_manyB, &
        irank, &
        ndim, &
@@ -635,6 +651,7 @@ subroutine cgyro_init_manager
        odist, &
        merge(CUFFT_R2C,CUFFT_D2Z,kind(uxmany) == singlePrecision), &
        nsplitB)
+  endif
 #endif
 
 #endif ! CGYRO_GPU_FFT

@@ -1006,6 +1006,7 @@ class cgyrodata_plot(data.cgyrodata):
       nscale = xin['nscale']
       ymin   = xin['ymin']
       ymax   = xin['ymax']
+      mirror = xin['abs']
 
       if xin['fig'] is None:
          fig = plt.figure(MYDIR,figsize=(xin['lx'],xin['ly']))
@@ -1013,33 +1014,21 @@ class cgyrodata_plot(data.cgyrodata):
       self.getxflux()
       
       ns = self.n_species
-      nl = self.n_global+1
+      ng = self.n_global+1
       t  = self.t
-
-      ky  = self.ky
-      ave = np.zeros((self.n_n,ns))
 
       if moment == 'phi':
          moment = 'e'
-
-      # NOTE: lky_flux_* -> [ 2, nl , ns , n_n , nt ]
-      #                       0  1    2     3    4 
-
+         
       if moment == 'n':
          ntag = 'Density~flux'
          mtag = '\Gamma'
-         z = np.sum(self.lky_flux_n,axis=3)
-         ftag = 'xflux_n'
       elif moment == 'e':
          ntag = 'Energy~flux'
          mtag = 'Q'
-         z = np.sum(self.lky_flux_e,axis=3)
-         ftag = 'xflux_e'
       elif moment == 'v':
          ntag = 'Momentum~flux'
          mtag = '\Pi'
-         z = np.sum(self.lky_flux_v,axis=3)
-         ftag = 'xflux_v'
       else:
          print('ERROR: (plot_xflux) Invalid moment.')
          sys.exit()
@@ -1055,7 +1044,6 @@ class cgyrodata_plot(data.cgyrodata):
       else:
          mnorm = ''
 
-
       #============================================================
       # Otherwise plot
       ax = fig.add_subplot(111)
@@ -1065,51 +1053,53 @@ class cgyrodata_plot(data.cgyrodata):
 
       color = ['k','m','b','c','g','r']
 
-      imin,imax=time_index(t,w)
+      imin,imax = time_index(t,w)
       mpre,mwin = wintxt(imin,imax,t)
 
       ax.set_title(r'$\mathrm{'+ntag+'} \quad $'+mwin)
-    
-      a = -np.pi+2*np.pi*np.arange(0.0,1.0,0.001)
+
+      na = 128
+      a  = np.linspace(-np.pi,np.pi,na)
+      ah = np.linspace(0,-2*np.pi,na)
 
       for ispec in range(ns):
 
          u = specmap(self.mass[ispec],self.z[ispec])
 
-         # Flux curve
-         g = np.zeros(len(t))
-         g = self.lky_xr[ispec,0] 
-         for l in range(1,nl):
-            g = g+2*(np.cos(l*a)*self.lky_xr[ispec,l]-np.sin(l*a)*self.lky_xi[ispec,l])
-         ax.plot(a/(2*np.pi),g,color=color[ispec])
-
          #---------------------------------
-         # Flux partial average over [-e,e]
+         # Global flux versus x
+         g = np.zeros(na) ; g[:] = self.lky_xr[0,ispec]          
+         for l in range(1,ng):
+            g[:] = g[:]+2*(np.cos(l*a)*self.lky_xr[l,ispec]-np.sin(l*a)*self.lky_xi[l,ispec])
+         ax.plot(a/(2*np.pi),g,color=color[ispec])
+         g = np.zeros(na) ; g[:] = self.lky_xr[0,ispec]          
+         for l in range(1,ng):
+            g[:] = g[:]+2*(np.cos(l*ah)*self.lky_xr[l,ispec]-np.sin(l*ah)*self.lky_xi[l,ispec])
+         ax.plot(a/(2*np.pi),g,color=color[ispec],linestyle='--')
+         #---------------------------------
+   
+         #---------------------------------
+         # Flux partial average over "positive" [-e,e] interval
          g0 = self.lky_flux_ave[ispec,0]
          label = r'$'+mtag+mnorm+'_'+u+'/'+mtag+'_\mathrm{GB}: '+str(round(g0,3))+'$'
          ax.plot([-e,e],[g0,g0],'o-',color=color[ispec],alpha=0.2,linewidth=3,label=label)
          #---------------------------------
 
          #---------------------------------
-         # Flux partial average over "negative" interval
+         # Flux partial average over "negative" [-e,e] interval
          g1 = self.lky_flux_ave[ispec,1]
          ax.plot([0.5-e,0.5],[g1,g1],'o--',color=color[ispec],alpha=0.2,linewidth=3)
          ax.plot([-0.5,-0.5+e],[g1,g1],'o--',color=color[ispec],alpha=0.2,linewidth=3)
          #---------------------------------
-
-         #---------------------------------
-         # Flux spectral average
-         gs = self.lky_xr[ispec,0]+2*np.pi/4*self.lky_xr[ispec,1]
-         #---------------------------------
-         
+        
          #---------------------------------
          # Flux domain average
-         ga = self.lky_xr[ispec,0]
+         ga = self.lky_xr[0,ispec]
          ax.plot([-0.5,0.5],[ga,ga],color=color[ispec],alpha=0.5)
          #---------------------------------
 
-         print('INFO: (plot_xflux) Ave [inner/inner_spec, outer, domain] = '
-               '{:.2f}/{:.2f}, {:.2f}, {:.2f}'.format(g0,gs,g1,ga)) 
+         print('INFO: (plot_xflux) Ave [inner-e, outer-e, domain] = '
+               '{:.2f}, {:.2f}, {:.2f}'.format(g0,g1,ga)) 
 
          if ymax != 'auto':
             ax.set_ylim(top=float(ymax))
@@ -1227,7 +1217,7 @@ class cgyrodata_plot(data.cgyrodata):
 
       ax = fig.add_subplot(1,1,1)
 
-      mpre,mwin = self.wintxt(imin,imax,t,0,0,field)
+      mpre,mwin = wintxt(imin,imax,t,0,0,field)
 
       ax.set_title(r'$\mathrm{Average~fluctuation~intensity} \quad $'+mwin)
       ax.set_xlabel(self.kxstr)
@@ -1318,7 +1308,7 @@ class cgyrodata_plot(data.cgyrodata):
 
       ax = fig.add_subplot(1,1,1)
 
-      mpre,mwin = self.wintxt(imin,imax,t,0,0,field)
+      mpre,mwin = wintxt(imin,imax,t,0,0,field)
 
       ax.set_title(r'$\mathrm{Average~fluctuation~intensity} \quad $'+mwin)
       ax.set_xlabel(self.kxstr)
@@ -1403,7 +1393,7 @@ class cgyrodata_plot(data.cgyrodata):
       t = self.t
 
       imin,imax=time_index(self.t,w)
-      mpre,mwin = self.wintxt(imin,imax,t,0,0,field)
+      mpre,mwin = wintxt(imin,imax,t,0,0,field)
 
       ax = fig.add_subplot(1,1,1)
 

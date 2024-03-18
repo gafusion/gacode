@@ -11,8 +11,15 @@ fi
 # Note: Will always put 32 mpi ranks per node
 #
 
+if [ -n $MEMPERCPU ] 
+then
+  echo "Error: Azure GPU does not accept mem per cpu"
+elif [ -z $MEMPERNODE ]
+  MEMPERNODE=400G
+fi
+
 bfile=$SIMDIR/batch.src
 echo "#!/bin/bash " > $bfile
-echo "#SBATCH --time $WALLTIME -p hpc --ntasks-per-node=32 --mem=400G -n $nmpi" >> $bfile
+echo "#SBATCH --time $WALLTIME -p hpc --ntasks-per-node=32 --mem=$MEMPERNODE -n $nmpi" >> $bfile
 
 echo "$CODE -e $LOCDIR -n $nmpi -nomp $nomp -numa $numa -mpinuma $mpinuma -p $SIMROOT" >> $bfile

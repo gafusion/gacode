@@ -6,7 +6,16 @@ echo "#SBATCH -o $SIMDIR/batch.out" >> $bfile
 echo "#SBATCH -e $SIMDIR/batch.err" >> $bfile
 echo "#SBATCH -t $WALLTIME" >> $bfile
 echo "#SBATCH -n $cores_used" >> $bfile
-echo "#SBATCH --mem 45G" >> $bfile
+
+if [ -n $MEMPERNODE ] 
+then
+  echo "#SBATCH --mem $MEMNODE" >> $bfile
+elif [ -n $MEMPERCPU ]
+  echo "#SBATCH --mem-per-cpu $MEMPERCPU" >> $bfile
+else
+  echo "#SBATCH --mem-per-cpu 16GB" >> $bfile
+fi
+
 if [ "$QUEUE" = "null_queue" ]
 then
   echo "#SBATCH -p medium" >> $bfile

@@ -1,0 +1,61 @@
+#!/usr/bin/python
+import numpy as np
+from neo.data import NEOData
+
+
+def niceprint(s,g,q,err):
+
+    if len(g) == 2:
+        print(s+'  Gamma = {:+.3e} {:+.3e}   Gamma_GB = {:+.3e} {:+.3e}   [{:+.2e}]'.
+              format(g[0],g[1],g[0]/rho2,g[1]/rho2,err))
+    
+        print('         Q = {:+.3e} {:+.3e}       Q_GB = {:+.3e} {:+.3e}'.
+              format(q[0],q[1],q[0]/rho2,q[1]/rho2))
+    else:
+        print(s+'  Gamma = {:+.3e} {:+.3e} {:+.3e}   Gamma_GB = {:+.3e} {:+.3e} {:+.3e}   [{:+.2e}]'.
+              format(g[0],g[1],g[2],g[0]/rho2,g[1]/rho2,g[2]/rho2,err))
+    
+        print('         Q = {:+.3e} {:+.3e} {:+.3e}       Q_GB = {:+.3e} {:+.3e} {:+.3e}'.
+              format(q[0],q[1],q[2],q[0]/rho2,q[1]/rho2,q[2]/rho2))
+
+    return
+
+# Gather all the needed NEO output data 
+grid = np.loadtxt('out.neo.grid')
+eq = np.loadtxt('out.neo.equil')
+data = np.loadtxt('out.neo.theory')
+tr = np.loadtxt('out.neo.transport')
+gb = np.loadtxt('out.neo.transport_flux')
+sp = np.loadtxt('out.neo.species')
+
+# Number of species
+ns = int(grid[0])
+# (rho_sunit/a)^2
+rho2 = eq[3]**2
+
+# Charge Z
+z = np.zeros(ns)
+for j in range(ns):
+    z[j] = sp[2*j+1]
+
+# Hirshman-Sigmar theory
+q_hs = np.zeros(ns)
+g_hs = np.zeros(ns)
+for j in range(ns):
+    g_hs[j] = data[15+2*j]
+    q_hs[j] = data[15+2*j+1]
+err_hs = sum(z[:]*g_hs[:])/sum(abs(z[:]*g_hs[:]))
+
+# NEO exact GK
+q_dk = np.zeros(ns)
+g_dk = np.zeros(ns)
+for j in range(ns):
+    g_dk[j] = tr[5+8*j]
+    q_dk[j] = tr[5+8*j+1]
+err_dk = sum(z[:]*g_dk[:])/sum(abs(z[:]*g_dk[:]))
+
+# Print output
+niceprint('HS:',g_hs,q_hs,err_hs)
+print()
+niceprint('DK:',g_dk,q_dk,err_dk)
+

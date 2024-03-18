@@ -1,5 +1,4 @@
 include ${GACODE_ROOT}/platform/build/make.inc.${GACODE_PLATFORM}
-include ../Makefile.extra
 
 ifeq ($(OPT),debug)
    FFLAGS=${FDEBUG}

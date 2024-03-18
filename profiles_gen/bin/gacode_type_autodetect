@@ -26,6 +26,10 @@ if [ "$1" == "null" ] ; then
    echo "null"
    exit 0
 fi
+if [ "$1" == "manual" ] ; then
+   echo "manual"
+   exit 0
+fi
 if [ ! -f $1 ] ; then
    echo "NOT_FOUND"
    exit 1

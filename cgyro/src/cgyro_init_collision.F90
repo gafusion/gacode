@@ -741,7 +741,7 @@ subroutine cgyro_init_collision
 
 
      ! result in amat, transfer to the right cmat matrix
-     if (collision_precision_mode /= 0) then
+     if (collision_precision_mode == 1) then
         ! keep all cmat in fp32 precision
         cmat_fp32(:,:,ic_loc,itor) = amat(:,:)
         ! keep the remaining precision for select elements
@@ -791,6 +791,9 @@ subroutine cgyro_init_collision
            ! use 19 as absolute counter for normalization
            cmap_fp32_error_abs_cnt_loc(19) = cmap_fp32_error_abs_cnt_loc(19) + 1
         enddo
+     else if (collision_precision_mode == 32) then
+        ! keep all cmat in fp32 precision
+        cmat_fp32(:,:,ic_loc,itor) = amat(:,:)
      else
         ! keep all cmat in full precision
         cmat(:,:,ic_loc,itor) = amat(:,:)
@@ -807,7 +810,7 @@ subroutine cgyro_init_collision
   end if
 
 
-  if (collision_precision_mode /= 0) then
+  if (collision_precision_mode == 1) then
 #if defined(OMPGPU)
      ! no async for OMPGPU for now
 !$omp target enter data map(to:cmat_fp32,cmat_stripes,cmat_e1) if (gpu_bigmem_flag == 1)
@@ -880,6 +883,12 @@ subroutine cgyro_init_collision
      endif
 #if (!defined(OMPGPU)) && defined(_OPENACC)
 !$acc wait
+#endif
+  else if (collision_precision_mode == 32) then
+#if defined(OMPGPU)
+!$omp target enter data map(to:cmat_fp32) if (gpu_bigmem_flag == 1)
+#elif defined(_OPENACC)
+!$acc enter data copyin(cmat_fp32) if (gpu_bigmem_flag == 1)
 #endif
   else
 #if defined(OMPGPU)

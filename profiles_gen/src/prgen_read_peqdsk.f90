@@ -20,7 +20,6 @@ subroutine prgen_read_peqdsk
   !----------------------------------------------------
   ! Read the peqdsk file
   !
-
   open(unit=1,file='pfile.ne',status='old')
   read(1,*) i
   nx = i

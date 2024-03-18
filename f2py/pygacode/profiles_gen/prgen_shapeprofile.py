@@ -8,18 +8,14 @@ from .prgen_geqdsk import *
 from .prgen_contour import *
 from .prgen_shape import *
 
-if len(sys.argv) > 1:
-   gfile   = sys.argv[1]
-   mag     = sys.argv[2]
-   narc    = int(sys.argv[3])
-   npsi    = int(sys.argv[4])
-   nharm   = int(sys.argv[5])
-   nfourier = int(sys.argv[6])
-   plotpng = bool(int(sys.argv[7]))
-   psinorm = float(sys.argv[8])
-else:
-   print('Usage: python prgen_shapeprofile.py <gfile> <mag> <narc> <npsi> <nfourier>')
-   sys.exit()
+gfile = sys.argv[1]
+mag   = sys.argv[2]
+narc  = int(sys.argv[3])
+npsi  = int(sys.argv[4])
+nharm = int(sys.argv[5])
+nfourier = int(sys.argv[6])
+plotpng  = bool(int(sys.argv[7]))
+psinorm  = float(sys.argv[8])
 
 efit = prgen_geqdsk(gfile)
 psi0 = efit['SIMAG']

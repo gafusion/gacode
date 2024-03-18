@@ -180,6 +180,7 @@ module expro
   integer :: expro_ctrl_quasineutral_flag 
   integer :: expro_ctrl_numeq_flag
   integer :: expro_error=0
+  integer :: expro_jerr=0
 
   ! Header information
   character(len=70) :: expro_head_original =  '#  *original : null'

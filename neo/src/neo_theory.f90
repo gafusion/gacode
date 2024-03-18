@@ -142,7 +142,7 @@ contains
     call compute_HS(ir,pflux_multi_HS, eflux_multi_HS)
     call compute_Koh(ir,jpar_K)
     call compute_Sauter_mod(ir,jpar_Smod,jtor_Smod)
-
+        
     if(silent_flag == 0 .and. i_proc == 0) then
        open(io,file=trim(path)//runfile,status='old',position='append')
        write(io,'(e16.8)',advance='no') r(ir)

@@ -20,6 +20,7 @@ subroutine prgen_allocate(ftype)
   allocate(ti_kev(nx))
   allocate(ne_e19m3(nx))
   allocate(ni_e19m3(nx))
+  allocate(nz_e19m3(nx))
   allocate(zeff(nx))
 
   allocate(jtot(nx))

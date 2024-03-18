@@ -17,7 +17,7 @@
 
 # Compilers and flags
 
-FC  = mpif90-mpich-gcc9 -I$(GACODE_ROOT)/modules -J$(GACODE_ROOT)/modules -fPIC -framework Accelerate
+FC  = mpif90-mpich-gcc11 -I$(GACODE_ROOT)/modules -J$(GACODE_ROOT)/modules -fPIC -framework Accelerate
 F77 = mpif77 -std=legacy
 CC  = ${FC}
 

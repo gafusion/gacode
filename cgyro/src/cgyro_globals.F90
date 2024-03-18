@@ -45,6 +45,7 @@ module cgyro_globals
   real    :: max_time
   integer :: print_step
   integer :: restart_step
+  integer :: restart_preservation_mode
   real    :: freq_tol
   real    :: up_radial
   real    :: up_theta
@@ -272,8 +273,8 @@ module cgyro_globals
 
   logical :: printout=.true.
 
-  integer, parameter :: mpiio_small_stripe_factor = 4
-  integer, parameter :: mpiio_stripe_factor = 24
+  integer :: mpiio_small_stripe_factor   ! optional striping for data files
+  integer :: mpiio_stripe_factor         ! optional striping for restart file
   character(len=2) :: mpiio_small_stripe_str
   character(len=3) :: mpiio_stripe_str
   !
@@ -457,10 +458,10 @@ module cgyro_globals
   !
   ! Collision operator
   integer :: n_low_energy
-  real, dimension(:,:,:,:), allocatable :: cmat ! only used if collision_precision_mode=0
-  real(KIND=REAL32), dimension(:,:,:,:), allocatable :: cmat_fp32 ! only used if collision_precision_mod/=0
-  real(KIND=REAL32), dimension(:,:,:,:,:,:), allocatable :: cmat_stripes ! only used if collision_precision_mod/=0
-  real(KIND=REAL32), dimension(:,:,:,:,:,:), allocatable :: cmat_e1 ! only used if collision_precision_mod/=0
+  real, dimension(:,:,:,:), allocatable :: cmat ! only used if collision_precision_mode=0 & 64
+  real(KIND=REAL32), dimension(:,:,:,:), allocatable :: cmat_fp32 ! only used if collision_precision_mode=1 & 32
+  real(KIND=REAL32), dimension(:,:,:,:,:,:), allocatable :: cmat_stripes ! only used if collision_precision_mode=1
+  real(KIND=REAL32), dimension(:,:,:,:,:,:), allocatable :: cmat_e1 ! only used if collision_precision_mode=1
   real, dimension(:,:,:,:,:,:), allocatable :: cmat_simple ! only used in collision_model=5
   ! 
   ! Equilibrium/geometry arrays

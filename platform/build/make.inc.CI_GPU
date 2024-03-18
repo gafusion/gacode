@@ -1,0 +1,33 @@
+IDENTITY="Generic NVHPC GPU"
+CORES_PER_NODE=16
+NUMAS_PER_NODE=1
+
+# Fortran 90/95 compiler
+FC = mpif90 -module ${GACODE_ROOT}/modules -Mpreprocess -DUSE_INLINE -Mdefaultunit
+
+# Fortran 77 compiler
+F77 = ${FC}
+
+# Compiler options/flags
+ifneq ($(GACODE_OMPGPU),1)
+FACC   =-acc -Minfo=accel -cudalib=cufft
+else
+FACC    =-mp=gpu -DOMPGPU -Minfo=mp,accel -cudalib=cufft
+endif
+FOMP   =-mp -Mstack_arrays 
+FMATH  =-r8 
+FOPT   =-fast
+FDEBUG =-g -Kieee -Ktrap=fp,divz -Mbounds -Mchkptr -Mchkstk -traceback -Minform=inform
+F2PY   = f2py --fcompiler=pg
+
+
+# System math libraries
+LMATH=-llapack -lblas
+
+# NetCDF
+NETCDF=-L${NETCDF_DIR}/lib -lnetcdff -lnetcdf
+NETCDF_INC = ${NETCDF_DIR}/include
+
+# Archive 
+ARCH = ar cr
+

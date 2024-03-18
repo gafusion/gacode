@@ -62,8 +62,10 @@ program cgyro
   call timer_lib_out('input')
 
   call cgyro_init_kernel
-  call cgyro_kernel
-  call cgyro_final_kernel
+  if (error_status == 0) then
+        call cgyro_kernel
+        call cgyro_final_kernel
+  endif
   call MPI_FINALIZE(i_err)
 
 end program cgyro

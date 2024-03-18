@@ -99,12 +99,31 @@ subroutine cgyro_write_restart_one
      return
   endif
 
+  if ((i_proc == 0) .and. (restart_preservation_mode<4)) then 
+    ! Anything but restart_preservation_mode == 4
+    ! User does not want high guarntees for the old file
+    ! So, remove .old file, if it exists
+    call UNLINK(trim(path)//runfile_restart//".old")
+    ! NOTE: We will not check if it succeeded... not important, may not even exist (yet)
+  endif
+
+  if ((i_proc == 0) .and. (restart_preservation_mode<2)) then 
+    ! restart_preservation_mode == 1
+    ! User wants to save disk space
+    ! So, remove existing restart file, if it exists
+    call UNLINK(trim(path)//runfile_restart)
+    ! NOTE: We will not check if it succeeded... not important, may not even exist (yet)
+  endif
+
   ! TODO Error handling
   call MPI_INFO_CREATE(finfo,i_err)
 
-  ! write to a temp file name first, so we don't end up with partially written files
-  call MPI_INFO_SET(finfo,"striping_factor",mpiio_stripe_str,i_err)
+  if (mpiio_stripe_factor > 0) then
+    ! user asked us to explicitly set the MPI IO striping factor
+    call MPI_INFO_SET(finfo,"striping_factor",mpiio_stripe_str,i_err)
+  endif
 
+  ! write to a temp file name first, so we don't end up with partially written files
   call MPI_FILE_OPEN(CGYRO_COMM_WORLD,&
           trim(path)//runfile_restart//".part",&
           filemode,&
@@ -167,10 +186,14 @@ subroutine cgyro_write_restart_one
 
   ! now that we know things worked well, move the file in its final location
   if (i_proc == 0) then 
-    ! but first try to save any existing file
-    i_err = RENAME(trim(path)//runfile_restart, trim(path)//runfile_restart//".old")
-    ! NOTE: We will not check if it succeeded... not important, may not even exist (yet)
+    if (restart_preservation_mode>2) then 
+       ! restart_preservation_mode == 3 or 4
+       ! First try to save any existing restart file as old
+       i_err = RENAME(trim(path)//runfile_restart, trim(path)//runfile_restart//".old")
+       ! NOTE: We will not check if it succeeded... not important, may not even exist (yet)
+    endif
 
+    ! Rename part into the final expected file name
     i_err = RENAME(trim(path)//runfile_restart//".part", trim(path)//runfile_restart)
     if (i_err /= 0) then
        call cgyro_error('Final rename in cgyro_write_restart failed')

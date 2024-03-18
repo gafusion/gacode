@@ -197,17 +197,21 @@
          sum_W_i = sum_W_i + QL_flux_spectrum_out(2,is,1,:,k)
         end do
         ! check for singularities in weight ratio near kmax
-        i = 1
-        do while (ky_spectrum(i) < kmax)
-	     i = i + 1
-	    end do
-	    if(sum_W_i(i).eq.0.0 .OR. sum_W_i(i-1).eq.0.0)then
-	     x = 0.5
-	    else
-	     abs_W_ratio = abs(QL_flux_spectrum_out(2,1,1,:,k) / sum_W_i)
-         x = linear_interpolation(ky_spectrum, abs_W_ratio, kmax)
-	    end if
-	    xs(k) = x
+        if(kmax<=ky_spectrum(1))then
+         x = 0.5
+        else
+         i = 1
+         do while (ky_spectrum(i) < kmax)
+          i = i + 1
+         end do
+         if(sum_W_i(i).eq.0.0 .OR. sum_W_i(i-1).eq.0.0)then
+          x = 0.5
+         else
+          abs_W_ratio = abs(QL_flux_spectrum_out(2,1,1,:,k) / sum_W_i)
+          x = linear_interpolation(ky_spectrum, abs_W_ratio, kmax)
+         end if
+        end if
+        xs(k) = x
         Y = mode_transition_function(x, Y_ITG, Y_TEM)  
         Ys(k) = Y
        enddo
@@ -365,38 +369,38 @@
       end do
       do l=k-1,k
        gamma0 = eigenvalue_spectrum_out(1,l,1)
-	   ky0 = ky_spectrum(l)
-	   kx = spectral_shift_out(l)
-	   if(ky0.lt. kycut)then
-	    kx_width = kycut/grad_r0_out
-	    sat_geo_factor = SAT_geo0_out*d1*SAT_geo1_out
-	   else
-	    kx_width = kycut/grad_r0_out + b1*(ky0 - kycut)*Gq
-	    sat_geo_factor = SAT_geo0_out*(d1*SAT_geo1_out*kycut +  &
-					 (ky0 - kycut)*d2*SAT_geo2_out)/ky0
-	   endif
-	   kx = kx*ky0/kx_width
-	   gammaeff = 0.0
-	   if(gamma0.gt.small)gammaeff = gamma_fp(l)
-	   ! potentials without multimode and ExB effects, added later
-	   dummy_interp(l) = scal*measure*cnorm*(gammaeff/(kx_width*ky0))**2
-	   if(units_in.ne.'GYRO')dummy_interp(l) = sat_geo_factor*dummy_interp(l)
-	  end do
-	  YT = linear_interpolation(ky_spectrum, dummy_interp, kT)
-	  do l=1,nmodes_in
-	   YTs(l) = YT
-	  end do
-	 else
-	  if(aoverb*(kP**2)+kP+coverb-((kP-kT)*(2*aoverb*kP+1))==0)then
-	   YTs=0.0
-	  else
-	   do l=1,nmodes_in
-	    YTs(l) = Ys(l)*(((aoverb*(k0**2)+k0+coverb)/(aoverb*(kP**2)+ &
-	                  kP+coverb-((kP-kT)*(2*aoverb*kP+1))))**abs(c_1))
-	   end do
-	  end if
-	 end if
-	end if
+       ky0 = ky_spectrum(l)
+       kx = spectral_shift_out(l)
+       if(ky0.lt. kycut)then
+        kx_width = kycut/grad_r0_out
+        sat_geo_factor = SAT_geo0_out*d1*SAT_geo1_out
+       else
+        kx_width = kycut/grad_r0_out + b1*(ky0 - kycut)*Gq
+        sat_geo_factor = SAT_geo0_out*(d1*SAT_geo1_out*kycut +  &
+                     (ky0 - kycut)*d2*SAT_geo2_out)/ky0
+       endif
+       kx = kx*ky0/kx_width
+       gammaeff = 0.0
+       if(gamma0.gt.small)gammaeff = gamma_fp(l)
+       ! potentials without multimode and ExB effects, added later
+       dummy_interp(l) = scal*measure*cnorm*(gammaeff/(kx_width*ky0))**2
+       if(units_in.ne.'GYRO')dummy_interp(l) = sat_geo_factor*dummy_interp(l)
+      end do
+      YT = linear_interpolation(ky_spectrum, dummy_interp, kT)
+      do l=1,nmodes_in
+       YTs(l) = YT
+      end do
+     else
+      if(aoverb*(kP**2)+kP+coverb-((kP-kT)*(2*aoverb*kP+1))==0)then
+       YTs=0.0
+      else
+       do l=1,nmodes_in
+        YTs(l) = Ys(l)*(((aoverb*(k0**2)+k0+coverb)/(aoverb*(kP**2)+ &
+                      kP+coverb-((kP-kT)*(2*aoverb*kP+1))))**abs(c_1))
+       end do
+      end if
+     end if
+    end if
   
     
     
@@ -434,52 +438,53 @@
          if(gamma_fp(j)==0)then
           Fky=0.0
          else
-		  Fky =  ((gamma_kymix(j) / gamma_fp(j))**2) / ((1.0 + ay*(kx**2))**2)
-		 end if
+          Fky = ((gamma_kymix(j) / gamma_fp(j))**2) / ((1.0 + ay*(kx**2))**2)
+         end if
          do i=1,nmodes_in
           field_spectrum_out(2,j,i) = 0.0  
           if(gamma0.gt.small) then
-           if (ky0 <= kP) then ! initial quadratic
-			sig_ratio = (aoverb * (ky0 ** 2) + ky0 + coverb) / (aoverb * (k0 ** 2) + k0 + coverb)	
-			field_spectrum_out(2,j,i) = Ys(i) * (sig_ratio ** c_1) * Fky *(eigenvalue_spectrum_out(1,j,i)/gamma0)**(2 * expsub)
-		   else if (ky0 <= kT) then ! connecting quadratic
-		    if(YTs(i)==0.0 .OR. kP==kT)then
-		     field_spectrum_out(2,j,i) = 0.0
-		    else
-			 doversig0 = ((Ys(i) / YTs(i))**(1.0/abs(c_1)))-((aoverb*(kP**2)+kP+coverb-((kP-kT)*(2*aoverb*kP+1)))/(aoverb*(k0**2)+k0+coverb))
-			 doversig0 = doversig0 * (1.0/((kP-kT)**2))
-			 eoversig0 = - 2 * doversig0 * kP + ((2 * aoverb * kP + 1)/(aoverb * (k0 ** 2) + k0 + coverb))
-			 foversig0 = ((Ys(i) / YTs(i))**(1.0/abs(c_1))) - eoversig0 * kT - doversig0 * (kT ** 2)
-			 sig_ratio = doversig0 * (ky0 ** 2) + eoversig0 * ky0 + foversig0
-			 field_spectrum_out(2,j,i) = Ys(i) * (sig_ratio ** c_1) * Fky *(eigenvalue_spectrum_out(1,j,i)/gamma0)**(2 * expsub)
-			end if
-		   else ! SAT2 for electron scale
-			gammaeff = gamma_kymix(j)*(eigenvalue_spectrum_out(1,j,i)/gamma0)**expsub
-			if(ky0.gt.kyetg)gammaeff = gammaeff*SQRT(ky0/kyetg)
-			field_spectrum_out(2,j,i) = scal*measure*cnorm*((gammaeff/(kx_width*ky0))/(1.0+ay*kx**2))**2
-			if(units_in.ne.'GYRO')field_spectrum_out(2,j,i) = sat_geo_factor*field_spectrum_out(2,j,i)
-		   end if
+           if (ky0 <= kT) then
+            if(YTs(i)==0.0 .OR. kP>=kT)then
+             field_spectrum_out(2,j,i) = 0.0
+            else if (ky0 <= kP) then ! initial quadratic
+             sig_ratio = (aoverb * (ky0 ** 2) + ky0 + coverb) / (aoverb * (k0 ** 2) + k0 + coverb)
+             field_spectrum_out(2,j,i) = Ys(i) * (sig_ratio ** c_1) * Fky *(eigenvalue_spectrum_out(1,j,i)/gamma0)**(2 * expsub)
+            else  ! connecting quadratic
+             doversig0 = ((Ys(i) / YTs(i))**(1.0/abs(c_1)))- & 
+                         ((aoverb*(kP**2)+kP+coverb-((kP-kT)*(2*aoverb*kP+1)))/(aoverb*(k0**2)+k0+coverb))
+             doversig0 = doversig0 * (1.0/((kP-kT)**2))
+             eoversig0 = - 2 * doversig0 * kP + ((2 * aoverb * kP + 1)/(aoverb * (k0 ** 2) + k0 + coverb))
+             foversig0 = ((Ys(i) / YTs(i))**(1.0/abs(c_1))) - eoversig0 * kT - doversig0 * (kT ** 2)
+             sig_ratio = doversig0 * (ky0 ** 2) + eoversig0 * ky0 + foversig0
+             field_spectrum_out(2,j,i) = Ys(i) * (sig_ratio ** c_1) * Fky *(eigenvalue_spectrum_out(1,j,i)/gamma0)**(2 * expsub)
+            end if
+           else ! SAT2 for electron scale
+            gammaeff = gamma_kymix(j)*(eigenvalue_spectrum_out(1,j,i)/gamma0)**expsub
+            if(ky0.gt.kyetg)gammaeff = gammaeff*SQRT(ky0/kyetg)
+            field_spectrum_out(2,j,i) = scal*measure*cnorm*((gammaeff/(kx_width*ky0))/(1.0+ay*kx**2))**2
+            if(units_in.ne.'GYRO')field_spectrum_out(2,j,i) = sat_geo_factor*field_spectrum_out(2,j,i)
+           end if
           end if
          enddo 
         endif
        enddo
        
-	  !SAT3 QLA here
-	  QLA_P=0.0
-	  QLA_E=0.0
-	  if(sat_rule_in.eq.3)then
-	   do k=1,nmodes_in
-	    ! factor of 2 included for real symmetry
-	    QLA_P(k) = 2 * mode_transition_function(xs(k), 1.1, 0.6)
-	    QLA_E(k) = 2 * mode_transition_function(xs(k), 0.75, 0.6)
-	   enddo
-	   QLA_O = 2 * 0.8
-	  else
-	   QLA_P = 1.0
-	   QLA_E = 1.0
-	   QLA_O = 1.0 
-	  endif
-	   
+      !SAT3 QLA here
+      QLA_P=0.0
+      QLA_E=0.0
+      if(sat_rule_in.eq.3)then
+       do k=1,nmodes_in
+        ! factor of 2 included for real symmetry
+        QLA_P(k) = 2 * mode_transition_function(xs(k), 1.1, 0.6)
+        QLA_E(k) = 2 * mode_transition_function(xs(k), 0.75, 0.6)
+       enddo
+       QLA_O = 2 * 0.8
+      else
+       QLA_P = 1.0
+       QLA_E = 1.0
+       QLA_O = 1.0 
+      endif
+       
      ! recompute the intensity and flux spectra
       do j=1,nky
          do i=1,nmodes_in
@@ -504,40 +509,40 @@
       enddo   
       ! SAT3 functions
       contains 
-		! mode transition function
-		real function mode_transition_function (x, y1, y2)
-		implicit none
-		
-			real :: x, y1, y2, y
+        ! mode transition function
+        real function mode_transition_function (x, y1, y2)
+        implicit none
 
-			if (x < x_ITG) then
-				y = y1
-			else if (x > x_TEM) then
-				y = y2
-			else
-				y = y1 * ((x_TEM - x) / (x_TEM - x_ITG)) + y2 * ((x - x_ITG) / (x_TEM - x_ITG))
-			end if
+            real :: x, y1, y2, y
 
-			mode_transition_function = y
-			
-		end function mode_transition_function
-		
-		! linear interpolation
-		real function linear_interpolation (x, y, x0)
-		implicit none
-		
-			real, dimension(NKY) :: x, y
-			real :: x0, y0
-			
-			i = 1
-			do while (x(i) < x0)
-				i = i + 1
-			end do
-			y0 = ((y(i) - y(i-1)) * x0 + (x(i) * y(i - 1) - x(i-1) * y(i))) / (x(i) - x(i-1)) ! y = m x0 + c
+            if (x < x_ITG) then
+                y = y1
+            else if (x > x_TEM) then
+                y = y2
+            else
+                y = y1 * ((x_TEM - x) / (x_TEM - x_ITG)) + y2 * ((x - x_ITG) / (x_TEM - x_ITG))
+            end if
 
-			linear_interpolation = y0
-		end function linear_interpolation 
-      
+            mode_transition_function = y
+
+        end function mode_transition_function
+
+        ! linear interpolation
+        real function linear_interpolation (x, y, x0)
+        implicit none
+
+            real, dimension(NKY) :: x, y
+            real :: x0, y0
+
+            i = 1
+            do while (x(i) < x0)
+                i = i + 1
+            end do
+            y0 = ((y(i) - y(i-1)) * x0 + (x(i) * y(i - 1) - x(i-1) * y(i))) / (x(i) - x(i-1)) ! y = m x0 + c
+
+            linear_interpolation = y0
+        end function linear_interpolation 
+
       END SUBROUTINE get_multiscale_spectrum
 !
 !-------------------------------------------------------------------------------

@@ -254,7 +254,7 @@ N_NULL=128
 IPCCW=0
 BTCCW=0
 
-# OMFIT mapper variables
+# Mapper variables
 EFIT=0
 MAG=auto
 NPSI=256
@@ -448,14 +448,14 @@ if [ "$itype" == "GACODE" ] && [ $INFO_FLAG == 1 ] ; then
     exit 0
 fi
 #=============================================================
-# Managing input file (also catches UFILE mode)
+# Managing input file 
 
 if [ "$itype" == "null" ] ; then
 
    # gfile-only mode
    echo "INFO: (profiles_gen) Parsing GFILE only."
 
-else
+else 
 
    echo "INFO: (profiles_gen) $FILE is autodetected as $itype."
 
@@ -687,7 +687,13 @@ fi
 $EXEC
 
 if [ -f "success" ] ; then
-   echo "INFO: (profiles_gen) Done."
+   if [ `cat success` -eq "1" ] ; then
+      echo "INFO: (profiles_gen) Done."
+   else
+      m=0.001
+      r=$(echo "($PSINORM-$m)"| bc -l)
+      echo "ERROR: (profiles_gen) Rerun with -psinorm $r"
+   fi
 else
    echo "ERROR: (profiles_gen) *Failed*. Try running with -V option"
 fi

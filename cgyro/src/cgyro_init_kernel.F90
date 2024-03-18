@@ -46,7 +46,10 @@ subroutine cgyro_init_kernel
 
   ! 1. MPI setup
   call cgyro_mpi_grid
-  if (error_status > 0) call cgyro_final_kernel
+  if (error_status > 0) then
+          call cgyro_final_kernel
+          return
+  endif
   
   call system_clock(aftermpi_time,kernel_count_rate,kernel_count_max)
   if (aftermpi_time > kernel_start_time) then
@@ -61,7 +64,10 @@ subroutine cgyro_init_kernel
 
   ! 3. Parameter consistency checks
   call cgyro_check
-  if (error_status > 0) call cgyro_final_kernel
+  if (error_status > 0) then
+          call cgyro_final_kernel
+          return
+  endif
 
   ! 4. Array initialization and construction
   !    NOTE: On exit, field_old = field 

@@ -57,6 +57,7 @@ module prgen_globals
   real, dimension(:), allocatable :: ti_kev
   real, dimension(:), allocatable :: ne_e19m3
   real, dimension(:), allocatable :: ni_e19m3
+  real, dimension(:), allocatable :: nz_e19m3
   real, dimension(:), allocatable :: zeff
 
   real, dimension(:), allocatable :: jtot

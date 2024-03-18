@@ -28,7 +28,7 @@ def prgen_geqdsk(filename):
         slf['NW'] = int(EQDSK[0][52:56])
         slf['NH'] = int(EQDSK[0][56:60])
         tmp = []
-        printd('IDUM,NW,NH',IDUM,slf['NW'],slf['NH'],topic='OMFITgeqdsk.load')
+        #printd('IDUM,NW,NH',IDUM,slf['NW'],slf['NH'],topic='OMFITgeqdsk.load')
 
     if len(tmp) > 3:
         slf['EXTRA_HEADER'] = EQDSK[0][49+len(re.findall('%d +%d +%d ' % (IDUM,slf['NW'],slf['NH']),EQDSK[0][49:])[0])+2:]

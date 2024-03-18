@@ -9,5 +9,5 @@ numa=${5}
 mpinuma=${6}
 
 cd $simdir
-mpiexec -env OMP_NUM_THREADS $nomp -n $nmpi $exec
+mpiexec -env OMP_NUM_THREADS $nomp -n $nmpi $exec 
 

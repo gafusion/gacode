@@ -6,7 +6,14 @@ export MPICH_GPU_SUPPORT_ENABLED=1
 MEMS=(1 5 3 7)
 DEVICE_NUM=(0 1 2 3)
 CPUS=(48-63 16-31 112-127 80-95)
-NICS=(mlx5_0:1 mlx5_0:1 mlx5_1:1 mlx5_1:1)
+
+NUMBER=$(echo "`uname -n`" | tr -dc '0-9')
+
+if [ $NUMBER -gt 80 ]; then
+    NICS=(mlx5_0:1 mlx5_0:1 mlx5_3:1 mlx5_3:1)
+else
+    NICS=(mlx5_0:1 mlx5_0:1 mlx5_1:1 mlx5_1:1)
+fi
 
 export ACC_DEVICE_NUM=${DEVICE_NUM[${SLURM_LOCALID}]}
 export UCX_NET_DEVICES=${NICS[${SLURM_LOCALID}]}

@@ -201,10 +201,7 @@ class cgyrodata:
 
    def xfluxave(self,w,moment,e=0.2,nscale=0):
 
-      """
-      Do complicated spatial averages for xflux
-      RESULT: self.lky_flux_ave
-      """
+      # Averaging functionfor global fluxes
 
       print('INFO: (xfluxave) Computing partial-domain averages')
 
@@ -221,41 +218,39 @@ class cgyrodata:
       else:
          sc[:] = 1.0
 
+      # Sum moments over fields (3) and toroidal modes (4)
+      # NOTE: lky_flux_n[2,ng,ns,nfield,n_n,nt]
       if moment == 'n':
          z = np.sum(self.lky_flux_n,axis=(3,4))
       elif moment == 'e':
          z = np.sum(self.lky_flux_e,axis=(3,4))
       elif moment == 'v':
          z = np.sum(self.lky_flux_v,axis=(3,4))
-      else:
-         raise ValueError('(xfluxave) Invalid moment.')
-
+         
       #--------------------------------------------
-      # Useful arrays required outside this routine
-      self.lky_xr = np.zeros((ns,ng))
-      self.lky_xi = np.zeros((ns,ng))
-      self.lky_flux_ave = np.zeros((ns,2))
+      # Arrays required outside this routine
+      self.lky_xr = np.zeros([ng,ns])
+      self.lky_xi = np.zeros([ng,ns])
+      self.lky_flux_ave = np.zeros([ns,2])
       #--------------------------------------------
 
-      imin,imax=time_index(self.t,w)
-      
+      imin,imax = time_index(self.t,w)
+
+      # Time averages of real and imaginary parts
+      self.lky_xr[:,:] = time_average(z[0,:,:,:],self.t,imin,imax)
+      self.lky_xi[:,:] = time_average(z[1,:,:,:],self.t,imin,imax)
+
+      l = np.arange(1,ng)
+      u = (2*np.pi*e)*l
       for ispec in range(ns):
-         for l in range(ng):
-            self.lky_xr[ispec,l] = time_average(z[0,l,ispec,:],self.t,imin,imax)*sc[ispec]
-            self.lky_xi[ispec,l] = time_average(z[1,l,ispec,:],self.t,imin,imax)*sc[ispec]
-
          # Flux partial average over [-e,e]
-         g0 = self.lky_xr[ispec,0]
-         g1 = g0
-         for l in range(1,ng):
-            u = 2*np.pi*l*e
-            g0 = g0+2*np.sin(u)*self.lky_xr[ispec,l]/u
-            g1 = g1+2*np.sin(u)*self.lky_xr[ispec,l]/u*(-1)**l
+         g0 = self.lky_xr[0,ispec]+2*np.sum(np.sin(u)*self.lky_xr[l,ispec]/u)
+         g1 = self.lky_xr[0,ispec]+2*np.sum(np.sin(u)*self.lky_xr[l,ispec]/u*(-1)**l)
 
          # Average over true (positive) interval
-         self.lky_flux_ave[ispec,0] = g0
+         self.lky_flux_ave[ispec,0] = g0*sc[ispec]
          # Average over negative interval
-         self.lky_flux_ave[ispec,1] = g1
+         self.lky_flux_ave[ispec,1] = g1*sc[ispec]
 
    def getbigfield(self):
 

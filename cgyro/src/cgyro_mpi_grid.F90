@@ -16,11 +16,12 @@ subroutine cgyro_mpi_grid
 
   implicit none
 
-  integer :: ie,ix,is,ir,it
-  integer :: iexch,itm,j
+  integer :: ie,ix,is,ir,it,itm
   integer :: iltheta_min,iltheta_max
   integer :: d
   integer :: splitkey
+  integer :: nproc_3
+  character(len=192) :: msg
 
   integer, external :: omp_get_max_threads, omp_get_thread_num
 
@@ -31,7 +32,8 @@ subroutine cgyro_mpi_grid
   call gcd(nv,nc,d)
 
   if (modulo(n_toroidal,nt_loc) /= 0) then
-     call cgyro_error('N_TOROIDAL must be a multiple of N_TOROIDAL_PER_PROCESS.')
+     write (msg, "(A,I3,A,I2,A)") "N_TOROIDAL (",n_toroidal,") not a multiple of N_TOROIDAL_PER_PROCESS (",nt_loc,")"
+     call cgyro_error(msg)
      return
   endif
 
@@ -50,17 +52,24 @@ subroutine cgyro_mpi_grid
      write(io,'(a,i5)') ' n_toroidal: ',n_toroidal
      write(io,'(a,i5)') '     nt_loc: ',nt_loc
      write(io,*)
-     write(io,*) '          [coll]     [str]      [NL]      [NL]      [NL]'
-     write(io,*) ' n_MPI    nc_loc    nv_loc   n_split  atoa[MB] atoa proc'
-     write(io,*) '------    ------    ------   -------  -------- ---------'
+     write(io,*) '          [coll]     [str]      [NL]      [NL]      [NL]    [coll]     [str]'
+     write(io,*) ' n_MPI    nc_loc    nv_loc   n_split  atoa[MB] atoa proc atoa proc ared proc'
+     write(io,*) '------    ------    ------   -------  -------- --------- --------- ---------'
      do it=1,d*n_toroidal_procs
         if (mod(d*n_toroidal_procs,it) == 0 .and. mod(it,n_toroidal_procs) == 0) then
            n_proc_1 = it/n_toroidal_procs
-           nc_loc = nc/n_proc_1           
-           nv_loc = nv/n_proc_1           
-           nsplit = 1+(nv_loc*n_theta-1)/n_toroidal_procs
-           write(io,'(t2,4(i6,4x),f5.2,4x,i6)') &
-                it,nc_loc,nv_loc,nsplit,16.0*n_radial*nt_loc*nsplit/1e6,n_toroidal_procs
+           ! further filter out incompatible multiples for velocity==2
+           if ((velocity_order==1) .or. &
+               (n_proc_1 == 1) .or. ( modulo(n_proc_1, n_species) == 0 ) ) then
+                nc_loc = nc/n_proc_1           
+                nv_loc = nv/n_proc_1           
+                nsplit = 1+(nv_loc*n_theta-1)/n_toroidal_procs
+                nproc_3 = n_proc_1
+                if ((n_proc_1 /= 1) .and. (velocity_order==2)) nproc_3 = n_proc_1/3
+                write(io,'(t2,4(i6,4x),f6.2,4x,i6,4x,i6,4x,i6)') &
+                     it,nc_loc,nv_loc,nsplit,16.0*n_radial*nt_loc*nsplit/1e6,&
+                     n_toroidal_procs,n_proc_1,nproc_3
+           endif
         endif
      enddo
      close(io)
@@ -172,7 +181,10 @@ subroutine cgyro_mpi_grid
   ! Check that n_proc is a multiple of n_toroidal_procs
   !
   if (modulo(n_proc,n_toroidal_procs) /= 0) then
-     call cgyro_error('Number of MPI processes must be a multiple of N_TOROIDAL/N_TOROIDAL_PER_PROCESS.')
+     write (msg, "(A,I3,A,I2,A)") "MPI processes (",n_proc,&
+                 ") not a multiple of N_TOROIDAL/N_TOROIDAL_PER_PROCESS (", &
+                 n_toroidal_procs,")"
+     call cgyro_error(msg)
      return
   endif
 
@@ -191,8 +203,15 @@ subroutine cgyro_mpi_grid
 
   ! Check that nv and nc are multiples of toroidal MPI multiplier
 
-  if (modulo(nv,n_proc_1) /= 0 .or. modulo(nc,n_proc_1) /= 0) then
-     call cgyro_error('nv or nc not a multiple of toroidal MPI multiplier.')
+  if (modulo(nv,n_proc_1) /= 0) then
+     write (msg, "(A,I6,A,I3,A)") "nv (",nv,") not a multiple of coll atoa procs (",n_proc_1,")"
+     call cgyro_error(msg)
+     return
+  endif
+
+  if (modulo(nc,n_proc_1) /= 0) then
+     write (msg, "(A,I6,A,I3,A)") "nc (",nc,") not a multiple of coll atoa procs (",n_proc_1,")"
+     call cgyro_error(msg)
      return
   endif
 
@@ -275,13 +294,12 @@ subroutine cgyro_mpi_grid
     ns1 = is_v(nv1)
     ns2 = is_v(nv2)
     ! We need a clean split, so that all ranks have the same number of species
-    if ( (n_proc_1 < n_species) .and. ( modulo(n_species, n_proc_1) /= 0 ) ) then
-      call cgyro_error('nv_species not a multiple of n_proc_1')
-      return
-    endif
-    if ( (n_proc_1 > n_species) .and. ( modulo(n_proc_1, n_species) /= 0 ) ) then
-      call cgyro_error('nv_proc_1 not a multiple of n_species')
-      return
+    ! n_proc_1 == 1 is an exception, since we do not need to split anything
+    if ( (n_proc_1 /= 1) .and. ( modulo(n_proc_1, n_species) /= 0 ) ) then
+           write (msg, "(A,I3,A,I2,A)") "coll atoa procs (",n_proc_1,") not a multiple of n_species (",n_species,&
+                   "), needed for VELOCITY_ORDER=2"
+           call cgyro_error(msg)
+           return
     endif
     i_group_3 = ns1
   endif
@@ -341,10 +359,17 @@ subroutine cgyro_mpi_grid
   n_omp = omp_get_max_threads()
 
   !----------------------------------------------------------------------------
-  ! Restart communication setup
+  ! Restart IO setup
 
-  write (mpiio_stripe_str,"(I3.3)") mpiio_stripe_factor
-  write (mpiio_small_stripe_str,"(I2.2)") mpiio_small_stripe_factor
+  if (mpiio_stripe_factor > 0) then
+     call cgyro_info("MPI IO factor set for restart file")
+     write (mpiio_stripe_str,"(I3.3)") mpiio_stripe_factor
+  endif
+
+  if (mpiio_small_stripe_factor > 0) then
+     call cgyro_info("MPI IO factor set for data files")
+     write (mpiio_small_stripe_str,"(I2.2)") mpiio_small_stripe_factor
+  endif
 
   ! save hostname configuration
   call cgyro_write_hosts

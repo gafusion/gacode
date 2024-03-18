@@ -3,7 +3,7 @@ requires = ['setuptools','wheel','numpy']
 
 [project]
 name = 'pygacode'
-version = '1.0.0'
+version = '1.0.1'
 description = 'Python-GACODE'
 license = {text = 'MIT'}
 requires-python = ">=3.8"

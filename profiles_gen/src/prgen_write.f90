@@ -48,7 +48,7 @@ subroutine prgen_write
      expro_shape_cos6 = shape_cos(6,:)
 
      expro_z_eff = zeff
-     
+
      ! EFIT passthrough functions
      expro_ptot = p_tot
      expro_fpol = fpol
@@ -63,9 +63,20 @@ subroutine prgen_write
   expro_head_gfile     = '#     *gfile : '//trim(file_g)
   expro_head_cerfile   = '#   *cerfile : '//trim(file_cer)
 
-  call expro_write('input.gacode')
-  print '(a)','INFO: (prgen_write) Wrote input.gacode.'
-  !-------------------------------------------------------------------------------------
-   
+  ! Run check for Jacobian
+  call expro_compute_derived
+
+  ! Use unit=2 since expro use unit=1
+  open(unit=2,file='success',status='replace')
+  if (expro_jerr == 0) then
+     call expro_write('input.gacode')
+     print '(a)','INFO: (prgen_write) Wrote input.gacode.'
+     ! Successful completion
+     write(2,*) 1
+  else
+     write(2,*) 2
+  endif
+  close(2)
+
 end subroutine prgen_write
 

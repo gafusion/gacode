@@ -16,9 +16,9 @@ F77 = ${FC}
 
 # Compiler options/flags
 ifneq ($(GACODE_OMPGPU),1)
-FACC   =-acc -Minfo=accel -target-accel=nvidia80 -Mcudalib=cufft
+FACC   =-acc -Minfo=accel -target-accel=nvidia80 -cudalib=cufft
 else
-FACC    =-mp=gpu -DOMPGPU -Minfo=mp,accel -target-accel=nvidia80 -Mcudalib=cufft
+FACC    =-mp=gpu -DOMPGPU -Minfo=mp,accel -target-accel=nvidia80 -cudalib=cufft
 endif
 FOMP   =-mp -Mstack_arrays 
 FMATH  =-r8 

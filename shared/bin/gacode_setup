@@ -13,13 +13,13 @@ export PATH=$GACODE_ROOT/le3/bin:${PATH}
 export PATH=$GACODE_ROOT/profiles_gen/bin:${PATH}
 export PATH=$GACODE_ROOT/shared/bin:${PATH}
 export PATH=$GACODE_ROOT/gftm/bin:${PATH}
+export PATH=$GACODE_ROOT/qlgyro/bin:${PATH}
 
 if [ -d $GACODE_ROOT/../gacode_add ] 
 then
    export GACODE_ADD_ROOT=$GACODE_ROOT/../gacode_add
    export PATH=$GACODE_ADD_ROOT/freya/bin:${PATH}
    export PATH=$GACODE_ADD_ROOT/prefreya/bin:${PATH}
-   export PATH=$GACODE_ADD_ROOT/qlgyro/bin:${PATH}
 fi
 
 export PYTHONPATH=$GACODE_ROOT/f2py:${PYTHONPATH}

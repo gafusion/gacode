@@ -1,0 +1,119 @@
+name: cgyro CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build-and-test:
+    strategy:
+      matrix:
+        os: [linux-gpu-cuda]
+        hwflavor: [cpu, openacc, ompgpu]
+    runs-on: ${{ matrix.os }}
+    env:
+      hwflavor: ${{ matrix.hwflavor }}
+    steps:
+    - uses: actions/checkout@v3
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        miniconda-version: "latest"
+        auto-update-conda: true
+    - name: Install
+      shell: bash -l {0}
+      run: |
+        df -h .
+        echo "HW flavor: '${hwflavor}'"
+        if [[ "${hwflavor}" == "cpu" ]]; then
+          conda create -q --yes --strict-channel-priority -n gacode -c conda-forge gxx_linux-64 gfortran_linux-64 make curl python
+          conda clean --yes -t
+          df -h .
+          conda activate gacode
+          which x86_64-conda-linux-gnu-gcc
+          x86_64-conda-linux-gnu-gcc -v
+          x86_64-conda-linux-gnu-g++ -v
+          conda install --yes --strict-channel-priority -c conda-forge fftw 'openblas=*=*openmp*'
+          conda install --yes --strict-channel-priority -c conda-forge mpich
+          export GACODE_PLATFORM=CI_CPU
+        else
+          # Assuming gfortran and modules are pre-installed
+          # install NVIDIA HPC SDK
+          .github/support_scripts/install_hpc_sdk.sh
+          source setup_scripts/setup_nv_hpc_bins.sh
+          export GACODE_PLATFORM=CI_GPU
+          if [[ "${hwflavor}" == "ompgpu" ]]; then
+             export GACODE_OMPGPU=1
+          else
+             export GACODE_OMPGPU=0
+          fi
+        fi
+        df -h .
+        export GACODE_ROOT=$PWD
+        . $GACODE_ROOT/shared/bin/gacode_setup
+        source $GACODE_ROOT/platform/env/env.${GACODE_PLATFORM}
+        echo "======= begin env ====="
+        env
+        echo "=======  end env  ====="
+        # build the code
+        echo "=======  building  ====="
+        (cd cgyro && make)
+        echo "=======  cgyro bin  ====="
+        (cd cgyro/src; ls -l cgyro)
+        (cd cgyro/src; ldd cgyro)
+            
+    - name: Tests
+      shell: bash -l {0}
+      run: |
+        echo "HW flavor: '${hwflavor}'"
+        if [[ "${hwflavor}" == "cpu" ]]; then
+          conda activate gacode
+          export GACODE_PLATFORM=CI_CPU
+        else
+          source setup_scripts/setup_nv_hpc_bins.sh
+          export GACODE_PLATFORM=CI_GPU
+          if [[ "${hwflavor}" == "ompgpu" ]]; then
+             export GACODE_OMPGPU=1
+          else
+             export GACODE_OMPGPU=0
+          fi
+        fi
+        export GACODE_ROOT=$PWD
+        . $GACODE_ROOT/shared/bin/gacode_setup
+        source $GACODE_ROOT/platform/env/env.${GACODE_PLATFORM}
+        echo "======= begin env ====="
+        env
+        echo "=======  end env  ====="
+        echo "=======  cgyro bin  ====="
+        (cd cgyro/src; ls -l cgyro)
+        (cd cgyro/src; ldd cgyro)
+        echo "=======  testing  ====="
+        # test the code
+        (cd cgyro/bin && cgyro -r -n 4 -nomp 2) | tee cgyro_reg.log
+        echo "=======  last out  ====="
+        if [ -f cgyro/bin/cgyro_regression_test/out ]; then cat cgyro/bin/cgyro_regression_test/out; fi
+        echo "=======  results  ====="
+        (grep reg cgyro_reg.log || test -f cgyro_reg.log) |tee  cgyro_reg.tests.log
+        (grep PASS cgyro_reg.tests.log || test -f cgyro_reg.tests.log) > cgyro_reg.tests.pass.log
+        cnt=`wc -l cgyro_reg.tests.pass.log |awk '{print $1}'`
+        if [ "$cnt" -eq 20 ]; then
+          echo "== ALL passed =="
+        else 
+          echo "== Some tests FAILED"
+          find cgyro/bin/cgyro_regression_test
+          echo "==== cgyro_regression_test/out"
+          if [ -f cgyro/bin/cgyro_regression_test/out ]; then cat cgyro/bin/cgyro_regression_test/out; fi
+          echo "==== cgyro_regression_test/.../out.cgyro.info"
+          cat cgyro/bin/cgyro_regression_test/*/out.cgyro.info
+          echo "== Aborting"
+          test -z "error"
+        fi
+
+    - name: Sanity checks
+      shell: bash -l {0}
+      run: |
+        echo "TODO"

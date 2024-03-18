@@ -15,7 +15,7 @@ OBJECTS = nclass_mod.o \
           u_erf.o \
           u_lu_backsub.o \
           u_lu_decomp.o \
-          write_mod.o 
+          write_mod.o
 
 .SUFFIXES : .o .f90 .f
 
@@ -26,6 +26,6 @@ lib: $(OBJECTS)
 
 .f.o :
 	$(F77) $(FMATH) $(FFLAGS) -c $<
- 
+
 clean:
 	rm -rf *.o nclass_lib.a *~
