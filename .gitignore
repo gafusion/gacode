@@ -39,6 +39,7 @@ glf23/src/glf23
 gyro/src/gyro
 cgyro/src/cgyro
 cgyro/mpi_tests/*
+qlgyro/src/qlgyro
 neo/src/neo
 neo/tools/pneo/src/pneo
 neo/tools/pneo/src/pneo_rbf
