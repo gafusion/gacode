@@ -9,6 +9,7 @@ export EXTRA_LIBS = \
        ${GACODE_ROOT}/shared/nclass/nclass_lib.a \
        ${GACODE_ROOT}/tglf/src/tglf_lib.a \
        ${GACODE_ROOT}/cgyro/src/cgyro_lib.a \
+       ${GACODE_ROOT}/qlgyro/src/qlgyro_lib.a \
        ${GACODE_ROOT}/f2py/expro/expro_lib.a \
        ${GACODE_ROOT}/f2py/geo/geo_lib.a \
        ${GACODE_ROOT}/shared/math/math_lib.a \
@@ -21,7 +22,7 @@ all:
 	cd ${GACODE_ROOT}/neo ; make
 	cd ${GACODE_ROOT}/tglf ; make
 	cd ${GACODE_ROOT}/cgyro ; make
-	cd ${GACODE_ADD_ROOT}/qlgyro ; make
+	cd ${GACODE_ROOT}/qlgyro ; make
 	cd src ; make
 
 clean:
