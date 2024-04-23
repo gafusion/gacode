@@ -1,0 +1,16 @@
+#!/bin/sh
+# GACODE Parallel execution script (PPPL_2024)
+
+simdir=${1}
+nmpi=${2}
+exec=${3}
+nomp=${4}
+numa=${5}
+mpinuma=${6}
+
+cd $simdir
+
+# Had to remove --oversubscribe for NEO to run for Tom Osborne
+echo "export OMP_NUM_THREADS=$nomp ; mpirun -np --oversubscribe $nmpi $exec "
+export OMP_NUM_THREADS=$nomp ; mpirun --oversubscribe -np $nmpi  $exec
+exit
