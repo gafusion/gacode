@@ -50,11 +50,11 @@ ifdef CUDA_DIR
    NEO_FLAGS += -DNEO_HAVE_CUDA $(CUDA_INC)
    NEO_LIBS  += $(CUDA_LIB)
 endif
-ifdef PETSC_DIR
-   OBJECTS   += neo_petsc.o
-   NEO_FLAGS += -DNEO_HAVE_PETSC $(PETSC_INC)
-   NEO_LIBS  += $(PETSC_LIB)
-endif
+#ifdef PETSC_DIR
+#   OBJECTS   += neo_petsc.o
+#   NEO_FLAGS += -DNEO_HAVE_PETSC $(PETSC_INC)
+#   NEO_LIBS  += $(PETSC_LIB)
+#endif
 ifdef SUPERLU_DIR
    OBJECTS   += neo_superlu.o st_to_cc.o c_fortran_dgssv.o
    NEO_FLAGS += -DNEO_HAVE_SUPERLU $(SUPERLU_INC)
