@@ -1,0 +1,35 @@
+#---------------------------------------------------
+# PPPL Portal Systems (ellis, dawson, kestrel, kite and kruskal) 
+#               with gcc compiler and OpenMPI, updated as of April 25 2024.
+#---------------------------------------------------
+# S. Smith (smithsp@fusion.gat.com)
+# J. Parisi (jparisi@pppl.gov)
+
+IDENTITY="PPPL Portal cluster"
+CORES_PER_NODE=1
+NUMAS_PER_NODE=1
+
+# Compilers and flags 
+FC  = mpif90 -std=f2008 -fall-intrinsics -I$(GACODE_ROOT)/modules -J$(GACODE_ROOT)/modules -fPIC
+F77 = mpif77 -std=legacy -I$(GACODE_ROOT)/modules
+CC  = gcc
+
+FMATH  = -fdefault-real-8 -fdefault-double-8 
+FOPT   = -Ofast
+FDEBUG = -Wall -W -fcheck=mem,bounds -g -fbacktrace -ffpe-trap=invalid,zero,overflow
+F2PY   = f2py
+FOMP   = -fopenmp
+
+# System math libraries
+LMATH = -L/usr/lib64 -lopenblas $(FFTW_HOME)/lib/libfftw3.a $(FFTW_HOME)/lib/libfftw3_omp.a
+FFTW_INC = $(FFTW_HOME)/include
+
+# NetCDF
+NETCDF = -L/usr/pppl/gcc/11.2-pkgs/netcdf-fortran-4.5.4/lib -lnetcdff -L/usr/lib64/hdf -L/usr/pppl/gcc/11.2-pkgs/netcdf-c-4.8.1/lib -lnetcdf -lnetcdf -ldl -lm
+NETCDF_INC =${NETCDF_FORTRAN_HOME}/include -I${NETCDF_C_HOME}/include
+
+# Mapping
+%.o : %.mod
+
+# Archive 
+ARCH = ar cr
