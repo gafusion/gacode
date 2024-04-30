@@ -11,7 +11,8 @@ subroutine qlgyro_run_cgyro_balloon
   integer :: ios
 
   character(len=5) :: kystr, px0str
-  real :: ky, timestep, maxtime, kx_max_default, px0
+  character(len=6) :: fmt_str
+  real :: ky, timestep, maxtime, kx_max_default, px0, ky_min
 
   integer, dimension(:), allocatable :: ky_run, px0_run
   integer, dimension(:), allocatable :: ky_px0_run
@@ -46,8 +47,14 @@ subroutine qlgyro_run_cgyro_balloon
   call map_global2interface
   call allocate_cgyro_interface
   if (i_proc_global .eq. 0)  call tglf_dump_local
-  
-  call qlgyro_ky_spectrum(0.005)
+
+  if (transport_method .eq. 0) then
+     ky_min = cgyro_ky_in
+  else if (transport_method .eq. 1) then
+     ky_min = cgyro_q_in / cgyro_rmin_in * cgyro_rho_star_norm_in
+  end if
+
+  call qlgyro_ky_spectrum(ky_min)
   call qlgyro_px0_spectrum
 
   maxtime = cgyro_max_time_in
@@ -57,6 +64,12 @@ subroutine qlgyro_run_cgyro_balloon
   tglf_nmodes_in = n_px0
 
   n_ky = tglf_nky_in
+
+  if (tglf_ky_spectrum_out(1) .lt. 0.01) then
+     fmt_str = "(F5.3)"
+  else
+     fmt_str = "(F5.2)"
+  end if
   
   ! Set up ky px0 grid
   n_kypx0 = n_ky * n_px0
@@ -157,7 +170,7 @@ subroutine qlgyro_run_cgyro_balloon
      px0 = px0_spectrum(i_px0_local)
 
      ! Creates directory for each ky and changes into it for that run
-     write(kystr, '(F5.2)') ky
+     write(kystr, fmt_str) ky
      write(px0str, '(F5.2)') px0
      runpath = trim(trim(path)//'/KY_'//trim(adjustl(kystr)))//"_PX0_"//trim(adjustl(px0str))//"/"
 

@@ -47,6 +47,7 @@ subroutine qlgyro_read_input
   call ql_readbc_int(sat_rule)
   call ql_readbc_int(n_px0)
   call ql_readbc_int(px0grid_model)
+  call ql_readbc_int(restart_mode)
 
   ! DONE reading data.
   !--------------------------------------------------------

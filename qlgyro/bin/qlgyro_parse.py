@@ -20,6 +20,7 @@ x.add('KX_MAX_BOX', '1000000.0')
 x.add('SAT_RULE', '1')
 x.add('N_PX0', '1')
 x.add('PX0GRID_MODEL', '1')
+x.add('RESTART_MODE', '0')
 
 # Perform the parsing
 x.read_input('input.qlgyro')

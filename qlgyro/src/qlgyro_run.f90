@@ -65,7 +65,7 @@ subroutine qlgyro_run(lpath_in, qlgyro_comm_in, i_tran_in)
   call qlgyro_comm_sync
 
   ! Apply saturation rule
-  if (sat_rule .eq. 1) then
+  if (sat_rule .gt. 0) then
      call qlgyro_sat1
   else if (sat_rule .eq. -1) then
      call qlgyro_sat_mg

@@ -101,6 +101,10 @@ enddo
      if (adjoint .eq. 0) then
         open(unit=io, iostat=i_err, file=trim(runpath)//runfile_restart_tag, status='old')
         if (i_err == 0) close(io, status='delete')
+        if (restart_mode .eq. 1) then
+           open(unit=io, iostat=i_err, file=trim(runpath)//runfile_restart, status='old')
+           if (i_err == 0) close(io, status='delete')
+        end if
      end if
   end if
   

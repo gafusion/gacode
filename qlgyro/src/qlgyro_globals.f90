@@ -267,7 +267,7 @@ module qlgyro_globals
 
   real, dimension(:, :, :), allocatable :: qlgyro_k_perp, qlgyro_jacobian
   
-  integer :: sat_rule
+  integer :: sat_rule, restart_mode
   !
   !
   ! Iteration variables (global)
