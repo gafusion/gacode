@@ -47,8 +47,8 @@ subroutine cgyro_init_kernel
   ! 1. MPI setup
   call cgyro_mpi_grid
   if (error_status > 0) then
-          call cgyro_final_kernel
-          return
+     call cgyro_final_kernel
+     return
   endif
   
   call system_clock(aftermpi_time,kernel_count_rate,kernel_count_max)
@@ -58,22 +58,20 @@ subroutine cgyro_init_kernel
      mpi_dt = (aftermpi_time-kernel_start_time+kernel_count_max)/real(kernel_count_rate)
   endif
 
-    ! 2. Profile setup
+  ! 2. Profile setup
   call cgyro_make_profiles
-  !if (error_status > 0) call cgyro_final_kernel
 
   ! 3. Parameter consistency checks
   call cgyro_check
   if (error_status > 0) then
-          call cgyro_final_kernel
-          return
+     call cgyro_final_kernel
+     return
   endif
 
   ! 4. Array initialization and construction
   !    NOTE: On exit, field_old = field 
-
   call cgyro_init_manager
-  if (error_status /=0 ) then
+  if (error_status > 0) then
      ! something went terribly wrong, hard abort, as things may be
      ! in weird state
      call abort

@@ -10,13 +10,10 @@
 export `grep PER_NODE $GACODE_ROOT/platform/build/make.inc.$GACODE_PLATFORM`
 
 # Default to densely-packed pure-MPI.
-if [[ $numa -eq 0 ]]; then
-   numa=$NUMAS_PER_NODE
-fi
-if [[ $mpinuma -eq 0 ]]; then
-   mpinuma=$((CORES_PER_NODE / NUMAS_PER_NODE))
-   mpinuma=$((mpinuma / nomp))
-fi
+numa=$NUMAS_PER_NODE
+
+mpinuma=$((CORES_PER_NODE / NUMAS_PER_NODE))
+mpinuma=$((mpinuma / nomp))
 
 # See if we are asking for too many NUMAs
 if [[ $numa -gt $NUMAS_PER_NODE ]]; then

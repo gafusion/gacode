@@ -10,6 +10,318 @@
 ! NOTE: Need to be careful with (p=-nr/2,n=0) component.
 !-----------------------------------------------------------------
 
+#if defined(MKLGPU)
+include 'fftw/offload/fftw3_omp_offload.f90'
+#endif
+
+subroutine cgyro_nl_fftw_init
+
+#if defined(HIPGPU)
+  use hipfort_hipfft
+#elif defined(MKLGPU)
+  use fftw3_omp_offload
+#else
+  use cufft
+#endif
+  use cgyro_globals
+
+  implicit none
+#if defined(MKLGPU)
+  include 'fftw/fftw3.f'
+#endif
+
+  integer :: howmany,istatus
+  integer, parameter :: irank = 2
+  integer, dimension(irank) :: ndim,inembed,onembed
+  integer :: idist,odist
+  integer, parameter :: istride = 1
+  integer, parameter :: ostride = 1
+
+#if !defined(MKLGPU)
+  integer, parameter :: singlePrecision = selected_real_kind(6,30)
+#endif
+
+  !-------------------------------------------------------------------
+  ! 2D
+  !   input[ b*idist + (x * inembed[1] + y)*istride ]
+  !  output[ b*odist + (x * onembed[1] + y)*ostride ]
+  !  isign is the sign of the exponent in the formula that defines
+  !  Fourier transform  -1 == FFTW_FORWARD
+  !                      1 == FFTW_BACKWARD
+  !-------------------------------------------------------------------
+
+#if defined(MKLGPU)
+  ! oneMKL offload uses the reverse ordering
+  ndim(2) = nx
+  ndim(1) = ny
+#else
+  ndim(1) = nx
+  ndim(2) = ny
+#endif
+  idist = size(fxmany,1)*size(fxmany,2)
+  odist = size(uxmany,1)*size(uxmany,2)
+  inembed = size(fxmany,1)
+  onembed = size(uxmany,1)
+#if defined(MKLGPU)
+  inembed(2) = size(fxmany,2)
+  onembed(2) = size(uxmany,2)
+#endif
+
+#if defined(HIPGPU)
+  hip_plan_c2r_manyA = c_null_ptr
+  istatus = hipfftPlanMany(&
+       hip_plan_c2r_manyA, &
+       irank, &
+       ndim, &
+       inembed, &
+       istride, &
+       idist, &
+       onembed, &
+       ostride, &
+       odist, &
+       merge(HIPFFT_C2R,HIPFFT_Z2D,kind(uxmany) == singlePrecision), &
+       nsplitA)
+
+  if (nsplitB > 0) then ! no fft if nsplitB==0
+    hip_plan_c2r_manyB = c_null_ptr
+    istatus = hipfftPlanMany(&
+       hip_plan_c2r_manyB, &
+       irank, &
+       ndim, &
+       inembed, &
+       istride, &
+       idist, &
+       onembed, &
+       ostride, &
+       odist, &
+       merge(HIPFFT_C2R,HIPFFT_Z2D,kind(uxmany) == singlePrecision), &
+       nsplitB)
+  endif
+
+  hip_plan_c2r_manyG = c_null_ptr
+  istatus = hipfftPlanMany(&
+       hip_plan_c2r_manyG, &
+       irank, &
+       ndim, &
+       inembed, &
+       istride, &
+       idist, &
+       onembed, &
+       ostride, &
+       odist, &
+       merge(HIPFFT_C2R,HIPFFT_Z2D,kind(uxmany) == singlePrecision), &
+       nsplit)
+#elif defined(MKLGPU)
+     dfftw_plan_c2r_manyA = 0
+!$omp target data map(tofrom: fymany,uymany)
+     !$omp dispatch
+     call dfftw_plan_many_dft_c2r(&
+          dfftw_plan_c2r_manyA, &
+          irank, &
+          ndim, &
+          nsplitA, &
+          fymany, &
+          inembed, &
+          istride, &
+          idist, &
+          uymany, &
+          onembed, &
+          ostride, &
+          odist, &
+          FFTW_ESTIMATE)
+
+  if (nsplitB > 0) then ! no fft if nsplitB==0
+     dfftw_plan_c2r_manyB = 0
+     !$omp dispatch
+     call dfftw_plan_many_dft_c2r(&
+          dfftw_plan_c2r_manyB, &
+          irank, &
+          ndim, &
+          nsplitB, &
+          fymany, &
+          inembed, &
+          istride, &
+          idist, &
+          uymany, &
+          onembed, &
+          ostride, &
+          odist, &
+          FFTW_ESTIMATE)
+  endif
+!$omp end target data
+
+     dfftw_plan_c2r_manyG = 0
+!$omp target data map(tofrom: gymany,vymany)
+     !$omp dispatch
+     call dfftw_plan_many_dft_c2r(&
+          dfftw_plan_c2r_manyG, &
+          irank, &
+          ndim, &
+          nsplit, &
+          gymany, &
+          inembed, &
+          istride, &
+          idist, &
+          vymany, &
+          onembed, &
+          ostride, &
+          odist, &
+          FFTW_ESTIMATE)
+!$omp end target data
+
+#else
+  istatus = cufftPlanMany(&
+       cu_plan_c2r_manyA, &
+       irank, &
+       ndim, &
+       inembed, &
+       istride, &
+       idist, &
+       onembed, &
+       ostride, &
+       odist, &
+       merge(CUFFT_C2R,CUFFT_Z2D,kind(uxmany) == singlePrecision), &
+       nsplitA)
+
+  if (nsplitB > 0) then ! no fft if nsplitB==0
+    istatus = cufftPlanMany(&
+       cu_plan_c2r_manyB, &
+       irank, &
+       ndim, &
+       inembed, &
+       istride, &
+       idist, &
+       onembed, &
+       ostride, &
+       odist, &
+       merge(CUFFT_C2R,CUFFT_Z2D,kind(uxmany) == singlePrecision), &
+       nsplitB)
+  endif
+
+  istatus = cufftPlanMany(&
+       cu_plan_c2r_manyG, &
+       irank, &
+       ndim, &
+       inembed, &
+       istride, &
+       idist, &
+       onembed, &
+       ostride, &
+       odist, &
+       merge(CUFFT_C2R,CUFFT_Z2D,kind(uxmany) == singlePrecision), &
+       nsplit)
+#endif
+
+  idist = size(uxmany,1)*size(uxmany,2)
+  odist = size(fxmany,1)*size(fxmany,2)
+  inembed = size(uxmany,1)
+  onembed = size(fxmany,1) 
+#if defined(MKLGPU)
+  inembed(2) = size(uxmany,2)
+  onembed(2) = size(fxmany,2) 
+#endif
+
+#if defined(HIPGPU)
+  hip_plan_r2c_manyA = c_null_ptr
+  istatus = hipfftPlanMany(&
+       hip_plan_r2c_manyA, &
+       irank, &
+       ndim, &
+       inembed, &
+       istride, &
+       idist, &
+       onembed, &
+       ostride, &
+       odist, &
+       merge(HIPFFT_R2C,HIPFFT_D2Z,kind(uxmany) == singlePrecision), &
+       nsplitA)
+
+  if (nsplitB > 0) then ! no fft if nsplitB==0
+    hip_plan_r2c_manyB = c_null_ptr
+    istatus = hipfftPlanMany(&
+       hip_plan_r2c_manyB, &
+       irank, &
+       ndim, &
+       inembed, &
+       istride, &
+       idist, &
+       onembed, &
+       ostride, &
+       odist, &
+       merge(HIPFFT_R2C,HIPFFT_D2Z,kind(uxmany) == singlePrecision), &
+       nsplitB)
+  endif
+#elif defined(MKLGPU)
+     dfftw_plan_r2c_manyA = 0
+!$omp target data map(tofrom: uvmany,fxmany)
+     !$omp dispatch
+     call dfftw_plan_many_dft_r2c(&
+          dfftw_plan_r2c_manyA, &
+          irank, &
+          ndim, &
+          nsplitA, &
+          uvmany, &
+          inembed, &
+          istride, &
+          idist, &
+          fxmany, &
+          onembed, &
+          ostride, &
+          odist, &
+          FFTW_ESTIMATE)
+
+  if (nsplitB > 0) then ! no fft if nsplitB==0
+     dfftw_plan_r2c_manyB = 0
+     !$omp dispatch
+     call dfftw_plan_many_dft_r2c(&
+          dfftw_plan_r2c_manyB, &
+          irank, &
+          ndim, &
+          nsplitB, &
+          uvmany, &
+          inembed, &
+          istride, &
+          idist, &
+          fxmany, &
+          onembed, &
+          ostride, &
+          odist, &
+          FFTW_ESTIMATE)
+  endif
+!$omp end target data
+
+#else
+  istatus = cufftPlanMany(&
+       cu_plan_r2c_manyA, &
+       irank, &
+       ndim, &
+       inembed, &
+       istride, &
+       idist, &
+       onembed, &
+       ostride, &
+       odist, &
+       merge(CUFFT_R2C,CUFFT_D2Z,kind(uxmany) == singlePrecision), &
+       nsplitA)
+
+  if (nsplitB > 0) then ! no fft if nsplitB==0
+    istatus = cufftPlanMany(&
+       cu_plan_r2c_manyB, &
+       irank, &
+       ndim, &
+       inembed, &
+       istride, &
+       idist, &
+       onembed, &
+       ostride, &
+       odist, &
+       merge(CUFFT_R2C,CUFFT_D2Z,kind(uxmany) == singlePrecision), &
+       nsplitB)
+  endif
+#endif
+
+end subroutine cgyro_nl_fftw_init
+
 subroutine cgyro_nl_fftw_mul(sz,uvm,uxm,vym,uym,vxm,inv_nxny)
   implicit none
 
@@ -36,9 +348,11 @@ end subroutine
 
 subroutine cgyro_nl_fftw
 
-#ifdef HIPGPU
+#if defined(HIPGPU)
   use hipfort
   use hipfort_hipfft
+#elif defined(MKLGPU)
+  use fftw3_omp_offload
 #else
   use cufft
 #endif
@@ -48,6 +362,9 @@ subroutine cgyro_nl_fftw
   use cgyro_globals
 
   implicit none
+#if defined(MKLGPU)
+  include 'fftw/fftw3.f'
+#endif
   !-----------------------------------
   integer :: j,p,iexch
   integer :: it,ir,itm,itl,ix,iy
@@ -199,13 +516,23 @@ subroutine cgyro_nl_fftw
      ! --------------------------------------
 
 #if defined(OMPGPU)
+
+#if defined(MKLGPU)
+!$omp target data map(tofrom: fymany,uymany)
+#else
 !$omp target data use_device_ptr(fymany,uymany)
+#endif
+
 #else
 !$acc  host_data use_device(fymany,uymany)
 #endif
 
-#ifdef HIPGPU
+#if defined(HIPGPU)
   rc = hipfftExecZ2D(hip_plan_c2r_manyA,c_loc(fymany),c_loc(uymany))
+#elif defined(MKLGPU)
+  !$omp dispatch
+  call dfftw_execute_dft_c2r(dfftw_plan_c2r_manyA,fymany,uymany)
+  rc = 0
 #else
   rc = cufftExecZ2D(cu_plan_c2r_manyA,fymany,uymany)
 #endif
@@ -229,13 +556,23 @@ subroutine cgyro_nl_fftw
   call cgyro_nl_fftw_comm_test()
 
 #if defined(OMPGPU)
+
+#if defined(MKLGPU)
+!$omp target data map(tofrom: fxmany,uxmany)
+#else
 !$omp target data use_device_ptr(fxmany,uxmany)
+#endif
+
 #else
 !$acc  host_data use_device(fxmany,uxmany)
 #endif
 
-#ifdef HIPGPU
+#if defined(HIPGPU)
   rc = hipfftExecZ2D(hip_plan_c2r_manyA,c_loc(fxmany),c_loc(uxmany))
+#elif defined(MKLGPU)
+  !$omp dispatch
+  call dfftw_execute_dft_c2r(dfftw_plan_c2r_manyA,fxmany,uxmany)
+  rc = 0
 #else
   rc = cufftExecZ2D(cu_plan_c2r_manyA,fxmany,uxmany)
 #endif
@@ -306,10 +643,10 @@ subroutine cgyro_nl_fftw
 #if defined(OMPGPU)
   !no async for OMPGPU for now
 !$omp target teams distribute parallel do simd collapse(5) &
-!$omp&   private(j,p,ix,itor,mytm,iy,g0,it,iv_loc,it_loc,jtheta_min,itm,itl,iy,ir)
+!$omp&   private(j,p,ix,itor,mytm,iy,g0,it,iv_loc,it_loc,jtheta_min,itm,itl,ir)
 #else
 !$acc parallel loop gang vector independent collapse(5) async(2) &
-!$acc&         private(j,p,ix,itor,mytm,iy,g0,it,iv_loc,it_loc,jtheta_min,itm,itl,iy,ir) &
+!$acc&         private(j,p,ix,itor,mytm,iy,g0,it,iv_loc,it_loc,jtheta_min,itm,itl,ir) &
 !$acc&         present(g_nl,jvec_c_nl) &
 !$acc&         present(nsplit,n_radial,n_toroidal_procs,nt_loc,nt1,n_theta,nv_loc,nx0)
 #endif
@@ -386,13 +723,23 @@ subroutine cgyro_nl_fftw
 #endif
 
 #if defined(OMPGPU)
+
+#if defined(MKLGPU)
+!$omp target data map(tofrom: gymany,vymany)
+#else
 !$omp target data use_device_ptr(gymany,vymany)
+#endif
+
 #else
 !$acc  host_data use_device(gymany,vymany)
 #endif
 
-#ifdef HIPGPU
+#if defined(HIPGPU)
   rc = hipfftExecZ2D(hip_plan_c2r_manyG,c_loc(gymany),c_loc(vymany))
+#elif defined(MKLGPU)
+  !$omp dispatch
+  call dfftw_execute_dft_c2r(dfftw_plan_c2r_manyG,gymany,vymany)
+  rc = 0
 #else
   rc = cufftExecZ2D(cu_plan_c2r_manyG,gymany,vymany)
 #endif
@@ -416,13 +763,23 @@ subroutine cgyro_nl_fftw
   ! gxmany is complete now
 
 #if defined(OMPGPU)
+
+#if defined(MKLGPU)
+!$omp target data map(tofrom: gxmany,vxmany)
+#else
 !$omp target data use_device_ptr(gxmany,vxmany)
+#endif
+
 #else
 !$acc  host_data use_device(gxmany,vxmany)
 #endif
 
-#ifdef HIPGPU
+#if defined(HIPGPU)
   rc = hipfftExecZ2D(hip_plan_c2r_manyG,c_loc(gxmany),c_loc(vxmany))
+#elif defined(MKLGPU)
+  !$omp dispatch
+  call dfftw_execute_dft_c2r(dfftw_plan_c2r_manyG,gxmany,vxmany)
+  rc = 0
 #else
   rc = cufftExecZ2D(cu_plan_c2r_manyG,gxmany,vxmany)
 #endif
@@ -465,14 +822,24 @@ subroutine cgyro_nl_fftw
   ! ------------------
 
 #if defined(OMPGPU)
+
+#if defined(MKLGPU)
+!$omp target data map(tofrom: uvmany,fxmany)
+#else
 !$omp target data use_device_ptr(uvmany,fxmany)
+#endif
+
 #else
 !$acc wait
 !$acc  host_data use_device(uvmany,fxmany)
 #endif
 
-#ifdef HIPGPU
+#if defined(HIPGPU)
   rc = hipfftExecD2Z(hip_plan_r2c_manyA,c_loc(uvmany),c_loc(fxmany))
+#elif defined(MKLGPU)
+  !$omp dispatch
+  call dfftw_execute_dft_r2c(dfftw_plan_r2c_manyA,uvmany,fxmany)
+  rc = 0
 #else
   rc = cufftExecD2Z(cu_plan_r2c_manyA,uvmany,fxmany)
 #endif
@@ -665,13 +1032,23 @@ subroutine cgyro_nl_fftw
      ! --------------------------------------
 
 #if defined(OMPGPU)
+
+#if defined(MKLGPU)
+!$omp target data map(tofrom: fymany,uymany)
+#else
 !$omp target data use_device_ptr(fymany,uymany)
+#endif
+
 #else
 !$acc  host_data use_device(fymany,uymany)
 #endif
 
-#ifdef HIPGPU
+#if defined(HIPGPU)
   rc = hipfftExecZ2D(hip_plan_c2r_manyB,c_loc(fymany),c_loc(uymany))
+#elif defined(MKLGPU)
+  !$omp dispatch
+  call dfftw_execute_dft_c2r(dfftw_plan_c2r_manyB,fymany,uymany)
+  rc = 0
 #else
   rc = cufftExecZ2D(cu_plan_c2r_manyB,fymany,uymany)
 #endif
@@ -695,13 +1072,23 @@ subroutine cgyro_nl_fftw
   call cgyro_nl_fftw_comm_test()
 
 #if defined(OMPGPU)
+
+#if defined(MKLGPU)
+!$omp target data map(tofrom: fxmany,uxmany)
+#else
 !$omp target data use_device_ptr(fxmany,uxmany)
+#endif
+
 #else
 !$acc  host_data use_device(fxmany,uxmany)
 #endif
 
-#ifdef HIPGPU
+#if defined(HIPGPU)
   rc = hipfftExecZ2D(hip_plan_c2r_manyB,c_loc(fxmany),c_loc(uxmany))
+#elif defined(MKLGPU)
+  !$omp dispatch
+  call dfftw_execute_dft_c2r(dfftw_plan_c2r_manyB,fxmany,uxmany)
+  rc = 0
 #else
   rc = cufftExecZ2D(cu_plan_c2r_manyB,fxmany,uxmany)
 #endif
@@ -744,14 +1131,24 @@ subroutine cgyro_nl_fftw
   ! ------------------
 
 #if defined(OMPGPU)
+
+#if defined(MKLGPU)
+!$omp target data map(tofrom: uvmany,fxmany)
+#else
 !$omp target data use_device_ptr(uvmany,fxmany)
+#endif
+
 #else
 !$acc wait
 !$acc  host_data use_device(uvmany,fxmany)
 #endif
 
-#ifdef HIPGPU
+#if defined(HIPGPU)
   rc = hipfftExecD2Z(hip_plan_r2c_manyB,c_loc(uvmany),c_loc(fxmany))
+#elif defined(MKLGPU)
+  !$omp dispatch
+  call dfftw_execute_dft_r2c(dfftw_plan_r2c_manyB,uvmany,fxmany)
+  rc = 0
 #else
   rc = cufftExecD2Z(cu_plan_r2c_manyB,uvmany,fxmany)
 #endif

@@ -23,14 +23,13 @@ subroutine cgyro_advect_wavenumber(ij)
 
 #if defined(OMPGPU)
 !$omp target teams distribute parallel do simd collapse(4) &
-!$omp&         private(ivc,ir,l,iccj) &
-!$omp&         private(ir,j,l,iccj,ll,rl,llnt,he1,he2)
+!$omp&         private(ivc,ir,l,iccj,j,ll,rl,llnt,he1,he2)
 #elif defined(_OPENACC)
-!$acc parallel loop collapse(4) gang vector private(ivc,ir,l,iccj) &
-!$acc&         private(ir,j,l,iccj,ll,rl,llnt,he1,he2) &
+!$acc parallel loop collapse(4) gang vector &
+!$acc&         private(ivc,ir,l,iccj,j,ll,rl,llnt,he1,he2) &
 !$acc&         present(rhs(:,:,:,ij),omega_ss,field,h_x,c_wave)
 #else
-!$omp parallel do collapse(4) private(ivc,ir,j,iccj,l,ll,rl,llnt,he1,he2)
+!$omp parallel do collapse(4) private(ivc,ir,l,iccj,j,ll,rl,llnt,he1,he2)
 #endif
      do itor=nt1,nt2
       do ivc=1,nv_loc

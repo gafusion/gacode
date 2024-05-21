@@ -3,6 +3,7 @@ subroutine cgyro_init_h
   use mpi
   use cgyro_globals
   use cgyro_io
+  use cgyro_restart
 
   implicit none
 
@@ -101,16 +102,15 @@ subroutine cgyro_init_h
               ir = ir_c(ic) 
               it = it_c(ic)
 
-              if (is == 1 .and. px(ir) /= 0) then
+              if (is == 1) then
                  arg = k_perp(ic,itor)*rho*vth(is)*mass(is)/(z(is)*bmag(it)) &
                       *vel2(ie)*sqrt(1.0-xi(ix)**2)
                  h_x(ic,iv_loc,itor) = 1e-6*bessel_j0(abs(arg))
 
-                 ! J0 here for the ions is equivalent to having
-                 ! the electrons deviate in density.
-                 ! Alternatively this is the result of instantaneous
-                 ! gyroaveraging after the deposition of particles in
-                 ! a certain k_radial mode.
+                 ! J0 here for the ions is equivalent to having the electrons
+                 ! deviate in density. Alternatively this is the result of
+                 ! instantaneous gyroaveraging after the deposition of particles
+                 ! in a certain k_radial mode.
 
               endif
            enddo

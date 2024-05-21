@@ -1,0 +1,29 @@
+#----------------------------------------------------------
+# STAMPEDE3 (TACC) [GPU (Ponte Vecchio Intel Max 1550) nodes]
+#----------------------------------------------------------
+
+IDENTITY="TACC STAMPEDE3 GPU PVC (ifx)"
+CORES_PER_NODE=96
+NUMAS_PER_NODE=8
+
+# Compilers and flags
+FC     = mpiifx -gen-interfaces -module ${GACODE_ROOT}/modules -I${GACODE_ROOT}/module -DDISABLE_GPUDIRECT_MPI -DNO_ASYNC_MPI -allow nofpp-comments
+F77    = ${FC}
+
+FOMP   = -fiopenmp -fopenmp-targets=spir64 -DOMPGPU -DMKLGPU
+FMATH  = -real-size 64 -qmkl=parallel -fpp -free -I${TACC_MKL_INC}/
+# Note: -Ofast produces bad results
+FOPT   = -g -O2
+FDEBUG = -eD -Ktrap=fp -m 1
+
+# System math libraries
+LMATH = -fiopenmp -fopenmp-targets=spir64 -qmkl=parallel -fsycl -liomp5 -lsycl -lOpenCL -lstdc++
+
+# NetCDF
+NETCDF_DIR=$TACC_NETCDF_DIR
+NETCDF=-L${NETCDF_DIR}/lib -lnetcdff -lnetcdf
+NETCDF_INC = ${NETCDF_DIR}/include
+
+# Archive 
+ARCH = ar cr
+

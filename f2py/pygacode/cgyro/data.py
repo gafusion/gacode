@@ -369,8 +369,15 @@ class cgyrodata:
       l=11
 
       self.p = np.array(data[l:l+self.n_radial],dtype=int)
-      # kx*rho (ignore leftmost "special" element)
-      self.kx = 2*np.pi*self.p[1:]/self.length
+
+      if self.p[0] > 0:
+         # zonal flow test
+         self.kx = 2*np.pi*self.p[:]/self.length
+         self.zf_test = True
+      else:
+         # kx*rho (ignore leftmost "special" element)
+         self.kx = 2*np.pi*self.p[1:]/self.length
+         self.zf_test = False
 
       mark = l+self.n_radial
       self.theta = np.array(data[mark:mark+self.n_theta])
@@ -409,10 +416,11 @@ class cgyrodata:
 
       # Construct k_perp
       # NOTE: kx,ky and kperp are kx*rho, ky*rho, kperp*rho
-      nx = self.n_radial-1
-      ny = self.n_n
-      self.kperp = np.sqrt(np.outer(self.kx[:]**2,np.ones(ny))+
-                           np.outer(np.ones(nx),self.ky[:]**2))
+      if not self.zf_test:
+         nx = self.n_radial-1
+         ny = self.n_n
+         self.kperp = np.sqrt(np.outer(self.kx[:]**2,np.ones(ny))+
+                              np.outer(np.ones(nx),self.ky[:]**2))
       
       #-----------------------------------------------------------------
 
@@ -483,14 +491,20 @@ class cgyrodata:
          self.temp[i],p   = self.eget(data,p) 
          self.dlnndr[i],p = self.eget(data,p) 
          self.dlntdr[i],p = self.eget(data,p) 
-         self.nu[i],p     = self.eget(data,p) 
+         self.nu[i],p     = self.eget(data,p)
+
+      # Added 3 May 2024
+      self.sdlnndr = np.zeros(ns)
+      self.sdlntdr = np.zeros(ns)
+      for i in range(ns):
+         self.sdlnndr[i],p = self.eget(data,p) 
+         self.sdlntdr[i],p = self.eget(data,p)
 
       if p == -1:
-         print('ERROR: (getgrid) Data format outdated. Please run cgyro -t')
-         sys.exit()
-         
-      if not self.silent:
-         print('INFO: (getgrid) Read {:d} entries out.cgyro.equilibrium.'.format(p))
+         print('WARNING: (getgrid) Data format outdated. Please run cgyro -t')
+      else:
+         if not self.silent:
+            print('INFO: (getgrid) Read {:d} entries out.cgyro.equilibrium.'.format(p))
 
       #-----------------------------------------------------------------
 
@@ -595,13 +609,17 @@ class cgyrodata:
 
       # 3D structure: f[r,n,time]
 
+      # 2024.04 moments are divided by rho in cgyro, so denormalize now
+      if moment == 'n' or moment == 'e' or moment == 'v':
+         f[:,:,:] = f[:,:,:]*self.rhonorm
+         
       if gbnorm:
          # gyrBohm normalization
          f[:,:,:] = f[:,:,:]/self.rhonorm
       
       return f,ft
 
-   def ylabeler(self,sub,ft,abs=True,sq=False,tave=False,sqrt=False,d=False):
+   def ylabeler(self,sub,ft,abs=True,sq=False,tave=False,sqrt=False,d=False,gb=True):
 
       if sub == '+' or sub == 'null':
          z = 'n'
@@ -612,10 +630,11 @@ class cgyrodata:
       u = ft+'_'+z
 
       if d:
-         u = u+r'^\prime'
+         u = r'(\mathrm{Gradient~scale~length})~~\partial_r \;'+u
          
       # gyroBohm norm
-      u = u+'/'+self.rhoi
+      if gb:
+         u = u+'/'+self.rhoi
 
       # Absolute value
       if abs:

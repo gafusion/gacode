@@ -9,7 +9,7 @@ from ..gacodefuncs import *
 from .data import cgyrodata
 
 try:
-   from pygacode import vis
+   from vis.vis import *
    haspygacode = True
 except:
    print("BAD: (plot_fluct) Please 'pip install pygacode'")
@@ -38,7 +38,7 @@ rc('font',size=font)
 
 # Extension handling
 pre,ftype=mkfile(ext)
-   
+
 sim = cgyrodata('./')
 nt = sim.n_time
 nr = sim.n_radial
@@ -82,11 +82,11 @@ else:
       for n in range(nn):
          eny[j,n]=np.exp(-1j*n*y[j])
 
-   # Only computing half sum 
+   # Only computing half sum
    eny[:,0] = 0.5*eny[:,0]
 
 print('INFO: (plot_fluct) Computation method: '+mode)
-   
+
 #------------------------------------------------------------------------
 # Real-space field reconstruction (if no pygacode)
 def maptoreal(nr,nn,nx,ny,c):
@@ -126,14 +126,14 @@ def maptoreal_fft(nr,nn,nx,ny,c):
          k = -p+nx
       else:
          k = -p
-      # Use identity f(p,-n) = f(-p,n)* 
+      # Use identity f(p,-n) = f(-p,n)*
       d[k,0:nn] = np.conj(c[i,0:nn])
 
    # 2D inverse real Hermitian transform
-   # NOTE: using inverse FFT with convention exp(ipx+iny), so need n -> -n 
+   # NOTE: using inverse FFT with convention exp(ipx+iny), so need n -> -n
    # NOTE: need factor of 0.5 to match half-sum method of slow maptoreal()
    f = np.fft.irfft2(d,s=[nx,ny],norm='forward')*0.5
-   
+
    end = time.time()
 
    return f,end-start
@@ -142,14 +142,14 @@ def maptoreal_fft(nr,nn,nx,ny,c):
 # Get filename and tags
 print('INFO: (plot_fluct) '+moment+' fluctuations')
 if moment == 't':
-	fdata,title,isfield = tag_helper(sim.mass[species],sim.z[species],'n')
-	fdata_n = 'bin' + fdata
-	fdata,title,isfield = tag_helper(sim.mass[species],sim.z[species],'e')	
-	fdata_e = 'bin' + fdata
-	u = specmap(sim.mass[species],sim.z[species])
-	title = r'${\delta \mathrm{T}}_'+u+'$'
+   fdata,title,isfield = tag_helper(sim.mass[species],sim.z[species],'n')
+   fdata_n = 'bin' + fdata
+   fdata,title,isfield = tag_helper(sim.mass[species],sim.z[species],'e')
+   fdata_e = 'bin' + fdata
+   u = specmap(sim.mass[species],sim.z[species])
+   title = r'${\delta \mathrm{T}}_'+u+'$'
 else:
-	fdata,title,isfield = tag_helper(sim.mass[species],sim.z[species],moment)
+   fdata,title,isfield = tag_helper(sim.mass[species],sim.z[species],moment)
 
 # Check to see if data exists (try binary data first)
 if os.path.isfile('bin'+fdata):
@@ -199,19 +199,14 @@ def frame():
 
       # Correct for half-sum
       f = 2*f
-            
+
       if fmin == 'auto':
-         f0=np.min(f)
-         f1=np.max(f)
-
-         #CH alternate suggestion ensure even range around 0 for fluctuations
-         flim = max(abs(f0),abs(f1))
-         f0=-flim
-         f1=flim
-
+         fa = np.max(np.abs(f))
+         f0 = -fa
+         f1 = +fa
       else:
-         f0=float(fmin)
-         f1=float(fmax)
+         f0 = float(fmin)
+         f1 = float(fmax)
 
       # Physical maxima
       xmax = sim.length
@@ -226,7 +221,7 @@ def frame():
       fp[0:nx,0:ny] = f[:,:]
       fp[-1,:] = fp[0,:]
       fp[:,-1] = fp[:,0]
-      
+
       levels = np.arange(f0,f1,(f1-f0)/256)
       if land == 0:
          fig = plt.figure(figsize=(px/100.0,py/100.0))
@@ -259,11 +254,10 @@ def frame():
          plt.savefig(pre+str(i)+'.'+ftype)
          # Close each time to prevent memory accumulation
          plt.close()
-            
+
       if i == max(ivec):
        sys.exit()
 
-    
 i = 0
 
 if moment == 't':
@@ -311,4 +305,3 @@ else:
             m = 0
             print('INFO: (plot_fluct) Time index '+str(i)) 
             frame()
-

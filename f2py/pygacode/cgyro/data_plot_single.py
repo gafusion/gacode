@@ -17,6 +17,12 @@ rc('font',size=int(sys.argv[2]))
 
 plot_type = sys.argv[3]
 
+# Rule out most plots for ZF test
+if data_in.zf_test:
+   zf_test = ['zf','geo','error']
+   if plot_type not in zf_test:
+      plot_type = 'zf_not'
+
 xin = data_in.plot_dictinit()
 
 xin['fig']    = None
@@ -150,6 +156,10 @@ elif plot_type == 'hball':
 
    head = data_in.plot_hball(xin)
 
+elif plot_type == 'zf_not':
+
+   print('ERROR: (data_plot_single) Not available with ZF test.')
+   
 else:
 
    print('ERROR: (data_plot_single) Plot type not found')

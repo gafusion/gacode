@@ -190,10 +190,10 @@ subroutine cgyro_mpi_grid
 
 #if defined(OMPGPU)
 !$omp target enter data map(to:nv,nc,n_toroidal,n_toroidal_procs)
-!$omp target enter data map(to:n_radial,n_theta,n_field,n_energy,n_xi,n_species,n_field)
+!$omp target enter data map(to:n_radial,n_theta,n_field,n_energy,n_xi,n_species)
 #elif defined(_OPENACC)
 !$acc enter data copyin(nv,nc,n_toroidal,n_toroidal_procs)
-!$acc enter data copyin(n_radial,n_theta,n_field,n_energy,n_xi,n_species,n_field)
+!$acc enter data copyin(n_radial,n_theta,n_field,n_energy,n_xi,n_species)
 #endif
 
   ! Assign subgroup dimensions: n_proc = n_proc_1 * n_proc_2

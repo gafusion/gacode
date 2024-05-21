@@ -10,6 +10,17 @@
 ! NOTE: Need to be careful with (p=-nr/2,n=0) component.
 !-----------------------------------------------------------------
 
+subroutine cgyro_nl_fftw_init
+  use cgyro_globals
+  implicit none
+  include 'fftw3.f03'
+
+  ! Create plans once and for all, with global arrays fx,ux
+  plan_c2r = fftw_plan_dft_c2r_2d(nx,ny,fx(:,:,1),uxmany(:,:,1),FFTW_PATIENT)
+  plan_r2c = fftw_plan_dft_r2c_2d(nx,ny,uv(:,:,1),fx(:,:,1),FFTW_PATIENT)
+
+end subroutine cgyro_nl_fftw_init
+
 subroutine cgyro_nl_fftw_stepr(g_j, f_j, nl_idx, i_omp)
 
   use timer_lib

@@ -44,22 +44,23 @@ OBJECTS = neo_globals.o \
           neo_spitzer.o \
           matconv.o
 
+# JC: Commenting out 2024.04.25
 #NEO_FLAGS = -cpp
-ifdef CUDA_DIR
-   OBJECTS   += neo_cusolve.o cusolve.o
-   NEO_FLAGS += -DNEO_HAVE_CUDA $(CUDA_INC)
-   NEO_LIBS  += $(CUDA_LIB)
-endif
-ifdef PETSC_DIR
-   OBJECTS   += neo_petsc.o
-   NEO_FLAGS += -DNEO_HAVE_PETSC $(PETSC_INC)
-   NEO_LIBS  += $(PETSC_LIB)
-endif
-ifdef SUPERLU_DIR
-   OBJECTS   += neo_superlu.o st_to_cc.o c_fortran_dgssv.o
-   NEO_FLAGS += -DNEO_HAVE_SUPERLU $(SUPERLU_INC)
-   NEO_LIBS  += $(SUPERLU_LIB)
-endif
+#ifdef CUDA_DIR
+#   OBJECTS   += neo_cusolve.o cusolve.o
+#   NEO_FLAGS += -DNEO_HAVE_CUDA $(CUDA_INC)
+#   NEO_LIBS  += $(CUDA_LIB)
+#endif
+#ifdef PETSC_DIR
+#   OBJECTS   += neo_petsc.o
+#   NEO_FLAGS += -DNEO_HAVE_PETSC $(PETSC_INC)
+#   NEO_LIBS  += $(PETSC_LIB)
+#endif
+#ifdef SUPERLU_DIR
+#   OBJECTS   += neo_superlu.o st_to_cc.o c_fortran_dgssv.o
+#   NEO_FLAGS += -DNEO_HAVE_SUPERLU $(SUPERLU_INC)
+#   NEO_LIBS  += $(SUPERLU_LIB)
+#endif
 
 .SUFFIXES : .o .f90 .F90
 

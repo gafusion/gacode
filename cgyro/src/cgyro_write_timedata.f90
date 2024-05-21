@@ -60,7 +60,7 @@ subroutine cgyro_write_timedata
   endif
 
   if (moment_print_flag == 1) then
-     ! (n,e) moment for all species at selected thetas.
+     ! (n,e,v) moment for all species at selected thetas.
      ! prattq, allow moment printing for linear runs.
      do i_moment=1,3
         call cgyro_write_distributed_bcomplex(&

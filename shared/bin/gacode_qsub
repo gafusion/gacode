@@ -7,7 +7,7 @@
 #--------------------------------------------------------
 
 #=============================================================
-# Syntax validity check and help message 
+# Syntax validity check and help message
 #
 n=$#
 
@@ -26,26 +26,20 @@ then
   echo "         Set optional path to simulation directory."
   echo "         [The default path is the current directory]"
   echo
-  echo "         -e <simdir>" 
+  echo "         -e <simdir>"
   echo "         Run <code> using input.<code> in <simdir>."
   echo
   echo "         -code <code>"
   echo "         <code>=tgyro,cgyro,neo"
   echo
-  echo "         -n <MPI tasks>" 
+  echo "         -n <MPI tasks>"
   echo "         Number of MPI tasks."
   echo
-  echo "         -nomp <threads>" 
+  echo "         -nomp <threads>"
   echo "         Number of OpenMP threads per MPI task."
   echo
-  echo "         -numa <n>" 
-  echo "         NUMAs active per node."
-  echo
-  echo "         -mpinuma <n>" 
-  echo "         MPI tasks per active NUMA."
-  echo
-  echo "         -mem <n>[unit]" 
-  echo "         -mem-per-cpu <n>[unit]" 
+  echo "         -mem <n>[unit]"
+  echo "         -mem-per-cpu <n>[unit]"
   echo "         Memory required per node or per cpu, resp."
   echo "         Default unit MB. Slurm recognizes [K|M|G|T]"
   echo "         No space beween number and unit."
@@ -69,21 +63,21 @@ fi
 #=============================================================
 # Define variables for flag capture with defaults
 #
-user=`whoami`
 CODE=cgyro
 SUB_FLAG=0
 NO_LOGIN=0
 QUEUE=null_queue
 WALLTIME=0:59:00
 
-if hash getnim 2> /dev/null; then
+if hash iris 2> /dev/null; then
    # NERSC
-   x=`getnim -U $user -D`
+   x=`iris`
    y=($x)
-   REPO=${y[0]}
+   # The 10th element should be the first repo in the list
+   REPO=${y[10]}
 elif hash showusage 2> /dev/null; then
    # ORNL
-   x=`showusage`
+   x=`showusage`x
    for item in $x
    do
       if [[ $item == *"fus"* ]] ; then
@@ -101,8 +95,6 @@ SIMROOT=$PWD
 # Default number of cores
 nmpi=1
 nomp=1
-numa=0
-mpinuma=0
 
 #Default Memory Per Node
 MEMPERNODE=
@@ -128,13 +120,9 @@ while [[ $# -gt 0 ]] ; do
 
   -nomp) shift ; nomp=$1 ;;
 
-  -numa) shift ; numa=$1 ;;
-
   -mem) shift ; MEMPERNODE=$1 ;;
 
   -mem-per-cpu) shift ; MEMPERCPU=$1 ;;
-
-  -mpinuma) shift ; mpinuma=$1 ;;
 
   -queue) shift ; QUEUE=$1 ;;
 
@@ -143,7 +131,7 @@ while [[ $# -gt 0 ]] ; do
   -repo) shift ; REPO=$1 ;;
 
    *) echo "ERROR (gacode_qsub): Incorrect syntax." ; exit 1 ;;
- 
+
   esac
   shift
 done
@@ -198,10 +186,9 @@ fi
 
 if [[ $SUB_FLAG -eq 0 ]] ; then
     # Query NERSC/ORNL repositories
-    if hash getnim 2> /dev/null; then
+    if hash iris 2> /dev/null; then
        echo
-       echo "Your repositories"
-       getnim -U $user
+       iris
     elif hash showusage 2> /dev/null; then
        echo
        echo "Your repositories"
@@ -213,21 +200,21 @@ if [[ $SUB_FLAG -eq 0 ]] ; then
           fi
        done
     fi
-    
-    # Print proposed batch file 
+
+    # Print proposed batch file
     echo
     echo " batch file:"
     echo "-----------------------------------------------"
     cat $bfile
     echo "-----------------------------------------------"
-    
+
 else
     # Submit batch file
     if hash sbatch 2> /dev/null ; then
-       sbatch $bfile 
+       sbatch $bfile
     elif hash qsub 2> /dev/null ; then
        qsub $bfile
     else
        echo "ERROR: (gacode_qsub) No batch command recognized."
-    fi 
+    fi
 fi

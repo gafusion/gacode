@@ -360,12 +360,14 @@ subroutine cgyro_make_profiles
      ! my_toroidal == 0
      ! k_theta == 0
 
-     call cgyro_info('Triggered zonal flow test')
-
-     if (n_radial /= 1) then
-        call cgyro_info('Zonal flow test with n_radial > 1')
+     if (n_radial == 1) then
+        call cgyro_info('ZF test with n_radial = 1 ; setting UP_RADIAL=0')
+     else
+        call cgyro_info('ZF test with n_radial > 1 ; setting UP_RADIAL=0')
      endif
 
+     up_radial = 0.0
+     
   else if (n_toroidal == 1) then
 
      ! Single linear mode (assume n=1, compute rho)
@@ -420,7 +422,7 @@ subroutine cgyro_make_profiles
      omega_eb_base = k_theta_base*length*gamma_e/(2*pi)
      select case (shear_method)
      case (1)
-        call cgyro_info('ExB shear: Hammett discrete shift') 
+        call cgyro_info('ExB shear: Hammett discrete shift (do not use for production simulations)') 
      case (2)
         call cgyro_info('ExB shear: Wavenumber advection') 
         source_flag = 1
@@ -434,7 +436,7 @@ subroutine cgyro_make_profiles
   endif
 
   if (profile_shear_flag == 1) then
-     call cgyro_info('Profile shear: Continuous wavenumber advection') 
+     call cgyro_info('Profile shear: Wavenumber advection') 
      source_flag = 1
   else
      sdlnndr(1:n_species) = 0.0

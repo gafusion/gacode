@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "-queue: regular [default], debug, preempt"
+echo "-queue: regular, preempt, debug, premium"
 
 # Default queue
 if [ "$QUEUE" == "null_queue" ] ; then

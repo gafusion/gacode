@@ -1,0 +1,37 @@
+#---------------------------------------------------
+# PPPL Systems (FLUX) 
+#               with Intel Compiler and OpenMPI
+#---------------------------------------------------
+# L. Peterson (jpeterso@pppl.gov)
+# D. Mikkelsen (mikk@pppl.gov)
+# N. Ferraro (nferraro@pppl.gov)
+# B.A. Grierson (bgriers@pppl.gov)
+# J Parisi -- jparisi@pppl.gov
+
+IDENTITY="PPPL FLUX cluster"
+CORES_PER_NODE=1
+NUMAS_PER_NODE=1
+
+# Compilers (intel) and flags 
+FC     = mpif90 -gen-interfaces -module ${GACODE_ROOT}/modules -I${GACODE_ROOT}/modules -I${MKLROOT}/include/fftw -I$(NETCDF_FORTRAN_HOME)/include
+F77    = ${FC}
+
+FOMP   = -qopenmp
+FMATH  = -real-size 64
+FOPT   = -O2
+FDEBUG = -check all -traceback
+F2PY   = f2py
+
+# System math libraries
+LMATH = -mkl
+
+# NetCDF
+NETCDF = -L${NETCDF_FORTRAN_HOME}/lib -lnetcdff -L${NETCDF_C_HOME}/lib -lnetcdf
+NETCDF_INC =-I${NETCDF_FORTRAN_HOME}/include -I${NETCDF_C_HOME}/include
+
+# Mapping
+%.o : %.mod
+
+# Archive 
+ARCH = ar cr
+

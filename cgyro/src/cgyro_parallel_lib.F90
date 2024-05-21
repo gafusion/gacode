@@ -51,6 +51,11 @@ contains
 
 #if defined(OMPGPU)
 
+#define cpl_use_device1(finout) \
+!$omp target update from(finout)
+#define cpl_release_device1(finout) \
+!$omp target update to(finout)
+
 #define cpl_use_device(fin,fout) \
 !$omp target update from(fin)
 #define cpl_release_device(fin,fout) \
@@ -62,6 +67,11 @@ contains
 !$omp target update to(fout)
 
 #elif defined(_OPENACC)
+
+#define cpl_use_device1(finout) \
+!$acc update host(finout)
+#define cpl_release_device1(finout) \
+!$acc update device(finout)
 
 #define cpl_use_device(fin,fout) \
 !$acc update host(fin)
@@ -75,6 +85,8 @@ contains
 
 #else
   ! no devices, no-ops only
+#define cpl_use_device1(finout) 
+#define cpl_release_device1(finout) 
 #define cpl_use_device(fin,fout) 
 #define cpl_release_device(fin,fout) 
 #define cpl_unbind_device(fin,fout)
@@ -86,8 +98,13 @@ contains
 
 #if defined(OMPGPU)
 
+#define cpl_use_device1(finout) \
+!$omp target data use_device_addr(finout)
+#define cpl_release_device1(finout) \
+!$omp end target data
+
 #define cpl_use_device(fin,fout) \
-!$omp target data use_device_ptr(fin,fout)
+!$omp target data use_device_addr(fin,fout)
 #define cpl_release_device(fin,fout) \
 !$omp end target data
 #define cpl_unbind_device(fin,fout) \
@@ -96,6 +113,11 @@ contains
 #define cpl_finalize_device(fin,fout)
 
 #elif defined(_OPENACC)
+
+#define cpl_use_device1(finout) \
+!$acc host_data use_device(finout)
+#define cpl_release_device1(finout) \
+!$acc end host_data
 
 #define cpl_use_device(fin,fout) \
 !$acc host_data use_device(fin,fout)
@@ -108,6 +130,8 @@ contains
 
 #else
   ! no devices, no-ops only
+#define cpl_use_device1(finout) 
+#define cpl_release_device1(finout) 
 #define cpl_use_device(fin,fout) 
 #define cpl_release_device(fin,fout) 
 #define cpl_unbind_device(fin,fout)
@@ -453,13 +477,16 @@ contains
 
   !=========================================================
 
+  ! Note: Using intent(inout) for field_loc due to possible copy from GPU to CPU memory
+  ! Same for many other argumnets in other subroutines
+
   subroutine parallel_lib_sum_field_gpu(field_loc,field)
 
     use mpi
 
     implicit none
 
-    complex, intent(in), dimension(:,:,:) :: field_loc
+    complex, intent(inout), dimension(:,:,:) :: field_loc
     complex, intent(inout), dimension(:,:,:) :: field
     integer :: ierr
 
@@ -512,7 +539,7 @@ contains
 
     implicit none
 
-    complex, intent(in), dimension(:,:,:) :: upwind_loc
+    complex, intent(inout), dimension(:,:,:) :: upwind_loc
     complex, intent(inout), dimension(:,:,:) :: upwind
     integer :: ierr
 
@@ -538,7 +565,7 @@ contains
 
     implicit none
 
-    complex(KIND=REAL32), intent(in), dimension(:,:,:) :: upwind_loc
+    complex(KIND=REAL32), intent(inout), dimension(:,:,:) :: upwind_loc
     complex(KIND=REAL32), intent(inout), dimension(:,:,:) :: upwind
     integer :: ierr
 
@@ -630,7 +657,7 @@ contains
     implicit none
     !
     integer, intent(in) :: nsx
-    complex, intent(in), dimension(nkeep,nk_loc,nsx*nn) :: x
+    complex, intent(inout), dimension(nkeep,nk_loc,nsx*nn) :: x
     complex, intent(inout), dimension(nkeep,nk_loc,nsx,nn) :: xt
     !
     integer :: ierr
@@ -657,7 +684,7 @@ contains
     implicit none
     !
     integer, intent(in) :: nsx
-    complex, intent(in), dimension(nkeep,nk_loc,nsx*nn) :: x
+    complex, intent(inout), dimension(nkeep,nk_loc,nsx*nn) :: x
     complex, intent(inout), dimension(nkeep,nk_loc,nsx,nn) :: xt
     integer, intent(inout) :: req
     !
@@ -694,7 +721,7 @@ contains
     implicit none
     !
     integer, intent(in) :: nsx
-    complex, intent(in), dimension(nkeep,nk_loc,nsx*nn) :: x
+    complex, intent(inout), dimension(nkeep,nk_loc,nsx*nn) :: x
     complex, intent(inout), dimension(nkeep,nk_loc,nsx,nn) :: xt
     integer, intent(inout) :: req
     !
@@ -723,7 +750,7 @@ contains
     implicit none
     !
     integer, intent(in) :: nsx
-    complex, intent(in), dimension(nkeep,nk_loc,nsx,nn) :: xt
+    complex, intent(inout), dimension(nkeep,nk_loc,nsx,nn) :: xt
     complex, intent(inout), dimension(nkeep,nk_loc,nsx*nn) :: x
     !
     integer :: ierr
@@ -750,7 +777,7 @@ contains
     implicit none
     !
     integer, intent(in) :: nsx
-    complex, intent(in), dimension(nkeep,nk_loc,nsx,nn) :: xt
+    complex, intent(inout), dimension(nkeep,nk_loc,nsx,nn) :: xt
     complex, intent(inout), dimension(nkeep,nk_loc,nsx*nn) :: x
     integer, intent(inout) :: req
     !
@@ -787,7 +814,7 @@ contains
     !
     integer, intent(in) :: nsx
     complex, intent(inout), dimension(nkeep,nk_loc,nsx,nn) :: xt
-    complex, intent(in), dimension(nkeep,nk_loc,nsx*nn) :: x
+    complex, intent(inout), dimension(nkeep,nk_loc,nsx*nn) :: x
     integer, intent(inout) :: req
     !
     integer :: ierr
@@ -818,7 +845,7 @@ contains
     implicit none
     !
     integer, intent(in) :: nels1,nels2,nels3
-    complex, intent(in), dimension(nels1,nels2,nels3,nk_loc*nn) :: x
+    complex, intent(inout), dimension(nels1,nels2,nels3,nk_loc*nn) :: x
     complex, intent(inout), dimension(nels1,nels2,nels3,nk_loc*nn) :: xt
     !
     integer :: ierr
@@ -845,7 +872,7 @@ contains
     implicit none
     !
     integer, intent(in) :: nels1,nels2,nels3
-    complex, intent(in), dimension(nels1,nels2,nels3,nk_loc*nn) :: x
+    complex, intent(inout), dimension(nels1,nels2,nels3,nk_loc*nn) :: x
     complex, intent(inout), dimension(nels1,nels2,nels3,nk_loc*nn) :: xt
     integer, intent(inout) :: req
     !
@@ -881,7 +908,7 @@ contains
     implicit none
     !
     integer, intent(in) :: nels1,nels2,nels3
-    complex, intent(in), dimension(nels1,nels2,nels3,nk_loc*nn) :: x
+    complex, intent(inout), dimension(nels1,nels2,nels3,nk_loc*nn) :: x
     complex, intent(inout), dimension(nels1,nels2,nels3,nk_loc*nn) :: xt
     integer, intent(inout) :: req
     !
@@ -905,37 +932,22 @@ contains
 
 !=========================================================
 
-  ! x is logically (nels,nn)
-  subroutine parallel_slib_distribute_real(nels,x)
+  subroutine parallel_slib_distribute_real(nels1,nels2,nels3,nels4,nels5,x)
 
     use mpi
 
     !-------------------------------------------------------
     implicit none
     !
-    integer, intent(in) :: nels
-    real, intent(inout), dimension(*) :: x
+    integer, intent(in) :: nels1,nels2,nels3,nels4,nels5
+    real, intent(inout), dimension(nels1,nels2,nels3,nels4,nels5,nn) :: x
     !
+    integer :: nels
     integer :: ierr
     !-------------------------------------------------------
 
-#ifdef DISABLE_GPUDIRECT_MPI
-
-#if defined(OMPGPU)
-!$omp target update from(x(1:nels))
-#elif defined(_OPENACC)
-!$acc update host(x(1:nels))
-#endif
-
-#else
-
-#if defined(OMPGPU)
-!$omp target data use_device_ptr(x)
-#elif defined(_OPENACC)
-!$acc host_data use_device(x)
-#endif
-
-#endif
+    nels = nels1*nels2*nels3*nels4*nels5
+    cpl_use_device1(x)
 
     call MPI_ALLTOALL(MPI_IN_PLACE, &
          nels, &
@@ -946,23 +958,7 @@ contains
          slib_comm, &
          ierr)
 
-#ifdef DISABLE_GPUDIRECT_MPI
-
-#if defined(OMPGPU)
-!$omp target update to(x(1:nels))
-#elif defined(_OPENACC)
-!$acc update device(x(1:nels))
-#endif
-
-#else
-
-#if defined(OMPGPU)
-!$omp end target data
-#elif defined(_OPENACC)
-!$acc end host_data
-#endif
-
-#endif
+   cpl_release_device1(x)
 
   end subroutine parallel_slib_distribute_real
 

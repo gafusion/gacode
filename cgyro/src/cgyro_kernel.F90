@@ -17,6 +17,7 @@ subroutine cgyro_kernel
   use cgyro_globals
   use cgyro_step
   use cgyro_io
+  use cgyro_restart
 
   implicit none
 
@@ -91,9 +92,9 @@ subroutine cgyro_kernel
 #endif
 
      if (mod(i_time,print_step) == 0) then
-       ! cap_h_c will not be modified in GPU memory for the rest of the loop
+        ! cap_h_c will not be modified in GPU memory for the rest of the loop
 #if defined(OMPGPU)
-     ! no async for OMPGPU for now
+        ! no async for OMPGPU for now
 !$omp target update from(cap_h_c)
 #elif defined(_OPENACC)
 !$acc update host(cap_h_c) async(4)
@@ -109,8 +110,8 @@ subroutine cgyro_kernel
      ! NOTE: Fluxes are calculated in cgyro_write_timedata
 
 #if (!defined(OMPGPU)) && defined(_OPENACC)
-  call timer_lib_in('coll_mem')
-  ! wait for fields to be synched into system memory, used by cgyro_error_estimate
+     call timer_lib_in('coll_mem')
+     ! wait for fields to be synched into system memory, used by cgyro_error_estimate
 !$acc wait(3)
   call timer_lib_out('coll_mem')
 #endif
@@ -125,13 +126,13 @@ subroutine cgyro_kernel
      ! IO
      !
      if (mod(i_time,print_step) == 0) then
-       call timer_lib_in('coll_mem')
+        call timer_lib_in('coll_mem')
 #if defined(OMPGPU)
-     ! no async for OMPGPU for now
+        ! no async for OMPGPU for now
 !$omp target update from(cap_h_c_dot)
 #elif defined(_OPENACC)
 !$acc update host(cap_h_c_dot)
-       ! wait for cap_h_c to be synched into system memory, used by cgyro_write_timedata
+        ! wait for cap_h_c to be synched into system memory, used by cgyro_write_timedata
 !$acc wait(4)
 #endif
        call timer_lib_out('coll_mem')
@@ -157,8 +158,8 @@ subroutine cgyro_kernel
      ! Don't wrap timer output in a timer
      if (mod(i_time,print_step) == 0) call write_timers(trim(path)//runfile_timers)
 
-     ! Exit if convergenced
-     if (signal == 1) exit
+     ! Exit if converged (1) or underflow (2)
+     if (signal > 1) exit
 
   enddo
   !---------------------------------------------------------------------------

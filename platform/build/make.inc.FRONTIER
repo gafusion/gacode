@@ -26,7 +26,6 @@ FOPT   =-Ofast
 FDEBUG =-O0 -g
 F2PY   = f2py --fcompiler=pg
 
-
 # System math libraries
 LMATH=-L${ROCM_PATH}/lib -L${HIPFORT_DIR}/lib -lhipfort-amdgcn -lhipfft -lamdhip64
 

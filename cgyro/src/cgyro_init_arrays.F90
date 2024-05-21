@@ -161,7 +161,7 @@ subroutine cgyro_init_arrays
      enddo
     enddo
    enddo
-   call parallel_slib_distribute_real(n_field*n_radial*n_jtheta*nv_loc*nt_loc,jvec_c_nl)
+   call parallel_slib_distribute_real(n_field,n_radial,n_jtheta,nv_loc,nt_loc,jvec_c_nl)
   endif
 
   !-------------------------------------------------------------------------

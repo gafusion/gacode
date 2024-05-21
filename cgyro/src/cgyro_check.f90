@@ -36,7 +36,7 @@ subroutine cgyro_check
   endif
 
   if (n_species > 11) then
-     call cgyro_error('n_species <= 11.')
+     call cgyro_error('n_species cannot be greater than 11.')
      return
   endif
 

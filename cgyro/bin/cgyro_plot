@@ -424,7 +424,7 @@ case "$VIS_TYPE" in
 	export OMP_NUM_THREADS=$NOMP ; python -m pygacode.cgyro.vis_wheel $EXT $MOMENT $SPECIES $NX $NY $NZ $TIME $FMIN $FMAX $CMAP $FONTSIZE ;;
 
    supertorus)
-	export OMP_NUM_THREADS=$NOMP ; python -m pygacode.cgyro.vis_supertorus $EXT $MOMENT $SPECIES $NX $NZ $NPHI $PHIMAX $TIME $FMIN $FMAX $CMAP $FONTSIZE $LEGACY_FLAG $DN $MAG $NOZONAL $ONLYZONAL ;;
+	export OMP_NUM_THREADS=$NOMP ; python -m pygacode.cgyro.vis_supertorus $EXT $MOMENT $SPECIES $NX $NZ $NPHI $PHIMAX $TIME $FMIN $FMAX $CMAP $FONTSIZE $LEGACY_FLAG $DN $MAG $NOZONAL $ONLYZONAL $PX $PY ;;
    
     *)
         echo "Unrecognized argument to -vis" ; exit 1 ;;

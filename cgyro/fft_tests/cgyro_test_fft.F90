@@ -1,3 +1,7 @@
+#if defined(MKLGPU)
+include 'fftw/offload/fftw3_omp_offload.f90'
+#endif
+
 program cgyro_test_fft
 
   use, intrinsic :: iso_c_binding
@@ -12,10 +16,12 @@ program cgyro_test_fft
 
 #ifdef CGYRO_GPU_FFT
   
-#ifdef HIPGPU
-  ! HIP
+#if defined(HIPGPU)
   type(C_PTR) :: plan_c2r_many
   type(C_PTR) :: plan_r2c_many
+#elif defined(MKLGPU)
+  INTEGER*8 :: plan_c2r_many
+  INTEGER*8 :: plan_r2c_many
 #else
   ! CUDA
   integer(c_int) :: plan_c2r_many
@@ -98,7 +104,8 @@ program cgyro_test_fft
 !$acc wait
 #endif
 
-  call cgyro_setup_fft(n_proc,plan_c2r_many,plan_r2c_many,fxmany,uvmany,comp_uxmany,comp_fvmany)
+  call cgyro_setup_fft(n_proc,plan_c2r_many,plan_r2c_many, &
+          fxmany(:,:,n1:n2),uvmany(:,:,n1:n2),comp_uxmany(:,:,n1:n2),comp_fvmany(:,:,n1:n2))
 
   open(unit=1,file="data/bin.fxmany.raw",form='unformatted',access='direct',recl=size(fxmany)*16)
   read(1,rec=1) fxmany
@@ -158,28 +165,31 @@ contains
      integer, intent(in) :: i_proc,nels
      real, dimension(1:nels), intent(in) :: comp_many,exp_many
      !-----------------------------------
-     integer :: n
+     integer :: n,errs
      real :: comp_val,exp_val
 
+     errs = 0
 #ifdef OMPGPU
-!$omp target teams distribute parallel do private(comp_val,exp_val)
+!$omp target teams distribute parallel do private(comp_val,exp_val) reduction(+:errs)
 #else
-!$acc parallel loop present(comp_many,exp_many) copyin(nels) private(comp_val,exp_val)
+!$acc parallel loop present(comp_many,exp_many) copyin(nels) private(comp_val,exp_val) reduction(+:errs)
 #endif
      do n=1,nels
        comp_val=comp_many(n)
        exp_val=exp_many(n)
        if (exp_val<1.e-5) then
           if (abs(comp_val - exp_val) > 1.e-10)  then
-             write(*,*) "ERROR: cgyro_comp_D ",n,comp_val,exp_val
+             !write(*,*) "ERROR: cgyro_comp_D ",n,comp_val,exp_val
+             errs = errs + 1
           endif
        else
           if (abs(comp_val - exp_val) > 1.e-7)  then
-             write(*,*) "ERROR: cgyro_comp_D ",n,comp_val,exp_val
+             !write(*,*) "ERROR: cgyro_comp_D ",n,comp_val,exp_val
+             errs = errs + 1
           endif
        endif
      enddo
-     write(*,*) "[",i_proc,"] cgyro_comp_D completed"
+     write(*,*) "[",i_proc,"] cgyro_comp_D completed, errs ", errs
 
   end subroutine cgyro_comp_D
 
@@ -189,39 +199,45 @@ contains
      integer, intent(in) :: i_proc,nels
      complex, dimension(1:nels), intent(in) :: comp_many,exp_many
      !-----------------------------------
-     integer :: n
+     integer :: n,errs1,errs2
      real :: comp_val,exp_val
 
+     errs1 = 0
+     errs2 = 0
 #ifdef OMPGPU
-!$omp target teams distribute parallel do private(comp_val,exp_val)
+!$omp target teams distribute parallel do private(comp_val,exp_val) reduction(+:errs1,errs2)
 #else
-!$acc parallel loop present(comp_many,exp_many) copyin(nels) private(comp_val,exp_val)
+!$acc parallel loop present(comp_many,exp_many) copyin(nels) private(comp_val,exp_val) reduction(+:errs1,errs2)
 #endif
      do n=1,nels
        comp_val=real(comp_many(n))
        exp_val=real(exp_many(n))
        if (exp_val<1.e-5) then
           if (abs(comp_val - exp_val) > 1.e-10)  then
-             write(*,*) "ERROR: cgyro_comp_Z real ",n,comp_val,exp_val
+             !write(*,*) "ERROR: cgyro_comp_Z real ",n,comp_val,exp_val
+             errs1 = errs1 + 1
           endif
        else
           if (abs(comp_val - exp_val) > 1.e-7)  then
-             write(*,*) "ERROR: cgyro_comp_Z real ",n,comp_val,exp_val
+             !write(*,*) "ERROR: cgyro_comp_Z real ",n,comp_val,exp_val
+             errs1 = errs1 + 1
           endif
        endif
        comp_val=aimag(comp_many(n))
        exp_val=aimag(exp_many(n))
        if (exp_val<1.e-5) then
           if (abs(comp_val - exp_val) > 1.e-10)  then
-             write(*,*) "ERROR: cgyro_comp_Z imag ",n,comp_val,exp_val
+             !write(*,*) "ERROR: cgyro_comp_Z imag ",n,comp_val,exp_val
+             errs2 = errs2 + 1
           endif
        else
           if (abs(comp_val - exp_val) > 1.e-7)  then
-             write(*,*) "ERROR: cgyro_comp_Z imag ",n,comp_val,exp_val
+             !write(*,*) "ERROR: cgyro_comp_Z imag ",n,comp_val,exp_val
+             errs2 = errs2 + 1
           endif
        endif
      enddo
-     write(*,*) "[",i_proc,"] cgyro_comp_Z completed"
+     write(*,*) "[",i_proc,"] cgyro_comp_Z completed, errs ", errs1,errs2
 
   end subroutine cgyro_comp_Z
 
@@ -229,8 +245,10 @@ contains
 
      use, intrinsic :: iso_c_binding
 #ifdef CGYRO_GPU_FFT
-#ifdef HIPGPU
+#if defined(HIPGPU)
      use hipfort_hipfft
+#elif defined(MKLGPU)
+     use fftw3_omp_offload
 #else
      use cufft
 #endif
@@ -238,15 +256,22 @@ contains
 
      implicit none
      !-----------------------------------
-#ifndef CGYRO_GPU_FFT
+#ifdef CGYRO_GPU_FFT
+#if defined(MKLGPU)
+     include 'fftw/fftw3.f'
+#endif
+#else
      include 'fftw3.f03'
 #endif
 
 #ifdef CGYRO_GPU_FFT
   
-#ifdef HIPGPU
+#if defined(HIPGPU)
      type(C_PTR), intent(inout) :: plan_c2r_many
      type(C_PTR), intent(inout) :: plan_r2c_many
+#elif defined(MKLGPU)
+     INTEGER*8, intent(inout) :: plan_c2r_many
+     INTEGER*8, intent(inout) :: plan_r2c_many
 #else
      integer(c_int), intent(inout) :: plan_c2r_many
      integer(c_int), intent(inout) :: plan_r2c_many
@@ -266,7 +291,13 @@ contains
      ! Forward
      ! --------------------------------------
 #ifdef OMPGPU
+
+#if defined(MKLGPU)
+!$omp target data map(tofrom: fxmany,uxmany)
+#else
 !$omp target data use_device_ptr(fxmany,uxmany)
+#endif
+
 #else
 !$acc wait
 !$acc  host_data use_device(fxmany,uxmany) 
@@ -274,8 +305,12 @@ contains
 
 #ifdef CGYRO_GPU_FFT
   
-#ifdef HIPGPU
+#if defined(HIPGPU)
      rc = hipfftExecZ2D(plan_c2r_many,c_loc(fxmany),c_loc(uxmany))
+#elif defined(MKLGPU)
+     !$omp dispatch
+     call dfftw_execute_dft_c2r(plan_c2r_many,fxmany,uxmany)
+     rc = 0
 #else
      rc = cufftExecZ2D(plan_c2r_many,fxmany,uxmany)
 #endif
@@ -287,6 +322,7 @@ contains
 #endif
      if (rc/=0) then
         write(*,*) "ERROR: fftExec D2Z failed! ", rc
+        call flush(6)
         call abort
      endif
 
@@ -302,7 +338,13 @@ contains
      ! --------------------------------------
 
 #ifdef OMPGPU
+
+#if defined(MKLGPU)
+!$omp target data map(tofrom: uxmany,fxmany)
+#else
 !$omp target data use_device_ptr(uxmany,fxmany)
+#endif
+
 #else
 !$acc wait
 !$acc host_data use_device(uxmany,fxmany)
@@ -310,8 +352,12 @@ contains
 
 #ifdef CGYRO_GPU_FFT
   
-#ifdef HIPGPU
+#if defined(HIPGPU)
      rc = hipfftExecD2Z(plan_r2c_many,c_loc(uxmany),c_loc(fxmany))
+#elif defined(MKLGPU)
+     !$omp dispatch
+     call dfftw_execute_dft_r2c(plan_r2c_many,uxmany,fxmany) 
+     rc = 0
 #else
      rc = cufftExecD2Z(plan_r2c_many,uxmany,fxmany)
 #endif
@@ -330,6 +376,7 @@ contains
 #endif
      if (rc/=0) then
         write(*,*) "ERROR: fftExec Z2D failed! ", rc
+        call flush(6)
         call abort
      endif
 !$acc wait
@@ -341,8 +388,10 @@ contains
 
      use, intrinsic :: iso_c_binding
 #ifdef CGYRO_GPU_FFT
-#ifdef HIPGPU
+#if defined(HIPGPU)
      use hipfort_hipfft
+#elif defined(MKLGPU)
+     use fftw3_omp_offload
 #else
      use cufft
 #endif
@@ -350,15 +399,22 @@ contains
 
      implicit none
      !-----------------------------------
-#ifndef CGYRO_GPU_FFT
+#ifdef CGYRO_GPU_FFT
+#if defined(MKLGPU)
+     include 'fftw/fftw3.f'
+#endif
+#else
      include 'fftw3.f03'
 #endif
 
 #ifdef CGYRO_GPU_FFT
   
-#ifdef HIPGPU
+#if defined(HIPGPU)
      type(C_PTR), intent(inout) :: plan_c2r_many
      type(C_PTR), intent(inout) :: plan_r2c_many
+#elif defined(MKLGPU)
+     INTEGER*8, intent(inout) :: plan_c2r_many
+     INTEGER*8, intent(inout) :: plan_r2c_many
 #else
      integer(c_int), intent(inout) :: plan_c2r_many
      integer(c_int), intent(inout) :: plan_r2c_many
@@ -380,16 +436,25 @@ contains
      ! Forward
      ! --------------------------------------
 #ifdef OMPGPU
+
+#if defined(MKLGPU)
+!$omp target data map(tofrom: fxmany,uxmany)
+#else
 !$omp target data use_device_ptr(fxmany,uxmany)
+#endif
+
 #else
 !$acc wait
 !$acc  host_data use_device(fxmany,uxmany) 
 #endif
-
 #ifdef CGYRO_GPU_FFT
   
-#ifdef HIPGPU
+#if defined(HIPGPU)
      rc = hipfftExecZ2D(plan_c2r_many,c_loc(fxmany),c_loc(uxmany))
+#elif defined(MKLGPU)
+     !$omp dispatch
+     call dfftw_execute_dft_c2r(plan_c2r_many,fxmany,uxmany) 
+     rc = 0
 #else
      rc = cufftExecZ2D(plan_c2r_many,fxmany,uxmany)
 #endif
@@ -401,6 +466,7 @@ contains
 #endif
      if (rc/=0) then
         write(*,*) "ERROR: fftExec D2Z failed! ", rc
+        call flush(6)
         call abort
      else
         write(*,*) "INFO: fftExec D2Z done."
@@ -419,7 +485,13 @@ contains
      ! --------------------------------------
 
 #ifdef OMPGPU
+
+#if defined(MKLGPU)
+!$omp target data map(tofrom: uvmany,fvmany)
+#else
 !$omp target data use_device_ptr(uvmany,fvmany)
+#endif
+
 #else
 !$acc wait
 !$acc host_data use_device(uvmany,fvmany)
@@ -427,8 +499,12 @@ contains
 
 #ifdef CGYRO_GPU_FFT
   
-#ifdef HIPGPU
+#if defined(HIPGPU)
      rc = hipfftExecD2Z(plan_r2c_many,c_loc(uvmany),c_loc(fvmany))
+#elif defined(MKLGPU)
+     !$omp dispatch
+     call dfftw_execute_dft_r2c(plan_r2c_many,uvmany,fvmany) 
+     rc = 0
 #else
      rc = cufftExecD2Z(plan_r2c_many,uvmany,fvmany)
 #endif
@@ -439,20 +515,20 @@ contains
      rc = 0
 #endif
 
+     if (rc/=0) then
+        write(*,*) "ERROR: fftExec Z2D failed! ", rc
+        call flush(6)
+        call abort
+     else
+        write(*,*) "INFO: fftExec Z2D done."
+        call flush(6)
+     endif
 #ifdef OMPGPU
 !$omp end target data
 #else
 !$acc wait
 !$acc end host_data
 #endif
-
-     if (rc/=0) then
-        write(*,*) "ERROR: fftExec Z2D failed! ", rc
-        call abort
-     else
-        write(*,*) "INFO: fftExec Z2D done."
-        call flush(6)
-     endif
 !$acc wait
 
   end subroutine cgyro_do_fft
@@ -463,14 +539,20 @@ contains
   use, intrinsic :: iso_c_binding
   use, intrinsic :: iso_fortran_env
 #ifdef CGYRO_GPU_FFT
-#ifdef HIPGPU
-  use hipfort_hipfft
+#if defined(HIPGPU)
+     use hipfort_hipfft
+#elif defined(MKLGPU)
+     use fftw3_omp_offload
 #else
   use cufft
 #endif
 #endif
   implicit none
-#ifndef CGYRO_GPU_FFT
+#ifdef CGYRO_GPU_FFT
+#if defined(MKLGPU)
+     include 'fftw/fftw3.f'
+#endif
+#else
      include 'fftw3.f03'
      integer, external :: omp_get_max_threads
 #endif
@@ -478,9 +560,12 @@ contains
    integer, intent(in) :: n_proc
 #ifdef CGYRO_GPU_FFT
   
-#ifdef HIPGPU
+#if defined(HIPGPU)
   type(C_PTR), intent(inout) :: plan_c2r_many
   type(C_PTR), intent(inout) :: plan_r2c_many
+#elif defined(MKLGPU)
+     INTEGER*8, intent(inout) :: plan_c2r_many
+     INTEGER*8, intent(inout) :: plan_r2c_many
 #else
   integer(c_int), intent(inout) :: plan_c2r_many
   integer(c_int), intent(inout) :: plan_r2c_many
@@ -498,7 +583,8 @@ contains
   !-----------------------------------
   integer :: istatus
   integer, parameter :: irank = 2
-  integer, dimension(irank) :: ndim,inembed,onembed
+  integer, dimension(irank) :: ndim
+  integer, dimension(irank) :: inembed,onembed
   integer :: idist,odist,istride,ostride,nsplit
 
 #ifndef CGYRO_GPU_FFT
@@ -509,18 +595,27 @@ contains
      nsplit = 72/n_proc
 
      ! nl03
+#if defined(CGYRO_GPU_FFT) && defined(MKLGPU)
+     ndim(2) = 768
+     ndim(1) = 190
+#else
      ndim(1) = 768
      ndim(2) = 190
+#endif
      idist = 96*768
      odist = 190*768
      istride = 1
      ostride = 1
      inembed = 96
      onembed = 190
+#if defined(CGYRO_GPU_FFT) && defined(MKLGPU)
+     inembed(2) = 768
+     onembed(2) = 768
+#endif
 
 #ifdef CGYRO_GPU_FFT
   
-#ifdef HIPGPU
+#if defined(HIPGPU)
      plan_c2r_many = c_null_ptr
      istatus = hipfftPlanMany(&
           plan_c2r_many, &
@@ -534,6 +629,31 @@ contains
           odist, &
           HIPFFT_Z2D, &
           nsplit)
+#elif defined(MKLGPU)
+     plan_c2r_many = 0
+!$omp target data map(tofrom: fxmany,uxmany)
+     !$omp dispatch
+     call dfftw_plan_many_dft_c2r(&
+          plan_c2r_many, &
+          irank, &
+          ndim, &
+          nsplit, &
+          fxmany, &
+          inembed, &
+          istride, &
+          idist, &
+          uxmany, &
+          onembed, &
+          ostride, &
+          odist, &
+          FFTW_ESTIMATE)
+
+!$omp end target data
+     if (plan_c2r_many == 0) then
+       istatus = 1
+     else
+       istatus = 0
+     endif
 #else
      istatus = cufftPlanMany(&
           plan_c2r_many, &
@@ -578,11 +698,15 @@ contains
      odist = 96*768
      inembed = 190
      onembed = 96
+#if defined (CGYRO_GPU_FFT) && defined(MKLGPU)
+     inembed(2) = 768
+     onembed(2) = 768
+#endif
      istride = 1
      ostride = 1
 #ifdef CGYRO_GPU_FFT
   
-#ifdef HIPGPU
+#if defined(HIPGPU)
      plan_r2c_many = c_null_ptr
      istatus = hipfftPlanMany(&
           plan_r2c_many, &
@@ -596,6 +720,30 @@ contains
           odist, &
           HIPFFT_D2Z, &
           nsplit)
+#elif defined(MKLGPU)
+     plan_r2c_many = 0
+!$omp target data map(tofrom: uvmany,fvmany)
+     !$omp dispatch
+     call dfftw_plan_many_dft_r2c(&
+          plan_r2c_many, &
+          irank, &
+          ndim, &
+          nsplit, &
+          uvmany, &
+          inembed, &
+          istride, &
+          idist, &
+          fvmany, &
+          onembed, &
+          ostride, &
+          odist, &
+          FFTW_PATIENT)
+!$omp end target data
+     if (plan_r2c_many == 0) then
+       istatus = 1
+     else
+       istatus = 0
+     endif
 #else
      istatus = cufftPlanMany(&
           plan_r2c_many, &

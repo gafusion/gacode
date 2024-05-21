@@ -13,15 +13,6 @@ module cgyro_globals
 #define CGYRO_GPU_FFT
 #endif
 
-#ifdef CGYRO_GPU_FFT
-
-#ifdef HIPGPU
-  use hipfort_hipfft
-#else
-  use cuFFT
-#endif
-
-#endif
   use, intrinsic :: iso_fortran_env
   
   ! Data output precision setting
@@ -260,8 +251,6 @@ module cgyro_globals
   ! Restart tags
   character(len=8) :: fmt='(I2.2)'
   character(len=6), dimension(100) :: rtag
-  integer, parameter :: restart_header_size = 1024
-  integer  :: restart_magic
   !
   ! error checking
   integer :: error_status = 0
@@ -404,9 +393,12 @@ module cgyro_globals
 #else
   ! GPU-FFTW plans
 
-#ifdef HIPGPU
+#if defined(HIPGPU)
   type(C_PTR) :: hip_plan_r2c_manyA,hip_plan_r2c_manyB
   type(C_PTR) :: hip_plan_c2r_manyA,hip_plan_c2r_manyB,hip_plan_c2r_manyG
+#elif defined(MKLGPU)
+  INTEGER*8 :: dfftw_plan_r2c_manyA,dfftw_plan_r2c_manyB
+  INTEGER*8 :: dfftw_plan_c2r_manyA,dfftw_plan_c2r_manyB,dfftw_plan_c2r_manyG
 #else
   integer(c_int) :: cu_plan_r2c_manyA,cu_plan_r2c_manyB
   integer(c_int) :: cu_plan_c2r_manyA,cu_plan_c2r_manyB,cu_plan_c2r_manyG

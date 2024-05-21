@@ -3,16 +3,14 @@
 #---------------------------------------------------
 
 IDENTITY="corg.gat.com gfortran+mpich+OpenBLAS (/usr)"
-CORES_PER_NODE=4
+CORES_PER_NODE=128
 NUMAS_PER_NODE=1
 
 FFTWDIR=/usr/lib/x86_64-linux-gnu
-
 ROOT=/home/math
 
 # Compilers
-
-FC     = mpif90 -std=f2008 -fall-intrinsics -I $(GACODE_ROOT)/modules -J $(GACODE_ROOT)/modules -fPIC
+FC     = mpif90 -std=f2018 -fall-intrinsics -I $(GACODE_ROOT)/modules -J $(GACODE_ROOT)/modules -fPIC
 F77    = mpif77
 FOMP   =-fopenmp
 FMATH  =-fdefault-real-8 -fdefault-double-8
@@ -29,5 +27,4 @@ NETCDF=-L/usr/lib -lnetcdff -lnetcdf
 NETCDF_INC=/usr/include
 
 # Archive 
-
 ARCH = ar cr

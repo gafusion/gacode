@@ -49,170 +49,175 @@ subroutine cgyro_flux
 !$omp&            private(prod1,prod2,prod3,l,icl,dvr,u,flux_norm) &
 !$omp&            shared(moment_loc,gflux_loc,cflux_loc)
   do itor=nt1,nt2
-   !-----------------------------------------------------
-   ! 1. Compute kx-ky moments (n,E)
-   !-----------------------------------------------------
 
-   moment_loc(:,:,:,itor,:) = 0.0
+     !-----------------------------------------------------
+     ! 1. Compute kx-ky moments (n,E,v)
+     !-----------------------------------------------------
 
-   iv_loc = 0
-   do iv=nv1,nv2
+     moment_loc(:,:,:,itor,:) = 0.0
 
-     iv_loc = iv_loc+1
+     iv_loc = 0
+     do iv=nv1,nv2
 
-     is = is_v(iv)
-     ix = ix_v(iv)
-     ie = ie_v(iv)
+        iv_loc = iv_loc+1
 
-     ! Integration weight
-     dv = w_exi(ie,ix)
+        is = is_v(iv)
+        ix = ix_v(iv)
+        ie = ie_v(iv)
 
-     ! Parallel velocity
-     vpar = vth(is)*vel2(ie)*xi(ix)
+        ! Integration weight
+        dv = w_exi(ie,ix)
 
-     do ic=1,nc
+        ! Parallel velocity
+        vpar = vth(is)*vel2(ie)*xi(ix)
 
-        ir = ir_c(ic)
-        it = it_c(ic)
+        do ic=1,nc
 
-        erot  = (energy(ie)+lambda_rot(it,is))*temp(is)
+           ir = ir_c(ic)
+           it = it_c(ic)
 
-        if (itp(it) > 0) then
-           cprod = cap_h_c(ic,iv_loc,itor)*dvjvec_c(1,ic,iv_loc,itor)/z(is)
-           cn    = dv*z(is)*dens2_rot(it,is)/temp(is)
+           erot  = (energy(ie)+lambda_rot(it,is))*temp(is)
 
-           ! Density moment: (delta n_a)/(n_norm rho_norm)
-           moment_loc(ir,itp(it),is,itor,1) = moment_loc(ir,itp(it),is,itor,1)-(cn*field(1,ic,itor)-cprod)
+           if (itp(it) > 0) then
+              cprod = cap_h_c(ic,iv_loc,itor)*dvjvec_c(1,ic,iv_loc,itor)/z(is)
+              cn    = dv*z(is)*dens2_rot(it,is)/temp(is)
 
-           ! Energy moment : (delta E_a)/(n_norm T_norm rho_norm)
-           moment_loc(ir,itp(it),is,itor,2) = moment_loc(ir,itp(it),is,itor,2)-(cn*field(1,ic,itor)-cprod)*erot
+              ! Note addition division by rho below
+              
+              ! Density moment: (delta n_a)/(n_norm)
+              moment_loc(ir,itp(it),is,itor,1) = moment_loc(ir,itp(it),is,itor,1)-(cn*field(1,ic,itor)-cprod)
 
-           ! Velocity moment : (delta v_a)/(n_norm v_norm rho_norm)
-           moment_loc(ir,itp(it),is,itor,3) = moment_loc(ir,itp(it),is,itor,3)-(cn*field(1,ic,itor)-cprod)*vpar
-        endif
+              ! Energy moment : (delta E_a)/(n_norm T_norm)
+              moment_loc(ir,itp(it),is,itor,2) = moment_loc(ir,itp(it),is,itor,2)-(cn*field(1,ic,itor)-cprod)*erot
 
-     enddo
-   enddo
-
-   moment_loc(:,:,:,itor,:) = moment_loc(:,:,:,itor,:)/rho
-
-   !-------------------------------------------------------------
-   ! 2. Compute global ky-dependent fluxes (with field breakdown)
-   !-------------------------------------------------------------
-
-   gflux_loc(:,:,:,:,itor) = 0.0
-
-   iv_loc = 0
-   do iv=nv1,nv2
-
-     iv_loc = iv_loc+1
-
-     is = is_v(iv)
-     ix = ix_v(iv)
-     ie = ie_v(iv)
-
-     ! Integration weight
-     dv = w_exi(ie,ix)
-
-     ! Parallel velocity
-     vpar = vth(is)*vel2(ie)*xi(ix)
-
-     do ic=1,nc
-
-        ir = ir_c(ic)
-        it = it_c(ic)
-
-        ! prod* are local to this loop
-        prod1 = 0.0 
-        prod2 = 0.0
-        prod3 = 0.0
-
-        ! Global flux coefficients (complex coefficients required to compute radial profile)
-        do l=0,n_global
-
-           ! H w^* + H^* w
-
-           if (ir-l > 0) then
-              icl = ic_c(ir-l,it)
-              prod1(l,:) = prod1(l,:) &
-                      +i_c*cap_h_c(ic,iv_loc,itor)*conjg(jvec_c(:,icl,iv_loc,itor)*field(:,icl,itor))
-              prod2(l,:) = prod2(l,:) &
-                      +i_c*cap_h_c(ic,iv_loc,itor)*conjg(i_c*jxvec_c(:,icl,iv_loc,itor)*field(:,icl,itor))
-              prod3(l,:) = prod3(l,:) &
-                      -cap_h_c_dot(ic,iv_loc,itor)*conjg(jvec_c(:,icl,iv_loc,itor)*field(:,icl,itor)) &
-                      +cap_h_c(ic,iv_loc,itor)*conjg(jvec_c(:,icl,iv_loc,itor)*field_dot(:,icl,itor))
-           endif
-           if (ir+l <= n_radial) then
-              icl = ic_c(ir+l,it)
-              prod1(l,:) = prod1(l,:) &
-                      -i_c*conjg(cap_h_c(ic,iv_loc,itor))*jvec_c(:,icl,iv_loc,itor)*field(:,icl,itor)
-              prod2(l,:) = prod2(l,:) &
-                      -i_c*conjg(cap_h_c(ic,iv_loc,itor))*i_c*jxvec_c(:,icl,iv_loc,itor)*field(:,icl,itor)
-              prod3(l,:) = prod3(l,:) &
-                      -conjg(cap_h_c_dot(ic,iv_loc,itor))*jvec_c(:,icl,iv_loc,itor)*field(:,icl,itor) &
-                      +conjg(cap_h_c(ic,iv_loc,itor))*jvec_c(:,icl,iv_loc,itor)*field_dot(:,icl,itor)
+              ! Velocity moment : (delta v_a)/(n_norm v_norm)
+              moment_loc(ir,itp(it),is,itor,3) = moment_loc(ir,itp(it),is,itor,3)-(cn*field(1,ic,itor)-cprod)*vpar
            endif
 
         enddo
+     enddo
 
-        dvr  = w_theta(it)*dens2_rot(it,is)*dv
-        erot = (energy(ie)+lambda_rot(it,is))*temp(is)
+     ! Unlike moments, fields are *not* divided by rho
+     ! (cgyro_plot will adjust so both have same normalization)
+     moment_loc(:,:,:,itor,:) = moment_loc(:,:,:,itor,:)/rho
 
-        ! 1. Density flux: Gamma_a
-        gflux_loc(:,is,1,:,itor) = gflux_loc(:,is,1,:,itor)+prod1(:,:)*dvr
+     !-------------------------------------------------------------
+     ! 2. Compute global ky-dependent fluxes (with field breakdown)
+     !-------------------------------------------------------------
 
-        ! 2. Energy flux : Q_a
-        gflux_loc(:,is,2,:,itor) = gflux_loc(:,is,2,:,itor)+prod1(:,:)*dvr*erot
+     gflux_loc(:,:,:,:,itor) = 0.0
 
-        prod1(:,:) = prod1(:,:)*(mach*bigr(it)/rmaj+btor(it)/bmag(it)*vpar)+prod2(:,:)
+     iv_loc = 0
+     do iv=nv1,nv2
 
-        ! 3. Momentum flux: Pi_a
-        gflux_loc(:,is,3,:,itor) = gflux_loc(:,is,3,:,itor)+prod1(:,:)*dvr*bigr(it)*mass(is)
+        iv_loc = iv_loc+1
 
-        ! 4. Exchange
-        gflux_loc(:,is,4,:,itor) = gflux_loc(:,is,4,:,itor)+0.5*prod3(:,:)*dvr*z(is)
+        is = is_v(iv)
+        ix = ix_v(iv)
+        ie = ie_v(iv)
+
+        ! Integration weight
+        dv = w_exi(ie,ix)
+
+        ! Parallel velocity
+        vpar = vth(is)*vel2(ie)*xi(ix)
+
+        do ic=1,nc
+
+           ir = ir_c(ic)
+           it = it_c(ic)
+
+           ! prod* are local to this loop
+           prod1 = 0.0 
+           prod2 = 0.0
+           prod3 = 0.0
+
+           ! Global flux coefficients (complex coefficients required to compute radial profile)
+           do l=0,n_global
+
+              ! H w^* + H^* w
+
+              if (ir-l > 0) then
+                 icl = ic_c(ir-l,it)
+                 prod1(l,:) = prod1(l,:) &
+                      +i_c*cap_h_c(ic,iv_loc,itor)*conjg(jvec_c(:,icl,iv_loc,itor)*field(:,icl,itor))
+                 prod2(l,:) = prod2(l,:) &
+                      +i_c*cap_h_c(ic,iv_loc,itor)*conjg(i_c*jxvec_c(:,icl,iv_loc,itor)*field(:,icl,itor))
+                 prod3(l,:) = prod3(l,:) &
+                      -cap_h_c_dot(ic,iv_loc,itor)*conjg(jvec_c(:,icl,iv_loc,itor)*field(:,icl,itor)) &
+                      +cap_h_c(ic,iv_loc,itor)*conjg(jvec_c(:,icl,iv_loc,itor)*field_dot(:,icl,itor))
+              endif
+              if (ir+l <= n_radial) then
+                 icl = ic_c(ir+l,it)
+                 prod1(l,:) = prod1(l,:) &
+                      -i_c*conjg(cap_h_c(ic,iv_loc,itor))*jvec_c(:,icl,iv_loc,itor)*field(:,icl,itor)
+                 prod2(l,:) = prod2(l,:) &
+                      -i_c*conjg(cap_h_c(ic,iv_loc,itor))*i_c*jxvec_c(:,icl,iv_loc,itor)*field(:,icl,itor)
+                 prod3(l,:) = prod3(l,:) &
+                      -conjg(cap_h_c_dot(ic,iv_loc,itor))*jvec_c(:,icl,iv_loc,itor)*field(:,icl,itor) &
+                      +conjg(cap_h_c(ic,iv_loc,itor))*jvec_c(:,icl,iv_loc,itor)*field_dot(:,icl,itor)
+              endif
+
+           enddo
+
+           dvr  = w_theta(it)*dens2_rot(it,is)*dv
+           erot = (energy(ie)+lambda_rot(it,is))*temp(is)
+
+           ! 1. Density flux: Gamma_a
+           gflux_loc(:,is,1,:,itor) = gflux_loc(:,is,1,:,itor)+prod1(:,:)*dvr
+
+           ! 2. Energy flux : Q_a
+           gflux_loc(:,is,2,:,itor) = gflux_loc(:,is,2,:,itor)+prod1(:,:)*dvr*erot
+
+           prod1(:,:) = prod1(:,:)*(mach*bigr(it)/rmaj+btor(it)/bmag(it)*vpar)+prod2(:,:)
+
+           ! 3. Momentum flux: Pi_a
+           gflux_loc(:,is,3,:,itor) = gflux_loc(:,is,3,:,itor)+prod1(:,:)*dvr*bigr(it)*mass(is)
+
+           ! 4. Exchange
+           gflux_loc(:,is,4,:,itor) = gflux_loc(:,is,4,:,itor)+0.5*prod3(:,:)*dvr*z(is)
+
+        enddo
 
      enddo
 
-   enddo
-
-   ! Construct "positive/interior" flux (real quantities)
-   cflux_loc(:,:,:,itor) = real(gflux_loc(0,:,:,:,itor))
-   do l=1,n_global
-     u = 2*pi*l*x_fraction
-     cflux_loc(:,:,:,itor) = cflux_loc(:,:,:,itor)+2*sin(u)*real(gflux_loc(l,:,:,:,itor))/u
-   enddo
-
-   !-----------------------------------------------------
-   ! 3. Renormalize fluxes to GB or quasilinear forms
-   !~----------------------------------------------------
-
-   if (nonlinear_flag == 0 .and. itor > 0) then
-
-     ! Quasilinear normalization (divide by |phi|^2)
-     ! Note: We assume we compute flux_norm once per itor
-     flux_norm = 0.0
-     do ir=1,n_radial
-        flux_norm = flux_norm+sum(abs(field(1,ic_c(ir,:),itor))**2*w_theta(:))
+     ! Construct "positive/interior" flux (real quantities)
+     cflux_loc(:,:,:,itor) = real(gflux_loc(0,:,:,:,itor))
+     do l=1,n_global
+        u = 2*pi*l*x_fraction
+        cflux_loc(:,:,:,itor) = cflux_loc(:,:,:,itor)+2*sin(u)*real(gflux_loc(l,:,:,:,itor))/u
      enddo
 
-     ! Correct for sign of q
-     flux_norm = flux_norm*q/abs(q)*2 ! need 2 for regression compatibility
+     !-----------------------------------------------------
+     ! 3. Renormalize fluxes to GB or quasilinear forms
+     !~----------------------------------------------------
 
-     gflux_loc(:,:,:,:,itor) = gflux_loc(:,:,:,:,itor)/flux_norm 
-     cflux_loc (:,:,:,itor)  = cflux_loc(:,:,:,itor)/flux_norm 
+     if (nonlinear_flag == 0 .and. itor > 0) then
 
-   else
+        ! Quasilinear normalization (divide by |phi|^2)
+        ! Note: We assume we compute flux_norm once per itor
+        flux_norm = 0.0
+        do ir=1,n_radial
+           flux_norm = flux_norm+sum(abs(field(1,ic_c(ir,:),itor))**2*w_theta(:))
+        enddo
 
-     ! Complete definition of fluxes (not exchange)
-     gflux_loc(:,:,1:3,:,itor) = gflux_loc(:,:,1:3,:,itor)*(k_theta_base*itor*rho)
-     cflux_loc(:,1:3,:,itor)   = cflux_loc(:,1:3,:,itor)*(k_theta_base*itor*rho)
+        ! Correct for sign of q
+        flux_norm = flux_norm*q/abs(q)*2 ! need 2 for regression compatibility
 
-     ! GyroBohm normalizations
-     gflux_loc(:,:,:,:,itor) = gflux_loc(:,:,:,:,itor)/rho**2
-     cflux_loc(:,:,:,itor) = cflux_loc(:,:,:,itor)/rho**2
+        gflux_loc(:,:,:,:,itor) = gflux_loc(:,:,:,:,itor)/flux_norm 
+        cflux_loc (:,:,:,itor)  = cflux_loc(:,:,:,itor)/flux_norm 
 
-   endif
+     else
+
+        ! Complete definition of fluxes (not exchange)
+        gflux_loc(:,:,1:3,:,itor) = gflux_loc(:,:,1:3,:,itor)*(k_theta_base*itor*rho)
+        cflux_loc(:,1:3,:,itor)   = cflux_loc(:,1:3,:,itor)*(k_theta_base*itor*rho)
+
+        ! GyroBohm normalizations
+        gflux_loc(:,:,:,:,itor) = gflux_loc(:,:,:,:,itor)/rho**2
+        cflux_loc(:,:,:,itor) = cflux_loc(:,:,:,itor)/rho**2
+
+     endif
   enddo
 
   ! Reduced complex moment(kx,ky), below, is still distributed over n 
@@ -234,7 +239,7 @@ subroutine cgyro_flux
        MPI_SUM, &
        NEW_COMM_1, &
        i_err)
-  
+
   ! Reduced real cflux(ky), below, is still distributed over n 
 
   call MPI_ALLREDUCE(cflux_loc, &
@@ -248,12 +253,12 @@ subroutine cgyro_flux
   tave_step = tave_step + 1
   tave_max  = t_current
   do itor=nt1,nt2
-   do i_field=1,n_field
-     cflux_tave(:,:) = cflux_tave(:,:) + cflux(:,:,i_field,itor)
-   enddo
-   do i_field=1,n_field
-     gflux_tave(:,:) = gflux_tave(:,:) + real(gflux(0,:,:,i_field,itor))
-   enddo
+     do i_field=1,n_field
+        cflux_tave(:,:) = cflux_tave(:,:) + cflux(:,:,i_field,itor)
+     enddo
+     do i_field=1,n_field
+        gflux_tave(:,:) = gflux_tave(:,:) + real(gflux(0,:,:,i_field,itor))
+     enddo
   enddo
      
 end subroutine cgyro_flux
