@@ -59,11 +59,11 @@ subroutine qlgyro_read_input
      stop
   end if
 
-  if (sat_rule .eq. 1 .and. n_px0 .ne. 1) then
+  if (sat_rule .ne. -1 .and. n_px0 .ne. 1) then
      open(unit=1,file=trim(runfile),position='append')
-     write(1,*) '---------------------------------------------------------'
-     write(1,*) 'Saturation rule 1 can only be run with a single PX0 value'
-     write(1,*) '---------------------------------------------------------'
+     write(1,*) '-----------------------------------------------------------'
+     write(1,*) 'Only saturation rule -1 can be run with multiple PX0 values'
+     write(1,*) '-----------------------------------------------------------'
      stop
   end if
 
