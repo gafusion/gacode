@@ -21,11 +21,11 @@ F2PY   = f2py
 FOMP   = -fopenmp
 
 # System math libraries
-LMATH = -L/usr/lib64 -lopenblas $(FFTW_HOME)/lib/libfftw3.a $(FFTW_HOME)/lib/libfftw3_omp.a
+LMATH = -L$(LAPACKHOME)/lib64 -llapack -lblas $(FFTW_HOME)/lib/libfftw3.a $(FFTW_HOME)/lib/libfftw3_omp.a
 FFTW_INC = $(FFTW_HOME)/include
 
 # NetCDF
-NETCDF = -L/usr/pppl/gcc/11.2-pkgs/netcdf-fortran-4.5.4/lib -lnetcdff -L/usr/lib64/hdf -L/usr/pppl/gcc/11.2-pkgs/netcdf-c-4.8.1/lib -lnetcdf -lnetcdf -ldl -lm
+NETCDF = -L$(NETCDF_FORTRAN_HOME)/lib -lnetcdff -L$(HDF5_HOME)/lib -L$(NETCDF_C_HOME)/lib -lnetcdf  -ldl -lm
 NETCDF_INC =${NETCDF_FORTRAN_HOME}/include -I${NETCDF_C_HOME}/include
 
 # Mapping
