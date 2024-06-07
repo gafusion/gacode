@@ -4,7 +4,6 @@ import sys,os
 import struct
 
 header_size = 1024*16 # 2xDouble precisio
-restart_v1_fname="out.cgyro.restart"
 restart_fname="bin.cgyro.restart"
 
 class CGyroGrid:
@@ -102,86 +101,6 @@ class CGyroRestartHeader:
                 g_b = struct.pack('i',g)
                 fd.write(g_b)
             fd.write(magic_b)
-
-# mpi_rank_order == 1
-def upgrade_v1v2_ro1(org_dir, new_dir, grid, n_species, n_proc):
-    org_fname = os.path.join(org_dir,restart_v1_fname)
-    new_fname = os.path.join(new_dir,restart_fname)
-            
-    # Data structure (in fortran terms)
-    # doublex2 h_x[nc,nv,n_toroidal]
-
-    el_size = 16 # 2xDouble precision
-    nc =      grid.get_nc()
-    ncbytes = nc*el_size
-    nv =     grid.get_nvg()*n_species
-
-    zerobuf = bytearray(header_size)
-    for i in range(header_size):
-        zerobuf[i] = 0 
-
-    with open(org_fname,"rb") as org_fd:
-        with  open(new_fname,"wb") as new_fd:
-            new_fd.write(zerobuf) # dummy header
-
-            for t in range(grid.n_toroidal*nv): # do loop to save tmp memory
-                tmp=org_fd.read(ncbytes)
-                new_fd.write(tmp)
-
-    # update the header
-    new_header = CGyroRestartHeader()
-    new_header.grid = grid
-    new_header.n_species = n_species
-    new_header.mpi_rank_order = 1
-    new_header.n_proc = n_proc
-    new_header.savev2(new_dir)
-
-# mpi_rank_order == 2
-def upgrade_v1v2_ro2(org_dir, new_dir, grid, n_species, n_proc):
-    org_fname = os.path.join(org_dir,restart_v1_fname)
-    new_fname = os.path.join(new_dir,restart_fname)
-            
-    # Data structure (in fortran terms)
-    # input:
-    #   double*2 h_x[nc,nv_loc,n_proc_2,n_proc_1]
-    # output:
-    #   double*2 h_x[nc,nv,n_toroidal]
-
-    el_size = 16 # 2xDouble precision
-    nc =      grid.get_nc()
-    ncbytes = nc*el_size
-    nv =     grid.get_nvg()*n_species
-
-    n_proc_1 = n_proc/grid.n_toroidal
-    n_proc_2 = grid.n_toroidal
-
-    nv_loc = nv / n_proc_1
-
-    zerobuf = bytearray(header_size)
-    for i in range(header_size):
-        zerobuf[i] = 0 
-
-    with open(org_fname,"rb") as org_fd:
-        with  open(new_fname,"wb") as new_fd:
-            new_fd.write(zerobuf) # dummy header
-
-            for t in range(n_proc_2):
-                for n in range(n_proc_1):
-                    # org file out of order, out file in order
-                    org_fd.seek(ncbytes*nv_loc*(n*n_proc_2+t))
-                    
-                    for v in range(nv_loc): # do loop to save tmp memory
-                        tmp=org_fd.read(ncbytes)
-                        new_fd.write(tmp)
-
-
-    # update the header
-    new_header = CGyroRestartHeader()
-    new_header.grid = grid
-    new_header.n_species = n_species
-    new_header.mpi_rank_order = 2
-    new_header.n_proc = n_proc
-    new_header.savev2(new_dir)
 
 def add_species(org_dir, new_dir, grid, org_pre_species, org_post_species, new_species):
     org_fname = os.path.join(org_dir,restart_fname)
