@@ -183,7 +183,7 @@ class CGyroRestartHeader:
         if self.fmt.velocity_order==1:
             iv = (i_e*self.grid.n_xi+i_x)*self.grid.n_species+ i_s;
         else:
-            iv = (i_e*self.grid.n_xi+i_x)*self.grid.n_species+ i_s;
+            iv = (i_s*self.grid.n_energy+i_e)*self.grid.n_xi+ i_x;
         return iv
 
     # offset to start of nc block
