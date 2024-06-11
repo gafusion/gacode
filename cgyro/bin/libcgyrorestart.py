@@ -81,8 +81,7 @@ class CGyroRestartHeader:
                    "delta_t_method", "nonlinear_flag", "n_jtheta", "nsplit", "nsplitA", "nsplitB",
                    "nup_theta", "nv", "nc" ]
         self.info_only = {}
-        for k in self.info_only_keys:
-           self.info_only[k] = 0
+        self.reset_info()
 
     def __str__(self):
         out="%s\n=== formatting ==="%self.grid
@@ -90,6 +89,10 @@ class CGyroRestartHeader:
         for k in self.info_only_keys:
             out += "\n%s=%i"%(k,self.info_only[k])
         return out
+
+    def reset_info(self):
+        for k in self.info_only_keys:
+           self.info_only[k] = 0
 
     def load(self,fdir, allow_old=False):
         fname = os.path.join(fdir,restart_fname)
@@ -122,8 +125,7 @@ class CGyroRestartHeader:
              self.grid.n_xi,self.grid.n_energy,
              self.grid.n_toroidal] = struct.unpack('6i',grid_b)
            
-            for k in self.info_only_keys:
-               self.info_only[k] = 0 # will keep to 0 anything I do not know
+            self.reset_info() # will keep to 0 anything I do not know
             if (version==3):
                # new format
                grid_c = fd.read(3*4)

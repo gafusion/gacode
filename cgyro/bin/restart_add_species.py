@@ -156,7 +156,16 @@ def add_species(org_dir, new_dir, org_grid, new_grid, org_pre_species, org_post_
 
     new_header = libcgyrorestart.CGyroRestartHeader()
     new_header.load(org_dir)  # keep the same format as the old one
-    new_header.grid.n_species += new_species # just add the species
+    # add the species
+    new_header.grid.n_species += new_species
+    # nv_loc must scale with nv
+    # But not all values are valid (simple scaling may result in fractional number)
+    # just set it to nv, which is always a valid value
+    new_header.fmt.nv_loc = new_header.grid.get_nv()
+    # at this point, may as well set velocity order to 1, which is less restrictive
+    new_header.fmt.velocity_order = 1
+    # invlidate optional info, to maintain consistency
+    new_header.reset_info()
     new_fsize = new_header.get_total_bytes()
     with open(org_fname,"rb") as org_fd:
         with  open(new_fname,"wb") as new_fd:
