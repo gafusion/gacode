@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # This tool evolves the cgyro restart file
 # Given an original (input.gen,restart) pair
@@ -10,7 +10,7 @@
 
 import sys,os
 import argparse
-import restart_resize
+import libcgyrorestart
 
 class CgyroInput:
     """Input parser for input.cgyro.gen file"""
@@ -32,7 +32,7 @@ class CgyroInput:
                 self.user_dict[arg] = val
 
     def isSameGrid(self, other):
-         cmpArgs=["N_ENERGY","N_XI","N_THETA","N_RADIAL","N_TOROIDAL","VELOCITY_ORDER"]
+         cmpArgs=["N_ENERGY","N_XI","N_THETA","N_RADIAL","N_TOROIDAL"]
          isSame=True
          for arg in cmpArgs: isSame = isSame and (self.user_dict[arg]==other.user_dict[arg])
          return isSame
@@ -74,8 +74,8 @@ class CgyroInput:
     def isSpeciesSuperset(self, other, diff_species):
         my_n_species = int(self.user_dict["N_SPECIES"])
         other_n_species = int(other.user_dict["N_SPECIES"])
-        if (my_n_species<=other_n_species):
-            return False
+        #if (my_n_species<=other_n_species):
+        #    return False
 
         # find out how many of the species we had before
         org_pre_species=0
@@ -131,6 +131,69 @@ def get_arguments():
    return args.o,args.n
 
 
+def add_species(org_dir, new_dir, org_grid, new_grid, org_pre_species, org_post_species, new_species):
+    org_fname = os.path.join(org_dir,libcgyrorestart.restart_fname)
+    new_fname = os.path.join(new_dir,libcgyrorestart.restart_fname)
+
+    header_size = libcgyrorestart.header_size
+
+    org_header = libcgyrorestart.CGyroRestartHeader()
+    org_header.load(org_dir)
+    if (not org_grid.isSame(org_header.grid)):
+        raise IOError("Wrong CGyroRestartHeader grid content")
+    if (not new_grid.isSame(org_header.grid, exclude_species=True)):
+        raise IOError("Incompatible CGyroRestartHeader grid content")
+    if (org_header.grid.n_species!=(org_pre_species+org_post_species)):
+        raise IOError("Incompatible CGyroRestartHeader number of species")
+    ncbytes = org_header.get_ncbytes()
+    org_fsize = org_header.get_total_bytes()
+    if os.stat(org_fname).st_size!=org_fsize:
+        raise IOError("Wrong restart file size")
+
+    zerobuf = bytearray(ncbytes)
+    for i in range(ncbytes):
+        zerobuf[i] = 0  # 0.0 is also a binary 0
+
+    new_header = libcgyrorestart.CGyroRestartHeader()
+    new_header.load(org_dir)  # keep the same format as the old one
+    new_header.grid.n_species += new_species # just add the species
+    new_fsize = new_header.get_total_bytes()
+    with open(org_fname,"rb") as org_fd:
+        with  open(new_fname,"wb") as new_fd:
+          new_fd.truncate(new_fsize)
+          new_header.savev3(new_fd)
+
+          for i_t in range(org_grid.n_toroidal):
+           for i_e in range(org_grid.n_energy):
+            for i_x in range(org_grid.n_xi):
+              # copy the initial species
+              for i_s in range(org_pre_species):
+                org_off = org_header.nc_offset(i_s, i_x, i_e, i_t)
+                new_off = new_header.nc_offset(i_s, i_x, i_e, i_t)
+                org_fd.seek(header_size+org_off)
+                new_fd.seek(header_size+new_off)
+                tmp=org_fd.read(ncbytes)
+                new_fd.write(tmp)
+
+              # fill additional species with 0
+              for i in range(org_post_species):
+                i_s = org_pre_species+new_species + i
+                new_off = new_header.nc_offset(i_s, i_x, i_e, i_t)
+                new_fd.seek(header_size+new_off)
+                new_fd.write(zerobuf)
+
+              # copy the final species
+              for i in range(org_post_species):
+                i_s = org_pre_species+new_species + i
+                org_off = org_header.nc_offset(i_s, i_x, i_e, i_t)
+                new_off = new_header.nc_offset(i_s, i_x, i_e, i_t)
+                org_fd.seek(header_size+org_off)
+                new_fd.seek(header_size+new_off)
+                tmp=org_fd.read(ncbytes)
+                new_fd.write(tmp)
+
+    return
+
 old_dir,new_dir=get_arguments()
 
 try:
@@ -150,12 +213,9 @@ if (not new_cfg.isSameGrid(old_cfg)):
     print("ERROR: Grids not the same")
     sys.exit(11)
 
-grid_obj =  restart_resize.CGyroGrid()
-grid_obj.load_from_dict(new_cfg.user_dict)
-
-if (new_cfg.isSameSpecies(old_cfg)):
-    print("INFO: No changes detected. No restart file generated")
-    sys.exit(1)
+#if (new_cfg.isSameSpecies(old_cfg)):
+#    print("INFO: No changes detected. No restart file generated")
+#    sys.exit(1)
 
 diff_species={"org_pre":0,"org_post":0,"new_species":0}
 if (not new_cfg.isSpeciesSuperset(old_cfg,diff_species)):
@@ -167,9 +227,16 @@ if diff_species["org_pre"]>0:
 print("INFO: Adding %i species"%diff_species["new_species"])
 if diff_species["org_post"]>0:
   print("INFO: Keeping last %i species"%diff_species["org_post"])
+
+
+old_grid_obj =  libcgyrorestart.CGyroGrid()
+new_grid_obj =  libcgyrorestart.CGyroGrid()
+old_grid_obj.load_from_dict(old_cfg.user_dict)
+new_grid_obj.load_from_dict(new_cfg.user_dict)
+
 try:
-  restart_resize.add_species(old_dir, new_dir, grid_obj,
-                                   diff_species["org_pre"],diff_species["org_post"],diff_species["new_species"])
+  add_species(old_dir, new_dir, old_grid_obj, new_grid_obj,
+              diff_species["org_pre"],diff_species["org_post"],diff_species["new_species"])
 except IOError as err:
     print("IO error: {0}".format(err))
     sys.exit(21)
