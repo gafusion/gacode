@@ -74,8 +74,8 @@ class CgyroInput:
     def isSpeciesSuperset(self, other, diff_species):
         my_n_species = int(self.user_dict["N_SPECIES"])
         other_n_species = int(other.user_dict["N_SPECIES"])
-        #if (my_n_species<=other_n_species):
-        #    return False
+        if (my_n_species<=other_n_species):
+            return False
 
         # find out how many of the species we had before
         org_pre_species=0
@@ -213,9 +213,9 @@ if (not new_cfg.isSameGrid(old_cfg)):
     print("ERROR: Grids not the same")
     sys.exit(11)
 
-#if (new_cfg.isSameSpecies(old_cfg)):
-#    print("INFO: No changes detected. No restart file generated")
-#    sys.exit(1)
+if (new_cfg.isSameSpecies(old_cfg)):
+    print("INFO: No changes detected. No restart file generated")
+    sys.exit(1)
 
 diff_species={"org_pre":0,"org_post":0,"new_species":0}
 if (not new_cfg.isSpeciesSuperset(old_cfg,diff_species)):
