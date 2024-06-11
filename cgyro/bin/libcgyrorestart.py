@@ -171,12 +171,18 @@ class CGyroRestartHeader:
                 fd.write(v_b)
             fd.write(magic_b)
 
+    def get_thetabytes(self):
+        return self.fmt.el_size*self.grid.n_theta
+
     def get_ncbytes(self):
-        return self.fmt.el_size*self.grid.get_nc()
+        return self.get_thetabytes()*self.grid.n_radial
 
     def get_total_bytes(self):
         return ( header_size +
                 self.get_ncbytes()*self.grid.get_nv()*self.grid.n_toroidal)
+
+    def get_ic(self, i_t, i_r):
+        return i_r*self.grid.n_theta+i_t
 
     def get_iv(self, i_s, i_x, i_e):
         iv = 0
@@ -198,4 +204,9 @@ class CGyroRestartHeader:
         off_col = (i_t//nt_loc)*(nv*nt_loc)
         offset = self.get_ncbytes()*(off_block+off_row+off_col)
         return offset
+
+    # offset to start of nc block
+    # not including the header
+    def theta_offset(self, i_r, i_s, i_x, i_e, i_t):
+        return self.nc_offset(i_s,i_x,i_e,i_t)+i_r*self.get_thetabytes()
 
