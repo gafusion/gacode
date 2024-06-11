@@ -164,6 +164,8 @@ def add_species(org_dir, new_dir, org_grid, new_grid, org_pre_species, org_post_
     new_header.fmt.nv_loc = new_header.grid.get_nv()
     # at this point, may as well set velocity order to 1, which is less restrictive
     new_header.fmt.velocity_order = 1
+    # and keep nt_loc=1 to be on the safe side, too
+    new_header.fmt.nt_loc = 1
     # invlidate optional info, to maintain consistency
     new_header.reset_info()
     new_fsize = new_header.get_total_bytes()
