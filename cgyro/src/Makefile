@@ -21,6 +21,7 @@ OBJECTS = cgyro_globals.o \
           cgyro_parallel_lib.o \
           cgyro_step.o \
           cgyro_io.o \
+          cgyro_restart.o \
           cgyro_advect_wavenumber.o \
 	  cgyro_init_rotation.o \
           cgyro_equilibrium.o \
@@ -58,8 +59,6 @@ OBJECTS = cgyro_globals.o \
 	  cgyro_step_gk_bs5.o \
 	  cgyro_step_gk_v76.o \
           cgyro_write_initdata.o \
-          cgyro_read_restart.o \
-          cgyro_write_restart.o \
           cgyro_write_timedata.o \
           cgyro_write_hosts.o
 

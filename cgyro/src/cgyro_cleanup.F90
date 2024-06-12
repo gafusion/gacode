@@ -95,7 +95,6 @@ subroutine cgyro_cleanup
   if(allocated(omega_rot_star))      deallocate(omega_rot_star)
   if(allocated(gtime))               deallocate(gtime)
   if(allocated(freq))                deallocate(freq)
-  if(allocated(freq_err))            deallocate(freq_err)
   if(allocated(fcoef))  then
      ccl_del_device(fcoef)     
      deallocate(fcoef)

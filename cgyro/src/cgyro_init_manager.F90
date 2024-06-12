@@ -26,7 +26,6 @@ subroutine cgyro_init_manager
 
   implicit none
 
-
   character(len=128) :: msg
   integer :: ie,ix
 
@@ -152,7 +151,7 @@ subroutine cgyro_init_manager
 
   allocate(gtime(nt1:nt2))
   allocate(freq(nt1:nt2))
-  allocate(freq_err(nt1:nt2))
+  freq_err = 0
 
   if (test_flag == 0) then
 
@@ -335,7 +334,7 @@ subroutine cgyro_init_manager
   endif
 
   call cgyro_equilibrium
-  if (error_status /=0 ) then
+  if (error_status > 0) then
      ! something went terribly wrong
      return
   endif
@@ -348,7 +347,7 @@ subroutine cgyro_init_manager
 
      call cgyro_init_arrays
      call timer_lib_out('str_init')
-     if (error_status /=0 ) then
+     if (error_status > 0) then
         ! something went terribly wrong
         return
      endif
@@ -356,7 +355,7 @@ subroutine cgyro_init_manager
      call timer_lib_in('coll_init')
      call cgyro_init_collision
      call timer_lib_out('coll_init')
-     if (error_status /=0 ) then
+     if (error_status > 0) then
         ! something went terribly wrong
         return
      endif
@@ -381,14 +380,6 @@ subroutine cgyro_init_manager
 
   call cgyro_check_memory(trim(path)//runfile_memory)
 
-  if (velocity_order == 1) then
-    ! traditional ordering
-    restart_magic = 140906808
-  else
-    ! alternative ordering, need different magic
-    restart_magic = 140916753
-  endif
-
   call timer_lib_out('str_init')
 
   ! Write initial data
@@ -402,7 +393,7 @@ subroutine cgyro_init_manager
   ! Initialize h (via restart or analytic IC)
   call timer_lib_in('str_init')
   call cgyro_init_h
-  if (error_status /=0 ) return
+  if (error_status > 0) return
   call timer_lib_out('str_init')
 
   ! Initialize nonlinear dimensions and arrays 

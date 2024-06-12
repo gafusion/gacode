@@ -811,11 +811,10 @@ subroutine print_scrdata()
           '[t: ',t_current,&
           '][e: ',integration_error(:),']'
   else
-     ! NOTE: There could be only one my_toroidal when n_toroidal <=1
      print '(a,1pe9.3,a,1pe10.3,1x,1pe10.3,a,1pe10.3,a,1pe9.3,1x,1pe9.3,a)',&
           '[t: ',t_current,&
           '][w: ',freq(nt1),&
-          '][dw:',abs(freq_err(nt1)),&
+          '][dw:',abs(freq_err),&
           '][e: ',integration_error(:),']'
 
   endif

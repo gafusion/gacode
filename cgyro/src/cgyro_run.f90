@@ -34,7 +34,7 @@ subroutine cgyro_run(test_flag_in,var_in,n_species_out,flux_tave_out,tave_min_ou
   test_flag = test_flag_in
 
   ! Re-set max time
-  if(var_in > 0.0) then
+  if (var_in > 0.0) then
      max_time = var_in
   endif
   
@@ -42,8 +42,8 @@ subroutine cgyro_run(test_flag_in,var_in,n_species_out,flux_tave_out,tave_min_ou
   call cgyro_kernel
 
   if (error_status == 0) then
-     if (nonlinear_flag == 0 .and. signal == 1) then
-        ! linear converged
+     if (nonlinear_flag == 0 .and. signal > 0) then
+        ! linear converged or underflow
         status_out = 1
      endif
      ! no errors

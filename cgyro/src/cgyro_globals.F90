@@ -251,8 +251,6 @@ module cgyro_globals
   ! Restart tags
   character(len=8) :: fmt='(I2.2)'
   character(len=6), dimension(100) :: rtag
-  integer, parameter :: restart_header_size = 1024
-  integer  :: restart_magic
   !
   ! error checking
   integer :: error_status = 0
@@ -284,7 +282,7 @@ module cgyro_globals
   real    :: t_current
   real, dimension(:), allocatable    :: gtime
   complex, dimension(:), allocatable :: freq
-  complex, dimension(:), allocatable :: freq_err
+  complex :: freq_err
   integer(KIND=8) :: kernel_start_time, kernel_exit_time, kernel_count_rate, kernel_count_max
   !---------------------------------------------------------------
 
