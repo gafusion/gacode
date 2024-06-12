@@ -76,7 +76,7 @@ def get_arguments():
    return args.o,args.n
 
 
-def add_dims(org_dir, new_dir, org_grid, new_grid):
+def add_dims(org_dir, new_dir, org_grid, new_grid, dim_offset):
     org_fname = os.path.join(org_dir,libcgyrorestart.restart_fname)
     new_fname = os.path.join(new_dir,libcgyrorestart.restart_fname)
 
@@ -115,7 +115,10 @@ def add_dims(org_dir, new_dir, org_grid, new_grid):
                                                   i_s, i_x, i_e,
                                                   i_t)
                 new_fd.seek(header_size+new_off)
-                j_r = min(i_r, org_grid.n_radial-1) # will extend the last eelement past the limit
+                if i_r<dim_offset:
+                  j_r = 0 # use the lowest element for the left pad
+                else:
+                  j_r = min(i_r-dim_offset, org_grid.n_radial-1) # will extend the last eelement past the limit
                 org_off = org_header.theta_offset(j_r,
                                                   i_s, i_x, i_e,
                                                   j_t)
@@ -151,14 +154,18 @@ if (new_cfg.isSameDims(old_cfg)):
 if (not new_cfg.isDimsSuperset(old_cfg)):
     print("ERROR: New dimensions are not a superset of the old ones")
 
-
 old_grid_obj =  libcgyrorestart.CGyroGrid()
 new_grid_obj =  libcgyrorestart.CGyroGrid()
 old_grid_obj.load_from_dict(old_cfg.user_dict)
 new_grid_obj.load_from_dict(new_cfg.user_dict)
 
+dim_offset = (new_grid_obj.n_radial-old_grid_obj.n_radial)//2
+if (dim_offset>0):
+    print("INFO: Shifting radial by %i"%dim_offset)
+
+
 try:
-  add_dims(old_dir, new_dir, old_grid_obj, new_grid_obj)
+  add_dims(old_dir, new_dir, old_grid_obj, new_grid_obj, dim_offset)
 except IOError as err:
     print("IO error: {0}".format(err))
     sys.exit(21)
