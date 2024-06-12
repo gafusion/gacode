@@ -11,6 +11,7 @@
 import sys,os
 import argparse
 import libcgyrorestart
+import array
 
 class CgyroInput:
     """Input parser for input.cgyro.gen file"""
@@ -71,12 +72,19 @@ def get_arguments():
                        type=str,
                        required=True)
     
+   parser.add_argument('-s',
+                       metavar='SCALE',
+                       help="Scaling factor for exended elements (Default: 1.0)",
+                       type=float,
+                       default=1.0,
+                       required=False)
+    
    args=parser.parse_args()
 
-   return args.o,args.n
+   return args.o,args.n,args.s
 
 
-def add_dims(org_dir, new_dir, org_grid, new_grid, dim_offset):
+def add_dims(org_dir, new_dir, org_grid, new_grid, dim_offset, scale_val):
     org_fname = os.path.join(org_dir,libcgyrorestart.restart_fname)
     new_fname = os.path.join(new_dir,libcgyrorestart.restart_fname)
 
@@ -124,11 +132,20 @@ def add_dims(org_dir, new_dir, org_grid, new_grid, dim_offset):
                                                   j_t)
                 org_fd.seek(header_size+org_off)
                 tmp=org_fd.read(thetabytes)
+                if ( (j_t!=i_t) and ((j_r+dim_offset)!=i_r) and # only scale new elements
+                     (scale_val!=1.0) ):  # and only if the scale is not 1
+                  tarr=array.array('d', tmp)
+                  tlist=tarr.tolist()
+                  for i in range(len(tlist)):
+                    tlist[i] *= scale_val
+                  tarr=array.array('d')
+                  tarr.fromlist(tlist)
+                  tmp=tarr.tobytes()
                 new_fd.write(tmp)
 
     return
 
-old_dir,new_dir=get_arguments()
+old_dir,new_dir,scale_val=get_arguments()
 
 try:
     old_cfg = CgyroInput()
@@ -154,6 +171,9 @@ if (new_cfg.isSameDims(old_cfg)):
 if (not new_cfg.isDimsSuperset(old_cfg)):
     print("ERROR: New dimensions are not a superset of the old ones")
 
+if (scale_val!=1.0):
+  print("INFO: Scaling additional elements from border by %f"%scale_val)
+
 old_grid_obj =  libcgyrorestart.CGyroGrid()
 new_grid_obj =  libcgyrorestart.CGyroGrid()
 old_grid_obj.load_from_dict(old_cfg.user_dict)
@@ -165,7 +185,7 @@ if (dim_offset>0):
 
 
 try:
-  add_dims(old_dir, new_dir, old_grid_obj, new_grid_obj, dim_offset)
+  add_dims(old_dir, new_dir, old_grid_obj, new_grid_obj, dim_offset, scale_val)
 except IOError as err:
     print("IO error: {0}".format(err))
     sys.exit(21)
