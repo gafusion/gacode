@@ -328,7 +328,7 @@ if(new_matrix)then
 	  endif
 
 	  ! Check if the mode is a numerical instability
-	  if (.not. is_even .or. rr(jmax(imax)) <= 0.0 .or. ri(jmax(imax)) <= 0) then
+	  if (.not. (is_even .and. rr(jmax(imax)) > 0.0 .and. ri(jmax(imax)) > 0) then
             rr(jmax(imax)) = -rr(jmax(imax))
 	  endif
 	endif
