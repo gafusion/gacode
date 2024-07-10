@@ -12,12 +12,12 @@ def gcd(m,n):
       a = b
       b = c
 
-   while True:          
-     c = np.mod(a,b)    
+   while True:
+     c = np.mod(a,b)
      if c == 0:
         break
-     a = b         
-     b = c 
+     a = b
+     b = c
 
    d = b
 

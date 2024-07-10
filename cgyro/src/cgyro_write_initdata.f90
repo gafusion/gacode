@@ -146,7 +146,7 @@ subroutine cgyro_write_initdata
         dn = rho/(rhos/a_meters)
         kyrat = abs(q/rmin*rhos/a_meters)
         write(io,*)
-        write(io,10) '           a[m]:',a_meters,'  b_unit[T]:',b_unit,  '     rhos/a:',rhos/a_meters,' dn:',dn
+        write(io,10) '           a[m]:',a_meters, '|b_unit[T]|:',abs(b_unit),  '   |rhos/a|:',abs(rhos)/a_meters,' dn:',dn
         write(io,10) 'n_norm[e19/m^3]:',dens_norm,'v_norm[m/s]:',vth_norm,'T_norm[keV]:',temp_norm
         write(io,*)
         write(io,'(t2,a)') ' n = 1         2         3         4         5         6         7         8'      

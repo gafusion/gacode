@@ -8,7 +8,7 @@ subroutine cgyro_init_h
   implicit none
 
   integer :: ir,it,is,ie,ix,itor
-  real :: arg, ang
+  real :: arg,ang
 
   !---------------------------------------------------------------------------
   ! Check to see if we have restart data available
@@ -50,24 +50,16 @@ subroutine cgyro_init_h
 
      call cgyro_info('Restart data found.')
      call cgyro_read_restart
-     if (error_status /=0 ) return
+     if (error_status > 0) return
+     
      gtime(:) = 0.0
      
   case (2)
 
      call cgyro_info('Initializing with restart data.')
      call cgyro_read_restart
-
-     !call MPI_ALLREDUCE(sum(abs(h_x)), &
-     !     arg, &
-     !     1, &
-     !     MPI_DOUBLE_PRECISION, &
-     !     MPI_SUM, &
-     !     NEW_COMM_1, &
-     !     i_err)
-     !h_x = h_x/arg
+     if (error_status > 0) return
      
-     if (error_status /=0 ) return
      i_current = 0
      t_current = 0.0
      gtime(:) = 0.0

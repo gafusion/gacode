@@ -35,7 +35,9 @@ subroutine qlgyro_cgyro_cleanup
 
   ! Write eigenvalues to interface
   cgyro_omega_out = freq
-  cgyro_omega_error_out = freq_err
+  ! EAB
+  !cgyro_omega_error_out = freq_err
+  cgyro_omega_error_out = 0.0
 
   bgs2 = b_gs2
 
@@ -214,7 +216,7 @@ subroutine qlgyro_cgyro_deallocate_arrays
   if(allocated(omega_rot_star))      deallocate(omega_rot_star)
   if(allocated(gtime))               deallocate(gtime)
   if(allocated(freq))                deallocate(freq)
-  if(allocated(freq_err))            deallocate(freq_err)
+  !if(allocated(freq_err))            deallocate(freq_err)
   if(allocated(fcoef))  then
      ccl_del_device(fcoef)     
      deallocate(fcoef)

@@ -29,18 +29,19 @@ subroutine cgyro_upwind_prepare_async_r64
 
   call timer_lib_in('str')
 
+#if defined(OMPGPU) || defined(_OPENACC)
+
+  ! running on the GPU
+  ! The vector/SIMT nature of the GPU allows us to compute effeciently both together
 #if defined(OMPGPU)
   ! No async for OMPGPU for now
 !$omp target teams distribute parallel do simd collapse(3) &
 !$omp&         private(res_loc,iv,iv_loc,g_val) 
-#elif defined(_OPENACC)
+#else
 !$acc parallel loop collapse(3) gang vector independent async(1) &
 !$acc&         private(res_loc,iv,iv_loc,g_val) &
 !$acc&         present(g_x,h_x,z,temp,jvec_c,field,upfac1,is_v,upwind_res_loc) &
 !$acc&         present(nt1,nt2,ns1,ns2,nc,nv1,nv2,n_field) default(none)
-#else
-!$omp parallel do collapse(3) &
-!$omp&         private(res_loc,iv,iv_loc) 
 #endif
   do itor=nt1,nt2
    do is=ns1,ns2
@@ -62,6 +63,45 @@ subroutine cgyro_upwind_prepare_async_r64
     enddo
    enddo
   enddo
+
+#else
+
+  ! running on the CPU
+  ! Split, to avoid false sharing
+!$omp parallel do collapse(3) &
+!$omp&         private(g_val,iv,iv_loc,is) 
+  do itor=nt1,nt2
+    do iv=nv1,nv2
+      do ic=1,nc
+          is = is_v(iv)
+          iv_loc = iv-nv1+1
+          g_val = h_x(ic,iv_loc,itor)
+          if (n_field > 1) then
+             g_val = g_val + & 
+                   (z(is)/temp(is))*jvec_c(2,ic,iv_loc,itor)*field(2,ic,itor)
+          endif
+          g_x(ic,iv_loc,itor) = g_val
+      enddo
+    enddo
+  enddo
+!$omp parallel do collapse(3) &
+!$omp&         private(res_loc,iv,iv_loc,is) 
+  do itor=nt1,nt2
+   do is=ns1,ns2
+     do ic=1,nc
+       res_loc = (0.0,0.0)
+       do iv=nv1,nv2
+          iv_loc = iv-nv1+1
+          if (is == is_v(iv)) then
+             res_loc = res_loc+upfac1(ic,iv_loc,itor)*g_x(ic,iv_loc,itor)
+          endif
+       enddo
+       upwind_res_loc(ic,is,itor) = res_loc
+    enddo
+   enddo
+  enddo
+
+#endif
 
   call timer_lib_out('str')
 
@@ -127,18 +167,19 @@ subroutine cgyro_upwind_prepare_async_r32
 
   call timer_lib_in('str')
 
+#if defined(OMPGPU) || defined(_OPENACC)
+
+  ! running on the GPU
+  ! The vector/SIMT nature of the GPU allows us to compute effeciently both together
 #if defined(OMPGPU)
   ! no sync for OMPGPU for now
 !$omp target teams distribute parallel do simd collapse(3) &
 !$omp&         private(res_loc,iv,iv_loc,g_val) 
-#elif defined(_OPENACC)
+#else
 !$acc parallel loop collapse(3) gang vector independent async(1) &
 !$acc&         private(res_loc,iv,iv_loc,g_val) &
 !$acc&         present(g_x,h_x,z,temp,jvec_c,field,upfac1,is_v,upwind32_res_loc) &
 !$acc&         present(nt1,nt2,ns1,ns2,nc,nv1,nv2,n_field) default(none)
-#else
-!$omp parallel do collapse(3) &
-!$omp&         private(res_loc,iv,iv_loc,g_val)
 #endif
   do itor=nt1,nt2
    do is=ns1,ns2
@@ -161,6 +202,45 @@ subroutine cgyro_upwind_prepare_async_r32
     enddo
    enddo
   enddo
+
+#else
+
+  ! running on the CPU
+  ! Split, to avoid false sharing
+!$omp parallel do collapse(3) &
+!$omp&         private(g_val,iv,iv_loc,is) 
+  do itor=nt1,nt2
+    do iv=nv1,nv2
+      do ic=1,nc
+          is = is_v(iv)
+          iv_loc = iv-nv1+1
+          g_val = h_x(ic,iv_loc,itor)
+          if (n_field > 1) then
+             g_val = g_val + & 
+                   (z(is)/temp(is))*jvec_c(2,ic,iv_loc,itor)*field(2,ic,itor)
+          endif
+          g_x(ic,iv_loc,itor) = g_val
+      enddo
+    enddo
+  enddo
+!$omp parallel do collapse(3) &
+!$omp&         private(res_loc,iv,iv_loc,is) 
+  do itor=nt1,nt2
+   do is=ns1,ns2
+     do ic=1,nc
+       res_loc = (0.0,0.0)
+       do iv=nv1,nv2
+          iv_loc = iv-nv1+1
+          if (is == is_v(iv)) then
+             res_loc = res_loc+upfac1(ic,iv_loc,itor)*g_x(ic,iv_loc,itor)
+          endif
+       enddo
+       upwind32_res_loc(ic,is,itor) = res_loc
+    enddo
+   enddo
+  enddo
+
+#endif
 
   call timer_lib_out('str')
 

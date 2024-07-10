@@ -217,37 +217,37 @@ subroutine cgyro_write_restart_one
 
   ! now that we know things worked well, move the file in its final location
   if (i_proc == 0) then 
-    if (restart_preservation_mode>2) then 
-       ! restart_preservation_mode == 3 or 4
-       ! First try to save any existing restart file as old
-       i_err = RENAME(trim(path)//runfile_restart, trim(path)//runfile_restart//".old")
-       ! NOTE: We will not check if it succeeded... not important, may not even exist (yet)
-    endif
+     if (restart_preservation_mode>2) then 
+        ! restart_preservation_mode == 3 or 4
+        ! First try to save any existing restart file as old
+        i_err = RENAME(trim(path)//runfile_restart, trim(path)//runfile_restart//".old")
+        ! NOTE: We will not check if it succeeded... not important, may not even exist (yet)
+     endif
 
-    ! Rename part into the final expected file name
-    i_err = RENAME(trim(path)//runfile_restart//".part", trim(path)//runfile_restart)
-    if (i_err /= 0) then
-       call cgyro_error('Final rename in cgyro_write_restart failed')
-       return
-    endif
+     ! Rename part into the final expected file name
+     i_err = RENAME(trim(path)//runfile_restart//".part", trim(path)//runfile_restart)
+     if (i_err /= 0) then
+        call cgyro_error('Final rename in cgyro_write_restart failed')
+        return
+     endif
   endif
 
   call system_clock(cp_time,count_rate,count_max)
   if (cp_time.gt.start_time) then
-    cp_dt = (cp_time-start_time)/real(count_rate)
+     cp_dt = (cp_time-start_time)/real(count_rate)
   else
-    cp_dt = (cp_time-start_time+count_max)/real(count_rate)
+     cp_dt = (cp_time-start_time+count_max)/real(count_rate)
   endif
 
   if (i_proc == 0) then
-    call date_and_time(sdate,stime);
-    call get_environment_variable('GACODE_PLATFORM',platform)
-    open(NEWUNIT=statusfd,FILE=trim(path)//runfile_startups,action='write',status='unknown',position='append')
-    write(statusfd,'(14(a),f7.3)') &
-         sdate(1:4),'/',sdate(5:6),'/',sdate(7:8),' ', &
-         stime(1:2),':',stime(3:4),':',stime(5:6),' ', &
-         trim(platform),' [CHECKPOINT WRITE] Time =',cp_dt
-    close(statusfd)
+     call date_and_time(sdate,stime);
+     call get_environment_variable('GACODE_PLATFORM',platform)
+     open(NEWUNIT=statusfd,FILE=trim(path)//runfile_startups,action='write',status='unknown',position='append')
+     write(statusfd,'(14(a),f7.3)') &
+          sdate(1:4),'/',sdate(5:6),'/',sdate(7:8),' ', &
+          stime(1:2),':',stime(3:4),':',stime(5:6),' ', &
+          trim(platform),' [CHECKPOINT WRITE] Time =',cp_dt
+     close(statusfd)
   endif
 
   ! Re-set h(0,0)=0
@@ -413,7 +413,7 @@ subroutine cgyro_read_restart_verify
 
   read(io,REC=recid) magic
   recid = recid + 1
-  if ( magic == restart_magic) then
+  if (magic == restart_magic) then
      read(io,REC=recid) version
      recid = recid + 1
      if ( version /= restart_version) then
@@ -430,7 +430,7 @@ subroutine cgyro_read_restart_verify
        ! alternative ordering, needed different magic
        restart_magic_v2 = 140916753
      endif
-     if ( magic /= restart_magic_v2) then
+     if (magic /= restart_magic_v2) then
         ! we don't support anything else, abort
         close(io)
         call cgyro_error('Wrong magic number in restart header')
@@ -465,7 +465,7 @@ subroutine cgyro_read_restart_verify
      return
   endif
 
-  if ( magic == restart_magic) then
+  if (magic == restart_magic) then
      read(io,REC=recid) t_velocity_order
      recid = recid + 1
      read(io,REC=recid) t_nt_loc
@@ -520,7 +520,7 @@ subroutine cgyro_read_restart_one
   
   if (i_proc == 0) then
      call cgyro_read_restart_verify
-     if (error_status /=0 ) return
+     if (error_status > 0) return
      mpibuf(1) = t_nt_loc
      mpibuf(2) = t_nv_loc
      mpibuf(3) = t_velocity_order
@@ -648,7 +648,7 @@ subroutine cgyro_read_restart_slow
 
   ! Velocity pointers for the restart velocity_order
   t_iv = 0
-  if (t_velocity_order==1) then
+  if (t_velocity_order == 1) then
     !original
     do ie=1,n_energy
       do ix=1,n_xi
@@ -658,7 +658,7 @@ subroutine cgyro_read_restart_slow
         enddo
       enddo
     enddo
-  else if (t_velocity_order==2) then
+  else if (t_velocity_order == 2) then
     ! optimized for minimizing species
     do is=1,n_species
       do ie=1,n_energy

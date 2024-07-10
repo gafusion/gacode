@@ -206,6 +206,7 @@
       REAL :: kx0_factor=1.0
       REAL :: rho_ion=1.0
       REAL :: rho_e=1.0
+      REAL :: max_freq=0.0
 ! output
       COMPLEX,DIMENSION(3,nb) :: field_weight_QL_out=0.0
       COMPLEX,DIMENSION(maxmodes,3,nb) :: field_weight_out=0.0

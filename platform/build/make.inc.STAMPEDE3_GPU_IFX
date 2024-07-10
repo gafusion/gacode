@@ -7,7 +7,7 @@ CORES_PER_NODE=96
 NUMAS_PER_NODE=8
 
 # Compilers and flags
-FC     = mpiifx -gen-interfaces -module ${GACODE_ROOT}/modules -I${GACODE_ROOT}/module -DDISABLE_GPUDIRECT_MPI -DNO_ASYNC_MPI -allow nofpp-comments
+FC     = mpiifx -gen-interfaces -module ${GACODE_ROOT}/modules -I${GACODE_ROOT}/module -allow nofpp-comments
 F77    = ${FC}
 
 FOMP   = -fiopenmp -fopenmp-targets=spir64 -DOMPGPU -DMKLGPU

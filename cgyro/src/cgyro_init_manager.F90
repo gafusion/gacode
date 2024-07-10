@@ -151,7 +151,7 @@ subroutine cgyro_init_manager
 
   allocate(gtime(nt1:nt2))
   allocate(freq(nt1:nt2))
-  allocate(freq_err(nt1:nt2))
+  freq_err = 0
 
   if (test_flag == 0) then
 

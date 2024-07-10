@@ -159,7 +159,7 @@ subroutine cgyro_kernel
      if (mod(i_time,print_step) == 0) call write_timers(trim(path)//runfile_timers)
 
      ! Exit if converged (1) or underflow (2)
-     if (signal > 1) exit
+     if (signal > 0) exit
 
   enddo
   !---------------------------------------------------------------------------

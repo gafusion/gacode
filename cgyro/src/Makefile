@@ -30,9 +30,9 @@ OBJECTS = cgyro_globals.o \
           cgyro_error_estimate.o \
           cgyro_field.o \
           cgyro_field_coefficients.o \
-          cgyro_zftest_em.o \
           cgyro_flux.o \
           cgyro_freq.o \
+          cgyro_global.o \
           cgyro_upwind.o \
           cgyro_init.o \
           cgyro_init_h.o \
@@ -60,7 +60,8 @@ OBJECTS = cgyro_globals.o \
 	  cgyro_step_gk_v76.o \
           cgyro_write_initdata.o \
           cgyro_write_timedata.o \
-          cgyro_write_hosts.o
+          cgyro_write_hosts.o \
+          cgyro_zftest_em.o 
 
 .SUFFIXES : .o .f90 .F90
 

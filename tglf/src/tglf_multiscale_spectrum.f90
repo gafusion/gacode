@@ -444,12 +444,13 @@
           field_spectrum_out(2,j,i) = 0.0  
           if(gamma0.gt.small) then
            if (ky0 <= kT) then
-            if(YTs(i)==0.0 .OR. kP>=kT)then
+            if(kP>=kT)then
              field_spectrum_out(2,j,i) = 0.0
             else if (ky0 <= kP) then ! initial quadratic
              sig_ratio = (aoverb * (ky0 ** 2) + ky0 + coverb) / (aoverb * (k0 ** 2) + k0 + coverb)
              field_spectrum_out(2,j,i) = Ys(i) * (sig_ratio ** c_1) * Fky *(eigenvalue_spectrum_out(1,j,i)/gamma0)**(2 * expsub)
             else  ! connecting quadratic
+             if(YTs(i)==0.0)YTs(i)=1.0E-5 
              doversig0 = ((Ys(i) / YTs(i))**(1.0/abs(c_1)))- & 
                          ((aoverb*(kP**2)+kP+coverb-((kP-kT)*(2*aoverb*kP+1)))/(aoverb*(k0**2)+k0+coverb))
              doversig0 = doversig0 * (1.0/((kP-kT)**2))

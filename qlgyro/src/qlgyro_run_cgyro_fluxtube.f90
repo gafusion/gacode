@@ -209,10 +209,22 @@ subroutine qlgyro_run_cgyro_fluxtube
 
         ky = tglf_ky_spectrum_out(i_ky_local)
 
-        if (abs(cgyro_omega_error_out(i_ky_local+1)) .lt. cgyro_freq_tol_in) then
-           run_status = 3
-        end if
+        !if (abs(cgyro_omega_error_out(i_ky_local+1)) .lt. cgyro_freq_tol_in) then
+        !   run_status = 3
+        !end if
 
+        ! EAB: note about cgyro_omega_error_out
+        ! cgyro_omega_error_out and freq_err were removed from CGYRO
+        ! cgyro_omega_error_out is not computed in cgyro for each toroidal mode
+        ! (it is a function of n_toroidal_per_proc, not n_toroidal
+        ! so would only be computed for each ky if n_toroidal_per_proc = n_toroidal
+        ! in the parallel layout at runtime)
+        ! there needs to be a different way to check convergence
+        ! it would be more efficient to just run the cgyro's at each ky separately
+        ! to convergence (e.g. via tgyro)
+        ! for now, we will just assume the code is converged at each ky
+        run_status = 3
+        
         i_kypx0  = (tglf_nky_in * i_px0_local) + i_ky_local
 
         call write_qlgyro_status(ky_run, ky_color, i_kypx0, run_status, color)

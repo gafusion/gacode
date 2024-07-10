@@ -34,6 +34,14 @@
       INTEGER,ALLOCATABLE,DIMENSION(:) :: di,de
       INTEGER,ALLOCATABLE,DIMENSION(:) :: ipiv
       COMPLEX,ALLOCATABLE,DIMENSION(:,:) :: zmat
+!  Filter numerical instabilities
+      REAL, DIMENSION(max_plot) :: phi_test
+      REAL :: eps_even
+      logical :: is_odd
+      logical :: is_even
+      logical :: is_sup_to_drift
+      REAL :: sum_phi, sum_abs_phi
+      REAL, DIMENSION(max_plot) :: even_function, odd_function
 ! 
 !      cputime0=MPI_WTIME()
 !
@@ -260,6 +268,115 @@ if(new_matrix)then
         enddo
       endif
 !      
+!  Filter out numerical instabilities with a mode frequency higher than filter*drift wave freq
+!  But not modes with an even structure for Re(phi)
+      if (filter_in.lt.0.0 .and. ibranch_in.eq.-1) then
+	is_sup_to_drift = .false.
+        do imax=1,nmodes_out
+	  if(rr(jmax(imax)).gt.0.0.and.ABS(ri(jmax(imax))).gt.ABS(max_freq))then
+	    is_sup_to_drift = .true.
+          else
+	    is_sup_to_drift = .false.
+	  endif
+
+	if (is_sup_to_drift) then	  
+	  if(jmax(imax).gt.0)then
+	    do i=1,iur
+	      v(i) = small
+	      do j=1,iur
+              zmat(i,j) = beta(jmax(imax))*amat(i,j)- &
+                         (small +alpha(jmax(imax)))*bmat(i,j)
+              enddo
+            enddo
+            call zgesv(iur,1,zmat,iur,ipiv,v,iur,info)
+	    if (info /= 0)CALL tglf_error(1,"ZGESV failed in tglf_LS")
+	    eigenvalue = xi*alpha(jmax(imax))/beta(jmax(imax))
+	    call get_QL_weights
+
+	    do i = 1, max_plot
+	       odd_function(i) = COS(pi * REAL(i-1) / REAL(max_plot))
+	       even_function(i) = SIN(pi * REAL(i-1) / REAL(max_plot))
+	    enddo
+
+	    do i = 1, max_plot
+	       phi_test(i) = 0.0
+	       do j = 1, nbasis
+	          if (MOD(j, 2) == 0) then
+		     phi_test(i) = phi_test(i) + odd_function(i) * REAL(field_weight_QL_out(1, j))
+	          else
+		     phi_test(i) = phi_test(i) + even_function(i) * REAL(field_weight_QL_out(1, j))
+	          endif
+	       enddo
+	    enddo
+
+	    eps_even = 0.1  ! 10% threshold 
+
+	    ! Compute the sum of the function values and the sum of their absolute values
+	    sum_phi = SUM(phi_test(:))
+	    sum_abs_phi = SUM(ABS(phi_test(:)))
+
+	    ! Check if the function is even or odd based on the sum/integral comparison
+	    is_even = .false.
+	    is_odd = .false.
+	    if (ABS(sum_phi) > (1-eps_even) * sum_abs_phi) then
+	      is_even = .true.
+	    endif
+	    if (ABS(sum_phi) < eps_even * sum_abs_phi) then
+	      is_odd = .true.
+	    endif
+	  endif
+
+	  ! Check if the mode is a numerical instability
+	  if (.not. (is_even .and. rr(jmax(imax)) > 0.0 .and. ri(jmax(imax)) > 0) ) then
+            rr(jmax(imax)) = -rr(jmax(imax))
+	  endif
+	endif
+        enddo 
+!      Re-initialize output to zero
+	do j1=1,maxmodes
+	  jmax(j1) = 0
+	  gamma_out(j1) = 0.0
+	  freq_out(j1) = 0.0
+	  v_QL_out(j1) = 0.0
+	  a_par_QL_out(j1) = 0.0
+	  b_par_QL_out(j1) = 0.0
+	  phi_bar_out(j1) = 0.0
+	  a_par_bar_out(j1) = 0.0
+	  b_par_bar_out(j1) = 0.0
+	  v_bar_out(j1) = 0.0
+	  do is=1,nsm
+	    do j=1,3
+	      particle_QL_out(j1,is,j) = 0.0
+	      energy_QL_out(j1,is,j) = 0.0
+	      stress_par_QL_out(j1,is,j) = 0.0
+	      stress_tor_QL_out(j1,is,j) = 0.0
+	      exchange_QL_out(j1,is,j) = 0.0
+	    enddo
+	    N_QL_out(j1,is) = 0.0
+	    T_QL_out(j1,is) = 0.0
+	    U_QL_out(j1,is) = 0.0
+	    Q_QL_out(j1,is) = 0.0
+	    N_bar_out(j1,is) = 0.0
+	    T_bar_out(j1,is) = 0.0
+	    U_bar_out(j1,is) = 0.0
+	    Q_bar_out(j1,is) = 0.0
+	    Ns_Ts_phase_out(j1,is) = 0.0
+	  enddo
+	  ne_te_phase_out(j1) = 0.0
+	enddo
+! Re-find the top nmodes most unstable modes
+        CALL sort_eigenvalues(nmodes_in,jmax)
+        nmodes_out = 0
+        do j1=1,nmodes_in 
+          if(jmax(j1).ne.0)then
+            nmodes_out = nmodes_out + 1
+            gamma_out(j1)=rr(jmax(j1))
+            freq_out(j1)=-ri(jmax(j1))
+          endif
+        enddo
+      endif
+! End of filtering out numerical instabilities
+
 !  get the fluxes for the most unstable modes
       if(iflux_in)then
         do imax=1,nmodes_out

@@ -282,7 +282,7 @@ module cgyro_globals
   real    :: t_current
   real, dimension(:), allocatable    :: gtime
   complex, dimension(:), allocatable :: freq
-  complex, dimension(:), allocatable :: freq_err
+  complex :: freq_err
   integer(KIND=8) :: kernel_start_time, kernel_exit_time, kernel_count_rate, kernel_count_max
   !---------------------------------------------------------------
 
