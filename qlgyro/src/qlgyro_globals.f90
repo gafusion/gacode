@@ -316,8 +316,8 @@ module qlgyro_globals
   !---------------------------------------------------------
   integer :: debug_flag=0
   
-  ! runpath for eachh KY
-  character(len=80) :: runpath
+  ! runpath for each KY
+  character(len=120) :: runpath
   
   ! TGLF specific parameters
   real :: qlgyro_tglf_nn_max_error=1.0e-3

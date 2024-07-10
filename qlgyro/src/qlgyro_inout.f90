@@ -1,3 +1,4 @@
+
 !
 SUBROUTINE write_qlgyro_flux_spectrum
   !
@@ -462,6 +463,65 @@ END SUBROUTINE write_qlgyro_eigenvalue_spectrum
 44 format(A5, F7.3, A8, F7.3, A14, 2I4, A1)
     
  end subroutine write_qlgyro_status
+
+  
+ subroutine get_set_qlgyro_status(i_kypx0, run_status, loop_cycle, runs, colors, color_in)
+   
+   use mpi
+   use qlgyro_globals
+   use tglf_interface
+   implicit none
+      
+   integer :: file_handle
+   integer(kind=MPI_OFFSET_KIND) :: offset
+   integer, intent(in) :: i_kypx0, color_in
+   integer, intent(inout) :: run_status
+   integer, dimension(n_kypx0), intent(inout) :: runs
+   integer, dimension(n_kypx0), intent(inout) :: colors
+   logical, intent(out) :: loop_cycle
+   CHARACTER(18) :: statusfile="out.qlgyro.status"
+   CHARACTER(1) :: outstr
+   CHARACTER(statstr) :: statusline
+   CHARACTER(98) :: full_statusfile
+   CHARACTER(14) :: ky_status
+
+   full_statusfile = trim(path)//statusfile
+
+   offset = (i_kypx0 - 1) * statstr + 44
+
+   call MPI_FILE_OPEN(qlgyro_comm, full_statusfile, &
+        MPI_MODE_RDWR, MPI_INFO_NULL, file_handle, ierr)
+
+   ! Location of run status
+   call MPI_FILE_READ_AT(file_handle, offset, outstr, &
+        1, MPI_CHARACTER, &
+        MPI_STATUS_IGNORE, ierr)
+
+   read(outstr, *) run_status
+
+   loop_cycle = .true.
+   if (run_status .eq. 0) then
+
+      loop_cycle = .false.
+      run_status = 1
+      runs(i_kypx0) = run_status
+      colors(i_kypx0) = color_in
+      ky_status = ": running     "
+      offset = (i_kypx0-1) * statstr
+
+      write(statusline, 44) "KY = ", tglf_ky_spectrum_out(i_ky(i_kypx0)), ", PX0 = ",&
+           px0_spectrum(i_px0(i_kypx0)), ky_status, runs(i_kypx0), colors(i_kypx0), NEW_LINE(' ')
+
+      call MPI_FILE_WRITE_AT(file_handle, offset, statusline, &
+           statstr, MPI_CHARACTER, &
+           MPI_STATUS_IGNORE, ierr)
+   end if
+   
+   call MPI_file_close(file_handle, ierr)
+
+44 format(A5, F7.3, A8, F7.3, A14, 2I4, A1)
+  
+ end subroutine get_set_qlgyro_status
 
  
  subroutine get_qlgyro_status(i_kypx0, status, loop_cycle)

@@ -153,7 +153,7 @@ subroutine qlgyro_run_cgyro_balloon
      i_ky_local = i_ky(i_kypx0)
      i_px0_local = i_px0(i_kypx0)
      
-     call get_qlgyro_status(i_kypx0, run_status, loop_cycle)
+     call get_set_qlgyro_status(i_kypx0, run_status, loop_cycle, ky_run, ky_color, color)
      
      ! If run is being done then skip to next ky
      if (loop_cycle) then
@@ -162,9 +162,6 @@ subroutine qlgyro_run_cgyro_balloon
         call MPI_barrier(CGYRO_COMM_WORLD, ierr)
         cycle
      end if
-     run_status = 1
-
-     call write_qlgyro_status(ky_run, ky_color, i_kypx0, run_status, color)
 
      ky = tglf_ky_spectrum_out(i_ky_local)
      px0 = px0_spectrum(i_px0_local)
@@ -176,8 +173,10 @@ subroutine qlgyro_run_cgyro_balloon
 
      if (adjoint .eq. 0) then
         call system("mkdir -p "//runpath)
-        write(*,*) ' '
-        write(*,21) 'Group ',  color, ' running in folder ', trim(runpath), ky_color(i_kypx0)
+        if (transport_method .eq. 0) then
+           write(*,*) ' '
+           write(*,21) 'Group ',  color, ' running in folder ', trim(runpath), ky_color(i_kypx0)
+        end if
      end if
 
      call MPI_barrier(CGYRO_COMM_WORLD, ierr)
@@ -235,7 +234,7 @@ subroutine qlgyro_run_cgyro_balloon
 
            cgyro_restart_flag_in=1
            
-           if ( i_run == n_runs) then
+           if ( i_run .eq. n_runs) then
               run_status = 2
            end if
         else
@@ -247,7 +246,7 @@ subroutine qlgyro_run_cgyro_balloon
      call write_qlgyro_status(ky_run, ky_color, i_kypx0, run_status, color)
 
      ! Set run status
-     if (adjoint == 0 ) then
+     if (adjoint .eq. 0 .and. transport_method .eq. 0) then
         if (run_status .eq. 3) then
            write(*,22) 'CGYRO run converged at ky/px0 =', ky,'/',px0
         else if (run_status .eq. 2) then
@@ -279,15 +278,14 @@ subroutine qlgyro_run_cgyro_balloon
         qlgyro_flux_spectrum_out(1:4, :, :cgyro_n_field_in, i_ky_local, i_px0_local) = 0.0
 
      end if
-
+     
      call MPI_BARRIER(CGYRO_COMM_WORLD, ierr)
   end do
-
   call MPI_BARRIER(QLGYRO_COMM_WORLD, ierr)
   
   call read_qlgyro_status(ky_run, ky_color)
  
-  if (i_proc_global == 0) then
+  if (i_proc_global .eq. 0 .and. transport_method .eq. 0) then
      open(unit=1,file=trim(runfile),position='append')
      write(1, *) 'INFO: Ran all kys'
      write(1, *) 'B_unit = ', bunit
