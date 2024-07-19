@@ -41,10 +41,31 @@ subroutine qlgyro_run(lpath_in, qlgyro_comm_in, i_tran_in)
   ! Transport solver operation
   transport_method = 1
   tag_removal = 1
+  i_tran = i_tran_in
   !
+
   path = lpath_in
   cgyro_path_in = path
-  i_tran = i_tran_in
+
+  if (transport_method .eq. 1) then
+     if (i_tran .lt. 10) then
+        format_string = "(A10, I1, A1)"
+     else if (i_tran .lt. 100) then
+        format_string = "(A10, I2, A1)"
+     else if (i_tran .lt. 1000) then
+        format_string = "(A10, I3, A1)"
+     else
+        write(*, *) "Too many iterations... over 1000..."
+        stop
+     end if
+
+     write(iter_path, format_string) "ITERATION_", i_tran, "/"
+     if (i_proc_global .eq. 0) then
+        call system("mkdir -p "//trim(path)//trim(iter_path))
+     end if
+  else
+     iter_path = "./"
+  end if
 
   call qlgyro_allocate_globals
 

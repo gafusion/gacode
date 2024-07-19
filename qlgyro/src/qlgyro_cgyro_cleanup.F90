@@ -106,6 +106,10 @@ enddo
         if (restart_mode .eq. 0) then
            open(unit=io, iostat=i_err, file=trim(runpath)//runfile_restart, status='old')
            if (i_err == 0) close(io, status='delete')
+           open(unit=io, iostat=i_err, file=trim(runpath)//runfile_restart//".old", status='old')
+           if (i_err == 0) close(io, status='delete')
+           open(unit=io, iostat=i_err, file=trim(runpath)//runfile_restart//".part", status='old')
+           if (i_err == 0) close(io, status='delete')
         end if
      end if
   end if
@@ -531,6 +535,11 @@ subroutine qlgyro_cgyro_deallocate_arrays
   if(allocated(ica_c))            deallocate(ica_c)
   if(allocated(icb_c))            deallocate(icb_c)
   
+  !!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! From cgyro_parallel_lib
+  !!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  call parallel_lib_clean
 
 end subroutine qlgyro_cgyro_deallocate_arrays
 
