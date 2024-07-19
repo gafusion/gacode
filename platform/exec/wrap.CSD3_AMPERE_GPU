@@ -15,9 +15,6 @@ else
     NICS=(mlx5_0:1 mlx5_0:1 mlx5_1:1 mlx5_1:1)
 fi
 
-export ACC_DEVICE_NUM=${DEVICE_NUM[${SLURM_LOCALID}]}
-export UCX_NET_DEVICES=${NICS[${SLURM_LOCALID}]}
-
 echo "`uname -n` $SLURM_PROCID $SLURM_LOCALID `taskset -pc $$`"
 
 export OMP_NUM_THREADS=$NOMP
@@ -30,7 +27,16 @@ if [ ${NTASKS_PER_NODE} -gt 4 ]; then
   export CUDA_MPS_PIPE_DIRECTORY=/tmp/nvidia-mps
   export CUDA_MPS_LOG_DIRECTORY=/tmp/nvidia-log
 
+  CUDA_MPS_PERCENTAGE=$((400 / NTASKS_PER_NODE))
+  export CUDA_MPS_ACTIVE_THREAD_PERCENTAGE=$CUDA_MPS_PERCENTAGE
+  
+  DEVICE_NUM=(1 0 2 3)
+
   NODE_RANK=$((SLURM_PROCID % NTASKS_PER_NODE))
+  GPU_RANK=$((SLURM_PROCID % 4))
+
+  export ACC_DEVICE_NUM=${DEVICE_NUM[${GPU_RANK}]}
+  export UCX_NET_DEVICES=${NICS[${GPU_RANK}]}
 
   if [ $NODE_RANK -eq 0 ]; then
     echo $SLURM_PROCID starting nvidia-cuda-mps-control on $(hostname)
@@ -51,7 +57,10 @@ if [ ${NTASKS_PER_NODE} -gt 4 ]; then
     echo "`uname -n` $SLURM_PROCID $SLURM_LOCALID stopped nvidia-cuda-mps-control: $(date --iso-8601=seconds)"
   fi
 else
-  # no need for MPS
-  $@
+    # no need for MPS
+    export ACC_DEVICE_NUM=${DEVICE_NUM[${SLURM_LOCALID}]}
+    export UCX_NET_DEVICES=${NICS[${SLURM_LOCALID}]}
+
+    $@
 fi
 

@@ -22,6 +22,8 @@ export OMP_STACKSIZE=400M
 export MPICH_GPU_SUPPORT_ENABLED=1
 export NOMP=$nomp
 ulimit -c unlimited
-
-#echo "> srun -C gpu --cpu_bind=cores -n $nmpi -c $nomp $GACODE_ROOT/platform/exec/wrap.${GACODE_PLATFORM}_2 $exec"
-srun -C gpu --cpu_bind=cores -n $nmpi --ntasks-per-node 4 -c $nomp $GACODE_ROOT/platform/exec/wrap.${GACODE_PLATFORM} $exec
+echo $nmpi $SLURM_NNODES
+NTASKS_PER_NODE=$((nmpi / SLURM_NNODES))
+echo $NTASKS_PER_NODE
+echo "> srun -C gpu --cpu_bind=cores -n $nmpi --ntasks-per-node $NTASKS_PER_NODE -c $nomp $GACODE_ROOT/platform/exec/wrap.${GACODE_PLATFORM} $exec"
+srun -C gpu --cpu_bind=cores -n $nmpi --ntasks-per-node $NTASKS_PER_NODE -c $nomp  $GACODE_ROOT/platform/exec/wrap.${GACODE_PLATFORM} $exec
