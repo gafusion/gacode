@@ -15,12 +15,17 @@ export ACC_DEVICE_NUM
 
 echo "`uname -n` $SLURM_PROCID $SLURM_LOCALID $ACC_DEVICE_NUM `taskset -pc $$`"
 
+NTASKS_PER_NODE=$((SLURM_NTASKS / SLURM_NNODES))
+
 if [ ${NTASKS_PER_GPU} -gt 1 ]; then
     # use MPS
     # https://docs.nvidia.com/deploy/mps/index.html
     export CUDA_MPS_PIPE_DIRECTORY=/tmp/nvidia-mps
     export CUDA_MPS_LOG_DIRECTORY=/tmp/nvidia-log
     
+    CUDA_MPS_PERCENTAGE=$((400 / NTASKS_PER_NODE))
+    export CUDA_MPS_ACTIVE_THREAD_PERCENTAGE=$CUDA_MPS_PERCENTAGE
+
     NODE_RANK=$((SLURM_PROCID % (NTASKS_PER_GPU*NUMA)))
     
     if [ $NODE_RANK -eq 0 ]; then

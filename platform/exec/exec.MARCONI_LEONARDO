@@ -32,6 +32,9 @@ export NGPU=$ngpu
 export NUMA=$numa
 
 export SLURM_CPU_BIND="cores"
+echo $nmpi $SLURM_NNODES
+NTASKS_PER_NODE=$((nmpi / SLURM_NNODES))
+echo $NTASKS_PER_NODE
 
 echo "> srun --cpu-bind=cores -n $nmpi -c $nomp $GACODE_ROOT/platform/exec/wrap.${GACODE_PLATFORM} $exec"
-srun --cpu-bind=cores -n $nmpi -c $nomp $GACODE_ROOT/platform/exec/wrap.${GACODE_PLATFORM} $exec
+srun --cpu-bind=cores -n $nmpi -c $nomp --ntasks-per-node $NTASKS_PER_NODE $GACODE_ROOT/platform/exec/wrap.${GACODE_PLATFORM} $exec
