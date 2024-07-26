@@ -204,8 +204,14 @@ subroutine cgyro_flux
         ! Correct for sign of q
         flux_norm = flux_norm*q/abs(q)*2 ! need 2 for regression compatibility
 
-        gflux_loc(:,:,:,:,itor) = gflux_loc(:,:,:,:,itor)/flux_norm 
-        cflux_loc (:,:,:,itor)  = cflux_loc(:,:,:,itor)/flux_norm 
+        ! Avoid divide by 0 (first time step usually)
+        if (flux_norm .lt. 1e-20) then
+           gflux_loc(:,:,:,:,itor) = gflux_loc(:,:,:,:,itor)*flux_norm
+           cflux_loc (:,:,:,itor)  = cflux_loc(:,:,:,itor)*flux_norm
+        else
+           gflux_loc(:,:,:,:,itor) = gflux_loc(:,:,:,:,itor)/flux_norm
+           cflux_loc (:,:,:,itor)  = cflux_loc(:,:,:,itor)/flux_norm
+        end if
 
      else
 

@@ -82,6 +82,7 @@ subroutine cgyro_freq
         else
            ! Trap a division-by-zero error and halt
            call cgyro_error('Underflow in calculation of frequency error')
+           signal = 2
         endif
         if (abs(freq_err) < freq_tol) signal = 1
      endif

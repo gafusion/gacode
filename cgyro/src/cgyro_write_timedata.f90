@@ -124,6 +124,7 @@ subroutine cgyro_write_timedata
               it = maxloc(abs(ftemp(:,n_radial/2+1)),dim=1)
               a_norm = ftemp(it,n_radial/2+1)
            endif
+           if (abs(a_norm) .lt. 1e-20) a_norm = 1.0
            call extended_ang(ftemp)
         else
            a_norm = 1.0

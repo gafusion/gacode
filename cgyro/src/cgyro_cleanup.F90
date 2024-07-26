@@ -281,8 +281,12 @@ subroutine cgyro_cleanup
      ccl_del_bigdevice(cmat_stripes)
      deallocate(cmat_stripes)
   endif
-    if (allocated(cmat_simple)) then
+  if (allocated(cmat_simple)) then
      ccl_del_device(cmat_simple)     
+     deallocate(cmat_simple)
+  endif
+  if (allocated(cmat_e1)) then
+     ccl_del_device(cmat_e1)
      deallocate(cmat_simple)
   endif
 

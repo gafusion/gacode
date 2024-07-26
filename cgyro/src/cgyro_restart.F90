@@ -276,13 +276,19 @@ subroutine cgyro_write_restart_header_part
 
   ! Different compilers have a different semantics for RECL... must use inquire
   integer :: reclen
+  integer :: io_err
   integer, dimension(1) :: recltest
 
   inquire(iolength=reclen) recltest
 
   open(unit=io,&
        file=trim(path)//runfile_restart//".part",&
-       status='old',access='DIRECT',RECL=reclen)
+       status='old',access='DIRECT',RECL=reclen, iostat=io_err)
+
+  if (io_err .ne. 0) then
+     call cgyro_error('Reading bin.cgyro.restart.part failed')
+     return
+  end if
 
   recid = 1
   write(io,REC=recid) restart_magic

@@ -151,6 +151,10 @@ subroutine cgyro_kernel
      call cgyro_write_restart
 
      call timer_lib_out('io')
+
+     ! Exit if failed
+     if (error_status > 0) exit
+
      !---------------------------------------
 
      call timer_lib_out('TOTAL')

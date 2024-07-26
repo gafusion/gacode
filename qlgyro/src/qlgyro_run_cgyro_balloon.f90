@@ -220,6 +220,7 @@ subroutine qlgyro_run_cgyro_balloon
 
      ! Reset signal to 0
      cgyro_signal_out = 0
+     cgyro_error_status_out = 0
 
      call map_interface2global
 

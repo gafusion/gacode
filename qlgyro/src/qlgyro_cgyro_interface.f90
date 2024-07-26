@@ -569,6 +569,7 @@ contains
     printout = cgyro_printout_in
 
     signal = cgyro_signal_out
+    error_status = cgyro_error_status_out
 
   end subroutine map_interface2global
 
