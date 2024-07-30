@@ -106,6 +106,7 @@ program qlgyro
      write(1,*) '-----------------------------------------'
      write(1,*) 'Sat rule ', sat_rule, 'not a valid option'
      write(1,*) '-----------------------------------------'
+     close(1)
      stop
   end if
   
@@ -124,7 +125,9 @@ program qlgyro
      call write_qlgyro_sat_geo_spectrum
      call write_qlgyro_kxrms_spectrum
   
-     print*, 'Completed QLGYRO run'
+     open(unit=1,file=trim(runfile),position='append')
+     write(1,*) 'Completed QLGYRO run'
+     close(1)
      
   end if
   

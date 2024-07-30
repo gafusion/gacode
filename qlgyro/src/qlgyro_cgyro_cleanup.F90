@@ -120,9 +120,6 @@ enddo
   timer_cpu=0.0
   timer_cpu_in=0.0
 
-  ! Deallocate arrays
-  !call cgyro_deallocate_arrays
-  
 end subroutine qlgyro_cgyro_cleanup
 
 

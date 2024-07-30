@@ -65,7 +65,9 @@ subroutine qlgyro_run_cgyro_balloon
 
   n_ky = tglf_nky_in
 
-  if (tglf_ky_spectrum_out(1) .lt. 0.01) then
+  if (tglf_ky_spectrum_out(1) .lt. 0.001) then
+     fmt_str = "(F5.4)"
+  else if (tglf_ky_spectrum_out(1) .lt. 0.01) then
      fmt_str = "(F5.3)"
   else
      fmt_str = "(F5.2)"

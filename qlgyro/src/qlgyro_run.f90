@@ -95,6 +95,7 @@ subroutine qlgyro_run(lpath_in, qlgyro_comm_in, i_tran_in)
      write(1,*) '-----------------------------------------'
      write(1,*) 'Sat rule ', sat_rule, 'not a valid option'
      write(1,*) '-----------------------------------------'
+     close(1)
      stop
   end if
 
@@ -102,23 +103,6 @@ subroutine qlgyro_run(lpath_in, qlgyro_comm_in, i_tran_in)
   call qlgyro_sum_fluxes
 
   if (i_proc_global .eq. 0) then
-
-     if (transport_method .eq. 1) then
-        if (i_tran .lt. 10) then
-           format_string = "(A10, I1, A1)"
-        else if (i_tran .lt. 100) then
-           format_string = "(A10, I2, A1)"
-        else if (i_tran .lt. 1000) then
-           format_string = "(A10, I3, A1)"
-        else
-           write(*, *) "Too many iterations... over 1000..."
-           stop
-        end if
-
-        write(iter_path, format_string) "ITERATION_", i_tran, "/"
-        call system("mkdir -p "//trim(path)//trim(iter_path))
-     end if
-
      call write_qlgyro_ky_spectrum
      call write_qlgyro_QL_weight_spectrum
      call write_qlgyro_eigenvalue_spectrum
@@ -129,8 +113,10 @@ subroutine qlgyro_run(lpath_in, qlgyro_comm_in, i_tran_in)
      call write_qlgyro_sat_geo_spectrum
      call write_qlgyro_kxrms_spectrum
 
-     print*, 'Completed QLGYRO run'
-     
+     open(unit=1,file=trim(runfile),position='append')
+     write(1,*) 'Completed QLGYRO run'
+     close(1)
+
   end if
 
   ! Need to deallocate array which get re-allocated in next call
