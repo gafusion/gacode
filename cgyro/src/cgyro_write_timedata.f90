@@ -129,7 +129,7 @@ subroutine cgyro_write_timedata
         else
            a_norm = 1.0
         endif
-
+        if (abs(a_norm) .le. 1e-20) a_norm = 1.0
         call write_binary(trim(path)//binfile_fieldb(i_field),&
              ftemp(:,:)/a_norm,size(ftemp))
      enddo

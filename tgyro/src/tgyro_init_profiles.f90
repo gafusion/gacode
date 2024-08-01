@@ -151,6 +151,9 @@ subroutine tgyro_init_profiles
   if (loc_n_ion > 1) then
      if (ion_name(1) == 'D' .and. ion_name(2) == 'T') dt_flag = 1
      if (ion_name(1) == 'T' .and. ion_name(2) == 'D') dt_flag = 1
+  else if (loc_n_ion .eq. 1) then
+     if (ion_name(1) == 'D' .and. expro_name(2) == 'T') dt_flag = 2
+     if (ion_name(1) == 'T' .and. expro_name(2) == 'D') dt_flag = 2
   endif
   
   !------------------------------------------------------

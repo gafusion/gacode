@@ -200,6 +200,10 @@ subroutine rad_alpha(ne,ni,te,ti,s_alpha_he,s_alpha_i,s_alpha_e,frac_ai,e_cross,
         ! D and T given by ion 1 and ion 2 (order doesn't matter)
         n_d = ni(1,i)
         n_t = ni(2,i)
+     else if (dt_flag == 2) then
+        ! D and T given by half of ion 1
+        n_d = ni(1,i) / 2
+        n_t = ni(1,i) / 2
      endif
 
      ! e_cross = (1/2) malpha v_cross^2 [agrees with Estrada 2006]
