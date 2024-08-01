@@ -82,7 +82,7 @@ contains
     implicit none
     character(len=*), intent(in) :: tag
     integer :: indx
-
+    timer_lib_time = 0.0
     do indx=1,timer_cpu_maxindx
        if (trim(tag) == trim(timer_cpu_tag(indx))) then
           timer_lib_time = timer_cpu(indx)

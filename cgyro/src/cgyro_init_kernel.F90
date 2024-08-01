@@ -74,7 +74,8 @@ subroutine cgyro_init_kernel
   if (error_status > 0) then
      ! something went terribly wrong, hard abort, as things may be
      ! in weird state
-     call abort
+     call cgyro_final_kernel
+     return
   endif
 
   if (test_flag == 1) return

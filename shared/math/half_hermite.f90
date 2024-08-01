@@ -163,6 +163,8 @@ contains
     tanhb(x)=2*x/(1+x)
     tanhp1(x)=tanhb(exp(2*x))   ! tanh(x)+1 for x<0 approx. 2*exp(2*x) for x<<-1
     tanhm1(x)=-tanhb(exp(-2*x)) ! tanh(x)-1 for x>0
+    leftnew=0
+    rightnew=0
 
     if (n==0) return
     nn=n

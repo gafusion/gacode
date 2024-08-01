@@ -23,7 +23,6 @@ subroutine cgyro_write_initdata
   ! NOTE: Some of this data is reproduced in other data files.
   !
   if (silent_flag == 0 .and. i_proc == 0) then
-
      open(unit=io,file=trim(path)//runfile_info,status='old',position='append')
 
      write(io,*)
@@ -41,12 +40,6 @@ subroutine cgyro_write_initdata
      endif
      write(io,*)
 
-     if (kymax < -99.9) then
-        lfmt = '(a,i4,2x,2(f7.2,2x),2x,f6.2,5x,i4,2a)'
-     else
-        lfmt = '(a,i4,2x,2(f7.3,2x),2x,f6.2,5x,i4,2a)'
-     endif
-
      if (zf_test_mode == 0) then
 
         ! Compute kymax
@@ -56,8 +49,13 @@ subroutine cgyro_write_initdata
            kymax = q/rmin*(n_toroidal-1)*rho
         endif
         
-        if (nonlinear_flag == 0) then
+        if (kymax < -99.9) then
+           lfmt = '(a,i4,2x,2(f7.2,2x),2x,f9.2,5x,i4,2a)'
+        else
+           lfmt = '(a,i4,2x,2(f7.3,2x),2x,f9.2,5x,i4,2a)'
+        endif
 
+        if (nonlinear_flag == 0) then
            write(io,*) '          n    Delta      Max     L/rho'
            write(io,lfmt) ' kx*rho:',&
                 n_radial,2*pi*rho/length,2*pi*rho*(n_radial/2-1)/length,length/rho
