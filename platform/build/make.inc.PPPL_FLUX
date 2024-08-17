@@ -23,10 +23,10 @@ FDEBUG = -check all -traceback
 F2PY   = f2py
 
 # System math libraries
-LMATH = -mkl
+LMATH = -qmkl
 
 # NetCDF
-NETCDF = -L${NETCDF_FORTRAN_HOME}/lib -lnetcdff -L${NETCDF_C_HOME}/lib -lnetcdf
+NETCDF = -L${NETCDF_FORTRAN_HOME}/lib -lnetcdff -L${NETCDF_C_HOME}/lib64 -lnetcdf
 NETCDF_INC =-I${NETCDF_FORTRAN_HOME}/include -I${NETCDF_C_HOME}/include
 
 # Mapping

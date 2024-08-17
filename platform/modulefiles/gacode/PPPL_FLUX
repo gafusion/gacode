@@ -1,5 +1,9 @@
-#!/bin/bash
-#module purge
+#%Module
+#
+# Module file for setting the GACODE machine-dependent environmental variables
+#
+
+module purge
 module load intel@2023.2
 module load openmpi/4.1.6-intel-2023.2.0
 module load openmpi-4.1.6/intel-2023.2.0/netcdf-c/main-nzscm
