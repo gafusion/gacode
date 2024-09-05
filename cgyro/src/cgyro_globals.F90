@@ -210,6 +210,8 @@ module cgyro_globals
   !
   integer :: nt1,nt2,nt_loc
   integer :: n_toroidal_procs
+  integer :: worker_index=0
+  integer :: iteration_method=0
   !---------------------------------------------------------------
 
   !---------------------------------------------------------------

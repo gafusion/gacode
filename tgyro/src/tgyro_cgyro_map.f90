@@ -194,5 +194,7 @@ subroutine tgyro_cgyro_map
   cgyro_rho_star_norm_in = rho_s(i_r) / r_min
   cgyro_vth_norm_in = c_s(i_r)
 
+  cgyro_worker_index_in = worker_index
+  cgyro_iteration_method_in = tgyro_iteration_method
 
 end subroutine tgyro_cgyro_map

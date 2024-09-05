@@ -76,8 +76,8 @@ subroutine qlgyro_cgyro_cleanup
         ftemp = ftemp / a_norm
         
         cgyro_wavefunction_out(i_tor, i_field, :) = reshape(ftemp, (/cgyro_n_radial_in * cgyro_n_theta_in/))
-  end do
-enddo
+     end do
+  enddo
 
   if (auto_box_size .eq. 0) then
      ! Get ballooning theta from out.cgyro.grids

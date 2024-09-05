@@ -60,6 +60,12 @@ subroutine qlgyro_run(lpath_in, qlgyro_comm_in, i_tran_in)
      end if
 
      write(iter_path, format_string) "ITERATION_", i_tran, "/"
+
+     ! Adjust path directory if running TGYRO in parallel
+     if (cgyro_iteration_method_in .eq. 5) then
+        write(worker_str, *) cgyro_worker_index_in
+        iter_path = trim(iter_path)//trim(adjustl(worker_str))//"/"
+     end if
      if (i_proc_global .eq. 0) then
         call system("mkdir -p "//trim(path)//trim(iter_path))
      end if

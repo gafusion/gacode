@@ -304,7 +304,8 @@ module qlgyro_globals
   integer :: flux_method
   integer, dimension(:), allocatable :: flux_method_vec
   integer :: i_tran=1
-  character(13) :: iter_path="./           "
+  character(30) :: iter_path="./"
+  character(30) :: worker_str
   integer :: i_bc
   integer :: flux_counter
   integer :: i_ash

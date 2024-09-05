@@ -179,7 +179,7 @@ subroutine qlgyro_run_cgyro_balloon
      ! Creates directory for each ky and changes into it for that run
      write(kystr, fmt_str_ky) i_ky_local
      write(px0str, fmt_str_px0) i_px0_local
-     runpath = trim(trim(path)//trim(iter_path)//'/KY_'//trim(adjustl(kystr)))//"_PX0_"//trim(adjustl(px0str))//"/"
+     runpath = trim(trim(path)//trim(iter_path)//'KY_'//trim(adjustl(kystr)))//"_PX0_"//trim(adjustl(px0str))//"/"
 
      if (adjoint .eq. 0) then
         call system("mkdir -p "//runpath)

@@ -202,6 +202,9 @@ module qlgyro_cgyro_interface
 
   logical :: cgyro_printout_in
 
+  integer :: cgyro_worker_index_in=0
+  integer :: cgyro_iteration_method_in=0
+
 contains
 
 
@@ -372,6 +375,9 @@ contains
     cgyro_error_message_out = error_message
 
     cgyro_printout_in = printout
+
+    cgyro_worker_index_in = worker_index
+    cgyro_iteration_method_in = iteration_method
 
   end subroutine map_global2interface
 
@@ -570,6 +576,9 @@ contains
 
     signal = cgyro_signal_out
     error_status = cgyro_error_status_out
+
+    worker_index = cgyro_worker_index_in
+    iteration_method = cgyro_iteration_method_in
 
   end subroutine map_interface2global
 

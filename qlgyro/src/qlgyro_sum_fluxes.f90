@@ -167,8 +167,10 @@ SUBROUTINE qlgyro_sum_fluxes
       end do
 
       if (i_proc_global == 0) then
-         write(*,*) 'QLGYRO Heat     fluxes (Qe, Qi): ', tglf_elec_eflux_out, tglf_ion_eflux_out(1)
-         write(*,*) 'QLGYRO Particle fluxes (Qe, Qi): ', tglf_elec_pflux_out, tglf_ion_pflux_out(1)
+         open(unit=1,file=trim(runfile),position='append')
+         write(1,*) 'QLGYRO Heat     fluxes (Qe, Qi): ', tglf_elec_eflux_out, tglf_ion_eflux_out(1)
+         write(1,*) 'QLGYRO Particle fluxes (Qe, Qi): ', tglf_elec_pflux_out, tglf_ion_pflux_out(1)
+         close(1)
       end if
 21 format(A35, F8.3, F8.3)
     END SUBROUTINE qlgyro_sum_fluxes

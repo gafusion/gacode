@@ -377,7 +377,7 @@ END SUBROUTINE write_qlgyro_eigenvalue_spectrum
    CHARACTER(18) :: statusfile="out.qlgyro.status"
    CHARACTER(98) :: full_statusfile
 
-   full_statusfile = trim(path)//statusfile
+   full_statusfile = trim(path)//trim(iter_path)//statusfile
 
    call MPI_FILE_DELETE(full_statusfile, MPI_INFO_NULL, ierr)
 
@@ -429,7 +429,7 @@ END SUBROUTINE write_qlgyro_eigenvalue_spectrum
    CHARACTER(98) :: full_statusfile
    CHARACTER(14) :: ky_status
 
-   full_statusfile = trim(path)//statusfile
+   full_statusfile = trim(path)//trim(iter_path)//statusfile
 
    offset = (i_kypx0 - 1) * statstr
 
@@ -485,7 +485,7 @@ END SUBROUTINE write_qlgyro_eigenvalue_spectrum
    CHARACTER(98) :: full_statusfile
    CHARACTER(14) :: ky_status
 
-   full_statusfile = trim(path)//statusfile
+   full_statusfile = trim(path)//trim(iter_path)//statusfile
 
    offset = (i_kypx0 - 1) * statstr + 44
 
@@ -540,7 +540,7 @@ END SUBROUTINE write_qlgyro_eigenvalue_spectrum
    CHARACTER(1) :: outstr
    CHARACTER(98) :: full_statusfile
 
-   full_statusfile = trim(path)//statusfile
+   full_statusfile = trim(path)//trim(iter_path)//statusfile
 
    offset = (i_kypx0-1) * statstr + 44
    call MPI_FILE_OPEN(qlgyro_comm, full_statusfile, &
@@ -579,7 +579,7 @@ END SUBROUTINE write_qlgyro_eigenvalue_spectrum
    INTEGER(kind=MPI_OFFSET_KIND) :: offset1, offset2
    CHARACTER(98) :: full_statusfile
 
-   full_statusfile = trim(path)//statusfile
+   full_statusfile = trim(path)//trim(iter_path)//statusfile
 
    call MPI_FILE_OPEN(qlgyro_comm, full_statusfile, &
         MPI_MODE_RDONLY, MPI_INFO_NULL, file_handle, ierr)
