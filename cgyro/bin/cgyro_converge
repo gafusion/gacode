@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from pygacode.cgyro import data
 from pygacode.gacodefuncs import *
 
+
 # --- to visualize results for one case plot=True------
 plot=True
 
@@ -43,6 +44,7 @@ for path, folders, files in os.walk(directory):
         
     
 
+
         # size and number of time windows
         #dt = 50.0
         #nwin = int(tmax/dt)
@@ -50,6 +52,7 @@ for path, folders, files in os.walk(directory):
         dt=tmax/nwin
         t0 = tmax-nwin*dt
         
+
         if plot:
          #add plot for visualization
          fig = plt.figure(figsize=(12,6))
@@ -58,6 +61,7 @@ for path, folders, files in os.walk(directory):
          plt.ylabel('Flux')
          colors = mpl.cm.rainbow(np.linspace(0, 1, nwin))
         
+
         convergance = True
 
         # select field=0 (phi), moment=1 (Q), species (0), and sum over kx
@@ -65,19 +69,23 @@ for path, folders, files in os.walk(directory):
           field=0 ; moment=1 ; 
           species=species_index
           y = np.sum(sim.ky_flux[species,moment,field,:,:],axis=0)
+
           if plot:
            plt.plot(t,y, label=f"Q_{species_index}", linestyle=linestyles[species_index], color=colors[species_index])
+
           average_array=[]
 
          # averaging over all windows (note that time_average function is fast/optimized)
           for i in range(nwin):
             w=str(tmax-(i+1)*dt)+','+str(tmax-i*dt)
+
             imin,imax=time_index(t,w)               
             
             ave = time_average(y[:],t,imin,imax)
             average_array.append(ave)
             if plot:
               plt.hlines(y=ave, xmin=t[imin], xmax=t[imax], color=colors[i], lw=3, linestyle=linestyles[species_index])
+
             
 
 
@@ -85,6 +93,7 @@ for path, folders, files in os.walk(directory):
         
         
         # define the convergence by std between last free averaged regions as a pesentage to the total
+
           if np.std(average_array[:3]/np.mean(average_array[:3])) > 0.2:
             convergance = False
        
@@ -102,5 +111,6 @@ for path, folders, files in os.walk(directory):
         if plot:
           plt.legend()
           plt.show()
+
     
 
