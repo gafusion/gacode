@@ -53,6 +53,9 @@ then
   echo "         -rs <case>"
   echo "         Run specified regression case."
   echo
+  echo "         -rt"
+  echo "         Enable restart regression testing."
+  echo
   echo "         -reset"
   echo "         Reset regression data."
   echo
@@ -104,6 +107,7 @@ MPINUMA=0
 TEST_FLAG=0
 GENERATE_FLAG=0
 REGRESS_FLAG=0
+REGRESS_RESTART=0
 MTEST_FLAG=0
 CLEAN=0
 COMPRESS_FLAG=0
@@ -141,6 +145,8 @@ while [ $# -gt 0 ] ; do
   -r) REGRESS_FLAG=1 ;;
 
   -rs) REGRESS_FLAG=1 ; shift ; SCASE=$1 ;;
+
+  -rt) REGRESS_RESTART=1 ;;
 
   -reset) RESET=1 ;;
 
@@ -219,7 +225,12 @@ then
       exit 1
    fi
    # NOMP=1 RESET=0
-   gacode_reg_do $NPROC $NOMP $RESET cgyro 1e-6 $SCASE
+   if [ $REGRESS_RESTART -eq 0 ]
+   then
+      gacode_reg_do $NPROC $NOMP $RESET cgyro 1e-6 $SCASE
+   else
+      gacode_reg_do_restart $NPROC $NOMP $RESET cgyro 1e-6 $SCASE
+   fi
    exit 0
 fi
 #============================================================

@@ -1,0 +1,101 @@
+#!/bin/bash
+# 
+# SCRIPT:
+#  gacode_reg_do_restart <n_proc> <n_omp> <reset_flag> <code> <tol>
+#
+# PURPOSE:
+#  Run three times through full suite of regression tests defined for <code>
+#  Check that both base, mid and final results are correct
+#
+# EXAMPLE:
+#  gacode_reg_do_restart 2 1 0 cgyro 1e-6 reg01
+#----------------------------------------------------
+
+n=$#
+
+if [ $n -lt 5 ] 
+then
+  echo "Usage: gacode_reg_do <n_proc> <n_omp> <reset_flag> <code> <tol> <scase>"
+  exit 1
+fi
+
+# Define list of test directories:
+
+n_proc=${1}
+n_omp=${2}
+reset=${3}
+code=${4}
+tol=${5}
+scase=${6}
+
+echo "REGRESSION TESTING: $code"
+
+testdir=$PWD/${code}_regression_test
+
+# Is data in GACODE
+
+if [ -d "$GACODE_ROOT/$code/tools/input" ]
+then
+   compdir=$GACODE_ROOT/$code/tools/input
+fi
+
+# Is data in GACODE_ADD
+if [ -d "$GACODE_ADD_ROOT/$code/tools/input" ]
+then
+   compdir=$GACODE_ADD_ROOT/$code/tools/input
+fi
+
+precfile=out.$code.prec
+infile=input.$code
+
+if [ "$scase" == "" ] 
+then
+   list=`cat $compdir/reg_list`
+else
+   list=$scase
+fi
+
+rm -rf $testdir ; mkdir $testdir
+cd $testdir
+
+for sim in $list
+do
+   $code -g $sim -p $testdir > out.$sim
+   rm -f $sim/$precfile
+   # patch input file to have frequent checkpointing
+   mv $sim/$infile $sim/$infile.org
+   grep -v RESTART_STEP $sim/$infile.org > $sim/$infile
+   echo "RESTART_STEP=1" >> $sim/$infile
+   # now run it 3 times
+   for ((i=0; $i<3; i=$i+1))
+   do
+    if [ $i -ne 0 ]
+    then
+      cp $sim/$precfile $sim/$precfile.$oi
+    fi
+    if [ $n_omp -eq 1 ] && [ $n_proc -eq 1 ] ; then 
+      $code -e $sim -p $testdir > out.$sim
+    else
+      $code -e $sim -n $n_proc -nomp $n_omp -p $testdir > out.$sim
+    fi
+    cp $sim/$precfile $sim/$precfile.$i
+    if [ $i -eq 0 ]
+    then
+      # reuse the non-checkpointed result from original regression test
+      myprecfile=$precfile
+    else
+      # use the additional iterations else
+      myprecfile=$precfile.$i
+    fi
+    gacode_reg $sim $compdir $myprecfile $tol
+    oi=$i
+   done
+   if [ $reset -eq 1 ]
+   then
+      # Overwrite regression data with current data
+      echo "$sim/$precfile -> $GACODE_ROOT/$code/tools/input/$sim"
+      cp $sim/$precfile.0 $compdir/$sim/$precfile
+      cp $sim/$precfile.1 $compdir/$sim/$precfile.1
+      cp $sim/$precfile.2 $compdir/$sim/$precfile.2
+   fi
+done
