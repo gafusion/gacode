@@ -376,6 +376,20 @@ subroutine cgyro_read_restart
 
   call cgyro_read_restart_one
 
+  ! Unpack h(0,0) into source
+  if (source_flag == 1 .and. nt1 == 0) then
+     ic0 = (n_radial/2)*n_theta
+     do j=1,n_theta
+        source(j,:,0) = h_x(ic0+j,:,0)
+        h_x(ic0+j,:,0) = 0.0
+     enddo
+     sa = 0.0
+     do j=1,nint(t_current/delta_t)
+        sa = 1.0+exp(-delta_t/tau_ave)*sa
+     enddo
+  endif
+
+
 end subroutine cgyro_read_restart
 
 
@@ -584,19 +598,6 @@ subroutine cgyro_read_restart_one
 
   call MPI_FILE_CLOSE(fhv,i_err)
   call MPI_INFO_FREE(finfo,i_err)
-
-  ! Unpack h(0,0) into source 
-  if (source_flag == 1 .and. nt1 == 0) then
-     ic0 = (n_radial/2)*n_theta
-     do j=1,n_theta
-        source(j,:,0) = h_x(ic0+j,:,0)
-        h_x(ic0+j,:,0) = 0.0
-     enddo
-     sa = 0.0
-     do j=1,nint(t_current/delta_t)
-        sa = 1.0+exp(-delta_t/tau_ave)*sa
-     enddo
-  endif
 
   call system_clock(cp_time,count_rate,count_max)
   if (cp_time > start_time) then
