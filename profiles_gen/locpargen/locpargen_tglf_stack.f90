@@ -68,6 +68,6 @@ subroutine locpargen_tglf_stack
        'VPAR_1=',mach_loc/cs_loc
   close(1)
 
-10 format(sp,21(a,1pe12.5,2x),a,s,i0,2x,4(a,s,i0,2x,sp,7(a,1pe12.5,2x)))
+10 format(sp,43(a,1pe12.5,2x),a,s,i0,2x,4(a,s,i0,2x,sp,7(a,1pe12.5,2x)))
 
 end subroutine locpargen_tglf_stack
