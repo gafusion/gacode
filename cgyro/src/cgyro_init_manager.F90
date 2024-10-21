@@ -306,6 +306,18 @@ subroutine cgyro_init_manager
 !$acc enter data create(fpackB,fB_nl)
 #endif
         endif
+
+       if (stress_flag == 1) then
+          allocate(stress(nc,nv_loc,nt1:nt2,n_field))
+          allocate(stress_integrated_loc(n_radial,nt_loc,nt1:nt2,n_field))
+          allocate(stress_integrated(n_radial,nt_loc,nt1:nt2,n_field))
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:stress,stress_integrated,stress_integrated_loc)
+#elif defined(_OPENACC)
+!$acc enter data create(stress,stress_integrated,stress_integrated_loc)
+#endif
+       end if
+
      endif
 
      if (collision_model == 5) then

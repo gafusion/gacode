@@ -68,7 +68,8 @@ module cgyro_globals
   real    :: z_eff
   integer :: z_eff_method
   integer :: zf_test_mode 
-  integer :: nonlinear_flag 
+  integer :: nonlinear_flag
+  integer :: stress_flag=1
   real :: temp_ae
   real :: dens_ae
   real :: mass_ae
@@ -249,6 +250,8 @@ module cgyro_globals
        (/'bin.cgyro.kxky_n','bin.cgyro.kxky_e','bin.cgyro.kxky_v'/)
   character(len=19), dimension(3) :: binfile_kxky_field = &
        (/'bin.cgyro.kxky_phi ','bin.cgyro.kxky_apar','bin.cgyro.kxky_bpar'/)
+  character(len=19), dimension(3) :: binfile_stress = &
+       (/'bin.cgyro.stress_phi ','bin.cgyro.stress_apar','bin.cgyro.stress_bpar'/)
   character(len=20), dimension(3) :: binfile_lky_flux = &
        (/'bin.cgyro.lky_flux_n','bin.cgyro.lky_flux_e','bin.cgyro.lky_flux_v'/)
   integer, parameter :: io=1
@@ -341,6 +344,9 @@ module cgyro_globals
   !
   ! Distributions
   complex, dimension(:,:,:,:), allocatable :: rhs
+  complex, dimension(:,:,:,:), allocatable :: stress
+  complex, dimension(:,:,:,:), allocatable :: stress_integrated
+  complex, dimension(:,:,:,:), allocatable :: stress_integrated_loc
   complex, dimension(:,:,:), allocatable :: h_x
   complex, dimension(:,:,:), allocatable :: g_x
   complex, dimension(:,:,:), allocatable :: h0_x

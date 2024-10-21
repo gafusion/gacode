@@ -93,6 +93,17 @@ subroutine cgyro_write_timedata
           field_plot)
   enddo
 
+  if (stress_flag == 1) then
+  do i_field=1,n_field
+     ! Sort out subset of theta values for plotting
+        call cgyro_write_distributed_bcomplex(&
+             trim(path)//binfile_stress(i_field),&
+             size(stress_integrated(:,:,:,i_field)),&
+             stress_integrated(:,:,:,i_field))
+     enddo
+
+  end if
+
   ! Checksum for regression testing
   ! Note that checksum is a distributed real scalar
   if (zf_test_mode == 0) then

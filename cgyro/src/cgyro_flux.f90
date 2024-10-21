@@ -30,6 +30,7 @@ subroutine cgyro_flux
 
   use mpi
   use cgyro_globals
+  use cgyro_nl_comm
 
   implicit none
 
@@ -217,6 +218,47 @@ subroutine cgyro_flux
         gflux_loc(:,:,:,:,itor) = gflux_loc(:,:,:,:,itor)/rho**2
         cflux_loc(:,:,:,itor) = cflux_loc(:,:,:,itor)/rho**2
 
+        if (stress_flag .eq. 1) then
+           stress(:, :, :, :) = 0.0
+
+           ! Set up phi stress
+           call cgyro_nl_fftw_comm1_async
+           call cgyro_nl_fftw_comm2_async_stress(1)
+           call cgyro_nl_fftw
+           call cgyro_nl_fftw_comm1_r_stress(1)
+           ! velocity + select ky=0
+
+           ! Set up A|| stress
+           call cgyro_nl_fftw_comm1_async
+           call cgyro_nl_fftw_comm2_async_stress(2)
+           call cgyro_nl_fftw
+           call cgyro_nl_fftw_comm1_r_stress(2)
+
+           ! Set up B|| stress
+           call cgyro_nl_fftw_comm1_async
+           call cgyro_nl_fftw_comm2_async_stress(3)
+           call cgyro_nl_fftw
+           call cgyro_nl_fftw_comm1_r_stress(3)
+
+           ! stress(kx-theta, vel_coord, ky, phi)
+           stress_integrated_loc = 0.0
+           iv_loc = 0
+           do iv=nv1,nv2
+
+              iv_loc = iv_loc+1
+              ix = ix_v(iv)
+              ie = ie_v(iv)
+
+              ! Integration weight
+              dv = w_exi(ie,ix)
+
+              do ic=1,nc
+                 ir = ir_c(ic)
+                 it = it_c(ic)
+                 stress_integrated_loc(ir, it, itor, :) = stress_integrated_loc(ir, it, itor, :) + stress(ic, iv_loc, itor, :) * dv
+              end do
+           enddo
+        end if
      endif
   enddo
 
@@ -235,6 +277,16 @@ subroutine cgyro_flux
   call MPI_ALLREDUCE(gflux_loc, &
        gflux, &
        size(gflux), &
+       MPI_DOUBLE_COMPLEX, &
+       MPI_SUM, &
+       NEW_COMM_1, &
+       i_err)
+
+  ! Reduce complex stress(kx, theta), distributed over n
+
+  call MPI_ALLREDUCE(stress_integrated_loc, &
+       stress_integrated, &
+       size(stress_integrated), &
        MPI_DOUBLE_COMPLEX, &
        MPI_SUM, &
        NEW_COMM_1, &

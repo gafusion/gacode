@@ -20,13 +20,14 @@ F77    = ${FC}
 
 FOMP   = -qopenmp
 FMATH  = -r8
-FOPT   = -xCORE-AVX512 -implicitnone -no-prec-div -O3 -fp-model fast=2 -pad -ip -qoverride-limits -mkl=cluster #-fast -no-ipo
+FOPT   = -xCORE-AVX512 -implicitnone -no-prec-div -O3 -fp-model fast=2 -pad -ip -qoverride-limits -qmkl=cluster #-fast -no-ipo
 FDEBUG = -shared-intel -implicitnone -check all -check noarg_temp_created -traceback
 #FPETSC = 
 F2PY  = f2py
 
 # System math libraries
-LMATH = -L${LD_LIBRARY_PATH} -lfftw3_threads -lfftw3f_threads -lfftw3 -lfftw3f -mkl=cluster
+FFTW_DIR=/usr/local/software/spack/csd3/opt-2024-06-01/linux-rocky8-cascadelake/intel-2021.10.0/fftw-3.3.10-hwbiyhzwfaes6y6z5yudwpmimfplpcr2/lib/
+LMATH = -L${LD_LIBRARY_PATH} -lfftw3_threads -lfftw3f_threads -lfftw3 -lfftw3f  -qmkl=cluster
 
 NETCDF  = -lnetcdf -lnetcdff
 NETCDF_INC = ${CPATH}
