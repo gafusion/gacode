@@ -307,7 +307,7 @@ subroutine cgyro_init_manager
 #endif
         endif
 
-       if (stress_flag == 1) then
+       if (stress_print_flag == 1) then
           allocate(stress(nc,nv_loc,nt1:nt2,n_field))
           allocate(stress_integrated_loc(n_radial,n_theta,nt1:nt2,n_field))
           allocate(stress_integrated(n_radial,n_theta,nt1:nt2,n_field))

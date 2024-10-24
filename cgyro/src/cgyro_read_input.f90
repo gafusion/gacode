@@ -70,6 +70,7 @@ subroutine cgyro_read_input
   call cgyro_readbc_int(moment_print_flag,'MOMENT_PRINT_FLAG')
   call cgyro_readbc_int(gflux_print_flag,'GFLUX_PRINT_FLAG')
   call cgyro_readbc_int(field_print_flag,'FIELD_PRINT_FLAG')
+  call cgyro_readbc_int(stress_print_flag,'STRESS_PRINT_FLAG')
   call cgyro_readbc_real(amp0)
   call cgyro_readbc_real(amp)
   call cgyro_readbc_real(gamma_e)

@@ -93,7 +93,7 @@ subroutine cgyro_write_timedata
           field_plot)
   enddo
 
-  if (stress_flag == 1) then
+  if (stress_print_flag == 1) then
   do i_field=1,n_field
      ! Sort out subset of theta values for plotting
         call cgyro_write_distributed_bcomplex(&

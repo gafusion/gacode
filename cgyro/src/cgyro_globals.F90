@@ -69,7 +69,6 @@ module cgyro_globals
   integer :: z_eff_method
   integer :: zf_test_mode 
   integer :: nonlinear_flag
-  integer :: stress_flag=1
   real :: temp_ae
   real :: dens_ae
   real :: mass_ae
@@ -81,6 +80,7 @@ module cgyro_globals
   integer :: moment_print_flag
   integer :: gflux_print_flag
   integer :: field_print_flag
+  integer :: stress_print_flag
   real :: amp0
   real :: amp
   real :: gamma_e

@@ -218,7 +218,7 @@ subroutine cgyro_flux
         gflux_loc(:,:,:,:,itor) = gflux_loc(:,:,:,:,itor)/rho**2
         cflux_loc(:,:,:,itor) = cflux_loc(:,:,:,itor)/rho**2
 
-        if (stress_flag .eq. 1) then
+        if (stress_print_flag .eq. 1) then
            stress(:, :, :, :) = 0.0
            if (i_time .ne.  0) then
 
