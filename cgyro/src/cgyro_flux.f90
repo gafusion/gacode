@@ -220,27 +220,18 @@ subroutine cgyro_flux
 
         if (stress_flag .eq. 1) then
            stress(:, :, :, :) = 0.0
+           if (i_time .ne.  0) then
 
-           ! Set up phi stress
-           call cgyro_nl_fftw_comm1_async
-           call cgyro_nl_fftw_comm2_async_stress(1)
-           call cgyro_nl_fftw
-           call cgyro_nl_fftw_comm1_r_stress(1)
-           ! velocity + select ky=0
+              ! Set up stress for each field
+              do i_field=1, n_field
+                 call cgyro_nl_fftw_comm1_async
+                 call cgyro_nl_fftw_comm2_async_stress(i_field)
+                 call cgyro_nl_fftw
+                 call cgyro_nl_fftw_comm1_r_stress(i_field)
+              end do
 
-           ! Set up A|| stress
-           call cgyro_nl_fftw_comm1_async
-           call cgyro_nl_fftw_comm2_async_stress(2)
-           call cgyro_nl_fftw
-           call cgyro_nl_fftw_comm1_r_stress(2)
-
-           ! Set up B|| stress
-           call cgyro_nl_fftw_comm1_async
-           call cgyro_nl_fftw_comm2_async_stress(3)
-           call cgyro_nl_fftw
-           call cgyro_nl_fftw_comm1_r_stress(3)
-
-           ! stress(kx-theta, vel_coord, ky, phi)
+           end if
+              ! stress(kx-theta, vel_coord, ky, phi)
            stress_integrated_loc = 0.0
            iv_loc = 0
            do iv=nv1,nv2

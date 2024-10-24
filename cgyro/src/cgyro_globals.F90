@@ -250,7 +250,7 @@ module cgyro_globals
        (/'bin.cgyro.kxky_n','bin.cgyro.kxky_e','bin.cgyro.kxky_v'/)
   character(len=19), dimension(3) :: binfile_kxky_field = &
        (/'bin.cgyro.kxky_phi ','bin.cgyro.kxky_apar','bin.cgyro.kxky_bpar'/)
-  character(len=19), dimension(3) :: binfile_stress = &
+  character(len=21), dimension(3) :: binfile_stress = &
        (/'bin.cgyro.stress_phi ','bin.cgyro.stress_apar','bin.cgyro.stress_bpar'/)
   character(len=20), dimension(3) :: binfile_lky_flux = &
        (/'bin.cgyro.lky_flux_n','bin.cgyro.lky_flux_e','bin.cgyro.lky_flux_v'/)
