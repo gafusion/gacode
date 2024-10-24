@@ -380,9 +380,9 @@ subroutine cgyro_init_arrays
               thfac = (1.0,0.0)
               jr = ir
            endif
-           dtheta(id, ic_c(ir,it), itor)    = cderiv(id)*thfac
-           dtheta_up(id, ic_c(ir,it), itor) = uderiv(id)*thfac*up_theta
-           icd_c(id, ic_c(ir,it), itor)     = ic_c(jr,modulo(it+id-1,n_theta)+1)
+           dtheta(ic_c(ir,it), id, itor)    = cderiv(id)*thfac
+           dtheta_up(ic_c(ir,it), id, itor) = uderiv(id)*thfac*up_theta
+           icd_c(ic_c(ir,it), id, itor)     = ic_c(jr,modulo(it+id-1,n_theta)+1)
         enddo
      enddo
    enddo

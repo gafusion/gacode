@@ -183,10 +183,10 @@ subroutine cgyro_rhs_comp2(ij)
 
         rhs_stream = 0.0
         do id=-nup_theta,nup_theta
-           jc = icd_c(id, ic, itor)
+           jc = icd_c(ic, id, itor)
            rhs_stream = rhs_stream &
-                -rval*dtheta(id,ic,itor)*cap_h_c(jc,iv_loc,itor)  &
-                -rval2*dtheta_up(id,ic,itor)*g_x(jc,iv_loc,itor)
+                -rval*dtheta(ic,id,itor)*cap_h_c(jc,iv_loc,itor)  &
+                -rval2*dtheta_up(ic,id,itor)*g_x(jc,iv_loc,itor)
         enddo
 
         rhs(ic,iv_loc,itor,ij) = rhs(ic,iv_loc,itor,ij) + rhs_stream
