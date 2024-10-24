@@ -17,7 +17,7 @@ subroutine cgyro_init_arrays
   integer :: i_field
   integer :: l,ll
   integer :: iltheta_min
-  complex :: thfac,carg
+  complex :: carg
   complex :: jval
   real, dimension(:,:,:), allocatable :: res_loc
   real, dimension(:,:,:), allocatable :: jloc_c
@@ -365,32 +365,35 @@ subroutine cgyro_init_arrays
   !-------------------------------------------------------------------------
   ! Streaming coefficient arrays
   !
+  allocate(thfac_itor(0:2,nt1:nt2))
+
   do itor=nt1,nt2
-   do ir=1,n_radial
-     do it=1,n_theta
-        do id=-nup_theta,nup_theta
-           jt = modulo(it+id-1,n_theta)+1
-           if (it+id < 1) then
-              thfac = exp(2*pi*i_c*k_theta_base*itor*rmin)
-              jr = modulo(ir-itor*box_size*sign_qs-1,n_radial)+1
-           else if (it+id > n_theta) then
-              thfac = exp(-2*pi*i_c*k_theta_base*itor*rmin)
-              jr = modulo(ir+itor*box_size*sign_qs-1,n_radial)+1
-           else
-              thfac = (1.0,0.0)
-              jr = ir
-           endif
-           dtheta(ic_c(ir,it), id, itor)    = cderiv(id)*thfac
-           dtheta_up(ic_c(ir,it), id, itor) = uderiv(id)*thfac*up_theta
-           icd_c(ic_c(ir,it), id, itor)     = ic_c(jr,modulo(it+id-1,n_theta)+1)
-        enddo
-     enddo
-   enddo
+   thfac_itor(0,itor) = exp(2*pi*i_c*k_theta_base*itor*rmin)
+   thfac_itor(1,itor) = (1.0,0.0)
+   thfac_itor(2,itor) = exp(-2*pi*i_c*k_theta_base*itor*rmin)
+   !do ir=1,n_radial
+   !  do it=1,n_theta
+   !     do id=-nup_theta,nup_theta
+   !        ! jt = modulo(it+id-1,n_theta)+1
+   !        if (it+id < 1) then
+   !           jr = modulo(ir-itor*box_size*sign_qs-1,n_radial)+1
+   !        else if (it+id > n_theta) then
+   !           jr = modulo(ir+itor*box_size*sign_qs-1,n_radial)+1
+   !        else
+   !           jr = ir
+   !        endif
+   !        thfac = thfac_itor((n_theta+it+id-1)/n_theta,itor)
+   !        dtheta(ic_c(ir,it), id, itor)    = cderiv(id)*thfac
+   !        dtheta_up(ic_c(ir,it), id, itor) = uderiv(id)*thfac*up_theta
+   !        icd_c(ic_c(ir,it), id, itor)     = ic_c(jr,modulo(it+id-1,n_theta)+1)
+   !     enddo
+   !  enddo
+   !enddo
   enddo
 #if defined(OMPGPU)
-!$omp target enter data map(to:dtheta,dtheta_up,icd_c,c_wave)
+!$omp target enter data map(to:c_wave,thfac_itor,cderiv,uderiv)
 #elif defined(_OPENACC)
-!$acc enter data copyin(dtheta,dtheta_up,icd_c,c_wave)
+!$acc enter data copyin(c_wave,thfac_itor,cderiv,uderiv)
 #endif
 
   ! Streaming coefficients (for speed optimization)

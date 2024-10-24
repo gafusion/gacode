@@ -24,9 +24,6 @@ subroutine cgyro_check_memory(datafile)
      call cgyro_alloc_add(io,nc*4.0,'it_c')
      call cgyro_alloc_add(io,n_radial*n_theta*4.0,'ic_c')
      call cgyro_alloc_add(io,n_energy*n_xi*n_species*4.0,'iv_v')
-     call cgyro_alloc_add(io,nc*(2*nup_theta+1)*nt_loc*4.0,'icd_c')
-     call cgyro_alloc_add_3d(io,(2*nup_theta+1),nc,nt_loc,16,'dtheta')
-     call cgyro_alloc_add_3d(io,(2*nup_theta+1),nc,nt_loc,16,'dtheta_up')
 
      write(io,*)
      write(io,*) 'Fields and field solve'

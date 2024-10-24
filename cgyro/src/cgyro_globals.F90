@@ -328,9 +328,7 @@ module cgyro_globals
   real, dimension(:), allocatable :: theta
   real, dimension(:), allocatable :: uderiv
   real, dimension(:), allocatable :: cderiv
-  integer, dimension(:,:,:), allocatable :: icd_c
-  complex, dimension(:,:,:), allocatable :: dtheta
-  complex, dimension(:,:,:), allocatable :: dtheta_up
+  complex, dimension(:,:), allocatable :: thfac_itor
   !
   ! Wavenumber advection
   integer :: source_flag

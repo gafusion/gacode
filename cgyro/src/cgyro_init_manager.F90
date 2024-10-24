@@ -183,9 +183,6 @@ subroutine cgyro_init_manager
      
      allocate(recv_status(MPI_STATUS_SIZE))
 
-     allocate(icd_c(nc, -nup_theta:nup_theta, nt1:nt2))
-     allocate(dtheta(nc, -nup_theta:nup_theta, nt1:nt2))
-     allocate(dtheta_up(nc, -nup_theta:nup_theta, nt1:nt2))
      allocate(source(n_theta,nv_loc,nt1:nt2))
 
 #if defined(OMPGPU)
