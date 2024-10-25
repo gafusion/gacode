@@ -174,46 +174,59 @@ subroutine cgyro_rhs_comp2(ij)
     do ir=1,n_radial
      do it=1,n_theta
        block
-        integer :: is,iv_loc
         integer :: itorbox
+        integer :: iv_loc
+        integer :: is
         integer :: jr0(0:2)   ! pre-compute jr-1
         real :: vel_xi
+        itorbox = itor*box_size*sign_qs
         iv_loc = iv-nv1+1
+
         is = is_v(iv)
         vel_xi = vel(ie_v(iv))*xi(ix_v(iv))
-        itorbox = itor*box_size*sign_qs
-        jr0(0) = modulo(ir-itorbox-1,n_radial)
-        jr0(1) = ir-1
-        jr0(2) = modulo(ir+itorbox-1,n_radial)
+        jr0(0) = n_theta*modulo(ir-itorbox-1,n_radial)
+        jr0(1) = n_theta*(ir-1)
+        jr0(2) = n_theta*modulo(ir+itorbox-1,n_radial)
         block
+          integer :: ic
           integer :: id
-          integer:: ic
+          integer :: itd   ! precompute modulo(it+id-1,n_theta)+1, use for iteration
+          integer :: itd_class
+          integer :: jc
           real :: rval,rval2,rval2s
+          complex :: thfac
           complex :: rhs_stream
           ic = (ir-1)*n_theta + it ! ic_c(ir,it)
+
           ! Parallel streaming with upwind dissipation 
           rval2s = omega_stream(it,is,itor)
           rval  = rval2s*vel_xi
           rval2 = abs(rval2s)
 
           rhs_stream = 0.0
+
+          !icd_c(ic, id, itor)     = ic_c(jr,modulo(it+id-1,n_theta)+1)
+          !jc = icd_c(ic, id, itor)
+          !dtheta(ic, id, itor)    := cderiv(id)*thfac
+          !dtheta_up(ic, id, itor) := uderiv(id)*thfac*up_theta
+          itd = n_theta+it-nup_theta
+          itd_class = 0
+          jc = jr0(itd_class)+itd
+          thfac = thfac_itor(itd_class,itor)
           do id=-nup_theta,nup_theta
-            block
-              integer :: jc, itd_class
-              integer :: itd0   ! precompute it+id-1
-              complex :: thfac
-              itd0 = it+id-1
-              itd_class = (n_theta+itd0)/n_theta
-              !icd_c(ic, id, itor)     = ic_c(jr,modulo(it+id-1,n_theta)+1)
-              !jc = icd_c(ic, id, itor)
-              jc = jr0(itd_class)*n_theta+modulo(itd0,n_theta)+1
-              !dtheta(ic, id, itor)    := cderiv(id)*thfac
-              !dtheta_up(ic, id, itor) := uderiv(id)*thfac*up_theta
-              thfac = thfac_itor(itd_class,itor)
+              if (itd > n_theta) then
+                ! move to next itd_class of compute
+                itd = itd - n_theta
+                itd_class = itd_class + 1
+                jc = jr0(itd_class)+itd
+                thfac = thfac_itor(itd_class,itor)
+              endif
               rhs_stream = rhs_stream &
-                -rval*cderiv(id)*thfac*cap_h_c(jc,iv_loc,itor)  &
-                -rval2*uderiv(id)*thfac*up_theta*g_x(jc,iv_loc,itor)
-             end block
+                - thfac  &
+                  * ( rval*cderiv(id)*cap_h_c(jc,iv_loc,itor)  &
+                    + rval2*uderiv(id)*up_theta*g_x(jc,iv_loc,itor) )
+              itd = itd + 1
+              jc = jc + 1
           enddo
 
           rhs(ic,iv_loc,itor,ij) = rhs(ic,iv_loc,itor,ij) + rhs_stream
