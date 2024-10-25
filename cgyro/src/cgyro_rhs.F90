@@ -196,13 +196,15 @@ subroutine cgyro_rhs_comp2(ij)
 !$omp&  firstprivate(n_radial,nv2,nv1,nt2,nt1,n_theta) &
 !$omp&  firstprivate(sign_qs,nup_theta,ij,box_size,up_theta) &
 !$omp&  private(itor,iv,ir,it) &
-!$omp&  private(itorbox,iv_loc,is,jr0,vel_xi) &
-!$omp&  private(ic,id,itd,itd_class,jc,rval,rval2,rval2s,thfac,rhs_stream)
+!$omp&  private(itorbox,iv_loc,is,jr0,vel_xi)
 #endif
   do itor=nt1,nt2
    do iv=nv1,nv2
     do ir=1,n_radial
+#if defined(OMPGPU) || defined(_OPENACC)
+     ! keep loop high for maximal collapse
      do it=1,n_theta
+#endif
         itorbox = itor*box_size*sign_qs
         iv_loc = iv-nv1+1
 
@@ -212,6 +214,12 @@ subroutine cgyro_rhs_comp2(ij)
         jr0(1) = n_theta*(ir-1)
         jr0(2) = n_theta*modulo(ir+itorbox-1,n_radial)
 
+#if !(defined(OMPGPU) || defined(_OPENACC))
+        ! loop as late as possible, to minimize recompute
+!$omp loop &
+!$omp&  private(ic,id,itd,itd_class,jc,rval,rval2,rval2s,thfac,rhs_stream)
+        do it=1,n_theta
+#endif
           ic = (ir-1)*n_theta + it ! ic_c(ir,it)
 
           ! Parallel streaming with upwind dissipation 
