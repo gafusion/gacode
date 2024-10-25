@@ -129,6 +129,10 @@ subroutine cgyro_cleanup
       ccl_del_device(source)      
      deallocate(source)
   endif
+  if(allocated(thfac_itor)) then
+      ccl_del_device(thfac_itor)
+     deallocate(thfac_itor)
+  endif
   if(allocated(h0_old)) then
      ccl_del_device(h0_old)      
      deallocate(h0_old)
