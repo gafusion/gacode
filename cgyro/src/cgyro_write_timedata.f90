@@ -98,8 +98,8 @@ subroutine cgyro_write_timedata
      ! Sort out subset of theta values for plotting
         call cgyro_write_distributed_bcomplex(&
              trim(path)//binfile_stress(i_field),&
-             size(stress_integrated(:,:,:,i_field)),&
-             stress_integrated(:,:,:,i_field))
+             size(stress_integrated(:,:,:,:,i_field)),&
+             stress_integrated(:,:,:,:,i_field))
      enddo
 
   end if

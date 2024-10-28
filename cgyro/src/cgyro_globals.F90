@@ -345,8 +345,8 @@ module cgyro_globals
   ! Distributions
   complex, dimension(:,:,:,:), allocatable :: rhs
   complex, dimension(:,:,:,:), allocatable :: stress
-  complex, dimension(:,:,:,:), allocatable :: stress_integrated
-  complex, dimension(:,:,:,:), allocatable :: stress_integrated_loc
+  complex, dimension(:,:,:,:,:), allocatable :: stress_integrated
+  complex, dimension(:,:,:,:,:), allocatable :: stress_integrated_loc
   complex, dimension(:,:,:), allocatable :: h_x
   complex, dimension(:,:,:), allocatable :: g_x
   complex, dimension(:,:,:), allocatable :: h0_x

@@ -237,6 +237,7 @@ subroutine cgyro_flux
            do iv=nv1,nv2
 
               iv_loc = iv_loc+1
+              is = is_v(iv)
               ix = ix_v(iv)
               ie = ie_v(iv)
 
@@ -246,7 +247,7 @@ subroutine cgyro_flux
               do ic=1,nc
                  ir = ir_c(ic)
                  it = it_c(ic)
-                 stress_integrated_loc(ir, it, itor, :) = stress_integrated_loc(ir, it, itor, :) + stress(ic, iv_loc, itor, :) * dv
+                 stress_integrated_loc(ir, it, is, itor, :) = stress_integrated_loc(ir, it, is, itor, :) + stress(ic, iv_loc, itor, :) * dv
               end do
            enddo
         end if
