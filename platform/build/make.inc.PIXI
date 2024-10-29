@@ -17,6 +17,7 @@
 #    pixi add mpich
 #    pixi add gfortran
 #    pixi add openblas
+#    pixi add "libopenblas=*=*openmp*"
 #    pixi add liblapack
 #    pixi add fftw
 #    pixi add hdf5
@@ -25,7 +26,7 @@
 # 5. Enter and configure Pixi environment (must be repeated every entry)
 #    pixi shell
 #    export GACODE_ROOT=${PIXI_PROJECT_ROOT}/gacode
-#    export GACODE_PLATFORM=CONDA
+#    export GACODE_PLATFORM=PIXI
 #    source ${GACODE_ROOT}/shared/bin/gacode_setup
 #
 # 6. Build GACODE
