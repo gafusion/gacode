@@ -312,9 +312,9 @@ subroutine cgyro_init_manager
           allocate(stress_integrated_loc(n_radial,n_theta,n_species,nt1:nt2,n_field))
           allocate(stress_integrated(n_radial,n_theta,n_species,nt1:nt2,n_field))
 #if defined(OMPGPU)
-!$omp target enter data map(alloc:stress,stress_integrated,stress_integrated_loc)
+!$omp target enter data map(alloc:stress)
 #elif defined(_OPENACC)
-!$acc enter data create(stress,stress_integrated,stress_integrated_loc)
+!$acc enter data create(stress)
 #endif
        end if
 

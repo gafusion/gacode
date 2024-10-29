@@ -30,7 +30,6 @@ subroutine cgyro_flux
 
   use mpi
   use cgyro_globals
-  use cgyro_nl_comm
 
   implicit none
 
@@ -48,7 +47,7 @@ subroutine cgyro_flux
 
 !$omp parallel do private(iv_loc,iv,is,ix,ie,dv,vpar,ic,ir,it,erot,cprod,cn) &
 !$omp&            private(prod1,prod2,prod3,l,icl,dvr,u,flux_norm) &
-!$omp&            shared(moment_loc,gflux_loc,cflux_loc)
+!$omp&            shared(moment_loc,gflux_loc,cflux_loc,stress_integrated_loc)
   do itor=nt1,nt2
 
      !-----------------------------------------------------
@@ -219,20 +218,8 @@ subroutine cgyro_flux
         cflux_loc(:,:,:,itor) = cflux_loc(:,:,:,itor)/rho**2
 
         if (stress_print_flag .eq. 1) then
-           stress(:, :, :, :) = 0.0
-           if (i_time .ne.  0) then
-
-              ! Set up stress for each field
-              do i_field=1, n_field
-                 call cgyro_nl_fftw_comm1_async
-                 call cgyro_nl_fftw_comm2_async_stress(i_field)
-                 call cgyro_nl_fftw
-                 call cgyro_nl_fftw_comm1_r_stress(i_field)
-              end do
-
-           end if
-              ! stress(kx-theta, vel_coord, ky, phi)
-           stress_integrated_loc = 0.0
+           stress_integrated_loc(:, :, :, itor, :) = 0.0
+           ! stress(kx-theta, vel_coord, ky, phi)
            iv_loc = 0
            do iv=nv1,nv2
 
@@ -248,9 +235,9 @@ subroutine cgyro_flux
                  ir = ir_c(ic)
                  it = it_c(ic)
                  stress_integrated_loc(ir, it, is, itor, :) = stress_integrated_loc(ir, it, is, itor, :) + stress(ic, iv_loc, itor, :) * dv
-              end do
+              enddo
            enddo
-        end if
+        endif
      endif
   enddo
 

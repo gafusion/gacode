@@ -399,14 +399,15 @@ subroutine cgyro_nl_fftw_comm2_async_stress(itf)
   call timer_lib_in('nl_mem')
 
 #if defined(OMPGPU)
-!$omp target teams distribute parallel do simd collapse(5) &
+!$omp target teams distribute parallel do simd collapse(4) &
 !$omp&         private(itor,it,iltheta_min,mytor,gval)
 #elif defined(_OPENACC)
-!$acc parallel loop gang vector collapse(5) independent &
+!$acc parallel loop gang vector collapse(4) independent &
 !$acc&         private(itor,it,iltheta_min,mytor,gval) &
 !$acc&         present(field,gpack) &
 !$acc&         present(n_toroidal_procs,nt_loc,n_jtheta,nv_loc,nt1) &
 !$acc&         present(n_theta,n_radial,n_field,nsplit) &
+!$acc&         copyin(itf) &
 !$acc&         default(none)
 #else
 !$omp parallel do collapse(3) &
@@ -441,9 +442,6 @@ subroutine cgyro_nl_fftw_comm2_async_stress(itf)
   call timer_lib_out('nl_comm')
 
 end subroutine cgyro_nl_fftw_comm2_async_stress
-
-
-end module cgyro_nl_comm
 
 
 subroutine cgyro_nl_fftw_comm1_r_stress(itf)
@@ -485,7 +483,7 @@ subroutine cgyro_nl_fftw_comm1_r_stress(itf)
 #elif defined(_OPENACC)
 !$acc parallel loop collapse(4) gang vector independent private(ic_loc_m,my_psi) &
 !$acc&         private(iexch0,itor0,isplit0,iexch_base) &
-!$acc&         present(ic_c,px,rhs,fpackA,fpackB) copyin(psi_mul,zf_scale) &
+!$acc&         present(ic_c,px,stress,fpackA,fpackB) copyin(psi_mul,zf_scale) &
 !$acc&         present(nt1,nt2,nv_loc,n_theta,n_radial,nsplit,nsplitA,nsplitB) copyin(itf) default(none)
 #else
 !$omp parallel do collapse(2) private(ic_loc_m,my_psi) &
@@ -516,10 +514,9 @@ subroutine cgyro_nl_fftw_comm1_r_stress(itf)
            endif
            stress(ic_loc_m,iv_loc_m,itor,itf) = stress(ic_loc_m,iv_loc_m,itor,itf)+psi_mul*my_psi
         enddo
+       enddo
       enddo
-    enddo
-  enddo
-
+     enddo
   else ! nsplitB==0
 
 #if defined(OMPGPU)
@@ -529,8 +526,8 @@ subroutine cgyro_nl_fftw_comm1_r_stress(itf)
 #elif defined(_OPENACC)
 !$acc parallel loop collapse(4) gang vector independent private(ic_loc_m,my_psi) &
 !$acc&         private(iexch0,itor0,isplit0,iexch_base) &
-!$acc&         present(ic_c,px,rhs,fpackA) copyin(psi_mul,zf_scale) &
-!$acc&         present(nt1,nt2,nv_loc,n_theta,n_radial,nsplit,nsplitA) copyin(ij) default(none)
+!$acc&         present(ic_c,px,stress,fpackA) copyin(psi_mul,zf_scale) &
+!$acc&         present(nt1,nt2,nv_loc,n_theta,n_radial,nsplit,nsplitA) copyin(itf) default(none)
 #else
 !$omp parallel do collapse(2) private(ic_loc_m,my_psi) &
 !$omp&         private(iexch0,itor0,isplit0,iexch_base)
@@ -564,4 +561,7 @@ subroutine cgyro_nl_fftw_comm1_r_stress(itf)
   call timer_lib_out('nl')
 
 end subroutine cgyro_nl_fftw_comm1_r_stress
+
+
+end module cgyro_nl_comm
 

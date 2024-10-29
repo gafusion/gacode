@@ -59,6 +59,7 @@ OBJECTS = cgyro_globals.o \
 	  cgyro_step_gk_ck.o \
 	  cgyro_step_gk_bs5.o \
 	  cgyro_step_gk_v76.o \
+	  cgyro_stress.o \
           cgyro_write_initdata.o \
           cgyro_write_timedata.o \
           cgyro_write_hosts.o \
