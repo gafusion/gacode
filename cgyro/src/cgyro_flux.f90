@@ -261,15 +261,17 @@ subroutine cgyro_flux
        NEW_COMM_1, &
        i_err)
 
-  ! Reduce complex stress(kx, theta), distributed over n
+  if (stress_print_flag .eq 1) then
+     ! Reduce complex stress(kx, theta), distributed over n
 
-  call MPI_ALLREDUCE(stress_integrated_loc, &
-       stress_integrated, &
-       size(stress_integrated), &
-       MPI_DOUBLE_COMPLEX, &
-       MPI_SUM, &
-       NEW_COMM_1, &
-       i_err)
+     call MPI_ALLREDUCE(stress_integrated_loc, &
+          stress_integrated, &
+          size(stress_integrated), &
+          MPI_DOUBLE_COMPLEX, &
+          MPI_SUM, &
+          NEW_COMM_1, &
+          i_err)
+  end if
 
   ! Reduced real cflux(ky), below, is still distributed over n 
 
