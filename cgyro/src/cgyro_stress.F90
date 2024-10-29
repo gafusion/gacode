@@ -17,7 +17,6 @@
 
 subroutine cgyro_stress
 
-  use timer_lib
   use mpi
   use cgyro_globals
   use cgyro_nl_comm
