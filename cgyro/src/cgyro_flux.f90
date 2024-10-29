@@ -261,7 +261,7 @@ subroutine cgyro_flux
        NEW_COMM_1, &
        i_err)
 
-  if (stress_print_flag .eq 1) then
+  if (stress_print_flag .eq. 1) then
      ! Reduce complex stress(kx, theta), distributed over n
 
      call MPI_ALLREDUCE(stress_integrated_loc, &
