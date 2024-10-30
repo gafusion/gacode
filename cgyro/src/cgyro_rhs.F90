@@ -196,7 +196,8 @@ subroutine cgyro_rhs_comp2(ij)
 !$omp&  firstprivate(n_radial,nv2,nv1,nt2,nt1,n_theta) &
 !$omp&  firstprivate(sign_qs,nup_theta,ij,box_size,up_theta) &
 !$omp&  private(itor,iv,ir,it) &
-!$omp&  private(itorbox,iv_loc,is,jr0,vel_xi)
+!$omp&  private(itorbox,iv_loc,is,jr0,vel_xi) &
+!$omp&  private(ic,id,itd,itd_class,jc,rval,rval2,rval2s,thfac,rhs_stream)
 #endif
   do itor=nt1,nt2
    do iv=nv1,nv2
@@ -216,8 +217,6 @@ subroutine cgyro_rhs_comp2(ij)
 
 #if !(defined(OMPGPU) || defined(_OPENACC))
         ! loop as late as possible, to minimize recompute
-!$omp loop &
-!$omp&  private(ic,id,itd,itd_class,jc,rval,rval2,rval2s,thfac,rhs_stream)
         do it=1,n_theta
 #endif
           ic = (ir-1)*n_theta + it ! ic_c(ir,it)
