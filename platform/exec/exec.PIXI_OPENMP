@@ -1,0 +1,19 @@
+#!/bin/sh
+# GACODE Parallel execution script (PIXI)
+#
+# NOTES:
+# Used mpich2-1.0.1, so use mpirun rather than mpiexec
+
+simdir=${1}
+nmpi=${2}
+exec=${3}
+nomp=${4}
+numa=${5}
+mpinuma=${6}
+
+echo $simdir
+
+cd $simdir
+ 
+mpirun -x OMP_NUM_THREADS=$nomp -np $nmpi $exec
+

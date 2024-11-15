@@ -1,0 +1,73 @@
+#---------------------------------------------------
+# OSX, Linux mpich using pixi
+#
+# 1. Install Pixi
+#    curl -fsSL https://pixi.sh/install.sh | bash
+#
+# 2. Restart shell / terminal / console for Pixi to be recognized
+#
+# 3. Create Pixi environment
+#    pixi init <env_name>
+#
+# 4. Setup Pixi environment
+#    cd <env_name>
+#    git clone git@github.com:gafusion/gacode.git
+#    pixi add "python~=3.12,<3.13"
+#    pixi add git
+#    pixi add mpich
+#    pixi add gfortran
+#    pixi add openblas
+#    pixi add "libopenblas=*=*openmp*"
+#    pixi add liblapack
+#    pixi add fftw
+#    pixi add hdf5
+#    pixi add netcdf-fortran
+#
+# 5. Enter and configure Pixi environment (must be repeated every entry)
+#    pixi shell
+#    export GACODE_ROOT=${PIXI_PROJECT_ROOT}/gacode
+#    export GACODE_PLATFORM=PIXI_MPICH
+#    source ${GACODE_ROOT}/shared/bin/gacode_setup
+#
+# 6. Build GACODE
+#    cd gacode
+#    make
+#    cd ..
+#
+# 7. Run regression tests
+#    neo -r
+#    tglf -r
+#    cgyro -r -n 4 -nomp 2
+#    tgyro -r -n 4
+#
+#---------------------------------------------------
+
+MAKE        = make
+PREFIX      = ${CONDA_PREFIX}
+NETCDF_PATH = ${PREFIX}
+MF90        = mpif90
+
+# Compilers and flags
+
+FC	= ${MF90} -std=f2008 -fall-intrinsics -I$(GACODE_ROOT)/modules -J$(GACODE_ROOT)/modules -g -I${PREFIX}/include
+F77	= ${MF90} -g 
+
+FMATH	= -fdefault-real-8 -fdefault-double-8
+FOPT	= -O3 -m64 -fallow-argument-mismatch
+FDEBUG	= -Wall -fcheck=all -fbacktrace -fbounds-check -O0 -Wextra -finit-real=nan -Wunderflow -ffpe-trap=invalid,zero,overflow
+FBOUND	= -Wall -fbounds-check
+FOMP	= -fopenmp
+
+# System math libraries
+
+LMATH = -L${PREFIX}/lib -lfftw3 -llapack -lblas
+
+# Optional netCDF libraries
+
+NETCDF     = -L${PREFIX}/lib -lnetcdff -lnetcdf 
+NETCDF_INC = ${PREFIX}/include
+
+# Archive
+
+ARCH = ar cr
+

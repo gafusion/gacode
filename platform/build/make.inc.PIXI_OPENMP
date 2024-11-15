@@ -14,7 +14,7 @@
 #    git clone git@github.com:gafusion/gacode.git
 #    pixi add "python~=3.12,<3.13"
 #    pixi add git
-#    pixi add mpich
+#    pixi add openmpi-mpifort
 #    pixi add gfortran
 #    pixi add openblas
 #    pixi add "libopenblas=*=*openmp*"
@@ -26,7 +26,7 @@
 # 5. Enter and configure Pixi environment (must be repeated every entry)
 #    pixi shell
 #    export GACODE_ROOT=${PIXI_PROJECT_ROOT}/gacode
-#    export GACODE_PLATFORM=PIXI
+#    export GACODE_PLATFORM=PIXI_OPENMPI
 #    source ${GACODE_ROOT}/shared/bin/gacode_setup
 #
 # 6. Build GACODE
@@ -42,10 +42,10 @@
 #
 #---------------------------------------------------
 
-MAKE = make
-PREFIX = ${CONDA_PREFIX}
-NETCDF_PATH=${PREFIX}
-MF90 = mpif90
+MAKE        = make
+PREFIX      = ${CONDA_PREFIX}
+NETCDF_PATH = ${PREFIX}
+MF90        = mpif90
 
 # Compilers and flags
 
@@ -62,8 +62,10 @@ FOMP	= -fopenmp
 
 LMATH = -L${PREFIX}/lib -lfftw3 -llapack -lblas
 
-NETCDF = -L${PREFIX}/lib -lnetcdff -lnetcdf 
-NETCDF_INC =${PREFIX}/include
+# Optional netCDF libraries
+
+NETCDF     = -L${PREFIX}/lib -lnetcdff -lnetcdf 
+NETCDF_INC = ${PREFIX}/include
 
 # Archive
 
