@@ -1,9 +1,10 @@
-program cgyro
+program xgyro
 
   use mpi
   use xgyro_globals
   use cgyro_globals
   use xgyro_io
+  use cgyro_io
   use timer_lib
 
   implicit none
@@ -11,6 +12,7 @@ program cgyro
   integer :: supported
   integer, external :: omp_get_max_threads
   character(len=32) :: arg
+  integer :: global_error_status = 0
 
   !----------------------------------------------------------------
   ! Find value of test flag
@@ -23,9 +25,11 @@ program cgyro
   !----------------------------------------------------------------
   
   ! Base path is cwd:
+  xgyro_path= './'
+  ! also set CGYRO path, but should not be really used
   path= './'
   ! create xgyro info file ASAP, so we can report error
-  open(unit=io,file=trim(path)//xgyro_runfile_info,status='replace')
+  open(unit=io,file=trim(xgyro_path)//xgyro_runfile_info,status='replace')
 
   !----------------------------------------------------------------
   ! Query OpenMP for threads
@@ -69,32 +73,49 @@ program cgyro
     write(*,*) "ERROR while reading input: ", error_message
     call MPI_ABORT(XGYRO_COMM_WORLD,1,i_err)
     call MPI_FINALIZE(i_err)
+    STOP 'ERROR while reading input'
   endif
 
-  ! 
+  ! split XGYRO_COMM_WORLD into the appropriate CGYRO_COMM_WORLD
   call xgyro_mpi_setup
   if (error_status /= 0) then
     write(*,*) "ERROR in initial MPI setup: ", error_message
     call MPI_ABORT(XGYRO_COMM_WORLD,1,i_err)
     call MPI_FINALIZE(i_err)
+    STOP 'ERROR in initial MPI setup'
   endif
+
+  ! --------------------------------------------------------
+  ! resume standard CGYRO logic
 
   ! my CGYRO path is from read params
   path = trim(xgyro_dir_name(xgyro_i_dir))//'/'
   !write(*,*) xgyro_i_proc,i_proc,n_proc,xgyro_i_dir,path
 
-  ! now read the cgyro input
-  !call timer_lib_init('input')
-  !call timer_lib_in('input')
-  !call cgyro_read_input
-  !call timer_lib_out('input')
+  call timer_lib_in('input')
+  call cgyro_read_input
+  if (error_status /= 0) then
+    call xgyro_error('Failed to read one of the CGYRO inputs')
+    write(*,*) "ERROR while reading CGYRO input: ", error_message
+    call MPI_ABORT(XGYRO_COMM_WORLD,1,i_err)
+    call MPI_FINALIZE(i_err)
+    STOP 'ERROR while reading CGYRO input'
+  endif
+  call timer_lib_out('input')
 
-!
-!  call cgyro_init_kernel
-!  if (error_status == 0) then
-!        call cgyro_kernel
-!        call cgyro_final_kernel
-!  endif
+  call cgyro_init_kernel
+  if (error_status == 0) then
+        call cgyro_kernel
+        call cgyro_final_kernel
+  endif
+
+  ! final check for reporting purposes  
+  call MPI_ALLREDUCE(error_status, global_error_status, 1, &
+                MPI_INTEGER, MPI_MAX, XGYRO_COMM_WORLD, i_err)
+  if ((xgyro_i_proc==0) .and. (i_err==0) .and. (error_status == 0)) then
+    call xgyro_info('XGYRO finished without an error')
+  endif
+
   call MPI_FINALIZE(i_err)
 
-end program cgyro
+end program xgyro

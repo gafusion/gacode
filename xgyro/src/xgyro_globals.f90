@@ -11,6 +11,7 @@ module xgyro_globals
   !---------------------------------------------------------------
   ! I/O and error management variables
   !
+  character(len=80) :: xgyro_path
   character(len=14) :: xgyro_runfile_info    = 'out.xgyro.info'
 
   !---------------------------------------------------------------

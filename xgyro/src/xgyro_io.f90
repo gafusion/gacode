@@ -11,15 +11,15 @@ contains
 
   subroutine xgyro_info(message)
 
-    use xgyro_globals, only : xgyro_runfile_info, xgyro_i_proc
-    use cgyro_globals, only : silent_flag, io, path
+    use xgyro_globals, only : xgyro_runfile_info, xgyro_i_proc, xgyro_path
+    use cgyro_globals, only : silent_flag, io
 
     implicit none
 
     character (len=*), intent(in) :: message
 
     if (silent_flag == 0 .and. xgyro_i_proc == 0) then
-       open(unit=io,file=trim(path)//xgyro_runfile_info,status='old',position='append')
+       open(unit=io,file=trim(xgyro_path)//xgyro_runfile_info,status='old',position='append')
        write(io,'(a)') 'INFO: (XGYRO) '//message
        close(io)
     endif
@@ -35,9 +35,9 @@ contains
 
   subroutine xgyro_error(message)
 
-    use xgyro_globals, only : xgyro_runfile_info, xgyro_i_proc
+    use xgyro_globals, only : xgyro_runfile_info, xgyro_i_proc, xgyro_path
     use cgyro_globals, only : error_status, error_message, &
-         silent_flag, io, path
+         silent_flag, io
 
     implicit none
 
@@ -47,7 +47,7 @@ contains
     error_message = message
 
     if (silent_flag == 0 .and. xgyro_i_proc == 0) then
-       open(unit=io,file=trim(path)//xgyro_runfile_info,status='old',position='append')
+       open(unit=io,file=trim(xgyro_path)//xgyro_runfile_info,status='old',position='append')
        write(io,'(a)') 'ERROR: (XGYRO) '//message
        close(io)
     endif
