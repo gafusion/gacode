@@ -176,7 +176,8 @@ then
    then
       cat ${XGYRO_DIR}/tools/input/simdir_list
    else
-      cp -ai ${XGYRO_DIR}/tools/input/$LOCDIR $SIMDIR
+      mkdir $SIMDIR
+      (cd ${XGYRO_DIR}/tools/input/$LOCDIR && tar -cf - .) | (cd $SIMDIR && tar -xf -)
    fi
    exit 0
 fi
@@ -187,10 +188,10 @@ fi
 #
 if [ $REGRESS_FLAG -eq 1 ]
 then
-   N2=$[ NPROC / 2 ]
-   if [ $[ NPROC - 2 * N2 ] -eq 1 ]
+   N2=$[ NPROC / 4 ]
+   if [ $[ NPROC - 4 * N2 ] -eq 1 ]
    then
-      echo "ERROR: (XGYRO) For regression test, number of processors must be multiple of 2."
+      echo "ERROR: (XGYRO) For regression test, number of processors must be multiple of 4."
       exit 1
    fi
    # NOMP=1 RESET=0

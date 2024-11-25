@@ -6,6 +6,7 @@ all:
 	cd vgen ; make
 	cd tglf ; make
 	cd cgyro ; make
+	cd xgyro ; make
 	cd gyro ; make
 	cd tgyro ; make
 	cd profiles_gen ; make
@@ -21,6 +22,7 @@ clean:
 	cd vgen ; make clean
 	cd tglf ; make clean
 	cd cgyro ; make clean
+	cd xgyro ; make clean
 	cd gyro ; make clean
 	cd tgyro ; make clean
 	cd profiles_gen ; make clean
@@ -42,6 +44,7 @@ distclean:
 	cd neo ; make clean
 	cd tglf ; make clean
 	cd cgyro ; make clean
+	cd xgyro ; make clean
 	cd gyro ; make clean
 	cd tgyro ; make clean
 	cd profiles_gen ; make clean
