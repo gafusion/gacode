@@ -36,6 +36,11 @@ class SimpleInput:
                 self.data_dict[p]=default
                 self.data_orderlist.append(p)
               
+    def rename(self,org_param,new_param):
+        self.data_dict[new_param] = self.data_dict[org_param]
+        del self.data_dict[org_param]
+        self.data_orderlist[self.data_orderlist.index(org_param)] = new_param
+
     def dep(self,param,default):
         self.dep_dict[param]=default
         self.dep_orderlist.append(param)
@@ -56,7 +61,7 @@ class SimpleInput:
     def set_extension(self,text):
         self.extension = text
 
-    def read_input(self,inputfile):
+    def read_input(self,inputfile,write_ext=True):
         # 1. read user input file
         with open(inputfile,'r') as fin:
            for line in fin.readlines():
@@ -88,8 +93,11 @@ class SimpleInput:
                 self.error=1
                 self.error_msg=self.error_msg+"ERROR: (gacodeinput) Bogus parameter "+x+'\n'
 
-        if self.error == 0:
-            with open(inputfile+self.extension,'w') as f:
+        if write_ext and (self.error == 0):
+            self.write_parsed(inputfile+self.extension)
+
+    def write_parsed(self,outfile):
+            with open(outfile,'w') as f:
                for x in self.data_orderlist:
                    f.write(self.data_dict[x]+'  '+x+'\n')
         

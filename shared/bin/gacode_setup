@@ -6,6 +6,7 @@
 export PATH=$GACODE_ROOT/tgyro/bin:${PATH}
 export PATH=$GACODE_ROOT/gyro/bin:${PATH}
 export PATH=$GACODE_ROOT/cgyro/bin:${PATH}
+export PATH=$GACODE_ROOT/xgyro/bin:${PATH}
 export PATH=$GACODE_ROOT/neo/bin:${PATH}
 export PATH=$GACODE_ROOT/vgen/bin:${PATH}
 export PATH=$GACODE_ROOT/tglf/bin:${PATH}

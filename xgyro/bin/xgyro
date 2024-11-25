@@ -1,0 +1,327 @@
+#!/bin/bash
+#=============================================================
+# xgyro
+#
+# PURPOSE:
+#  Top-level script controlling execution of XGYRO.
+#=============================================================
+
+#=============================================================
+# Syntax validity check and help message
+#
+n=$#
+
+if [ $n -eq 0 ]
+then
+  echo
+  echo "Usage:   xgyro [options]"
+  echo
+  echo "         -p <path>"
+  echo "         Set optional path to simulation directory."
+  echo "         The default path is \$XGYRO_DIR/sim."
+  echo
+  echo "TEST MODE"
+  echo
+  echo "         -t <simdir>"
+  echo "         Sanity test for INPUT data in <simdir>."
+  echo
+  echo "EXECUTE MODE"
+  echo
+  echo "         -e <simdir>"
+  echo "         Use input data in <simdir>."
+  echo
+  echo "         -n <MPI tasks>"
+  echo "         Number of MPI tasks."
+  echo
+  echo "         -nomp <threads>"
+  echo "         Number of OpenMP threads per MPI task."
+  echo
+  echo "         -numa <n>"
+  echo "         NUMAs active per node."
+  echo
+  echo "         -mpinuma <n>"
+  echo "         MPI tasks per active NUMA."
+  echo
+  echo "REGRESSION TESTING"
+  echo
+  echo "         -r"
+  echo "         Run full regression suite."
+  echo
+  echo "         -rs <case>"
+  echo "         Run specified regression case."
+  echo
+  echo "         -rt"
+  echo "         Enable restart regression testing."
+  echo
+  echo "         -reset"
+  echo "         Reset regression data."
+  echo
+  echo "TEMPLATE GENERATION"
+  echo
+  echo "         -g"
+  echo "         List available simulation templates."
+  echo
+  echo "         -g <template>"
+  echo "         Copy <template> into simulation path."
+  echo
+  echo "UTILITIES"
+  echo
+  echo "         -h"
+  echo "         Version and platform information."
+  echo
+  echo "         -clean"
+  echo "         Clean simulation directory (all out.* and bin.* files)."
+  echo
+  echo "         -optclean"
+  echo "         Clean simulation directory except for timing files."
+  echo
+  echo "         -compress"
+  echo "         Replicate directory, but without restart or nonstandard files."
+ 
+  exit 1
+fi
+#=============================================================
+
+#=============================================================
+# Define variables for flag capture
+#
+SIMROOT=$PWD
+XGYRO_DIR=$GACODE_ROOT/xgyro
+CGYRO_DIR=$GACODE_ROOT/cgyro
+# Default number of cores
+NPROC=1
+NOMP=1
+NUMA=0
+MPINUMA=0
+# Execute/test mode flags
+TEST_FLAG=0
+GENERATE_FLAG=0
+REGRESS_FLAG=0
+REGRESS_RESTART=0
+CLEAN=0
+RESET=0
+HELP_TAG=null
+SCASE=
+#=============================================================
+
+#=============================================================
+# Parse command line options
+#
+while [ $# -gt 0 ] ; do
+  case "$1" in
+
+  -p) shift ; SIMROOT=$1 ;;
+
+  -e) shift ; LOCDIR=$1 ;;
+
+  -t) shift ; LOCDIR=$1 ; TEST_FLAG=1 ;;
+
+  -n) shift ; NPROC=$1 ;;
+
+  -nomp) shift ; NOMP=$1 ;;
+
+  -numa) shift ; NUMA=$1 ;;
+
+  -mpinuma) shift ; MPINUMA=$1 ;;
+
+  -g) shift ; LOCDIR=$1 ; GENERATE_FLAG=1 ;;
+
+  -r) REGRESS_FLAG=1 ;;
+
+  -rs) REGRESS_FLAG=1 ; shift ; SCASE=$1 ;;
+
+  -rt) REGRESS_RESTART=1 ;;
+
+  -reset) RESET=1 ;;
+
+  -h) gacode_printversion XGYRO ; exit 0 ;;
+
+  -help) shift ; HELP_TAG=$1 ;;
+
+  -clean) CLEAN=1 ;;
+  -optclean) CLEAN=2 ;;
+
+  *) echo "ERROR (xgyro script): unknown option $1." ; exit 1 ;;
+
+  esac
+  shift
+done
+#=============================================================
+
+if [ "$LOCDIR" == "." ]
+then
+   SIMDIR=$PWD
+   cd .. ; LOCDIR=$PWD
+else
+   SIMDIR=$SIMROOT/$LOCDIR
+fi
+
+#============================================================
+# Check for inconsistent flags:
+FLAG_SUM=$[ $EXEC_FLAG + $TEST_FLAG + $GENERATE_FLAG
+                       + $REGRESS_FLAG ]
+if [ $FLAG_SUM -gt 1 ]
+then
+   echo "ERROR: Can only specify one of -e, -t, -g, -r"
+   exit 1
+fi
+#============================================================
+
+#============================================================
+# Generate simdir if -g set, then exit.
+#
+if [ $GENERATE_FLAG -eq 1 ]
+then
+   if [ ! -f "${XGYRO_DIR}/tools/input/$LOCDIR/input.xgyro" ]
+   then
+      cat ${XGYRO_DIR}/tools/input/simdir_list
+   else
+      cp -ai ${XGYRO_DIR}/tools/input/$LOCDIR $SIMDIR
+   fi
+   exit 0
+fi
+#============================================================
+
+#============================================================
+# Do the regression test if -r set, then exit.
+#
+if [ $REGRESS_FLAG -eq 1 ]
+then
+   N2=$[ NPROC / 2 ]
+   if [ $[ NPROC - 2 * N2 ] -eq 1 ]
+   then
+      echo "ERROR: (XGYRO) For regression test, number of processors must be multiple of 2."
+      exit 1
+   fi
+   # NOMP=1 RESET=0
+   if [ $REGRESS_RESTART -eq 0 ]
+   then
+      gacode_reg_do $NPROC $NOMP $RESET xgyro 1e-6 $SCASE
+   else
+      gacode_reg_do_restart $NPROC $NOMP $RESET xgyro 1e-6 $SCASE
+   fi
+   exit 0
+fi
+#============================================================
+
+#============================================================
+# Everything else must be done in $SIMDIR; so ensure existence
+# of $SIMDIR (needed at this point) and go there:
+#
+if ! gacode_sim_warn $SIMDIR
+then
+   exit 1
+fi
+
+cd $SIMDIR
+#============================================================
+
+#==========================================================
+# parse input.xgyro and all the subdir/input.cgyro
+#
+cgyrodirs=`python $XGYRO_DIR/bin/xgyro_parse.py ${NPROC}`
+if [ $? -eq 1 ]
+then
+    exit 1
+fi
+
+for dname in $cgyrodirs; do
+  (cd ${dname} && python $CGYRO_DIR/bin/cgyro_parse.py)
+  if [ $? -eq 1 ]
+  then
+    exit 1
+  fi
+  # datafile check
+  if [ -s "${dname}/out.xgyro.time" ] ; then
+   ncol=`awk '{print NF}' ${dname}/out.xgyro.time | sort -nu | tail -n 1`
+   if [ $ncol -eq 3 ] ; then
+      echo "ERROR: (CGYRO) Run cgyro_plot -plot text to update number of columns in ${dname}/out.cgyro.time"
+      exit 1
+   fi
+  fi
+done
+
+#==========================================================
+
+#============================================================
+# Clean/new options
+
+CFILES="bin.* batch.out batch.err *~"
+C1FILES="out.* *gen"
+C2FILES="*egrid *equilibrium *grids *hosts *memory *rotation"
+
+if [ $CLEAN -eq 1 ] ; then
+    rm -f $CFILES $C1FILES
+    for dname in $cgyrodirs; do
+        (cd ${dname} && rm -f $CFILES $C1FILES)
+    done
+    echo "INFO: (xgyro) Cleaned directory."
+    exit 1
+fi
+if [ $CLEAN -eq 2 ] ; then
+    rm -f $CFILES $C2FILES
+    for dname in $cgyrodirs; do
+      (cd ${dname} && rm -f $CFILES $C2FILES)
+    done
+    echo "INFO: (xgyro) Thinned out directory."
+    exit 1
+fi
+#============================================================
+
+
+#===========================================================
+# RUN XGYRO
+#
+# Version stamp for CGYRO simulations
+# NOTE: log all starts and restarts, but NOT test mode
+if [ $TEST_FLAG -eq 0 ]
+then
+ for dname in $cgyrodirs; do
+   pushd ${dname} >/dev/null
+   if [ $? -eq 1 ]
+   then
+    exit 1
+   fi
+   
+   # If there are no restart files, its safe to overwrite the log file
+   PATTERN=(bin.cgyro.restar*)
+   if [ ! -r ${PATTERN[0]} ]; then
+      > out.cgyro.version
+   fi
+
+   # Date with custom formatting
+   date_tag=`date +"%y-%b-%d %T"`
+   version_tag=`gacode_getversion`
+   if [ -f out.cgyro.tag ]
+   then
+      simtime=`head -n2 out.cgyro.tag | tail -n1`
+      simtime=`echo $simtime`
+   else
+      simtime=0.0
+   fi
+   echo "$date_tag [$version_tag][$GACODE_PLATFORM][$simtime]" >> out.cgyro.version
+   popd >/dev/null
+ done 
+else
+   NUMA=1
+   MPINUMA=1
+fi
+
+gacode_printversion XGYRO
+
+if [ -f $XGYRO_DIR/src/xgyro ] ; then
+   $GACODE_ROOT/platform/exec/exec.$GACODE_PLATFORM \
+      $SIMDIR $NPROC "$XGYRO_DIR/src/xgyro $TEST_FLAG" $NOMP $NUMA $MPINUMA
+else
+   echo "ERROR: XGYRO executable not found."
+   exit 1
+fi
+#===========================================================
+
+#============================================================
+# Print runfile if test case
+if [ $TEST_FLAG -eq 1 ]
+then
+    python $GACODE_ROOT/shared/bin/osxlist.py out.xgyro.info
+fi
+#============================================================
