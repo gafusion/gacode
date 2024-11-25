@@ -13,6 +13,8 @@ program xgyro
   integer, external :: omp_get_max_threads
   character(len=32) :: arg
   integer :: global_error_status = 0
+  integer :: i
+  character(len=192) :: msg
 
   !----------------------------------------------------------------
   ! Find value of test flag
@@ -75,6 +77,10 @@ program xgyro
     call MPI_FINALIZE(i_err)
     STOP 'ERROR while reading input'
   endif
+  do i=1,xgyro_n_dirs
+    write(msg,'(A,A,A,I0)') "Sub-simulation ", trim(xgyro_dir_name(i)), " N_MPI ",xgyro_n_mpi(i)
+    call xgyro_info(trim(msg))
+  enddo
 
   ! split XGYRO_COMM_WORLD into the appropriate CGYRO_COMM_WORLD
   call xgyro_mpi_setup
