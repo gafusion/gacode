@@ -15,7 +15,7 @@ base.read_input('input.xgyro')
 
 n_dirs = int(base.data_dict['N_DIRS'])
 if (n_dirs<1):
-  print("ERROR: At least one CGYRO dir needed in input.xgyro.")
+  print("ERROR: At least one CGYRO dir needed in input.xgyro.", file=sys.stderr)
   sys.exit(1)
 
 del base
@@ -44,11 +44,11 @@ for i in range(n_dirs):
   min_mpi += int(x.data_dict['MIN_MPI_%i'%fi])
 
 if min_mpi>total_MPI:
-  print("ERROR: Need at least %i MPI processes."%min_mpi)
+  print("ERROR: Need at least %i MPI processes."%min_mpi, file=sys.stderr)
   sys.exit(1)
 
 if (total_MPI%min_mpi)!=0:
-  print("ERROR: MPI rank must be multiple of %i."%min_mpi)
+  print("ERROR: MPI rank must be multiple of %i."%min_mpi, file=sys.stderr)
   sys.exit(1)
 
 mpi_mult = total_MPI//min_mpi
@@ -65,7 +65,7 @@ for i in range(n_dirs):
   fi = i+1
   cgyro_dir = x.data_dict['DIR_%i'%fi]
   if not os.path.isfile(cgyro_dir+"/input.cgyro"):
-    print("ERROR: Cound not find %s/input.cgyro"%cgyro_dir)
+    print("ERROR: Cound not find %s/input.cgyro"%cgyro_dir, file=sys.stderr)
     sys.exit(1)
 
 # now we can write out the gen file
