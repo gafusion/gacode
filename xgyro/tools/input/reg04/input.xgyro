@@ -1,0 +1,8 @@
+MPI_RANK_ORDER = 2
+N_DIRS = 3
+MIN_MPI_1 = 1
+DIR_1 = reg10
+MIN_MPI_2 = 2
+DIR_2 = reg19
+MIN_MPI_3 = 1
+DIR_3 = reg11

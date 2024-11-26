@@ -1,3 +1,4 @@
+MPI_RANK_ORDER = 2
 N_DIRS = 2
 MIN_MPI_1 = 2
 DIR_1 = reg06
