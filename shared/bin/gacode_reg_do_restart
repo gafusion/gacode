@@ -9,6 +9,7 @@
 #
 # EXAMPLE:
 #  gacode_reg_do_restart 2 1 0 cgyro 1e-6 reg01
+#  gacode_reg_do_restart 2 1 0 xgyro/cgyro 1e-6 reg01
 #----------------------------------------------------
 
 n=$#
@@ -24,9 +25,13 @@ fi
 n_proc=${1}
 n_omp=${2}
 reset=${3}
-code=${4}
+code_raw=${4}
 tol=${5}
 scase=${6}
+
+# if a / is present in code_raw string, use the part after / to signify another code
+code=`python3 -c "import sys; print(sys.argv[1].split('/')[0])" ${code_raw}`
+code2=`python3 -c "import sys; carr=sys.argv[1].split('/'); print(carr[1] if (len(carr)==2) else '')"  ${code_raw}`
 
 echo "REGRESSION TESTING: $code"
 
@@ -45,8 +50,13 @@ then
    compdir=$GACODE_ADD_ROOT/$code/tools/input
 fi
 
-precfile=out.$code.prec
-infile=input.$code
+if [ "x${code2}" == "x" ]; then
+  precfile=out.${code}.prec
+  infile=input.${code}
+else
+  precfile=out.${code2}.prec
+  infile=input.${code2}
+fi
 
 if [ "$scase" == "" ] 
 then
@@ -61,33 +71,44 @@ cd $testdir
 for sim in $list
 do
    $code -g $sim -p $testdir > out.$sim
-   rm -f $sim/$precfile
-   # patch input file to have frequent checkpointing
-   mv $sim/$infile $sim/$infile.org
-   grep -v RESTART_STEP $sim/$infile.org > $sim/$infile
-   echo "RESTART_STEP=1" >> $sim/$infile
+   if [ "x${code2}" == "x" ]; then
+     dnames="$sim"
+   else
+     dnames=`(ls -p -d ${sim}/* |grep '/$' |sed 's/.$//' )`
+   fi
+   for dname in $dnames; do
+     rm -f ${dname}/$precfile
+     # patch input file to have frequent checkpointing
+     mv ${dname}/$infile ${dname}/$infile.org
+     grep -v RESTART_STEP ${dname}/$infile.org > ${dname}/$infile
+     echo "RESTART_STEP=1" >> ${dname}/$infile
+   done
    # now run it 3 times
    for ((i=0; $i<3; i=$i+1))
    do
     if [ $i -ne 0 ]
     then
-      cp $sim/$precfile $sim/$precfile.$oi
+     for dname in $dnames; do
+      cp ${dname}/$precfile ${dname}/$precfile.$oi
+     done
     fi
     if [ $n_omp -eq 1 ] && [ $n_proc -eq 1 ] ; then 
       $code -e $sim -p $testdir > out.$sim
     else
       $code -e $sim -n $n_proc -nomp $n_omp -p $testdir > out.$sim
     fi
-    cp $sim/$precfile $sim/$precfile.$i
-    if [ $i -eq 0 ]
-    then
+    for dname in $dnames; do
+     cp ${dname}/$precfile ${dname}/$precfile.$i
+     if [ $i -eq 0 ]
+     then
       # reuse the non-checkpointed result from original regression test
       myprecfile=$precfile
-    else
+     else
       # use the additional iterations else
       myprecfile=$precfile.$i
-    fi
-    gacode_reg $sim $compdir $myprecfile $tol
+     fi
+     gacode_reg $dname $compdir $myprecfile $tol
+    done
     oi=$i
    done
    if [ $reset -eq 1 ]

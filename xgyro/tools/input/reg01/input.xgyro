@@ -1,0 +1,5 @@
+N_DIRS = 4
+DIR_1 = reg01
+DIR_2 = reg02
+DIR_3 = reg03
+DIR_4 = reg04

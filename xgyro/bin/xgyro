@@ -197,9 +197,9 @@ then
    # NOMP=1 RESET=0
    if [ $REGRESS_RESTART -eq 0 ]
    then
-      gacode_reg_do $NPROC $NOMP $RESET xgyro 1e-6 $SCASE
+      gacode_reg_do $NPROC $NOMP $RESET xgyro/cgyro 1e-6 $SCASE
    else
-      gacode_reg_do_restart $NPROC $NOMP $RESET xgyro 1e-6 $SCASE
+      gacode_reg_do_restart $NPROC $NOMP $RESET xgyro/cgyro 1e-6 $SCASE
    fi
    exit 0
 fi
