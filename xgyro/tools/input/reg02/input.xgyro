@@ -1,0 +1,7 @@
+N_DIRS = 3
+MIN_MPI_1 = 1
+DIR_1 = reg04
+MIN_MPI_2 = 2
+DIR_2 = reg05
+MIN_MPI_3 = 1
+DIR_3 = reg17

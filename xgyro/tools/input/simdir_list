@@ -1,4 +1,5 @@
 Local XGYRO templates:
 
 reg01: CGYRO reg01, reg02, reg03, reg04 - equal MPI
-
+reg02: CGYRO reg04, reg05, reg17 - 1+2+1 MPI
+reg03: CGYRO reg06, reg07 - equal MPI, explicit min=2
