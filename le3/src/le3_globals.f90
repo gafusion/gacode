@@ -38,6 +38,7 @@ module le3_globals
   real, dimension(:,:), allocatable  :: sinn,cosn
 
   real, dimension(:,:), allocatable :: gpp,gtt,gpt
+  real, dimension(:,:), allocatable :: gct, gcp, gcc
   real, dimension(:,:), allocatable :: cosu,rc
   real, dimension(:,:), allocatable :: bpol,btor
   real, dimension(:,:), allocatable :: chi1
@@ -72,6 +73,8 @@ module le3_globals
   real, dimension(:,:), allocatable :: bdotgradB_overB
   real, dimension(:,:), allocatable :: dgdp,vexb_dt,vexb_dp
   real, dimension(:,:), allocatable :: vdrift_x, vdrift_dt, vdrift_dp
+  real, dimension(:,:,:), allocatable :: grad_perpsq_gk, vdrift_gk
+  real, dimension(:,:), allocatable :: grad_cc, grad_tt, grad_pp, grad_pt, grad_ct, grad_cp
   real, dimension(:,:), allocatable :: g
   real, dimension(:,:), allocatable :: mat_stream_dt
   real, dimension(:,:), allocatable :: mat_stream_dp

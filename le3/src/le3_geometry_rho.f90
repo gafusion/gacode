@@ -45,6 +45,9 @@ subroutine le3_geometry_rho
   allocate(dthetap(nt,np))
   allocate(b1(nt,np))
   allocate(gc(nt,np))
+  allocate(gct(nt,np))
+  allocate(gcp(nt,np))
+  allocate(gcc(nt,np))
 
   do i=1,nt
      do j=1,np
@@ -233,6 +236,15 @@ subroutine le3_geometry_rho
 
         ! g_cp + i g_ct
         gc(i,j) = ysinuv/chi1(i,j)-c_m0*dtheta(i,j)
+
+        ! g_ct
+        gct(i,j) = -dtheta(i,j) * x**2
+        
+        ! g_cp
+        gcp(i,j) = ysinuv/chi1(i,j) - dtheta(i,j)*x*ycosuv
+        
+        ! g_cc
+        gcc(i,j) = 1.0/chi1(i,j)**2 + dtheta(i,j)**2 * x**2
 
      enddo
   enddo
