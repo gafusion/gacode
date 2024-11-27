@@ -20,26 +20,70 @@ subroutine le3_geometry_matrix
   real :: xsum
   integer, dimension(:), allocatable :: i_piv
 
-  ! bhat dot grad = bdotgrad * (iota d/dt + d/dp)  
+  ! anorm* bhat dot grad = bdotgrad * (iota d/dt + d/dp)  
   bdotgrad(:,:) = 1.0/(bmag * g)
 
-  ! (bhat dot grad B)/B
+  ! anorm * (bhat dot grad B)/B
   bdotgradB_overB(:,:) = bdotgrad * (iota * dbdt + dbdp) / bmag
 
-  ! bhat cross grad B dot grad r / B^2
-  vdrift_x(:,:) = 1/(rmin*bmag * g**2) &
+  ! B cross grad B dot grad chi / (B^2 * r * B)
+  vdrift_x(:,:) = 1/(rmin*bmag* g**2) &
        * (-dbdt * (gpp + iota * gpt) + dbdp * (gpt + iota*gtt)) / bmag**2
 
-  ! bhat cross grad B dot grad theta / B^2
+  ! B cross grad B dot grad theta / B^2
+  ! EAB: is there (1/bmag) missing here??
   vdrift_dt(:,:) = 1/g**2 &
        * ((b1*bmag/chi1 - dtheta*dbdt)*(gpp + iota * gpt) &
        - dbdp*gc) / bmag**2
 
-  ! bhat cross grad B dot grad phi / B^2
+  ! B cross grad B dot grad phi / B^2
+  ! EAB: is there (1/bmag) missing here??
   vdrift_dp(:,:) = 1/g**2 &
        * (-(b1*bmag/chi1 - dtheta*dbdt)*(gpt + iota * gtt) &
        + dbdt*gc) / bmag**2
+ 
+  ! (a/cs)*vdrift_gradB = 1/(cs*anorm*Omega_ca_unit)*(vperp^2/2+vpar^2)*[(1) d/d(r/a) + (2) (i k_theta a)]
+  vdrift_gk(:,:,1) = vdrift_x(:,:)
+  vdrift_gk(:,:,2)  = (-iota*vdrift_dp(:,:) + vdrift_dt(:,:))/bmag(:,:)
+  do i=1,nt
+     do j=1,np
+        vdrift_gk(i,j,2) = vdrift_gk(i,j,2) &
+             - vdrift_x(i,j) * rmin*(iota_p/iota)*t(i)
+     enddo
+  enddo
+  vdrift_gk(:,:,2) = vdrift_gk(:,:,2)*rmin
+  i=1
+  j=1
+  print *, vdrift_gk(i,j,2), b1(i,j)*bmag(i,j)
+  print *, gpp(i,j), gpt(i,j), gtt(i,j), dbdp(i,j), dbdt(i,j), gc(i,j)
 
+  ! (a/cs)*vdrift_gradp =  1/(cs*anorm*Omega_ca_unit)*(vpar^2) [(3) (i k_theta a)]
+  vdrift_gk(:,:,3) = (-0.5*beta_star)/bmag(:,:)**2
+
+  ! grad_perpsq: (1) d^2/d(r/a)^2 + (2) (k_theta a)^2 + (3) (i k_theta a) d/d(r/a)
+  grad_cc =  1.0/g**2 * (gtt * gpp - gpt**2)
+  grad_tt =  1.0/g**2 * (gpp * gcc - gcp**2)
+  grad_pp =  1.0/g**2 * (gtt * gcc - gct**2)
+  grad_pt =  1.0/g**2 * (gcp * gct - gpt*gcc)
+  grad_ct =  1.0/g**2 * (gpt * gcp - gpp*gct)
+  grad_cp =  1.0/g**2 * (gpt * gct - gtt*gcp)
+  grad_perpsq_gk(:,:,1) = 1.0/rmin**2 * grad_cc(:,:)
+  grad_perpsq_gk(:,:,2) = grad_pp + 1.0/iota**2*grad_tt - 2.0/iota*grad_pt 
+  do i=1,nt
+     do j=1,np
+        grad_perpsq_gk(i,j,2) = grad_perpsq_gk(i,j,2) + (iota_p/iota**2*t(i))**2 * grad_cc(i,j) &
+             + 2.0*iota_p/iota**2*t(i)*grad_cp(i,j) - 2.0*iota_p/iota**3*t(i)*grad_ct(i,j)
+     enddo
+  enddo
+  grad_perpsq_gk(:,:,2) = grad_perpsq_gk(:,:,2)*(iota*rmin)**2
+  grad_perpsq_gk(:,:,3) = grad_cp - 1.0/iota*grad_ct
+  do i=1,nt
+     do j=1,np
+        grad_perpsq_gk(i,j,3) =  grad_perpsq_gk(i,j,3) + iota_p/iota**2*t(i)* grad_cc(i,j)
+     enddo
+  enddo
+  grad_perpsq_gk(:,:,3) =  grad_perpsq_gk(:,:,3)*(-2.0*iota)
+  
   ! flux-surface d volume / dr
   vprime = 0.0
   do i=1,nt
@@ -64,7 +108,7 @@ subroutine le3_geometry_matrix
   vexb_dp(:,:) = -1/(rmin*bmag * g**2) & 
        * (gpt + iota*gtt) * bmag/bsq_avg
 
-  ! construct the geo collocation matices
+  ! construct the geo collocation matices for NEO-3D
 
   allocate(mat_stream_dt(matsize,matsize))
   allocate(mat_stream_dp(matsize,matsize))
@@ -174,7 +218,7 @@ subroutine le3_geometry_matrix
   enddo
   close(1)
 
-  ! Construct the geo vectors
+  ! Construct the geo vectors for NEO-3D
 
   vec_thetabar(:) = vec_thetabar(:) / (nt*np)
   vec_vdriftx(:)  = vec_vdriftx(:) / (nt*np)
@@ -212,7 +256,7 @@ subroutine le3_geometry_matrix
      write (1,'(i2,i2,i2)') itype(i),m_indx(i), n_indx(i)
   enddo
   close(1)
-
+  
   ! Map to Boozer coordinates
 
   ! J: B ~ J(psi) grad phi
@@ -412,6 +456,43 @@ subroutine le3_geometry_matrix
 
   call le3_compute_theory
 
+  ! Write out quantitites for GK-3D
+     
+  open(unit=1,file='out.le3.geogk',status='replace')
+  write (1,'(i2)') nt
+  write (1,'(i2)') np
+  write (1,'(e16.8)') t
+  write (1,'(e16.8)') p
+
+  ! theta_bar(theta,phi) and derivatives
+  write (1,'(e16.8)') tb(:,:)
+  write (1,'(e16.8)') dtbdt(:,:)
+  write (1,'(e16.8)') dtbdp(:,:)
+  
+  ! B/Bunit
+  write (1,'(e16.8)') bmag(:,:)
+  
+  ! anorm*(bhat dot grad) = bdotgrad * (iota d/dt + d/dp) = (1) d/dt + (2) d/dp
+  write (1,'(e16.8)') bdotgrad(:,:)*iota
+  write (1,'(e16.8)') bdotgrad(:,:)
+  
+  ! anorm*(bhat dot grad B)/B
+  write (1,'(e16.8)') bdotgradB_overB(:,:)
+  
+  ! (a/cs)*vdrift_gradB = 1/(cs*anorm*Omega_ca_unit)*(vperp^2/2+vpar^2)*[(1) d/d(r/a) + (2) (i k_theta a)]
+  write (1,'(e16.8)') vdrift_gk(:,:,1)
+  write (1,'(e16.8)') vdrift_gk(:,:,2)
+  
+  ! (a/cs)*vdrift_gradp =  1/(cs*anorm*Omega_ca_unit)*(par^2)*(i k_theta a) [(3) (i ktheta a)]
+  write (1,'(e16.8)') vdrift_gk(:,:,3)
+  
+  ! grad_perpsq: (1) d^2/d(r/a)^2 + (2) (k_theta a)^2 + (3) (i k_theta a) d/d(r/a)
+  write (1,'(e16.8)') grad_perpsq_gk(:,:,1)
+  write (1,'(e16.8)') grad_perpsq_gk(:,:,2)
+  write (1,'(e16.8)') grad_perpsq_gk(:,:,3)
+  
+  close(1)
+  
   deallocate(itype)
   deallocate(m_indx)
   deallocate(n_indx)
@@ -423,6 +504,9 @@ subroutine le3_geometry_matrix
   deallocate(gpp)
   deallocate(gtt)
   deallocate(gpt)
+  deallocate(gct)
+  deallocate(gcp)
+  deallocate(gcc)
   deallocate(cosu)
   deallocate(btor)
   deallocate(bpol)
@@ -440,6 +524,14 @@ subroutine le3_geometry_matrix
   deallocate(vexb_dp)
   deallocate(vdrift_dt)
   deallocate(vdrift_dp)
+  deallocate(vdrift_gk)
+  deallocate(grad_perpsq_gk)
+  deallocate(grad_cc)
+  deallocate(grad_tt)
+  deallocate(grad_pp)
+  deallocate(grad_pt)
+  deallocate(grad_ct)
+  deallocate(grad_cp)
   deallocate(mat_stream_dt)
   deallocate(mat_stream_dp)
   deallocate(mat_trap)
