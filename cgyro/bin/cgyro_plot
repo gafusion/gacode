@@ -262,6 +262,7 @@ EXT=screen
 
 SPECIES=0
 FIELD=0
+FNORM=0
 FC=0
 TIME=-1
 TMAX=-1.0
@@ -326,6 +327,7 @@ while [ $# -gt 0 ] ; do
   -species) shift ; SPECIES=$1 ;;
 
   -field) shift ; FIELD=$1 ;;
+  -fnorm) shift ; FNORM=$1 ;;
 
   -fc) FC=1 ;;
 
