@@ -44,6 +44,7 @@ class cgyrodata_plot(data.cgyrodata):
       xin['bar']    = 0
       xin['ie']     = 0
       xin['mesh']   = 0
+      xin['fnorm']  = 0
 
       return xin
 
@@ -241,6 +242,7 @@ class cgyrodata_plot(data.cgyrodata):
       itime = xin['itime']
       field = xin['field']
       tmax  = xin['tmax']
+      fnorm = xin['fnorm']
 
       if xin['fig'] is None:
          fig = plt.figure(MYDIR,figsize=(xin['lx'],xin['ly']))
@@ -277,11 +279,23 @@ class cgyrodata_plot(data.cgyrodata):
          else:
             ax.set_xlim([-tmax,tmax])
 
-      y1 = np.real(f)
-      y2 = np.imag(f)
+            
+      # theta_* = 0
+      n0 = self.n_radial//2*self.n_theta+self.n_theta//2
+
+      # Normalized real and imag parts
+      if fnorm == 0:
+         f_norm = self.phib[0,n0,itime]+1j*self.phib[1,n0,itime]
+      elif fnorm == 1:
+         f_norm = self.aparb[0,n0,itime]+1j*self.aparb[1,n0,itime]
+      else:
+         f_norm = self.bparb[0,n0,itime]+1j*self.bparb[1,n0,itime]
+         
+      y1 = np.real(f/f_norm)
+      y2 = np.imag(f/f_norm)
 
       ax.plot(x,y1,'-o',color='black',markersize=2,label=r'$\mathrm{Re}$')
-      ax.plot(x,y2,'-o',color='red',markersize=2,label=r'$\mathrm{Im}$')
+      ax.plot(x,y2,'-o',color='red'  ,markersize=2,label=r'$\mathrm{Im}$')
 
       ax.legend()
 

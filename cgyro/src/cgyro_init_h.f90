@@ -129,9 +129,11 @@ subroutine cgyro_init_h
                  ir = ir_c(ic) 
                  it = it_c(ic)
                  ang = theta(it)+2*pi*px(ir)
-                 if (amp >  0.0) then
+                 if (amp > 0.0) then
+                    ! symmetric
                     h_x(ic,iv_loc,nt1) = rho/(1.0+ang**4)
                  else
+                    ! anti-symmetric
                     h_x(ic,iv_loc,nt1) = rho*ang/(1.0+ang**4)
                  endif
               enddo
