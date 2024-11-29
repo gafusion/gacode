@@ -482,7 +482,7 @@ class cgyrodata_plot(data.cgyrodata):
       # Now, ys -> {n_species,3,nt}
 
       if moment == 'n':
-         mtag = '\Gamma'
+         mtag = r'\Gamma'
          ttag = 'G'
          ftag = 'flux_n'
          y = ys[:,0,:]
@@ -493,7 +493,7 @@ class cgyrodata_plot(data.cgyrodata):
          y = ys[:,1,:]/self.qc
       elif moment == 'v':
          # JC: correct for other norms?
-         mtag = '\Pi'
+         mtag = r'\Pi'
          ttag = 'Pi'
          ftag = 'flux_v'
          y = ys[:,2,:]
@@ -512,7 +512,7 @@ class cgyrodata_plot(data.cgyrodata):
          mnorm = ''
       else:
          norm_vec = 1.0/self.dens
-         mnorm = '^\mathrm{norm}'
+         mnorm = r'^\mathrm{norm}'
 
       color = ['k','m','b','c','g','r']
 
@@ -532,7 +532,7 @@ class cgyrodata_plot(data.cgyrodata):
          ave   = time_average(y_norm,t,imin,imax)
          y_ave = ave*np.ones(len(t))
          u = specmap(self.mass[ispec],self.z[ispec])
-         label = r'$'+mtag+mnorm+'_\mathrm{'+u+'}/'+mtag+self.gbnorm+': '+str(round(ave,3))+'$'
+         label = r'$'+mtag+mnorm+r'_\mathrm{'+u+'}/'+mtag+self.gbnorm+': '+str(round(ave,3))+'$'
          if not ftype == 'nox':
             # Average
             ax.plot(t[imin:imax+1],y_ave[imin:imax+1],'--',color=color[ispec])
@@ -612,7 +612,7 @@ class cgyrodata_plot(data.cgyrodata):
          ys = self.ky_flux[:,:,field,:,:]
 
       if moment == 'n':
-         mtag = '\Gamma'
+         mtag = r'\Gamma'
          ttag = 'G'
          ftag = 'flux_n'
          y = ys[:,0,:,:]
@@ -622,7 +622,7 @@ class cgyrodata_plot(data.cgyrodata):
          ftag = 'flux_e'
          y = ys[:,1,:,:]/self.qc
       elif moment == 'v':
-         mtag = '\Pi'
+         mtag = r'\Pi'
          ttag = 'Pi'
          ftag = 'flux_v'
          y = ys[:,2,:,:]
@@ -668,7 +668,7 @@ class cgyrodata_plot(data.cgyrodata):
             ax = fig.add_subplot(nrow,ncol,ispec+1)
 
             ax.set_xlabel(self.kystr)
-            ax.set_ylabel(r'$'+mtag+'_\mathrm{'+u+'}/'+mtag+self.gbnorm+'$',color='k')
+            ax.set_ylabel(r'$'+mtag+r'_\mathrm{'+u+'}/'+mtag+self.gbnorm+'$',color='k')
 
             if ispec < ncol:
                ax.set_title(mpre+mwin,fontsize=16)
@@ -757,7 +757,7 @@ class cgyrodata_plot(data.cgyrodata):
       # calculate envelope
       corr_hilbert = signal.hilbert(corr)
       corr_env = np.abs(corr_hilbert)
-      ax.set_ylabel(r'$C_{'+ft+'}(\Delta r)$',color='k')
+      ax.set_ylabel(r'$C_{'+ft+r'}(\Delta r)$',color='k')
       ax.plot(delta_r,0*delta_r,color='k',ls='--')
       ax.plot(delta_r,corr,color=color[0])
 
@@ -995,7 +995,7 @@ class cgyrodata_plot(data.cgyrodata):
          gfactor = 1e6*(1-np.i0(k0**2)*np.exp(-k0**2))/(np.i0(k0**2)*np.exp(-k0**2))
 
          y = f[i,:]*gfactor
-         ax.plot(t,y,label=self.kxstr+'$={:.4f}$'.format(k0))
+         ax.plot(t,y,label=self.kxstr+r'$={:.4f}$'.format(k0))
 
          #----------------------------------------------------
          # Average calculations
@@ -1048,13 +1048,13 @@ class cgyrodata_plot(data.cgyrodata):
          
       if moment == 'n':
          ntag = 'Density~flux'
-         mtag = '\Gamma'
+         mtag = r'\Gamma'
       elif moment == 'e':
          ntag = 'Energy~flux'
          mtag = 'Q'
       elif moment == 'v':
          ntag = 'Momentum~flux'
-         mtag = '\Pi'
+         mtag = r'\Pi'
       else:
          print('ERROR: (plot_xflux) Invalid moment.')
          sys.exit()
@@ -1065,7 +1065,7 @@ class cgyrodata_plot(data.cgyrodata):
 
       # Rescale with density ratio
       if nscale == 1:
-         mnorm = '^\mathrm{norm}'
+         mnorm = r'^\mathrm{norm}'
       else:
          mnorm = ''
 
@@ -1081,7 +1081,7 @@ class cgyrodata_plot(data.cgyrodata):
       imin,imax = time_index(t,w)
       mpre,mwin = wintxt(imin,imax,t)
 
-      ax.set_title(r'$\mathrm{'+ntag+'} \quad $'+mwin)
+      ax.set_title(r'$\mathrm{'+ntag+r'} \quad $'+mwin)
 
       na = 128
 
@@ -1097,7 +1097,7 @@ class cgyrodata_plot(data.cgyrodata):
       for ispec in range(ns):
 
          u = specmap(self.mass[ispec],self.z[ispec])
-         label = r'$'+mtag+mnorm+'_'+u+'/'+mtag+'_\mathrm{GB}$'
+         label = r'$'+mtag+mnorm+'_'+u+r'/'+mtag+r'_\mathrm{GB}$'
 
          #---------------------------------
          # Global flux versus x
@@ -1108,7 +1108,7 @@ class cgyrodata_plot(data.cgyrodata):
          g = np.ones(na)*self.lky_xr[0,ispec]
          for l in range(1,ng):
             g[:] = g[:]+2*(np.cos(l*a2)*self.lky_xr[l,ispec]-np.sin(l*a2)*self.lky_xi[l,ispec])
-         ax.plot(r,g,color=color[ispec],linestyle='--',label=label+'$\mathrm{(mirror)}$')
+         ax.plot(r,g,color=color[ispec],linestyle='--',label=label+r'$\mathrm{(mirror)}$')
          #---------------------------------
 
          #---------------------------------
@@ -1209,7 +1209,7 @@ class cgyrodata_plot(data.cgyrodata):
 
       ax.set_xlabel(self.kxstr)
       ax.set_ylabel(self.kystr)
-      ax.set_title(r'$\mathrm{Log} |'+ft+'| \quad $'+mwin)
+      ax.set_title(r'$\mathrm{Log} |'+ft+r'| \quad $'+mwin)
 
       ax.imshow(y,extent=[xl,xr,0,y0],interpolation='none',cmap='plasma')
       print('INFO: (plot_kxky_phi) min={:.2e} max={:.2e}'.format(np.min(y),np.max(y)))
@@ -1562,7 +1562,7 @@ class cgyrodata_plot(data.cgyrodata):
          #======================================
          ax = fig.add_subplot(3,2,p)
 
-         ax.set_title(r'${\rm Re} \, h_'+u+' \quad \mathrm{ie}='+str(ie)+'$')
+         ax.set_title(r'${\rm Re} \, h_'+u+r' \quad \mathrm{ie}='+str(ie)+'$')
          ax.set_xlabel(r'$\theta/\pi$')
          ax.set_ylabel(r'$\xi = v_\parallel/v$')
 
@@ -1587,7 +1587,7 @@ class cgyrodata_plot(data.cgyrodata):
          #======================================
          ax = fig.add_subplot(3,2,p)
 
-         ax.set_title(r'${\rm Im} \, h_'+u+' \quad \mathrm{ie}='+str(ie)+'$')
+         ax.set_title(r'${\rm Im} \, h_'+u+r' \quad \mathrm{ie}='+str(ie)+'$')
          ax.set_xlabel(r'$\theta/\pi$')
          ax.set_ylabel(r'$\xi = v_\parallel/v$')
 
@@ -1662,7 +1662,7 @@ class cgyrodata_plot(data.cgyrodata):
          ax.grid(which="both",ls=":")
          ax.grid(which="major",ls=":")
 
-         ax.set_title(r'$'+u+': \\xi=0 \quad \mathrm{ie}='+str(ie)+'$')
+         ax.set_title(r'$'+u+r': \\xi=0 \quad \mathrm{ie}='+str(ie)+'$')
          ax.set_xlabel(r'$\theta/\pi$')
 
          if self.n_xi%2 == 0:
@@ -1684,7 +1684,7 @@ class cgyrodata_plot(data.cgyrodata):
          ax.grid(which="both",ls=":")
          ax.grid(which="major",ls=":")
 
-         ax.set_title(r'$'+u+': \\theta/\pi='+str(thetapi)+' \quad \mathrm{ie}='+str(ie)+'$')
+         ax.set_title(r'$'+u+r': \\theta/\pi='+str(thetapi)+r' \quad \mathrm{ie}='+str(ie)+'$')
          ax.set_xlabel(r'$\xi = v_\parallel/v$')
 
          n0 = (self.n_radial//2)*self.n_theta+i0
@@ -1703,7 +1703,7 @@ class cgyrodata_plot(data.cgyrodata):
          ax.grid(which="both",ls=":")
          ax.grid(which="major",ls=":")
 
-         ax.set_title(r'$'+u+': \\theta/\pi='+str(thetapi)+' \quad \mathrm{ix}='+str(ix)+'$')
+         ax.set_title(r'$'+u+r': \\theta/\pi='+str(thetapi)+r' \quad \mathrm{ix}='+str(ix)+'$')
          ax.set_xlabel(r'$x=\sqrt{\varepsilon}$')
 
          n0 = (self.n_radial//2)*self.n_theta+i0
