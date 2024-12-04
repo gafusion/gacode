@@ -44,7 +44,7 @@
       ! SAT2 + XNU 3 + UNITS != GYRO
       if(USE_PRESETS)then
         wdia_trapped_in=0.0
-        if(sat_rule_in.eq.2 .OR. sat_rule_in.eq.3)then
+        if(sat_rule_in.eq.2 .OR. sat_rule_in.eq.3 .OR. sat_rule_in.eq.4)then
           xnu_model_in=3
           wdia_trapped_in = 1.0
           if(units_in.eq."GYRO")units_in = "CGYRO"

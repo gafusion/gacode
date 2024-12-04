@@ -367,7 +367,7 @@ SUBROUTINE put_model_parameters(adi_elec,alpha_e,alpha_p,alpha_mach,  &
   if(adi_elec .NEQV. adiabatic_elec_in)new_matrix = .TRUE.
   if(kygrid_model.lt.0.or.kygrid_model.gt.5)kygrid_model = kygrid_model_in
   if(xnu_model.lt.0.or.xnu_model.gt.3)xnu_model = xnu_model_in
-  if(sat_rule.lt.0.or.sat_rule.gt.3)sat_rule=sat_rule_in
+  if(sat_rule.lt.0.or.sat_rule.gt.4)sat_rule=sat_rule_in
   !if(vpar_model.lt.-1.or.vpar_model.gt.1)vpar_model=vpar_model_in
   if(vpar_shear_model.lt.0.or.vpar_shear_model.gt.1)vpar_shear_model=vpar_shear_model_in
   !

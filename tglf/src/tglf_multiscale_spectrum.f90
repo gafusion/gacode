@@ -58,7 +58,11 @@
       REAL,DIMENSION(nkym) :: gamma=0.0
       REAL,DIMENSION(nkym) :: gamma_kymix=0.0
       REAL,PARAMETER :: small=1.0E-10
-      !
+      ! SAT4 = SAT2 linear x SAT0 for QLGYRO
+      REAL :: get_gamma_net, intensity
+      REAL :: exponent1,ave_p0
+      REAL :: wd0,gnet,kx0e
+      REAL :: c1,pols,ks 
       
       if(jmax_out.eq.0)then
          first_pass = .TRUE.
@@ -433,7 +437,7 @@
            if(ky0.gt.kyetg)gammaeff = gammaeff*SQRT(ky0/kyetg)
            field_spectrum_out(2,j,i) = measure*cnorm*((gammaeff/(kx_width*ky0))/(1.0+ay*kx**2))**2
            if(units_in.ne.'GYRO')field_spectrum_out(2,j,i) = sat_geo_factor*field_spectrum_out(2,j,i)
-         enddo       
+        enddo
         elseif(sat_rule_in.eq.3)then ! SAT3
          if(gamma_fp(j)==0)then
           Fky=0.0
@@ -466,7 +470,36 @@
             if(units_in.ne.'GYRO')field_spectrum_out(2,j,i) = sat_geo_factor*field_spectrum_out(2,j,i)
            end if
           end if
-         enddo 
+         enddo
+       elseif(sat_rule_in.eq.4)then !SAT4 = SAT2 lin x SAT0 for QLGYRO
+         pols = (ave_p0_out/ABS(as(1)*zs(1)*zs(1)))**2 ! scale invariant pol
+         cnorm = 1.82770384*pols ! calibrated against 70 GYRO runs
+         exponent1 = 1.39786897
+         c1 = 0.36017009
+         etg_factor_in = 1.25
+         ks = ky0*SQRT(taus(1)*mass(2))/ABS(zs(1))
+         do i=1,nmodes_in
+          if(alpha_quench_in.ne.0.0)then
+! apply quench rule
+           gamma(j) = get_gamma_net(eigenvalue_spectrum_out(1,j,i))
+          else
+! use spectral shift model for second pass
+           gamma(j) = eigenvalue_spectrum_out(1,j,i)
+          endif
+          measure = SQRT(taus(1)*mass(2))
+          if(ks.gt.1.0)cnorm=cnorm/(ks)**etg_factor_in
+          wd0 =ks*SQRT(taus(1)/mass(2))/R_unit  ! renomalized for scale invariance
+          gamma_net(j) = gamma(j)/wd0
+          intensity = cnorm*(wd0**2)*(gamma_net(j)**exponent1 &
+          + c1*gamma_net(j))/(ky0**4)
+          if(alpha_quench_in.eq.0.0.and.ABS(spectral_shift_out(j)).gt.0.0)then
+           kx0e = spectral_shift_out(j)
+           intensity = intensity/(1.0+0.56*kx0e**2)**2
+           intensity = intensity/(1.0+(1.15*kx0e)**4)**2
+          endif
+          intensity = intensity*SAT_geo0_out*measure
+          field_spectrum_out(2,j,i) = intensity
+         enddo
         endif
        enddo
        
