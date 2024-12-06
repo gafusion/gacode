@@ -1,7 +1,7 @@
 import os
 import numpy as np
-from gacodefuncs import *
-from cgyro.data import cgyrodata
+#from gacodefuncs import *
+#from cgyro.data import cgyrodata
 import matplotlib.pyplot as plt
 from pydmd import DMD
 import matplotlib.gridspec as gridspec
@@ -33,67 +33,65 @@ bpar_filename = "/path/to/bin.cgyro.kxky_bpar"
 v_filename = "/path/to/bin.cgyro.kxky_v"
 
 time = np.loadtxt("/path/to/out.cgyro.time")
-sim = cgyrodata('/path/to/all_CGYRO_outputs/')
+#sim = cgyrodata('/path/to/all_CGYRO_outputs/')
 
 
 
-print('ky*rho = ', sim.ky0)
-print('omega = ', sim.freq[0,0,-1])
-print('gamma = ', sim.freq[1,0,-1])
+#print('ky*rho = ', sim.ky0)
+#print('omega = ', sim.freq[0,0,-1])
+#print('gamma = ', sim.freq[1,0,-1])
 
 
 
+# To be replaced with data from out.cgyro.grids 
 t = time[:,0]
-N_radial = 4   # CGYRO N_RADIAL
+N_radial = 5   # CGYRO N_RADIAL
 N_theta = 32   # CGYRO N_THETA
 Nspecies = 2   # number of gyrokinetic species 
 theta = np.linspace(-np.pi, np.pi, N_theta * N_radial) * N_radial
 theta0 = np.linspace(-np.pi, np.pi, N_theta)
+radial = np.linspace(-2, 2, N_radial)
 
+
+
+sim_fields = np.zeros([len(t), N_theta, N_radial], dtype=DTYPE)
+sim_ptcls = np.zeros([len(t), N_theta, N_radial, Nspecies], dtype=DTYPE)
 
 
 data = read_binary_file(filename)
-sim0 = np.zeros([len(t), N_theta, N_radial], dtype=DTYPE)
-sim0 = data.reshape(sim0.shape)
-phi_kxky = sim0
+phi_kxky = data.reshape(sim_fields.shape)
 
 data = read_binary_file(dens_filename)
-sim0 = np.zeros([len(t), N_theta, N_radial, Nspecies], dtype=DTYPE)
-sim0 = data.reshape(sim0.shape)
-dens_kxky = sim0
+dens_kxky = data.reshape(sim_ptcls.shape)
 
 data = read_binary_file(apar_filename)
-sim0 = np.zeros([len(t), N_theta, N_radial], dtype=DTYPE)
-sim0 = data.reshape(sim0.shape)
-apar_kxky = sim0
+apar_kxky = data.reshape(sim_fields.shape)
 
 data = read_binary_file(bpar_filename)
-sim0 = np.zeros([len(t), N_theta, N_radial], dtype=DTYPE)
-sim0 = data.reshape(sim0.shape)
-bpar_kxky = sim0
+bpar_kxky = data.reshape(sim_fields.shape)
 
 data = read_binary_file(v_filename)
-sim0 = np.zeros([len(t), N_theta, N_radial, Nspecies], dtype=DTYPE)
-sim0 = data.reshape(sim0.shape)
-v_kxky = sim0
+v_kxky = data.reshape(sim_ptcls.shape)
 
 
 # SVD rank to perform DMD 
 svd_rank = 0
-# j to label radial grid 
-j=2
+
+
+# Switch to DMD time step
+k=20
 
 
 # step for DMD   
-delt = t[1]-t[0]
+delt = t[::k][1]-t[::k][0]
 
 #-----------------------------------------------------------------------------------------
 # fluctuating potential 
 
 dmd = DMD(svd_rank = svd_rank, exact = True)
-dmd.fit(phi_kxky[:,:,j].T)
+#dmd.fit(phi_kxky[:,:,:].T)
 
-realEigs = np.log(dmd.eigs)/(-complex(0,1)*delt)
+#realEigs = np.log(dmd.eigs)/(-complex(0,1)*delt)
 
 
 fig = plt.figure()
@@ -103,107 +101,93 @@ ax1 = fig.add_subplot(gs[0,0])
 ax1.axvline(0., linestyle="dashed", color="k", linewidth=0.5)
 ax1.axhline(0., linestyle="dashed", color="k", linewidth=0.5)
 
-ax1.plot(realEigs.real, realEigs.imag, 'o')
+for j, rVal in enumerate(radial):
 
-ax1.set_xlabel(r"realEigs.real, i.e. $\omega$", fontsize=15)
-ax1.set_ylabel(r"realEigs.imag, i.e. $\gamma$", fontsize=15)
-ax1.tick_params(labelsize=15)
+    dmd.fit(phi_kxky[::k,:,j].T)
+    realEigs = np.log(dmd.eigs)/(-complex(0,1)*delt)
+
+    ax1.plot(realEigs.real, realEigs.imag, 'o', color="tab:blue")
 
 
-
-print ('DMD predictions based on Phi:')
-print (realEigs)
+#print ('DMD predictions based on Phi:')
+#print (realEigs)
 #plt.show()
 
 
 #-----------------------------------------------------------------------------------------
 # fluctuating density 1
 
-dmd = DMD(svd_rank = svd_rank, exact = True)
-dmd.fit(dens_kxky[:,:,j,0].T)
+#dmd = DMD(svd_rank = svd_rank, exact = True)
+#dmd.fit(dens_kxky[:,:,:,0].T)
 
-realEigs = np.log(dmd.eigs)/(-complex(0,1)*delt)
+#realEigs = np.log(dmd.eigs)/(-complex(0,1)*delt)
 
+for j, rVal in enumerate(radial):
 
-ax1.axvline(0., linestyle="dashed", color="k", linewidth=0.5)
-ax1.axhline(0., linestyle="dashed", color="k", linewidth=0.5)
+    dmd.fit(dens_kxky[::k,:,j,0].T)
+    realEigs = np.log(dmd.eigs)/(-complex(0,1)*delt)
 
-ax1.plot(realEigs.real, realEigs.imag, 's', color="tab:green", mfc="none", markersize=9.5)
-
-ax1.set_xlabel(r"realEigs.real, i.e. $\omega$", fontsize=15)
-ax1.set_ylabel(r"realEigs.imag, i.e. $\gamma$", fontsize=15)
-ax1.tick_params(labelsize=15)
+    ax1.plot(realEigs.real, realEigs.imag, 's', color="tab:green", mfc="none", markersize=9.5)
 
 
 
-print ('DMD predictions based on density (species 1):')
-print (realEigs)
+#print ('DMD predictions based on density (species 1):')
+#print (realEigs)
 #plt.show()
 
 
 #-----------------------------------------------------------------------------------------
 # fluctuating density 2
 
-dmd = DMD(svd_rank = svd_rank, exact = True)
-dmd.fit(dens_kxky[:,:,j,1].T)
+#dmd = DMD(svd_rank = svd_rank, exact = True)
+#dmd.fit(dens_kxky[:,:,j,1].T)
 
-realEigs = np.log(dmd.eigs)/(-complex(0,1)*delt)
-
-
-ax1.axvline(0., linestyle="dashed", color="k", linewidth=0.5)
-ax1.axhline(0., linestyle="dashed", color="k", linewidth=0.5)
-
-ax1.plot(realEigs.real, realEigs.imag, 's', color="green", mfc="none", markersize=8.5)
-
-ax1.set_xlabel(r"realEigs.real, i.e. $\omega$", fontsize=15)
-ax1.set_ylabel(r"realEigs.imag, i.e. $\gamma$", fontsize=15)
-ax1.tick_params(labelsize=15)
+#realEigs = np.log(dmd.eigs)/(-complex(0,1)*delt)
 
 
-
-print ('DMD predictions based on density (species 2):')
-print (realEigs)
+#print ('DMD predictions based on density (species 2):')
+#print (realEigs)
 #plt.show()
 
 
 #-----------------------------------------------------------------------------------------
 # fluctuating vector potential 
 
-dmd = DMD(svd_rank = svd_rank, exact = True)
-dmd.fit(apar_kxky[:,:,j].T)
+#dmd = DMD(svd_rank = svd_rank, exact = True)
+#dmd.fit(apar_kxky[:,:,:].T)
 
-realEigs = np.log(dmd.eigs)/(-complex(0,1)*delt)
+#realEigs = np.log(dmd.eigs)/(-complex(0,1)*delt)
 
+for j, rVal in enumerate(radial):
 
-ax1.axvline(0., linestyle="dashed", color="k", linewidth=0.5)
-ax1.axhline(0., linestyle="dashed", color="k", linewidth=0.5)
+    dmd.fit(apar_kxky[::k,:,j].T)
+    realEigs = np.log(dmd.eigs)/(-complex(0,1)*delt)
 
-ax1.plot(realEigs.real, realEigs.imag, 'o', color="red", mfc="none")
-
-ax1.set_xlabel(r"realEigs.real, i.e. $\omega$", fontsize=15)
-ax1.set_ylabel(r"realEigs.imag, i.e. $\gamma$", fontsize=15)
-ax1.tick_params(labelsize=15)
+    ax1.plot(realEigs.real, realEigs.imag, 'o', color="red", mfc="none")
 
 
 
-print ('DMD predictions based on Apar:')
-print (realEigs)
+#print ('DMD predictions based on Apar:')
+#print (realEigs)
 #plt.show()
 
 
 #-----------------------------------------------------------------------------------------
 # fluctuating magnetic field  
 
-dmd = DMD(svd_rank = svd_rank, exact = True)
-dmd.fit(bpar_kxky[:,:,j].T)
+#dmd = DMD(svd_rank = svd_rank, exact = True)
+#dmd.fit(bpar_kxky[:,:,:].T)
 
-realEigs = np.log(dmd.eigs)/(-complex(0,1)*delt)
+#realEigs = np.log(dmd.eigs)/(-complex(0,1)*delt)
+
+for j, rVal in enumerate(radial):
+
+    dmd.fit(bpar_kxky[::k,:,j].T)
+    realEigs = np.log(dmd.eigs)/(-complex(0,1)*delt)
+
+    #ax1.plot(realEigs.real, realEigs.imag, 's', color="red", mfc="none", markersize=7.5)
 
 
-ax1.axvline(0., linestyle="dashed", color="k", linewidth=0.5)
-ax1.axhline(0., linestyle="dashed", color="k", linewidth=0.5)
-
-ax1.plot(realEigs.real, realEigs.imag, 'o', color="deeppink", mfc="none", markersize=7.5)
 
 ax1.set_xlabel(r"realEigs.real, i.e. $\omega$", fontsize=15)
 ax1.set_ylabel(r"realEigs.imag, i.e. $\gamma$", fontsize=15)
@@ -211,8 +195,8 @@ ax1.tick_params(labelsize=15)
 
 
 
-print ('DMD predictions based on Bpar:')
-print (realEigs)
+#print ('DMD predictions based on Bpar:')
+#print (realEigs)
 plt.show()
 
 
