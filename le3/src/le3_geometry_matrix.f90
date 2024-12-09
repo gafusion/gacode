@@ -26,25 +26,23 @@ subroutine le3_geometry_matrix
   ! anorm * (bhat dot grad B)/B
   bdotgradB_overB(:,:) = bdotgrad * (iota * dbdt + dbdp) / bmag
 
-  ! B cross grad B dot grad chi / (B^2 * r * B)
+  ! bhat cross grad B dot grad chi / (B^2 * r)
   vdrift_x(:,:) = 1/(rmin*bmag* g**2) &
        * (-dbdt * (gpp + iota * gpt) + dbdp * (gpt + iota*gtt)) / bmag**2
 
-  ! B cross grad B dot grad theta / B^2
-  ! EAB: is there (1/bmag) missing here??
+  ! bhat cross grad B dot grad theta / B^2
   vdrift_dt(:,:) = 1/g**2 &
        * ((b1*bmag/chi1 - dtheta*dbdt)*(gpp + iota * gpt) &
-       - dbdp*gc) / bmag**2
+       - dbdp*gc) / bmag**3
 
-  ! B cross grad B dot grad phi / B^2
-  ! EAB: is there (1/bmag) missing here??
+  ! bhat cross grad B dot grad phi / B^2
   vdrift_dp(:,:) = 1/g**2 &
        * (-(b1*bmag/chi1 - dtheta*dbdt)*(gpt + iota * gtt) &
-       + dbdt*gc) / bmag**2
+       + dbdt*gc) / bmag**3
  
   ! (a/cs)*vdrift_gradB = 1/(cs*anorm*Omega_ca_unit)*(vperp^2/2+vpar^2)*[(1) d/d(r/a) + (2) (i k_theta a)]
   vdrift_gk(:,:,1) = vdrift_x(:,:)
-  vdrift_gk(:,:,2)  = (-iota*vdrift_dp(:,:) + vdrift_dt(:,:))/bmag(:,:)
+  vdrift_gk(:,:,2)  = -iota*vdrift_dp(:,:) + vdrift_dt(:,:)
   do i=1,nt
      do j=1,np
         vdrift_gk(i,j,2) = vdrift_gk(i,j,2) &
@@ -52,10 +50,11 @@ subroutine le3_geometry_matrix
      enddo
   enddo
   vdrift_gk(:,:,2) = vdrift_gk(:,:,2)*rmin
-  i=1
-  j=1
-  print *, vdrift_gk(i,j,2), b1(i,j)*bmag(i,j)
-  print *, gpp(i,j), gpt(i,j), gtt(i,j), dbdp(i,j), dbdt(i,j), gc(i,j)
+  !i=1
+  !j=1
+  !print *, vdrift_gk(i,j,2), -iota*vdrift_dp(i,j)*rmin, vdrift_dt(i,j)*rmin
+  !print *, rmin*b1(i,j)/chi1(i,j)
+  !print *, g(i,j), b1(i,j)*bmag(i,j), chi1(i,j), bmag(i,j)
 
   ! (a/cs)*vdrift_gradp =  1/(cs*anorm*Omega_ca_unit)*(vpar^2) [(3) (i k_theta a)]
   vdrift_gk(:,:,3) = (-0.5*beta_star)/bmag(:,:)**2
@@ -459,8 +458,8 @@ subroutine le3_geometry_matrix
   ! Write out quantitites for GK-3D
      
   open(unit=1,file='out.le3.geogk',status='replace')
-  write (1,'(i2)') nt
-  write (1,'(i2)') np
+  write (1,'(i4)') nt
+  write (1,'(i4)') np
   write (1,'(e16.8)') t
   write (1,'(e16.8)') p
 

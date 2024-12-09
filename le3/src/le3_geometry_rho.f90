@@ -15,7 +15,7 @@ subroutine le3_geometry_rho
   real :: up,pp,pt
   real :: d0,eta
 
-  real, dimension(:,:), allocatable :: s1a,s1b
+  real, dimension(:,:), allocatable :: s1a,s1b, s1c
   real, dimension(:,:), allocatable :: s2a,s2b
   real, dimension(:,:), allocatable :: a11a,a11b
   real, dimension(:,:), allocatable :: a12a
@@ -31,6 +31,7 @@ subroutine le3_geometry_rho
   ! Step 1: Generate required functions on (theta,phi) mesh
   allocate(s1a(nt,np))
   allocate(s1b(nt,np))
+  allocate(s1c(nt,np))
   allocate(s2a(nt,np))
   allocate(s2b(nt,np))
   allocate(a11a(nt,np))
@@ -77,6 +78,7 @@ subroutine le3_geometry_rho
 
         s1a(i,j) = -0.5*d0*beta_star/rmin+(c_dn+iota*c_dm)/(chi1(i,j)*d0)
         s1b(i,j) = ysinuv/(chi1(i,j)*d0)
+        s1c(i,j) = (c_dn+iota*c_dm)/d0
 
         s2a(i,j) = c_dm/(chi1(i,j)*d0)
         s2b(i,j) = c_dn/(chi1(i,j)*d0)
@@ -231,9 +233,24 @@ subroutine le3_geometry_rho
         !-------------------------------------------------------------
 
         ! B1/Bs
-        b1(i,j) = 0.5*chi1(i,j)/a12a(i,j)*(iota_p*c_m0/d0+s1a(i,j)) &
-             -0.5*(eta-dchi(i,j)-chi1(i,j)*dthetap(i,j))
+        !b1(i,j) = 0.5*chi1(i,j)/a12a(i,j)*(iota_p*c_m0/d0+s1a(i,j)) &
+        !     -0.5*(eta-dchi(i,j)-chi1(i,j)*dthetap(i,j))
 
+        b1(i,j) = 0.5/a12a(i,j)*(chi1(i,j)*iota_p*c_m0/d0+s1c(i,j)) &
+             -0.5*(eta-2*dchi(i,j)*chi1(i,j)-2*chi1(i,j)*dthetap(i,j))
+
+        if(j == 1) then
+           if (i == 1) then
+              print *, t(i), tb(i,j)
+              print *, b1(i,j)
+              print *, 0.5/a12a(i,j)*(chi1(i,j)*iota_p*c_m0/d0)
+              print *, 0.5/a12a(i,j)*s1c(i,j)
+              print *, eta
+              print *, d0
+              print *, chi1(i,j), dchi(i,j), dthetap(i,j)
+           endif
+        endif
+        
         ! g_cp + i g_ct
         gc(i,j) = ysinuv/chi1(i,j)-c_m0*dtheta(i,j)
 
@@ -282,7 +299,7 @@ subroutine le3_geometry_rho
 
   endif
   !--------------------------------------------------------------------
-
+  
   deallocate(sys_m)
   deallocate(sys_b)
   deallocate(i_piv)
