@@ -489,6 +489,10 @@ subroutine le3_geometry_matrix
   write (1,'(e16.8)') grad_perpsq_gk(:,:,1)
   write (1,'(e16.8)') grad_perpsq_gk(:,:,2)
   write (1,'(e16.8)') grad_perpsq_gk(:,:,3)
+
+  write (1,'(e16.8)') dchi(:,:)
+
+  write (1,'(e16.8)') b1(:,:)
   
   close(1)
   
