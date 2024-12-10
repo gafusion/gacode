@@ -91,7 +91,6 @@ subroutine le3_geometry_rho
         a21a(i,j) = (-2*c_m0+iota*x**2)/d0
         a21b(i,j) = x**2/d0
 
-
      enddo
   enddo
 
@@ -237,19 +236,25 @@ subroutine le3_geometry_rho
         !     -0.5*(eta-dchi(i,j)-chi1(i,j)*dthetap(i,j))
 
         b1(i,j) = 0.5/a12a(i,j)*(chi1(i,j)*iota_p*c_m0/d0+s1c(i,j)) &
-             -0.5*(eta-2*dchi(i,j)*chi1(i,j)-2*chi1(i,j)*dthetap(i,j))
+             -0.5*(eta-2.0*dchi(i,j)*chi1(i,j)-2.0*chi1(i,j)*dthetap(i,j))
 
-        if(j == 1) then
-           if (i == 1) then
-              print *, t(i), tb(i,j)
-              print *, b1(i,j)
-              print *, 0.5/a12a(i,j)*(chi1(i,j)*iota_p*c_m0/d0)
-              print *, 0.5/a12a(i,j)*s1c(i,j)
-              print *, eta
-              print *, d0
-              print *, chi1(i,j), dchi(i,j), dthetap(i,j)
-           endif
-        endif
+        print *, dchi(i,j)+dthetap(i,j), &
+             -iota*(c_m0/c_n0)*dchi(i,j) - 1.0/(chi1(i,j)*c_n0)*(c_dn + iota*c_dm), &
+             chi1(i,j), eta
+        
+        !if(j == 1) then
+        !   if (i == 1) then
+        !      print *, t(i), tb(i,j)
+        !      print *, b1(i,j)
+        !      print *, (r(i,j)*cosu(i,j) + iota**2*x**2/rc(i,j))/(r(i,j)**2 + iota**2 * x**2)
+        !      print *, rc(i,j), rmin
+        !print *, b1(i,j), &
+        !     -eta + 0.5*chi1(i,j)*(dchi(i,j)+dthetap(i,j)) &
+        !     + (r(i,j)*cosu(i,j) + iota**2*x**2/rc(i,j)&
+        !     + chi1(i,j)*iota_p*iota*x**2) &
+        !     /(r(i,j)**2 + iota**2 * x**2)
+        !   endif
+        !endif
         
         ! g_cp + i g_ct
         gc(i,j) = ysinuv/chi1(i,j)-c_m0*dtheta(i,j)

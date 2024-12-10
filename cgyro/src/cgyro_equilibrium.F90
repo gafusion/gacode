@@ -217,6 +217,8 @@ subroutine cgyro_equilibrium
   write (1,'(e16.8)') geo_grad_r(:)**2
   write (1,'(e16.8)') geo_gq(:)**2 * (1.0+geo_captheta(:)**2)
   write (1,'(e16.8)') 2.0*geo_grad_r(:)*geo_gq(:)*geo_captheta(:)
+  write (1,'(e16.8)') geo_chi2(:)
+  write (1,'(e16.8)') -(geo_gcos1(:) + geo_gcos2(:))/rmaj
   close(1)
 
   do it=1,n_theta
