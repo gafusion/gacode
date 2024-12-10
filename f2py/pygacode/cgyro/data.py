@@ -98,7 +98,6 @@ class cgyrodata:
             print('INFO: (data.py) Read data in '+fmt+'.cgyro.freq. '+t) 
       #-----------------------------------------------------------------
 
-      
       #-----------------------------------------------------------------
       # Ballooning potentials
       #

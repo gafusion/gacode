@@ -19,7 +19,7 @@ class cgyrodata_dump(data.cgyrodata):
       for moment in ['n','e','v']:
          if moment == 'n':
             ntag = 'Density~flux'
-            mtag = '\Gamma'
+            mtag = r'\Gamma'
             ttag = 'G'
             ftag = 'flux_n'
             y = ys[:,0,:]
@@ -31,7 +31,7 @@ class cgyrodata_dump(data.cgyrodata):
             y = ys[:,1,:]
          elif moment == 'v':
             ntag = 'Momentum~flux'
-            mtag = '\Pi'
+            mtag = r'\Pi'
             ttag = 'Pi'
             ftag = 'flux_v'
             y = ys[:,2,:]
@@ -61,18 +61,18 @@ class cgyrodata_dump(data.cgyrodata):
       ky  = self.ky
       ave = np.zeros((self.n_n,ns))
 
-      field_tag = '\mathrm{Total}'
+      field_tag = r'\mathrm{Total}'
 
       if fc == 0:
          ys = np.sum(self.ky_flux,axis=2)
       else:
          ys = self.ky_flux[:,:,field,:,:]
          if field == 0:
-            field_tag = '\phi'
+            field_tag = r'\phi'
          elif field == 1:
-            field_tag = 'A_\parallel'
+            field_tag = r'A_\parallel'
          else:
-            field_tag = 'B_\parallel'
+            field_tag = r'B_\parallel'
 
       if moment == 'e' or moment == 'phi':
          ntag = 'Energy~flux'
@@ -82,13 +82,13 @@ class cgyrodata_dump(data.cgyrodata):
          y = ys[:,1,:,:]
       elif moment == 'n':
          ntag = 'Density~flux'
-         mtag = '\Gamma'
+         mtag = r'\Gamma'
          ttag = 'G'
          ftag = 'flux_n'
          y = ys[:,0,:,:]
       elif moment == 'v':
          ntag = 'Momentum~flux'
-         mtag = '\Pi'
+         mtag = r'\Pi'
          ttag = 'Pi'
          ftag = 'flux_v'
          y = ys[:,2,:,:]
