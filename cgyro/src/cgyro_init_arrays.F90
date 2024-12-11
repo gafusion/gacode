@@ -475,6 +475,7 @@ subroutine cgyro_init_arrays
 
            ! generalized beta/drift shear (acts on H)
            sb = -sbeta(is)*energy(ie)*xi(ix)**2/bmag(it)**3
+           sb = sbeta(is)
 
            arg = k_theta_base*itor*length/(2*pi)
 
