@@ -40,6 +40,10 @@ subroutine le3_geometry_rho
   allocate(a21a(nt,np))
   allocate(a21b(nt,np))
 
+  allocate(b1_temp1(nt,np))
+  allocate(b1_temp2(nt,np))
+  allocate(b1_temp3(nt,np))
+
   ! Global second order quantities
   allocate(dtheta(nt,np))
   allocate(dchi(nt,np))
@@ -236,14 +240,23 @@ subroutine le3_geometry_rho
         !     -0.5*(eta-dchi(i,j)-chi1(i,j)*dthetap(i,j))
 
         b1(i,j) = 0.5/a12a(i,j)*(chi1(i,j)*iota_p*c_m0/d0+s1c(i,j)) &
-             -0.5*(eta-2.0*dchi(i,j)*chi1(i,j)-2.0*chi1(i,j)*dthetap(i,j))
+             -0.5*(eta-2*dchi(i,j)*chi1(i,j)-2*chi1(i,j)*dthetap(i,j))
 
-        print *, dchi(i,j)+dthetap(i,j), &
-             -iota*(c_m0/c_n0)*dchi(i,j) - 1.0/(chi1(i,j)*c_n0)*(c_dn + iota*c_dm), &
-             chi1(i,j), eta
+        !print *, chi1(i,j)*(dchi(i,j)+dthetap(i,j)), &
+        !     -chi1(i,j)*iota**2 *x**2/r(i,j)**2 * dchi(i,j) &
+        !     - 1.0/(r(i,j)**2)*(c_dn + iota*c_dm), &
+        !     chi1(i,j)*(dchi(i,j)+dthetap(i,j))+c_dn/c_n0, &
+        !     rc(i,j),x**2
+        !     chi1(i,j), eta
+        print *, t(i), c_n0/d0
+
+        b1_temp1(i,j) = eta
+        b1_temp2(i,j) = 1.0/a12a(i,j)*(chi1(i,j)*iota_p*c_m0/d0)
+        b1_temp3(i,j) = 1.0/a12a(i,j)*s1c(i,j)
         
         !if(j == 1) then
         !   if (i == 1) then
+        !      print *, chi1(i,j), d0
         !      print *, t(i), tb(i,j)
         !      print *, b1(i,j)
         !      print *, (r(i,j)*cosu(i,j) + iota**2*x**2/rc(i,j))/(r(i,j)**2 + iota**2 * x**2)
