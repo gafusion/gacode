@@ -490,9 +490,21 @@ subroutine le3_geometry_matrix
   write (1,'(e16.8)') grad_perpsq_gk(:,:,2)
   write (1,'(e16.8)') grad_perpsq_gk(:,:,3)
 
+  write (1,'(e16.8)') b1(:,:)
+
   write (1,'(e16.8)') dchi(:,:)
 
-  write (1,'(e16.8)') b1(:,:)
+  write (1,'(e16.8)') dthetap(:,:)
+
+  write (1,'(e16.8)') chi1(:,:)
+
+  write (1,'(e16.8)') b1_temp1(:,:)
+
+  write (1,'(e16.8)') b1_temp2(:,:)
+
+  write (1,'(e16.8)') b1_temp3(:,:)
+
+  write (1,'(e16.8)') dtheta(:,:)
   
   close(1)
   

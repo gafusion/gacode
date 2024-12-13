@@ -204,6 +204,7 @@ subroutine cgyro_equilibrium
   !
 
   ! EAB LE3 test
+  print *, geo_f
   open(unit=1,file='out.cgyro.geogk',status='replace')
   write (1,'(i2)') n_theta
   write (1,'(e16.8)') theta(:)
