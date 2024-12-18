@@ -119,14 +119,13 @@ subroutine cgyro_write_timedata
            enddo
         enddo
 
+        a_norm = 1.0
         if (has_balloon) then
            !if (i_field == 1) then
            !   it = maxloc(abs(ftemp(:,n_radial/2+1)),dim=1)
            !   a_norm = ftemp(it,n_radial/2+1)
            !endif
            call extended_ang(ftemp)
-        else
-           a_norm = 1.0
         endif
 
         call write_binary(trim(path)//binfile_fieldb(i_field),&
