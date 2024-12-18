@@ -48,9 +48,9 @@ ovec = {}
 y = sim.kxky_phi[0,:,:,0,imin:imax]+1j*sim.kxky_phi[1,:,:,0,imin:imax]
 ovec['phi'],a0 = map1d(y,sim.q)
 y = sim.kxky_apar[0,:,:,0,imin:imax]+1j*sim.kxky_apar[1,:,:,0,imin:imax]
-ovec['apar'],a0 = map1d(y,sim.q)
+ovec['apar'],a1 = map1d(y,sim.q)
 y = sim.kxky_bpar[0,:,:,0,imin:imax]+1j*sim.kxky_bpar[1,:,:,0,imin:imax]
-ovec['bpar'],a0 = map1d(y,sim.q)
+ovec['bpar'],a2 = map1d(y,sim.q)
 
 # step for DMD
 dt = k*(t[1]-t[0])
@@ -107,14 +107,14 @@ ax.grid(which="major",ls=":")
 
 # symbols
 args = {}
-args['phi']  = {'color':'r','marker':'o'}
+args['phi']  = {'color':'r','marker':'o','facecolors':'none'}
 args['apar'] = {'color':'b','marker':'s','facecolors':'none'}
 args['bpar'] = {'color':'k','marker':'+'}
 
 #for x in ostr:
 #    ax.scatter(evec[x].real,evec[x].imag,s=60,**args[x])
 for x in ostr:
-    ax.scatter(evec[x].real,evec[x].imag,s=60,**args[x],alpha=0.2)
+    ax.scatter(evec[x].real,evec[x].imag,s=60,**args[x],alpha=0.15)
 
 print('-----------------------------------------------')
 print('tmax = {}'.format(t[imax-1]))
@@ -129,36 +129,114 @@ for v in m01:
             e0 = (zvec[0,i]+zvec[1,j]+zvec[2,k])/3 
             err = abs(zvec[0,i]-e0)+abs(zvec[1,j]-e0)+abs(zvec[2,k]-e0)
             print("gamma = {:.3f} omega = {:+.3f} | err = {:.3e}".format(e0.imag,e0.real,err))
-            ax.scatter(e0.real,e0.imag,s=60)
+            ax.scatter(zvec[0,i].real,zvec[0,i].imag,s=60,**args['phi'])
+            ax.scatter(zvec[1,j].real,zvec[1,j].imag,s=60,**args['apar'])
+            ax.scatter(zvec[2,k].real,zvec[2,k].imag,s=60,**args['bpar'])
+
             freqs.append(e0)
             field.append(mvec[:,:,i]) 
 
-n = len(freqs)
-# theta_* = 0
-p0 = n_radial//2*n_theta+n_theta//2
-a0 = np.zeros(n,dtype=complex)
-
-#ax.set_xlim([-1.2,1.2])
-#ax.set_ylim([-0.2,0.5])
+ax.set_xlim([-1.2,1.2])
+ax.set_ylim([-0.2,0.5])
 
 plt.tight_layout()
 plt.show()
 
-fig = plt.figure(figsize=(10,8))
-ax = fig.add_subplot(111)
-for i in range(n):
-    a0[i] = field[i][0,p0]
-    ax.plot(np.real(field[i][0,:]/a0[i]))
-plt.show()
+#-------------------------------------------------------------
+dtheta = 2*np.pi/n_theta
+thetab = np.arange(n_theta*n_radial)*dtheta-(n_radial+1)*np.pi
+x = thetab/np.pi
+p0 = n_radial//2*n_theta+n_theta//2
+rc('font',size=16)
 
+#-------------------------------------------------------------
+# PHI
 fig = plt.figure(figsize=(10,8))
-ax = fig.add_subplot(111)
-for i in range(n):
-    ax.plot(np.real(field[i][1,:]/a0[i]))
-plt.show()
+ax1 = fig.add_subplot(221)
+ax1.set_xlabel(r"$\theta$")
+ax1.set_ylabel(r"$\phi$")
+ax1.grid(which="both",ls=":")
+ax1.grid(which="major",ls=":")
 
-fig = plt.figure(figsize=(10,8))
-ax = fig.add_subplot(111)
-for i in range(n):
-    ax.plot(np.real(field[i][2,:]/a0[i]))
-plt.show()
+# plot initial-value 
+a00 = a0[-1]
+yr = np.real(ovec['phi'][:,-1]/a00)
+yi = np.imag(ovec['phi'][:,-1]/a00)
+ax1.plot(x,yr,color='k',linewidth=3,alpha=0.2)
+ax1.plot(x,yi,color='r',linewidth=3,alpha=0.2)
+
+# plot DMD 
+a0d = field[0][0,p0]
+
+yr = np.real(field[0][0,:]/a0d)
+yi = np.imag(field[0][0,:]/a0d)
+ax1.plot(x,yr,color='k',linewidth=1)
+ax1.plot(x,yi,color='r',linewidth=1)
+
+#plt.savefig('dmd_phi_0.png')
+
+#-------------------------------------------------------------
+# APAR
+#fig = plt.figure(figsize=(10,8))
+ax2 = fig.add_subplot(222)
+ax2.set_xlabel(r"$\theta$")
+ax2.set_ylabel(r"$A_\parallel$")
+ax2.grid(which="both",ls=":")
+ax2.grid(which="major",ls=":")
+
+# initial-value
+a00 = ovec['apar'][n_radial*n_theta//3,-1]
+yr = np.real(ovec['apar'][:,-1]/a00) 
+yi = np.imag(ovec['apar'][:,-1]/a00)
+ax2.plot(x,yr,color='k',linewidth=3,alpha=0.2)
+ax2.plot(x,yi,color='r',linewidth=3,alpha=0.2)
+
+# DMD 
+a0d = field[0][1,n_radial*n_theta//3] 
+yr = np.real(field[0][1,:]/a0d) 
+yi = np.imag(field[0][1,:]/a0d)
+ax2.plot(x,yr,color='k',linewidth=1)
+ax2.plot(x,yi,color='r',linewidth=1)
+
+#plt.savefig('dmd_apar_0.png')
+
+#-------------------------------------------------------------
+# PHI
+#fig = plt.figure(figsize=(10,8))
+ax3 = fig.add_subplot(223)
+ax3.set_xlabel(r"$\theta$")
+ax3.set_ylabel(r"$\phi$")
+ax3.grid(which="both",ls=":")
+ax3.grid(which="major",ls=":")
+
+# plot DMD 
+a0d = field[1][0,p0]
+
+yr = np.real(field[1][0,:]/a0d)
+yi = np.imag(field[1][0,:]/a0d)
+ax3.plot(x,yr,color='k',linewidth=1)
+ax3.plot(x,yi,color='r',linewidth=1)
+
+#plt.savefig('dmd_phi_1.png')
+
+#-------------------------------------------------------------
+# APAR
+
+#fig = plt.figure(figsize=(10,8))
+ax4 = fig.add_subplot(224)
+ax4.set_xlabel(r"$\theta$")
+ax4.set_ylabel(r"$A_\parallel$")
+ax4.grid(which="both",ls=":")
+ax4.grid(which="major",ls=":")
+
+# DMD 
+a0d = field[1][1,n_radial*n_theta//3] 
+yr = np.real(field[1][1,:]/a0d) 
+yi = np.imag(field[1][1,:]/a0d)
+ax4.plot(x,yr,color='k',linewidth=1)
+ax4.plot(x,yi,color='r',linewidth=1)
+
+#plt.savefig('dmd_apar_1.png')
+plt.savefig('dmd_modes.png')
+
+print('Wrote eigenmodes to dmd_modes.png')
