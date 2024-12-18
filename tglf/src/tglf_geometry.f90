@@ -1376,17 +1376,17 @@ SUBROUTINE miller_geo
   !
   theta = 0.0
   arg_r = theta + shape_cos0_loc + &
-  shape_cos1_loc*cos(theta) + &
+  shape_cos1_loc*cos(theta)   + &
   shape_cos2_loc*cos(2*theta) + &
   shape_cos3_loc*cos(3*theta) + &
   shape_cos4_loc*cos(4*theta) + &
   shape_cos5_loc*cos(5*theta) + &
   shape_cos6_loc*cos(6*theta) + &
-  x_delta*sin(theta)- &
-  zeta_loc*sin(2*theta) + &
-  shape_sin3_loc*sin(3*theta) +&
+  x_delta*sin(theta)          - &
+  zeta_loc*sin(2*theta)       + &
+  shape_sin3_loc*sin(3*theta) + &
   shape_sin4_loc*sin(4*theta) + &
-  shape_sin5_loc*sin(5*theta) +&
+  shape_sin5_loc*sin(5*theta) + &
   shape_sin6_loc*sin(6*theta)
    
   darg_r = 1 - shape_cos1_loc*sin(theta) - &
@@ -1395,8 +1395,8 @@ SUBROUTINE miller_geo
   4*shape_cos4_loc*sin(4*theta) - &
   5*shape_cos5_loc*sin(5*theta) - &
   6*shape_cos6_loc*sin(6*theta) + &
-  x_delta*cos(theta)-&
-  2*zeta_loc*cos(2*theta) + &
+  x_delta*cos(theta)            - &
+  2*zeta_loc*cos(2*theta)       + &
   3*shape_sin3_loc*cos(3*theta) + &
   4*shape_sin4_loc*cos(4*theta) + &
   5*shape_sin5_loc*cos(5*theta) + &
@@ -1424,17 +1424,17 @@ SUBROUTINE miller_geo
      endif
      ! write(*,*)"theta = ",theta,"dtheta=",dtheta
      arg_r = theta + shape_cos0_loc + &
-     shape_cos1_loc*cos(theta) + &
+     shape_cos1_loc*cos(theta)   + &
      shape_cos2_loc*cos(2*theta) + &
      shape_cos3_loc*cos(3*theta) + &
      shape_cos4_loc*cos(4*theta) + &
      shape_cos5_loc*cos(5*theta) + &
      shape_cos6_loc*cos(6*theta) + &
-     x_delta*sin(theta)- &
-     zeta_loc*sin(2*theta) + &
-     shape_sin3_loc*sin(3*theta) +&
+     x_delta*sin(theta)          - &
+     zeta_loc*sin(2*theta)       + &
+     shape_sin3_loc*sin(3*theta) + &
      shape_sin4_loc*sin(4*theta) + &
-     shape_sin5_loc*sin(5*theta) +&
+     shape_sin5_loc*sin(5*theta) + &
      shape_sin6_loc*sin(6*theta)
   
      ! d(arg_r)/dtheta
@@ -1444,8 +1444,8 @@ SUBROUTINE miller_geo
      4*shape_cos4_loc*sin(4*theta) - &
      5*shape_cos5_loc*sin(5*theta) - &
      6*shape_cos6_loc*sin(6*theta) + &
-     x_delta*cos(theta)-&
-     2*zeta_loc*cos(2*theta) + &
+     x_delta*cos(theta)            - &
+     2*zeta_loc*cos(2*theta)       + &
      3*shape_sin3_loc*cos(3*theta) + &
      4*shape_sin4_loc*cos(4*theta) + &
      5*shape_sin5_loc*cos(5*theta) + &
@@ -1484,17 +1484,17 @@ SUBROUTINE miller_geo
   ! make a first guess based on theta=0.0
   theta=0.0
   arg_r = theta + shape_cos0_loc + &
-  shape_cos1_loc*cos(theta) + &
+  shape_cos1_loc*cos(theta)   + &
   shape_cos2_loc*cos(2*theta) + &
   shape_cos3_loc*cos(3*theta) + &
   shape_cos4_loc*cos(4*theta) + &
   shape_cos5_loc*cos(5*theta) + &
   shape_cos6_loc*cos(6*theta) + &
-  x_delta*sin(theta)- &
-  zeta_loc*sin(2*theta) + &
-  shape_sin3_loc*sin(3*theta) +&
+  x_delta*sin(theta)          - &
+  zeta_loc*sin(2*theta)       + &
+  shape_sin3_loc*sin(3*theta) + &
   shape_sin4_loc*sin(4*theta) + &
-  shape_sin5_loc*sin(5*theta) +&
+  shape_sin5_loc*sin(5*theta) + &
   shape_sin6_loc*sin(6*theta)
   darg_r = 1 - shape_cos1_loc*sin(theta) - &
   2*shape_cos2_loc*sin(2*theta) - &
@@ -1502,8 +1502,8 @@ SUBROUTINE miller_geo
   4*shape_cos4_loc*sin(4*theta) - &
   5*shape_cos5_loc*sin(5*theta) - &
   6*shape_cos6_loc*sin(6*theta) + &
-  x_delta*cos(theta)-&
-  2*zeta_loc*cos(2*theta) + &
+  x_delta*cos(theta)            - &
+  2*zeta_loc*cos(2*theta)       + &
   3*shape_sin3_loc*cos(3*theta) + &
   4*shape_sin4_loc*cos(4*theta) + &
   5*shape_sin5_loc*cos(5*theta) + &
@@ -1519,15 +1519,15 @@ SUBROUTINE miller_geo
   !
   do m=1,ms
      arg_r = theta + shape_cos0_loc + &
-     shape_cos1_loc*cos(theta) + &
+     shape_cos1_loc*cos(theta)   + &
      shape_cos2_loc*cos(2*theta) + &
      shape_cos3_loc*cos(3*theta) + &
      shape_cos4_loc*cos(4*theta) + &
      shape_cos5_loc*cos(5*theta) + &
      shape_cos6_loc*cos(6*theta) + &
-     x_delta*sin(theta)- &
-     zeta_loc*sin(2*theta) + &
-     shape_sin3_loc*sin(3*theta) +&
+     x_delta*sin(theta)          - &
+     zeta_loc*sin(2*theta)       + &
+     shape_sin3_loc*sin(3*theta) + &
      shape_sin4_loc*sin(4*theta) + &
      shape_sin5_loc*sin(5*theta) +&
      shape_sin6_loc*sin(6*theta)
@@ -1537,8 +1537,8 @@ SUBROUTINE miller_geo
      4*shape_cos4_loc*sin(4*theta) - &
      5*shape_cos5_loc*sin(5*theta) - &
      6*shape_cos6_loc*sin(6*theta) + &
-     x_delta*cos(theta)-&
-     2*zeta_loc*cos(2*theta) + &
+     x_delta*cos(theta)            - &
+     2*zeta_loc*cos(2*theta)       + &
      3*shape_sin3_loc*cos(3*theta) + &
      4*shape_sin4_loc*cos(4*theta) + &
      5*shape_sin5_loc*cos(5*theta) + &
@@ -1589,15 +1589,15 @@ SUBROUTINE miller_geo
 
      theta = t_s(m)
      arg_r = theta + shape_cos0_loc + &
-     shape_cos1_loc*cos(theta) + &
+     shape_cos1_loc*cos(theta)   + &
      shape_cos2_loc*cos(2*theta) + &
      shape_cos3_loc*cos(3*theta) + &
      shape_cos4_loc*cos(4*theta) + &
      shape_cos5_loc*cos(5*theta) + &
      shape_cos6_loc*cos(6*theta) + &
-     x_delta*sin(theta)- &
-     zeta_loc*sin(2*theta) + &
-     shape_sin3_loc*sin(3*theta) +&
+     x_delta*sin(theta)          - &
+     zeta_loc*sin(2*theta)       + &
+     shape_sin3_loc*sin(3*theta) + &
      shape_sin4_loc*sin(4*theta) + &
      shape_sin5_loc*sin(5*theta) +&
      shape_sin6_loc*sin(6*theta)
@@ -1607,8 +1607,8 @@ SUBROUTINE miller_geo
      4*shape_cos4_loc*sin(4*theta) - &
      5*shape_cos5_loc*sin(5*theta) - &
      6*shape_cos6_loc*sin(6*theta) + &
-     x_delta*cos(theta)-&
-     2*zeta_loc*cos(2*theta) + &
+     x_delta*cos(theta)            - &
+     2*zeta_loc*cos(2*theta)       + &
      3*shape_sin3_loc*cos(3*theta) + &
      4*shape_sin4_loc*cos(4*theta) + &
      5*shape_sin5_loc*cos(5*theta) + &
@@ -1635,14 +1635,14 @@ SUBROUTINE miller_geo
      ! dZ/dr
      R_r = drmajdx_loc + drmindx_loc*cos(arg_r) &
           -sin(arg_r)*(shape_s_cos0_loc + &
-          shape_s_cos1_loc*cos(theta) + &
+          shape_s_cos1_loc*cos(theta)   + &
           shape_s_cos2_loc*cos(2*theta) + &
           shape_s_cos3_loc*cos(3*theta) + &
           shape_s_cos4_loc*cos(4*theta) + &
           shape_s_cos5_loc*cos(5*theta) + &
           shape_s_cos6_loc*cos(6*theta) + &
           s_delta_loc*sin(theta)/cos(x_delta) - &
-          s_zeta_loc*sin(2*theta) + &
+          s_zeta_loc*sin(2*theta)       + &
           shape_s_sin3_loc*sin(3*theta) + &
           shape_s_sin4_loc*sin(4*theta) + &
           shape_s_sin5_loc*sin(5*theta) + &
@@ -2011,17 +2011,6 @@ SUBROUTINE ELITE_geo
   rmin_input = (Rmax-Rmin)/2.0
   Rmaj_input = (Rmax+Rmin)/2.0
 
-  !
-  ! find the major and minor radius at Z0
-  !
-  ! signdZ=1.0
-  ! if(Z_ELITE(0).lt.Z)signZ=-1.0
-  !
-  ! i1 = 0
-  ! do i=0,n_ELITE
-  ! if(Z_ELITE
-  !
-  ! enddo
   !
   ! find maximum of quardratic fit through R(e): R(e) = a + b e + c e^2
   !

@@ -633,7 +633,7 @@ SUBROUTINE put_ELITE_geometry(nc,q,q_prime,p_prime,r_c,z_c,bp_c)
   !
   ! set geometry type flag for ELITE
   !
-  igeo = 2
+  igeo = 3
   !
   ! set flow control switch
   !
