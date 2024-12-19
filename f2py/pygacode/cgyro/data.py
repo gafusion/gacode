@@ -7,7 +7,7 @@ try:
 except:
    from ..gacodefuncs import *
    
-BYTE='float32'
+BYTE='float'
 
 # class to read cgyro output data
 class cgyrodata:
@@ -106,19 +106,22 @@ class cgyrodata:
       t,fmt,data = self.extract(f)
       if fmt != 'null':
          self.phib = np.reshape(data[0:nd],(2,self.n_theta*self.n_radial,nt),'F')
-         print('INFO: (data.py) Read data in '+fmt+f+'  '+t)
+         if not self.silent:
+            print('INFO: (data.py) Read data in '+fmt+f+'  '+t)
 
       f='.cgyro.aparb'
       t,fmt,data = self.extract(f)
       if fmt != 'null':
          self.aparb = np.reshape(data[0:nd],(2,self.n_theta*self.n_radial,nt),'F')
-         print('INFO: (data.py) Read data in '+fmt+f+' '+t)
+         if not self.silent:
+            print('INFO: (data.py) Read data in '+fmt+f+' '+t)
 
       f='.cgyro.bparb'
       t,fmt,data = self.extract(f)
       if fmt != 'null':
          self.bparb = np.reshape(data[0:nd],(2,self.n_theta*self.n_radial,nt),'F')
-         print('INFO: (data.py) Read data in '+fmt+f+' '+t)
+         if not self.silent:
+            print('INFO: (data.py) Read data in '+fmt+f+' '+t)
       #-----------------------------------------------------------------
 
       #-----------------------------------------------------------------
@@ -128,7 +131,8 @@ class cgyrodata:
       if fmt != 'null':
          self.hb = np.reshape(data,(2,self.n_radial*self.n_theta,
                                     self.n_species,self.n_xi,self.n_energy,nt),'F')
-         print('INFO: (data.py) Read data in '+fmt+'.cgyro.hb. '+t) 
+         if not self.silent:
+            print('INFO: (data.py) Read data in '+fmt+'.cgyro.hb. '+t) 
          self.hb = self.hb/np.max(self.hb)
       #-----------------------------------------------------------------
 
@@ -265,43 +269,49 @@ class cgyrodata:
       # 1a. kxky_phi
       t,fmt,data = self.extract('.cgyro.kxky_phi')
       if fmt != 'null':
-         print('INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_phi. '+t)
          self.kxky_phi = np.reshape(data[0:nd],(2,self.n_radial,self.theta_plot,self.n_n,nt),'F')
+         if not self.silent:
+            print('INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_phi. '+t)
 
       # 1b. kxky_apar
       t,fmt,data = self.extract('.cgyro.kxky_apar')
       if fmt != 'null':
-         print('INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_apar. '+t)
-         self.kxky_apar = np.reshape(data[0:nd],(2,self.n_radial,self.theta_plot,self.n_n,nt),'F')
-
+        self.kxky_apar = np.reshape(data[0:nd],(2,self.n_radial,self.theta_plot,self.n_n,nt),'F')
+        if not self.silent:
+           print('INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_apar. '+t)
+ 
       # 1c. kxky_bpar
       t,fmt,data = self.extract('.cgyro.kxky_bpar')
       if fmt != 'null':
-         print('INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_bpar. '+t)
          self.kxky_bpar = np.reshape(data[0:nd],(2,self.n_radial,self.theta_plot,self.n_n,nt),'F')
+         if not self.silent:
+            print('INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_bpar. '+t)
 
       # 2. kxky_n
       nd = 2*self.n_radial*self.theta_plot*self.n_species*self.n_n*nt
 
       t,fmt,data = self.extract('.cgyro.kxky_n')
       if fmt != 'null':
-         print('INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_n.   '+t)
          self.kxky_n = np.reshape(data[0:nd],(2,self.n_radial,self.theta_plot,self.n_species,self.n_n,nt),'F')
+         if not self.silent:
+            print('INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_n.   '+t)
 
       # 3. kxky_e
       t,fmt,data = self.extract('.cgyro.kxky_e')
 
       if fmt != 'null':
-         print('INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_e.   '+t)
          self.kxky_e = np.reshape(data[0:nd],(2,self.n_radial,self.theta_plot,self.n_species,self.n_n,nt),'F')
+         if not self.silent:
+            print('INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_e.   '+t)
 
       # 4. kxky_e
       t,fmt,data = self.extract('.cgyro.kxky_v')
 
       if fmt != 'null':
-         print('INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_v.   '+t)
-         self.kxky_v = np.reshape(data[0:nd],(2,self.n_radial,self.theta_plot,self.n_species,self.n_n,nt),'F')
-      #-----------------------------------------------------------------
+        self.kxky_v = np.reshape(data[0:nd],(2,self.n_radial,self.theta_plot,self.n_species,self.n_n,nt),'F')
+        if not self.silent:
+           print('INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_v.   '+t)
+       #-----------------------------------------------------------------
 
    def getgeo(self):
 

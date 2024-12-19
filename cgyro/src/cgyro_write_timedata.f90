@@ -856,7 +856,7 @@ subroutine write_binary(datafile,fn,n_fn)
 
      open(unit=io,file=datafile,status='old',position='append',access='stream')
 
-     write(io) cmplx(fn,kind=4)
+     write(io) cmplx(fn,kind=BYTE)
      close(io)
 
   case (3)
