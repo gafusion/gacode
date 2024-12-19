@@ -14,6 +14,7 @@ subroutine le3_geometry_rho
   real :: ysinuv
   real :: up,pp,pt
   real :: d0,eta
+  real :: sum1, sum2, sum3, sum4
 
   real, dimension(:,:), allocatable :: s1a,s1b, s1c
   real, dimension(:,:), allocatable :: s2a,s2b
@@ -236,19 +237,15 @@ subroutine le3_geometry_rho
         !-------------------------------------------------------------
 
         ! B1/Bs
-        !b1(i,j) = 0.5*chi1(i,j)/a12a(i,j)*(iota_p*c_m0/d0+s1a(i,j)) &
-        !     -0.5*(eta-dchi(i,j)-chi1(i,j)*dthetap(i,j))
 
-        b1(i,j) = 0.5/a12a(i,j)*(chi1(i,j)*iota_p*c_m0/d0+s1c(i,j)) &
-             -0.5*(eta-2*dchi(i,j)*chi1(i,j)-2*chi1(i,j)*dthetap(i,j))
+        !b1(i,j) = 0.5/a12a(i,j)*(chi1(i,j)*iota_p*c_m0/d0+s1c(i,j)) &
+        !     -0.5*(eta-2.0*dchi(i,j)*chi1(i,j)-2.0*chi1(i,j)*dthetap(i,j))
 
-        !print *, chi1(i,j)*(dchi(i,j)+dthetap(i,j)), &
-        !     -chi1(i,j)*iota**2 *x**2/r(i,j)**2 * dchi(i,j) &
-        !     - 1.0/(r(i,j)**2)*(c_dn + iota*c_dm), &
-        !     chi1(i,j)*(dchi(i,j)+dthetap(i,j))+c_dn/c_n0, &
-        !     rc(i,j),x**2
-        !     chi1(i,j), eta
-        print *, t(i), c_n0/d0
+        ! EAB temp
+        b1(i,j) = -eta+chi1(i,j)*(dchi(i,j)+dthetap(i,j)) &
+             + 1.0/(c_n0 + iota*c_m0) * (r(i,j)*cosu(i,j) &
+             + iota**2 * x**2 * (1.0/rc(i,j)- chi1(i,j)*dthetap(i,j)) &
+             + chi1(i,j)*iota*iota_p*x**2)
 
         b1_temp1(i,j) = eta
         b1_temp2(i,j) = 1.0/a12a(i,j)*(chi1(i,j)*iota_p*c_m0/d0)
@@ -284,6 +281,36 @@ subroutine le3_geometry_rho
      enddo
   enddo
 
+  j=1
+  sum1=0.0
+  sum2=0.0
+  sum3=0.0
+  sum4=0.0
+  do i=1,nt
+     sum4 = sum4 + (cos(tb(i,j)))/r(i,j)-1/rmin
+     sum1 = sum1 + cos(tb(i,j))/r(i,j)
+     sum2 = sum2 + 1/(r(i,j))*dtbdt(i,j)
+     sum3 = sum3 + dchi(i,j)
+  enddo
+  sum1 = sum1/nt
+  sum2 = sum2/nt
+  sum3 = sum3/nt
+  sum4 = sum4/nt
+  print *, (-rmin**2 * sum2**2 * chi1(i,1)*iota_p*iota &
+       -2*rmin**2 * sum2**2 *iota**2 * (-sum4)) &
+       / (1.0 + iota**2 * rmin**2 * sum2**2)
+  do i=1,nt
+     x = sqrt(gtt(i,j))
+        print *, b1(i,j), -1.0/(r(i,j)**2 + iota**2 * x**2) &
+             * (r(i,j)*cos(tb(i,j)) + iota**2*x**2/rmin &
+             + 0.0*2*iota**2 * x**2*(cos(tb(i,j))/r(i,j) - sum1))
+     !print *, chi1(i,j)*r(i,j)/x, r(i,j)/x/iota &
+     !     *(-1/rc(i,j)+cosu(i,j)/r(i,j)+chi1(i,j)*(dchi(i,j)+dthetap(i,j)))
+  enddo
+  !print *, chi1(i,1)*(1+iota**2 * gtt(i,1)/r(i,1)**2)*sum3, &
+  !     - sum1
+  !print *, sum4 - sum1/(1.0 + iota**2 * rmin**2 * sum2**2)
+  
   !--------------------------------------------------------------------
   ! Check with GEO result
   !
