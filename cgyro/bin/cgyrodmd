@@ -1,0 +1,290 @@
+#!/usr/bin/env python
+
+import os,sys
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import rc
+import argparse
+import textwrap
+from pydmd import DMD
+from cgyro.data import cgyrodata
+
+# Number of roots to test
+nmode = 16
+
+# Command line option parser
+def opts():
+
+    mytext = '''\
+    output:
+       NEED DOCUMENTATION HERE
+    '''
+
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawTextHelpFormatter,
+        prog = 'cgyrodmd',
+        description="CGYRO DMD utility",
+        epilog=textwrap.dedent(mytext))
+
+    parser.add_argument('-e',
+                        help="working directory (default: cwd)",
+                        type=str,
+                        default='.')
+    parser.add_argument('-tmax',
+                        help='Fraction of time samples to retain (default=1.0)',
+                        type=float,
+                        default=1.0)
+    parser.add_argument('-dt',
+                        help='Time sample spacing (default=1)',
+                        type=int,
+                        default=1)
+    parser.add_argument('-obs',
+                        help="Comma-separated list of 3 observables",
+                        type=str,
+                        default='phi,apar,bpar')
+    parser.add_argument('-tol',
+                        help='Root acceptance tolerance (default=0.005)',
+                        type=float,
+                        default=0.005)
+
+    args=parser.parse_args()
+
+    return args.e,args.tmax,args.dt,args.obs,args.tol
+
+# DMD utility: helper function for plotting
+def axishelp(ax,x,ylabel):
+    
+    ax.set_xlabel(r"$\theta_*$")
+    ax.set_ylabel(ylabel)
+    ax.grid(which="both",ls=":")
+    ax.grid(which="major",ls=":")
+
+    ax.set_xlim(-max(x),max(x))
+    return ax
+
+# DMD utility: Map from (kx,theta) to theta_* 
+def map1d(f2d,q):
+    nr    = f2d.shape[0]
+    nt    = f2d.shape[1]
+    ntime = f2d.shape[2]
+    px = np.arange(nr)-nr//2
+    f1d = np.zeros([nr,nt,ntime],dtype=complex)
+    anorm = f1d[nr//2,nt//2,:]
+
+    for ir in range(nr):
+        f1d[ir,:,:] = f2d[ir,:,:]*np.exp(-2*np.pi*1j*px[ir]*q)
+    f1d = f1d.reshape(nr*nt,ntime)
+
+    return f1d,anorm
+
+# DMD utility: downsample with averaging (eps is flatness)
+def downsample(f,n,eps=0.01):
+    npar = f.shape[0]
+    nave = f.shape[1]
+
+    # array end trim
+    m = (nave//n)*n
+
+    # downsample
+
+    u = np.linspace(-1,1,n)
+
+    w = 1/(1+eps*u*u)
+    w = w/np.sum(w)
+    
+    fdown = np.sum(f[:,:m].reshape(npar,-1,n)*w[None,None,:],axis=2)
+    return fdown
+
+#------------------------------------------------------------------------
+#
+mydir,tmax,k,obs,tol = opts()
+
+# process inputs
+mydir = mydir+'/'
+ostr  = obs.split(',')
+
+fdict = {'phi' :r'$\phi$',
+         'apar':r'$A_\parallel$',
+         'bpar':r'$B_\parallel$',
+         'ni':'$n_i$',
+         'ne':'$n_e$',
+         'vi':'$v_i$',
+         've':'$v_e$'}
+
+# symbols
+args = {}
+args[ostr[0]] = {'color':'r','marker':'o','facecolors':'none'}
+args[ostr[1]] = {'color':'b','marker':'s','facecolors':'none'}
+args[ostr[2]] = {'color':'k','marker':'+'}
+
+#---------------------------------------------------------------------------
+# COLLECT DATA
+sim = cgyrodata(mydir,silent=True)
+sim.getbigfield()
+
+t = sim.t
+n_radial  = sim.n_radial  
+n_theta   = sim.theta_plot
+n_species = sim.n_species
+
+# gacode utility for time indices
+imax = int(len(t)*tmax)
+
+# balloonings-space potentials
+# fields
+ovec = {}
+y = sim.kxky_phi[0,:,:,0,:imax]+1j*sim.kxky_phi[1,:,:,0,:imax]
+ovec['phi'],a0 = map1d(y,sim.q)
+y = sim.kxky_apar[0,:,:,0,:imax]+1j*sim.kxky_apar[1,:,:,0,:imax]
+ovec['apar'],a0 = map1d(y,sim.q)
+y = sim.kxky_bpar[0,:,:,0,:imax]+1j*sim.kxky_bpar[1,:,:,0,:imax]
+ovec['bpar'],a0 = map1d(y,sim.q)
+# moments
+y = sim.kxky_n[0,:,:,0,0,:imax]+1j*sim.kxky_n[1,:,:,0,0,:imax]
+ovec['ni'],a0 = map1d(y,sim.q)
+y = sim.kxky_n[0,:,:,1,0,:imax]+1j*sim.kxky_n[1,:,:,1,0,:imax]
+ovec['ne'],a0 = map1d(y,sim.q)
+y = sim.kxky_v[0,:,:,0,0,:imax]+1j*sim.kxky_v[1,:,:,0,0,:imax]
+ovec['vi'],a0 = map1d(y,sim.q)
+y = sim.kxky_v[0,:,:,1,0,:imax]+1j*sim.kxky_v[1,:,:,1,0,:imax]
+ovec['ve'],a0 = map1d(y,sim.q)
+
+# step for DMD
+dt = k*(t[1]-t[0])
+
+#---------------------------------------------------------------------------
+# RUN DMD
+dmd = DMD(svd_rank=0,exact=True,sorted_eigs='abs')
+
+evec = {}
+modes = {}
+for x in ostr:
+    down = downsample(ovec[x],k) 
+    dmd.fit(down)
+    evec[x] = 1j*np.log(dmd.eigs)/dt
+    modes[x] = dmd.modes
+
+# determine most unstable modes (zvec)
+
+zvec = np.zeros([3,nmode],dtype=complex)
+mvec = np.zeros([3,n_radial*n_theta,nmode],dtype=complex)
+for i,x in enumerate(ostr):
+    z  = evec[x] 
+    zi = z.imag
+    k = np.flip(np.argsort(zi))
+    zvec[i,:] = z[k[:nmode]]
+    mvec[i,:,:] = modes[x][:,k[:nmode]]
+
+# find true eigenmodes and compute errors
+
+m01 = []
+m02 = []
+for i in range(nmode):
+    for j in range(nmode):
+        em = abs(zvec[0,i]-zvec[1,j])
+        en = abs(zvec[0,i]-zvec[2,j])
+        if em < tol:
+            m01.append([i,j])
+        if en < tol:
+            m02.append([i,j])
+
+#---------------------------------------------------------------------------
+# PLOTTING
+
+print('---------------------- CGYRO-DMD ------------------------------')
+print('tmax = {} a/cs'.format(t[imax-1]))
+print('dt   = {} a/cs'.format(dt))
+print('observables = '+obs)
+print()
+
+rc('font',size=20)
+rc('text',usetex=True)
+
+fig = plt.figure(figsize=(10,8))
+ax = fig.add_subplot(111)
+
+ax.set_xlabel(r"$(a/c_s)\,\omega$")
+ax.set_ylabel(r"$(a/c_s)\,\gamma$")
+ax.grid(which="both",ls=":")
+ax.grid(which="major",ls=":")
+
+for x in ostr:
+    ax.scatter(evec[x].real,evec[x].imag,s=60,**args[x],alpha=0.15)
+
+freqs = []
+field = []
+haslabel = False
+for v in m01:
+    for w in m02:
+        if v[0] == w[0]:
+            i0 = v[0] ; i1 = v[1] ; i2 = w[1]
+            rvec = np.array([i0,i1,i2])
+            e0 = (zvec[0,i0]+zvec[1,i1]+zvec[2,i2])/3 
+            err = abs(zvec[0,i1]-e0)+abs(zvec[1,i1]-e0)+abs(zvec[2,i2]-e0)
+            print("gamma = {:+.3f} omega = {:+.3f} | err = {:.3e}".format(e0.imag,e0.real,err))
+            for i,x in enumerate(ostr):
+                if haslabel:
+                    ax.scatter(zvec[i,rvec[i]].real,zvec[i,rvec[i]].imag,s=60,**args[x])
+                else:
+                    ax.scatter(zvec[i,rvec[i]].real,zvec[i,rvec[i]].imag,s=60,**args[x],label=fdict[x])
+
+            haslabel = True
+            freqs.append(e0)
+            field.append(mvec[:,:,i1]) 
+
+xmax = max(np.real(freqs))+0.05
+xmin = min(np.real(freqs))-0.05
+ymax = max(np.imag(freqs))+0.05
+ymin = min(np.imag(freqs))-0.05
+ax.set_xlim([xmin,xmax])
+ax.set_ylim([ymin,ymax])
+ax.axvline(0,color='k',linestyle=':')
+ax.axhline(0,color='k',linestyle=':')
+ax.legend()
+
+plt.tight_layout()
+plt.show()
+
+nm = len(freqs)
+
+#-------------------------------------------------------------
+dtheta = 2*np.pi/n_theta
+thetab = np.arange(n_theta*n_radial)*dtheta-(n_radial+1)*np.pi
+xt = thetab/np.pi
+p0 = n_radial//2*n_theta+n_theta//2
+
+rc('font',size=15)
+
+#-------------------------------------------------------------
+if nm < 4:
+    ly = 1+2*nm
+else:
+    ly = 9
+
+fig = plt.figure(figsize=(12,ly))
+
+for m in range(nm):
+    for i,x in enumerate(ostr):
+        ax = fig.add_subplot(nm,3,i+1+3*m)
+        ax = axishelp(ax,xt,fdict[x])
+
+        if m == 0:
+            # plot initial-value
+            p = np.argmax(abs(ovec[x][:,-1]))
+            a00 = ovec[x][p,-1]
+            yr = np.real(ovec[x][:,-1]/a00)
+            yi = np.imag(ovec[x][:,-1]/a00)
+            ax.plot(xt,yr,color='k',linewidth=2,alpha=0.3,linestyle='--')
+            ax.plot(xt,yi,color='r',linewidth=2,alpha=0.3,linestyle='--')
+
+        # DMD 
+        p = np.argmax(abs(field[m][i,:]))
+        a0d = field[m][i,p]
+        yr = np.real(field[m][i,:]/a0d)
+        yi = np.imag(field[m][i,:]/a0d)
+        ax.plot(xt,yr,color='k',linewidth=1)
+        ax.plot(xt,yi,color='r',linewidth=1)
+
+
+plt.tight_layout(pad=0.15)
+plt.show()

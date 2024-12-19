@@ -16,7 +16,7 @@ module cgyro_globals
   use, intrinsic :: iso_fortran_env
   
   ! Data output precision setting
-  integer, parameter :: BYTE=4 ! Change to 8 for double precision
+  integer, parameter :: BYTE=8 ! Change to 8 for double precision
   
   !---------------------------------------------------------------
   ! Input parameters:
