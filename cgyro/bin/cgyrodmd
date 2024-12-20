@@ -17,7 +17,9 @@ def opts():
 
     mytext = '''\
     output:
-       NEED DOCUMENTATION HERE
+       This tool will analyze a linear CGYRO run based on the time
+       history of various field. Subdoninant and even unstable modes
+       can be computed.
     '''
 
     parser = argparse.ArgumentParser(
@@ -109,7 +111,9 @@ fdict = {'phi' :r'$\phi$',
          'ni':'$n_i$',
          'ne':'$n_e$',
          'vi':'$v_i$',
-         've':'$v_e$'}
+         've':'$v_e$',
+         'ei':'$E_i$',
+         'ee':'$E_e$'}
 
 # symbols
 args = {}
@@ -121,6 +125,10 @@ args[ostr[2]] = {'color':'k','marker':'+'}
 # COLLECT DATA
 sim = cgyrodata(mydir,silent=True)
 sim.getbigfield()
+
+if sim.hiprec_flag == 0:
+    print('ERROR: (cgyrodmd) Need to run cgyro with HIPREC_FLAG=1')
+    sys.exit()
 
 t = sim.t
 n_radial  = sim.n_radial  
@@ -148,35 +156,42 @@ y = sim.kxky_v[0,:,:,0,0,:imax]+1j*sim.kxky_v[1,:,:,0,0,:imax]
 ovec['vi'],a0 = map1d(y,sim.q)
 y = sim.kxky_v[0,:,:,1,0,:imax]+1j*sim.kxky_v[1,:,:,1,0,:imax]
 ovec['ve'],a0 = map1d(y,sim.q)
+y = sim.kxky_e[0,:,:,0,0,:imax]+1j*sim.kxky_e[1,:,:,0,0,:imax]
+ovec['ei'],a0 = map1d(y,sim.q)
+y = sim.kxky_e[0,:,:,1,0,:imax]+1j*sim.kxky_e[1,:,:,1,0,:imax]
+ovec['ee'],a0 = map1d(y,sim.q)
 
 # step for DMD
 dt = k*(t[1]-t[0])
 
 #---------------------------------------------------------------------------
-# RUN DMD
+# Initialize (classic) DMD object 
 dmd = DMD(svd_rank=0,exact=True,sorted_eigs='abs')
 
-evec = {}
-modes = {}
+# dictionary of eigenvalues
+edict = {}
+# dictionary of eigenmodes
+mdict = {}
 for x in ostr:
     down = downsample(ovec[x],k) 
     dmd.fit(down)
-    evec[x] = 1j*np.log(dmd.eigs)/dt
-    modes[x] = dmd.modes
+    edict[x] = 1j*np.log(dmd.eigs)/dt
+    mdict[x] = dmd.modes
 
 # determine most unstable modes (zvec)
 
-zvec = np.zeros([3,nmode],dtype=complex)
+# vector of sorted eigenvalues
+evec = np.zeros([3,nmode],dtype=complex)
+# vector of sorted eigenmodes
 mvec = np.zeros([3,n_radial*n_theta,nmode],dtype=complex)
 for i,x in enumerate(ostr):
-    z  = evec[x] 
+    z  = edict[x] 
     zi = z.imag
     k = np.flip(np.argsort(zi))
-    zvec[i,:] = z[k[:nmode]]
-    mvec[i,:,:] = modes[x][:,k[:nmode]]
+    evec[i,:] = z[k[:nmode]]
+    mvec[i,:,:] = mdict[x][:,k[:nmode]]
 
 # find true eigenmodes and compute errors
-
 m01 = []
 m02 = []
 for i in range(nmode):

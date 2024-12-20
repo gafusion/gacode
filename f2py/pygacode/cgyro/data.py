@@ -6,8 +6,6 @@ try:
    from gacodefuncs import *
 except:
    from ..gacodefuncs import *
-   
-BYTE='float'
 
 # class to read cgyro output data
 class cgyrodata:
@@ -17,8 +15,25 @@ class cgyrodata:
 
       self.silent = silent
       self.dir = sim_directory
+
+      # read time vector
       hastime = self.gettime()
+
+      # get mesh/input data
       self.getgrid()
+
+      # set data resolution
+      if self.hiprec_flag:
+         # double
+         self.BYTE = 'float64'
+      else:
+         # single
+         self.BYTE = 'float32'
+
+      if not self.silent:
+         print('INFO: (data.py) Detected precision '+self.BYTE)
+
+         
       if hastime and not fast:
          self.getdata()
       
@@ -28,7 +43,7 @@ class cgyrodata:
       start = time.time()
       if os.path.isfile(self.dir+'bin'+f):
          fmt = 'bin'
-         data = np.fromfile(self.dir+'bin'+f,dtype=BYTE)
+         data = np.fromfile(self.dir+'bin'+f,dtype=self.BYTE)
       elif os.path.isfile(self.dir+'out'+f):
          fmt = 'out'
          data = np.fromfile(self.dir+'out'+f,dtype='float',sep=' ')
@@ -47,34 +62,15 @@ class cgyrodata:
          return False
       
       #-----------------------------------------------------------------
-      # Read time vector -- autodetect number of columns (ncol)
-      #
-
-      # START: 3-column output (delete this code eventually)
-      tfile = self.dir+'out.cgyro.time'
-      with open(tfile,'r') as f:
-          ncol = len(f.readline().split())
-   
-      if ncol == 3:
-         newlines = []
-         with open(tfile,'r') as f:
-            for line in f.readlines():
-               newlines.append(line.strip()+'  0.0')
-         with open(tfile,'w') as outfile:
-             outfile.write("\n".join(newlines))
-         print('INFO: (data.py) Updated to 4-column format for out.cgyro.time')
-        
+      # Read time vector
+      #        
       data = np.fromfile(self.dir+'out.cgyro.time',dtype='float',sep=' ')
       nt = len(data)//4
       data = np.reshape(data,(4,nt),'F')
-      # END: 3-column output (delete this code eventually)
 
       self.t    = data[0,:]
       self.err1 = data[1,:]
-      try:
-         self.err2 = data[2,:]
-      except:
-         self.err2 = data[1,:]
+      self.err2 = data[2,:]
       self.n_time = nt
       if not self.silent:
          print('INFO: (data.py) Read time vector in out.cgyro.time.')
@@ -520,6 +516,7 @@ class cgyrodata:
          self.sbeta[i],p = self.eget(data,p)
       # Added 17 Dec 2024
       self.z_eff,p = self.eget(data,p) 
+      self.hiprec_flag,p = self.eget(data,p) 
 
       if p == -1:
          print('WARNING: (getgrid) Data format outdated. Please run cgyro -t')
@@ -544,7 +541,6 @@ class cgyrodata:
          except:
             pass
 
-            
          self.rhonorm = self.rho
          self.rhoi    = r'\rho_s'
 

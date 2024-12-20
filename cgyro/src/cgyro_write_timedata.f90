@@ -507,7 +507,7 @@ subroutine write_precision(datafile,fn)
      ! Append
 
      open(unit=io,file=datafile,status='old',position='append')
-     write(io,fmtstr_hi) fn_sum
+     write(io,fmtstr_prec) fn_sum
      close(io)
 
   case(3)
@@ -516,7 +516,7 @@ subroutine write_precision(datafile,fn)
 
      open(unit=io,file=datafile,status='old')
      do i=1,i_current
-        read(io,fmtstr_hi) fn_sum
+        read(io,fmtstr_prec) fn_sum
      enddo
      endfile(io)
      close(io)
@@ -864,7 +864,12 @@ subroutine write_binary(datafile,fn,n_fn)
 
      open(unit=io,file=datafile,status='old',position='append',access='stream')
 
-     write(io) cmplx(fn,kind=BYTE)
+     if (BYTE == 4) then
+        write(io) cmplx(fn,kind=4)
+     else
+        write(io) cmplx(fn,kind=8)
+     endif
+     
      close(io)
 
   case (3)
