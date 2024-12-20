@@ -199,10 +199,19 @@ for i in range(nmode):
         em = abs(evec[0,i]-evec[1,j])
         en = abs(evec[0,i]-evec[2,j])
         if em < tol:
+            # observable 1-i close to observable 2-j
             m01.append([i,j])
         if en < tol:
+            # observable 1-i close to observable 3-j 
             m02.append([i,j])
 
+# Get number of legitimate modes
+nm = 0
+for v in m01:
+    for w in m02:
+        if v[0] == w[0]:
+            nm = nm+1
+            
 #---------------------------------------------------------------------------
 # PLOTTING
 
@@ -226,31 +235,38 @@ ax.grid(which="major",ls=":")
 for x in ostr:
     ax.scatter(edict[x].real,edict[x].imag,s=60,**args[x],alpha=0.15)
 
-freqs = []
-field = []
+efreq = np.zeros(nm,dtype=complex)
+emode = np.zeros([3,n_radial*n_theta,nm],dtype=complex)
+j = np.zeros(3,dtype=int)
 haslabel = False
+
+# v[0] -> obs1 index 
+# v[1] -> obs2 index 
+# w[0] -> obs3 index
+m = 0
 for v in m01:
     for w in m02:
         if v[0] == w[0]:
-            i0 = v[0] ; i1 = v[1] ; i2 = w[1]
-            rvec = np.array([i0,i1,i2])
-            e0 = (evec[0,i0]+evec[1,i1]+evec[2,i2])/3
-            err = abs(evec[0,i1]-e0)+abs(evec[1,i1]-e0)+abs(evec[2,i2]-e0)
+            # 3-way match
+            j[0] = v[0] ; j[1] = v[1] ; j[2] = w[1]
+            e0  = np.trace(evec[:,j[:]])/3
+            err = np.trace(abs(evec[:,j[:]]-e0))
             print("gamma = {:+.3f} omega = {:+.3f} | err = {:.3e}".format(e0.imag,e0.real,err))
             for i,x in enumerate(ostr):
                 if haslabel:
-                    ax.scatter(evec[i,rvec[i]].real,evec[i,rvec[i]].imag,s=60,**args[x])
+                    ax.scatter(evec[i,j[i]].real,evec[i,j[i]].imag,s=60,**args[x])
                 else:
-                    ax.scatter(evec[i,rvec[i]].real,evec[i,rvec[i]].imag,s=60,**args[x],label=fdict[x])
+                    ax.scatter(evec[i,j[i]].real,evec[i,j[i]].imag,s=60,**args[x],label=fdict[x])
+                emode[i,:,m] = mvec[i,:,j[i]]
 
             haslabel = True
-            freqs.append(e0)
-            field.append(mvec[:,:,i1])
-
-xmax = max(np.real(freqs))+0.05
-xmin = min(np.real(freqs))-0.05
-ymax = max(np.imag(freqs))+0.05
-ymin = min(np.imag(freqs))-0.05
+            efreq[m] = e0
+            m = m+1
+    
+xmax = max(np.real(efreq))+0.05
+xmin = min(np.real(efreq))-0.05
+ymax = max(np.imag(efreq))+0.05
+ymin = min(np.imag(efreq))-0.05
 ax.set_xlim([xmin,xmax])
 ax.set_ylim([ymin,ymax])
 ax.axvline(0,color='k',linestyle=':')
@@ -260,7 +276,6 @@ ax.legend()
 plt.tight_layout()
 plt.show()
 
-nm = len(freqs)
 
 #-------------------------------------------------------------
 dtheta = 2*np.pi/n_theta
@@ -293,10 +308,10 @@ for m in range(nm):
             ax.plot(xt,yi,color='r',linewidth=2,alpha=0.3,linestyle='--')
 
         # DMD
-        p = np.argmax(abs(field[m][i,:]))
-        a0d = field[m][i,p]
-        yr = np.real(field[m][i,:]/a0d)
-        yi = np.imag(field[m][i,:]/a0d)
+        p = np.argmax(abs(emode[i,:,m]))
+        a0d = emode[i,p,m]
+        yr = np.real(emode[i,:,m]/a0d)
+        yi = np.imag(emode[i,:,m]/a0d)
         ax.plot(xt,yr,color='k',linewidth=1)
         ax.plot(xt,yi,color='r',linewidth=1)
 
