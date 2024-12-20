@@ -231,6 +231,7 @@ subroutine cgyro_write_initdata
      enddo
      ! Added 17 Dec 2024
      write (io,fmtstr) z_eff
+     write (io,'(i0)') hiprec_flag
      close(io)
 
   endif
@@ -242,19 +243,35 @@ subroutine cgyro_write_initdata
   !
   if (silent_flag == 0 .and. i_proc == 0) then
      open(unit=io,file=trim(path)//'bin.cgyro.geo',status='replace',access='stream')
-     write(io) real(theta,kind=4)
-     write(io) real(g_theta_geo,kind=4)
-     write(io) real(bmag,kind=4)
-     write(io) real(omega_stream(:,1,nt1),kind=4)
-     write(io) real(omega_trap(:,1,nt1),kind=4)
-     write(io) real(omega_rdrift(:,1),kind=4)
-     write(io) real(omega_adrift(:,1),kind=4)
-     write(io) real(omega_aprdrift(:,1),kind=4)
-     write(io) real(omega_cdrift(:,1),kind=4)
-     write(io) real(omega_cdrift_r(:,1),kind=4)
-     write(io) real(omega_gammap(:),kind=4)
-     write(io) real(k_perp(ic_c(n_radial/2+1,:),nt1),kind=4)
-     write(io) real(captheta,kind=4)
+     if (hiprec_flag == 0) then
+        write(io) real(theta,kind=4)
+        write(io) real(g_theta_geo,kind=4)
+        write(io) real(bmag,kind=4)
+        write(io) real(omega_stream(:,1,nt1),kind=4)
+        write(io) real(omega_trap(:,1,nt1),kind=4)
+        write(io) real(omega_rdrift(:,1),kind=4)
+        write(io) real(omega_adrift(:,1),kind=4)
+        write(io) real(omega_aprdrift(:,1),kind=4)
+        write(io) real(omega_cdrift(:,1),kind=4)
+        write(io) real(omega_cdrift_r(:,1),kind=4)
+        write(io) real(omega_gammap(:),kind=4)
+        write(io) real(k_perp(ic_c(n_radial/2+1,:),nt1),kind=4)
+        write(io) real(captheta,kind=4)
+     else
+        write(io) real(theta)
+        write(io) real(g_theta_geo)
+        write(io) real(bmag)
+        write(io) real(omega_stream(:,1,nt1))
+        write(io) real(omega_trap(:,1,nt1))
+        write(io) real(omega_rdrift(:,1))
+        write(io) real(omega_adrift(:,1))
+        write(io) real(omega_aprdrift(:,1))
+        write(io) real(omega_cdrift(:,1))
+        write(io) real(omega_cdrift_r(:,1))
+        write(io) real(omega_gammap(:))
+        write(io) real(k_perp(ic_c(n_radial/2+1,:),nt1))
+        write(io) real(captheta)
+     endif
      close(io)
 
   endif
@@ -308,6 +325,7 @@ subroutine cgyro_write_initdata
      endif
      write(io,'(1pe13.6)') (spectraldiss((pi/n_toroidal)*in,nup_alpha),in=0,n_toroidal-1)
      write(io,'(1pe13.6)') (spectraldiss((2*pi/n_radial)*p,nup_radial),p=-n_radial/2,n_radial/2-1)
+     write(io,'(i0)') hiprec_flag
      close(io)
 
   endif

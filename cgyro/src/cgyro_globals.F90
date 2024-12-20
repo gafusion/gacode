@@ -15,8 +15,6 @@ module cgyro_globals
 
   use, intrinsic :: iso_fortran_env
   
-  ! Data output precision setting
-  integer, parameter :: BYTE=8 ! Change to 8 for double precision
   
   !---------------------------------------------------------------
   ! Input parameters:
@@ -272,11 +270,16 @@ module cgyro_globals
   character(len=2) :: mpiio_small_stripe_str
   character(len=3) :: mpiio_stripe_str
   !
-  ! Standard precision for IO (there are optionally reset to higher precision later)
-  character(len=8)  :: fmtstr    ='(es11.4)'
-  integer           :: fmtstr_len = 12
-  character(len=15) :: fmtstrn   ='(10(es11.4,1x))'
-  character(len=9)  :: fmtstr_hi ='(es18.12)'
+  ! Precision for IO (these are set in cgyro_init_manager)
+  !
+  ! BYTE=4 (standard single precision)
+  ! BYTE=8 (double precision for DMD analysis)
+  !
+  integer :: BYTE
+  character(len=8)  :: fmtstr   
+  integer           :: fmtstr_len 
+  character(len=15) :: fmtstrn  
+  character(len=9)  :: fmtstr_prec ='(es18.12)'
   !----------------------------------------------------
 
   !---------------------------------------------------------------

@@ -31,10 +31,16 @@ subroutine cgyro_init_manager
   integer :: ie,ix
 
   if (hiprec_flag == 1) then
-     fmtstr  = '(es16.9)'
+     BYTE   = 8
+     fmtstr = '(es16.9)'
      fmtstr_len = 17
      fmtstrn = '(10(es16.9,1x))'
-  endif
+  else
+     BYTE   = 4
+     fmtstr ='(es11.4)'
+     fmtstr_len = 12
+     fmtstrn ='(10(es11.4,1x))'
+   endif
   
   !------------------------------------------------------
   ! Initialize startup timers 
