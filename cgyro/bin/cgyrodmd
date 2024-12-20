@@ -55,7 +55,7 @@ def opts():
 
 # DMD utility: helper function for plotting
 def axishelp(ax,x,ylabel):
-    
+
     ax.set_xlabel(r"$\theta_*$")
     ax.set_ylabel(ylabel)
     ax.grid(which="both",ls=":")
@@ -64,7 +64,7 @@ def axishelp(ax,x,ylabel):
     ax.set_xlim(-max(x),max(x))
     return ax
 
-# DMD utility: Map from (kx,theta) to theta_* 
+# DMD utility: Map from (kx,theta) to theta_*
 def map1d(f2d,q):
     nr    = f2d.shape[0]
     nt    = f2d.shape[1]
@@ -93,7 +93,7 @@ def downsample(f,n,eps=0.01):
 
     w = 1/(1+eps*u*u)
     w = w/np.sum(w)
-    
+
     fdown = np.sum(f[:,:m].reshape(npar,-1,n)*w[None,None,:],axis=2)
     return fdown
 
@@ -131,7 +131,7 @@ if sim.hiprec_flag == 0:
     sys.exit()
 
 t = sim.t
-n_radial  = sim.n_radial  
+n_radial  = sim.n_radial
 n_theta   = sim.theta_plot
 n_species = sim.n_species
 
@@ -165,7 +165,7 @@ ovec['ee'],a0 = map1d(y,sim.q)
 dt = k*(t[1]-t[0])
 
 #---------------------------------------------------------------------------
-# Initialize (classic) DMD object 
+# Initialize (classic) DMD object
 dmd = DMD(svd_rank=0,exact=True,sorted_eigs='abs')
 
 # dictionary of eigenvalues
@@ -173,7 +173,7 @@ edict = {}
 # dictionary of eigenmodes
 mdict = {}
 for x in ostr:
-    down = downsample(ovec[x],k) 
+    down = downsample(ovec[x],k)
     dmd.fit(down)
     edict[x] = 1j*np.log(dmd.eigs)/dt
     mdict[x] = dmd.modes
@@ -185,7 +185,7 @@ evec = np.zeros([3,nmode],dtype=complex)
 # vector of sorted eigenmodes
 mvec = np.zeros([3,n_radial*n_theta,nmode],dtype=complex)
 for i,x in enumerate(ostr):
-    z  = edict[x] 
+    z  = edict[x]
     zi = z.imag
     k = np.flip(np.argsort(zi))
     evec[i,:] = z[k[:nmode]]
@@ -196,8 +196,8 @@ m01 = []
 m02 = []
 for i in range(nmode):
     for j in range(nmode):
-        em = abs(zvec[0,i]-zvec[1,j])
-        en = abs(zvec[0,i]-zvec[2,j])
+        em = abs(evec[0,i]-evec[1,j])
+        en = abs(evec[0,i]-evec[2,j])
         if em < tol:
             m01.append([i,j])
         if en < tol:
@@ -224,7 +224,7 @@ ax.grid(which="both",ls=":")
 ax.grid(which="major",ls=":")
 
 for x in ostr:
-    ax.scatter(evec[x].real,evec[x].imag,s=60,**args[x],alpha=0.15)
+    ax.scatter(edict[x].real,edict[x].imag,s=60,**args[x],alpha=0.15)
 
 freqs = []
 field = []
@@ -234,18 +234,18 @@ for v in m01:
         if v[0] == w[0]:
             i0 = v[0] ; i1 = v[1] ; i2 = w[1]
             rvec = np.array([i0,i1,i2])
-            e0 = (zvec[0,i0]+zvec[1,i1]+zvec[2,i2])/3 
-            err = abs(zvec[0,i1]-e0)+abs(zvec[1,i1]-e0)+abs(zvec[2,i2]-e0)
+            e0 = (evec[0,i0]+evec[1,i1]+evec[2,i2])/3
+            err = abs(evec[0,i1]-e0)+abs(evec[1,i1]-e0)+abs(evec[2,i2]-e0)
             print("gamma = {:+.3f} omega = {:+.3f} | err = {:.3e}".format(e0.imag,e0.real,err))
             for i,x in enumerate(ostr):
                 if haslabel:
-                    ax.scatter(zvec[i,rvec[i]].real,zvec[i,rvec[i]].imag,s=60,**args[x])
+                    ax.scatter(evec[i,rvec[i]].real,evec[i,rvec[i]].imag,s=60,**args[x])
                 else:
-                    ax.scatter(zvec[i,rvec[i]].real,zvec[i,rvec[i]].imag,s=60,**args[x],label=fdict[x])
+                    ax.scatter(evec[i,rvec[i]].real,evec[i,rvec[i]].imag,s=60,**args[x],label=fdict[x])
 
             haslabel = True
             freqs.append(e0)
-            field.append(mvec[:,:,i1]) 
+            field.append(mvec[:,:,i1])
 
 xmax = max(np.real(freqs))+0.05
 xmin = min(np.real(freqs))-0.05
@@ -292,7 +292,7 @@ for m in range(nm):
             ax.plot(xt,yr,color='k',linewidth=2,alpha=0.3,linestyle='--')
             ax.plot(xt,yi,color='r',linewidth=2,alpha=0.3,linestyle='--')
 
-        # DMD 
+        # DMD
         p = np.argmax(abs(field[m][i,:]))
         a0d = field[m][i,p]
         yr = np.real(field[m][i,:]/a0d)
