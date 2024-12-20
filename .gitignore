@@ -56,6 +56,7 @@ tglf/tools/ptglf/src/ptglf
 tgyro/src/tgyro_main
 le3/src/le3
 le3/profiles_3d/profiles_3d
+xgyro/src/xgyro
 f2py/build
 f2py/gacode.egg-info
 f2py/pygacode.egg-info
