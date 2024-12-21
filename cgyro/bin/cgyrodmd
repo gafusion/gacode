@@ -48,10 +48,13 @@ def opts():
                         help='Root acceptance tolerance (default=0.005)',
                         type=float,
                         default=0.005)
+    parser.add_argument('-noplot',
+                        help='Switch off plotting',
+                        action='store_true')
 
     args=parser.parse_args()
 
-    return args.e,args.tmax,args.dt,args.obs,args.tol
+    return args.e,args.tmax,args.dt,args.obs,args.tol,args.noplot
 
 # DMD utility: helper function for plotting
 def axishelp(ax,x,ylabel):
@@ -99,7 +102,7 @@ def downsample(f,n,eps=0.01):
 
 #------------------------------------------------------------------------
 #
-mydir,tmax,k,obs,tol = opts()
+mydir,tmax,k,obs,tol,noplot = opts()
 
 # process inputs
 mydir = mydir+'/'
@@ -262,7 +265,10 @@ for v in m01:
             haslabel = True
             efreq[m] = e0
             m = m+1
-    
+
+if noplot:
+    sys.exit()
+            
 xmax = max(np.real(efreq))+0.05
 xmin = min(np.real(efreq))-0.05
 ymax = max(np.imag(efreq))+0.05
@@ -314,7 +320,6 @@ for m in range(nm):
         yi = np.imag(emode[i,:,m]/a0d)
         ax.plot(xt,yr,color='k',linewidth=1)
         ax.plot(xt,yi,color='r',linewidth=1)
-
 
 plt.tight_layout(pad=0.15)
 plt.show()
