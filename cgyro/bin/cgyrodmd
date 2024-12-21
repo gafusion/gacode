@@ -208,41 +208,39 @@ for i in range(nmode):
             # observable 1-i close to observable 3-j 
             m02.append([i,j])
 
-# Get number of legitimate modes
-nm = 0
-for v in m01:
-    for w in m02:
-        if v[0] == w[0]:
-            nm = nm+1
-            
-
-print('---------------------- CGYRO-DMD ------------------------------')
-print('tmax = {} a/cs'.format(t[imax-1]))
-print('dt   = {} a/cs'.format(dt))
-print('observables = '+obs)
-print()
-
-efreq = np.zeros(nm,dtype=complex)
-emode = np.zeros([3,n_radial*n_theta,nm],dtype=complex)
-j = np.zeros(3,dtype=int)
-haslabel = False
-
+# Get legitimate modes
 # v[0] -> obs1 index 
 # v[1] -> obs2 index 
 # w[0] -> obs3 index
-m = 0
+jm = []
 for v in m01:
     for w in m02:
         if v[0] == w[0]:
             # 3-way match
-            j[0] = v[0] ; j[1] = v[1] ; j[2] = w[1]
-            e0  = np.trace(evec[:,j[:]])/3
-            err = np.trace(abs(evec[:,j[:]]-e0))
-            print("gamma = {:+.3f} omega = {:+.3f} | err = {:.3e}".format(e0.imag,e0.real,err))
-            for i,x in enumerate(ostr):
-                emode[i,:,m] = mvec[i,:,j[i]]
-            efreq[m] = e0
-            m = m+1
+            jm.append([v[0],v[1],w[1]])
+
+nm = len(jm)
+
+print('---------------------- CGYRO-DMD ------------------------------')
+print('observables: '+obs)
+print()
+
+efreq = np.zeros(nm,dtype=complex)
+emode = np.zeros([3,n_radial*n_theta,nm],dtype=complex)
+
+# Collect eigenmodes (emode) and eigenfrequencies (efreq)
+for m in range(nm):
+    j = np.array(jm[m])
+    e0  = np.trace(evec[:,j[:]])/3
+    err = np.trace(abs(evec[:,j[:]]-e0))
+    print("gamma = {:+.3f} omega = {:+.3f} | err = {:.3e}".format(e0.imag,e0.real,err))
+    for i in range(3):
+        emode[i,:,m] = mvec[i,:,j[i]]
+    efreq[m] = e0
+    
+print()
+print('tmax = {:.1f} a/cs | w*tmax = {:.2f}'.format(t[imax-1],abs(efreq[0])*t[imax-1]))
+print('dt   = {:.3f} a/cs | w*dt   = {:.3f}'.format(dt,abs(efreq[0])*dt))
 
 if noplot:
     sys.exit()
@@ -261,20 +259,20 @@ ax.set_ylabel(r"$(a/c_s)\,\gamma$")
 ax.grid(which="both",ls=":")
 ax.grid(which="major",ls=":")
 
+# First plot all modes
 for x in ostr:
     ax.scatter(edict[x].real,edict[x].imag,s=60,**args[x],alpha=0.15)
 
-for v in m01:
-    for w in m02:
-        if v[0] == w[0]:
-            # 3-way match
-            j[0] = v[0] ; j[1] = v[1] ; j[2] = w[1]
-            for i,x in enumerate(ostr):
-                if haslabel:
-                    ax.scatter(evec[i,j[i]].real,evec[i,j[i]].imag,s=60,**args[x])
-                else:
-                    ax.scatter(evec[i,j[i]].real,evec[i,j[i]].imag,s=60,**args[x],label=fdict[x])
-                haslabel = True
+# Next plot legitimate modes
+haslabel = False
+for m in range(nm):
+    j = np.array(jm[m])
+    for i,x in enumerate(ostr):
+        if haslabel:
+            ax.scatter(evec[i,j[i]].real,evec[i,j[i]].imag,s=60,**args[x])
+        else:
+            ax.scatter(evec[i,j[i]].real,evec[i,j[i]].imag,s=60,**args[x],label=fdict[x])
+    haslabel = True
 
 xmax = max(np.real(efreq))+0.05
 xmin = min(np.real(efreq))-0.05
