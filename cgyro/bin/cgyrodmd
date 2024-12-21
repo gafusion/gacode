@@ -215,28 +215,12 @@ for v in m01:
         if v[0] == w[0]:
             nm = nm+1
             
-#---------------------------------------------------------------------------
-# PLOTTING
 
 print('---------------------- CGYRO-DMD ------------------------------')
 print('tmax = {} a/cs'.format(t[imax-1]))
 print('dt   = {} a/cs'.format(dt))
 print('observables = '+obs)
 print()
-
-rc('font',size=20)
-rc('text',usetex=True)
-
-fig = plt.figure(figsize=(10,8))
-ax = fig.add_subplot(111)
-
-ax.set_xlabel(r"$(a/c_s)\,\omega$")
-ax.set_ylabel(r"$(a/c_s)\,\gamma$")
-ax.grid(which="both",ls=":")
-ax.grid(which="major",ls=":")
-
-for x in ostr:
-    ax.scatter(edict[x].real,edict[x].imag,s=60,**args[x],alpha=0.15)
 
 efreq = np.zeros(nm,dtype=complex)
 emode = np.zeros([3,n_radial*n_theta,nm],dtype=complex)
@@ -256,19 +240,42 @@ for v in m01:
             err = np.trace(abs(evec[:,j[:]]-e0))
             print("gamma = {:+.3f} omega = {:+.3f} | err = {:.3e}".format(e0.imag,e0.real,err))
             for i,x in enumerate(ostr):
-                if haslabel:
-                    ax.scatter(evec[i,j[i]].real,evec[i,j[i]].imag,s=60,**args[x])
-                else:
-                    ax.scatter(evec[i,j[i]].real,evec[i,j[i]].imag,s=60,**args[x],label=fdict[x])
                 emode[i,:,m] = mvec[i,:,j[i]]
-
-            haslabel = True
             efreq[m] = e0
             m = m+1
 
 if noplot:
     sys.exit()
-            
+
+#---------------------------------------------------------------------------
+# PLOTTING
+
+rc('font',size=20)
+rc('text',usetex=True)
+
+fig = plt.figure(figsize=(10,8))
+ax = fig.add_subplot(111)
+
+ax.set_xlabel(r"$(a/c_s)\,\omega$")
+ax.set_ylabel(r"$(a/c_s)\,\gamma$")
+ax.grid(which="both",ls=":")
+ax.grid(which="major",ls=":")
+
+for x in ostr:
+    ax.scatter(edict[x].real,edict[x].imag,s=60,**args[x],alpha=0.15)
+
+for v in m01:
+    for w in m02:
+        if v[0] == w[0]:
+            # 3-way match
+            j[0] = v[0] ; j[1] = v[1] ; j[2] = w[1]
+            for i,x in enumerate(ostr):
+                if haslabel:
+                    ax.scatter(evec[i,j[i]].real,evec[i,j[i]].imag,s=60,**args[x])
+                else:
+                    ax.scatter(evec[i,j[i]].real,evec[i,j[i]].imag,s=60,**args[x],label=fdict[x])
+                haslabel = True
+
 xmax = max(np.real(efreq))+0.05
 xmin = min(np.real(efreq))-0.05
 ymax = max(np.imag(efreq))+0.05
@@ -281,7 +288,6 @@ ax.legend()
 
 plt.tight_layout()
 plt.show()
-
 
 #-------------------------------------------------------------
 dtheta = 2*np.pi/n_theta
