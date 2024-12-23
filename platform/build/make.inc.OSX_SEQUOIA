@@ -1,0 +1,52 @@
+#---------------------------------------------------
+# OSX Sequoia 15.2
+#
+# macport installation instructions for new Mac 
+# running Sequoia, assuming OMFIT being installed as
+# well. YMMV.
+# uses XCODE 16.2
+#
+# 1) install OMFIT via macports- gets initial 
+#    dependencies
+# 2) sudo port install mpich
+# 3) sudo port install netcdf-fortran
+# 4) determine local host name via uname -n
+#    add following line to /etc/hosts
+#    127.0.0.1    <local host name>
+#
+#---------------------------------------------------
+
+# Compilers and flags
+
+FC  = mpif90 -DNO_DIMATCOPY -I$(GACODE_ROOT)/modules -J$(GACODE_ROOT)/modules -fPIC -framework Accelerate
+F77 = mpif77 -std=legacy
+CC  = ${FC}
+
+GOMPTEST := $(shell ${CC} -v 2>&1 | grep " version " | grep gcc >/dev/null; echo $$?)
+ifeq ($(GOMPTEST),0)
+  FOMP  =-fopenmp
+endif
+
+FMATH	=-fdefault-real-8 -fdefault-double-8 
+FOPT	=-O3 
+FDEBUG  =-Wall -fcheck=all -ffpe-trap=invalid,zero,overflow -g -fbacktrace
+F2PY    = f2py
+
+# System math libraries
+
+LMATH = /opt/local/lib/libfftw3.a
+FFTW_INC = /opt/local/include 
+
+ifdef FANN_ROOT
+   # neural net libraries
+   NN_LIB=-L$(GACODE_ROOT)/../neural/ -I$(GACODE_ROOT)/../neural/ -lbrainfuse -lfann
+endif
+
+# NetCDF libraries
+
+NETCDF = -L/opt/local/lib -lnetcdff -L/opt/local/lib -Wl,-headerpad_max_install_names -lnetcdf -lnetcdf
+NETCDF_INC = /opt/local/include
+ 
+# Archive
+
+ARCH = ar cr
