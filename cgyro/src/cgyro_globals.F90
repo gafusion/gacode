@@ -80,6 +80,7 @@ module cgyro_globals
   integer :: moment_print_flag
   integer :: gflux_print_flag
   integer :: field_print_flag
+  integer :: triad_print_flag
   real :: amp0
   real :: amp
   real :: gamma_e
@@ -192,7 +193,7 @@ module cgyro_globals
   integer :: nsplit,nsplitA,nsplitB
   integer :: ns1,ns2
   integer, dimension(:), allocatable :: recv_status
-  integer :: fA_req, fB_req, g_req
+  integer :: fA_req, fB_req, eA_req, eB_req, g_req
   logical :: fA_req_valid, fB_req_valid, g_req_valid
   ! Thetas present in the process after NL AllToAll
   integer :: n_jtheta
@@ -243,6 +244,7 @@ module cgyro_globals
   character(len=12) :: binfile_hb      = 'bin.cgyro.hb'
   character(len=17) :: binfile_ky_flux = 'bin.cgyro.ky_flux'
   character(len=18) :: binfile_ky_cflux = 'bin.cgyro.ky_cflux'
+  character(len=15) :: binfile_triad   = 'bin.cgyro.triad'
   character(len=15), dimension(3) :: binfile_fieldb = &
        (/'bin.cgyro.phib ','bin.cgyro.aparb','bin.cgyro.bparb'/)
   character(len=16), dimension(3) :: binfile_kxky = &
@@ -344,11 +346,14 @@ module cgyro_globals
   complex, dimension(:,:,:), allocatable :: h0_x
   complex, dimension(:,:,:), allocatable :: h0_old
   complex, dimension(:,:,:,:), allocatable :: fA_nl,fB_nl
+  complex, dimension(:,:,:,:), allocatable :: eA_nl,eB_nl
   complex, dimension(:,:,:,:), allocatable :: g_nl
   complex, dimension(:,:,:), allocatable :: fpackA,fpackB
+  complex, dimension(:,:,:), allocatable :: epackA,epackB
   complex, dimension(:,:,:,:), allocatable :: gpack
   complex, dimension(:,:,:), allocatable :: omega_cap_h
   complex, dimension(:,:,:), allocatable :: omega_h
+  complex, dimension(:,:,:), allocatable :: diss_r
   complex, dimension(:,:,:,:), allocatable :: omega_s,omega_ss
   complex, dimension(:,:,:), allocatable :: omega_sbeta
   complex, dimension(:,:,:), allocatable :: cap_h_c
@@ -382,6 +387,7 @@ module cgyro_globals
   real, dimension(:,:,:,:), allocatable :: cflux
   complex, dimension(:,:,:,:,:), allocatable :: gflux_loc
   complex, dimension(:,:,:,:,:), allocatable :: gflux
+  complex, dimension(:,:,:,:), allocatable :: triad,triad_loc,triad_loc_old
   real, dimension(:,:), allocatable :: cflux_tave, gflux_tave
   real :: tave_min, tave_max
   integer :: tave_step

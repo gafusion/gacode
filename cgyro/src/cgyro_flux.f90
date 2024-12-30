@@ -44,7 +44,8 @@ subroutine cgyro_flux
   complex :: cprod
   real, parameter :: x_fraction=0.2
   real :: u
-
+  real :: kx
+  
 !$omp parallel do private(iv_loc,iv,is,ix,ie,dv,vpar,ic,ir,it,erot,cprod,cn) &
 !$omp&            private(prod1,prod2,prod3,l,icl,dvr,u,flux_norm) &
 !$omp&            shared(moment_loc,gflux_loc,cflux_loc)
@@ -188,6 +189,34 @@ subroutine cgyro_flux
         cflux_loc(:,:,:,itor) = cflux_loc(:,:,:,itor)+2*sin(u)*real(gflux_loc(l,:,:,:,itor))/u
      enddo
 
+
+  !-------------------------------------------------------------
+  ! 2-1. Compute Triad energy transfer
+  !-------------------------------------------------------------
+
+     kx = 2*pi*rho/length
+     do is=1,n_species
+        ! Triad energy transfer   :   T_k
+        triad_loc_old(is,:,itor,1) = triad_loc(is,:,itor,1) *temp(is)/dlntdr(is_ele)
+        ! From Nonzonal Triad energy transfer   :   T_k [NZ(k',k")->k]
+        triad_loc_old(is,:,itor,2) = triad_loc(is,:,itor,2) *temp(is)/dlntdr(is_ele)
+        ! dEntropy / dt   :   dS_k/dt 
+        triad_loc_old(is,:,itor,3) = (triad_loc(is,:,itor,3)-triad_loc_old(is,:,itor,3))/delta_t
+        triad_loc_old(is,:,itor,3) = triad_loc_old(is,:,itor,3) *temp(is)/dlntdr(is_ele)*0.5
+        ! dWk_perp / dt    , (ky = 0)  
+        triad_loc_old(is,:,itor,4) = (triad_loc(is,:,itor,4)-triad_loc_old(is,:,itor,4))/delta_t
+        triad_loc_old(is,:,itor,4) = triad_loc_old(is,:,itor,4) *(kx*lambda_star)**2/dlntdr(is_ele)*0.5
+        ! Entropy   :   S_k
+        triad_loc_old(is,:,itor,5) = triad_loc(is,:,itor,3) *temp(is)/dlntdr(is_ele)*0.5
+        ! Diss. (radial)
+        triad_loc_old(is,:,itor,6) = triad_loc(is,:,itor,5) *temp(is)/dlntdr(is_ele)
+        ! Diss. (theta )
+        triad_loc_old(is,:,itor,7) = triad_loc(is,:,itor,6) *temp(is)/dlntdr(is_ele)
+        ! Diss. (Coll. )
+        triad_loc_old(is,:,itor,8) = triad_loc(is,:,itor,7) *temp(is)/dlntdr(is_ele)
+     enddo
+
+
      !-----------------------------------------------------
      ! 3. Renormalize fluxes to GB or quasilinear forms
      !~----------------------------------------------------
@@ -216,7 +245,7 @@ subroutine cgyro_flux
         ! GyroBohm normalizations
         gflux_loc(:,:,:,:,itor) = gflux_loc(:,:,:,:,itor)/rho**2
         cflux_loc(:,:,:,itor) = cflux_loc(:,:,:,itor)/rho**2
-
+        triad_loc_old(:,:,itor,:)  = triad_loc_old(:,:,itor,:)/rho**2
      endif
   enddo
 
@@ -249,6 +278,16 @@ subroutine cgyro_flux
        MPI_SUM, &
        NEW_COMM_1, &
        i_err)
+
+  ! Reduced complex triad(ns,kx), below, is still distributed over n 
+  call MPI_ALLREDUCE(triad_loc_old(:,:,:,:), &
+       triad, &
+       size(triad), &
+       MPI_DOUBLE_COMPLEX, &
+       MPI_SUM, &
+       NEW_COMM_1, &
+       i_err)
+
 
   tave_step = tave_step + 1
   tave_max  = t_current

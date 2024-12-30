@@ -178,6 +178,11 @@ subroutine cgyro_init_manager
      allocate(cflux_loc(n_species,4,n_field,nt1:nt2))
      allocate(    gflux(0:n_global,n_species,4,n_field,nt1:nt2))
      allocate(gflux_loc(0:n_global,n_species,4,n_field,nt1:nt2))
+
+     allocate(    triad(n_species,n_radial,nt1:nt2,8))
+     allocate(triad_loc(n_species,n_radial,nt1:nt2,7))
+     allocate(triad_loc_old(n_species,n_radial,nt1:nt2,8))
+
      allocate(cflux_tave(n_species,4))
      allocate(gflux_tave(n_species,4))
 
@@ -257,6 +262,7 @@ subroutine cgyro_init_manager
      allocate(cap_h_v(nc_loc,nt1:nt2,nv))
      allocate(omega_cap_h(nc,nv_loc,nt1:nt2))
      allocate(omega_h(nc,nv_loc,nt1:nt2))
+     allocate(diss_r(nc,nv_loc,nt1:nt2))
      allocate(omega_s(n_field,nc,nv_loc,nt1:nt2))
      allocate(omega_ss(n_field,nc,nv_loc,nt1:nt2))
      allocate(omega_sbeta(nc,nv_loc,nt1:nt2))
@@ -296,8 +302,10 @@ subroutine cgyro_init_manager
      ! Nonlinear arrays
      if (nonlinear_flag == 1) then
         allocate(fA_nl(n_radial,nt_loc,nsplitA,n_toroidal_procs))
+        allocate(eA_nl(n_radial,nt_loc,nsplitA,n_toroidal_procs))
         allocate(g_nl(n_field,n_radial,n_jtheta,n_toroidal))
         allocate(fpackA(n_radial,nt_loc,nsplitA*n_toroidal_procs))
+        allocate(epackA(n_radial,nt_loc,nsplitA*n_toroidal_procs))
         allocate(gpack(n_field,n_radial,n_jtheta,n_toroidal))
         allocate(jvec_c_nl(n_field,n_radial,n_jtheta,nv_loc,n_toroidal))
 #if defined(OMPGPU)
@@ -308,6 +316,8 @@ subroutine cgyro_init_manager
         if (nsplitB > 0) then ! nsplitB can be zero at large MPI
           allocate(fB_nl(n_radial,nt_loc,nsplitB,n_toroidal_procs))
           allocate(fpackB(n_radial,nt_loc,nsplitB*n_toroidal_procs))
+          allocate(eB_nl(n_radial,nt_loc,nsplitB,n_toroidal_procs))
+          allocate(epackB(n_radial,nt_loc,nsplitB*n_toroidal_procs))
 #if defined(OMPGPU)
 !$omp target enter data map(alloc:fpackB,fB_nl)
 #elif defined(_OPENACC)

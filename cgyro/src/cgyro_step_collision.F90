@@ -333,6 +333,32 @@ subroutine cgyro_step_collision_cpu(use_simple)
   call timer_lib_in('coll')
 
   ! Compute H given h and [phi(h), apar(h)]
+ if (triad_print_flag == 1 ) then
+!$omp parallel do collapse(2) &
+!$omp&            private(iv_loc,is,ic,iv,my_psi,my_ch) firstprivate(nc)
+  do itor=nt1,nt2
+   do iv=nv1,nv2
+     iv_loc = iv-nv1+1
+     is = is_v(iv)
+     do ic=1,nc
+  
+        ! Save collisional diss. 
+        my_ch = cap_h_ct(iv_loc,itor,ic)
+        my_psi = sum(jvec_c(:,ic,iv_loc,itor)*field(:,ic,itor))
+           
+        my_psi = my_ch-my_psi*(z(is)/temp(is))
+        cap_h_ct(iv_loc,itor,ic) = (cap_h_c(ic,iv_loc,itor) + my_ch) / 2.0
+        cap_h_ct(iv_loc,itor,ic) = conjg(cap_h_ct(iv_loc,itor,ic)) &
+          * ( my_psi - h_x(ic,iv_loc,itor) )
+
+        h_x(ic,iv_loc,itor) = my_psi
+        cap_h_c(ic,iv_loc,itor) = my_ch
+
+     enddo
+   enddo
+  enddo
+
+ else
 
 !$omp parallel do collapse(2) &
 !$omp&            private(iv_loc,is,ic,iv,my_psi,my_ch) firstprivate(nc)
@@ -348,6 +374,8 @@ subroutine cgyro_step_collision_cpu(use_simple)
      enddo
    enddo
   enddo
+
+ end if ! (triad_print_flag == 1 )
 
   call timer_lib_out('coll')
 

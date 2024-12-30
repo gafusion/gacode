@@ -35,7 +35,11 @@ subroutine cgyro_rhs_r_comm_async(ij)
   integer, intent(in) :: ij
 
   if (nonlinear_flag == 1) then
-       call cgyro_nl_fftw_comm1_r(ij)
+     if (triad_print_flag == 1 .and. ij == 4) then
+        call cgyro_nl_fftw_comm1_r_triad(ij)
+     else
+        call cgyro_nl_fftw_comm1_r(ij)
+     endif
   endif
 
 end subroutine cgyro_rhs_r_comm_async
@@ -410,7 +414,7 @@ subroutine cgyro_rhs(ij,update_cap)
   if (nonlinear_flag == 1) then
      ! assumes someone already started the input comm
      ! and will finish the output comm
-     call cgyro_nl_fftw()
+     call cgyro_nl_fftw(ij)
   endif
 
   call cgyro_upwind_complete

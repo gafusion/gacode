@@ -70,6 +70,14 @@ subroutine cgyro_write_timedata
      enddo
   endif
 
+  if (nonlinear_flag == 1 .and. triad_print_flag == 1) then
+      ! Triad energy transfer for all kxky
+        call cgyro_write_distributed_bcomplex(&
+             trim(path)//binfile_triad,&
+             size(triad(:,:,:,:)),&
+             triad(:,:,:,:))
+  endif
+
   if (field_print_flag == 1) then
      p_field = n_field
   else

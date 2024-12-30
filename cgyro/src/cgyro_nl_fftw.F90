@@ -378,7 +378,7 @@ subroutine cgyro_nl_fftw_mul(sz,uvm,uxm,vym,uym,vxm,inv_nxny)
 
 end subroutine
 
-subroutine cgyro_nl_fftw
+subroutine cgyro_nl_fftw(ij)
 
 #if defined(HIPGPU)
   use hipfort
@@ -397,6 +397,8 @@ subroutine cgyro_nl_fftw
 #if defined(MKLGPU)
   include 'fftw/fftw3.f'
 #endif
+  !-----------------------------------
+  integer, intent(in) :: ij
   !-----------------------------------
   integer :: j,p,iexch
   integer :: it,ir,itm,itl,ix,iy
@@ -1305,8 +1307,103 @@ subroutine cgyro_nl_fftw_stepr(g_j, f_j, nl_idx, i_omp)
 
 end subroutine cgyro_nl_fftw_stepr
 
+subroutine cgyro_nl_fftw_stepr_triad(g_j, f_j, nl_idx, i_omp)
+
+  use timer_lib
+  use parallel_lib
+  use cgyro_globals
+
+  implicit none
+
+  integer, intent(in) :: g_j, f_j
+  integer,intent(in) :: nl_idx ! 1=>A, 2=>B
+  integer,intent(in) :: i_omp
+  real :: y_mean(nx)
+  integer :: ix,iy
+  integer :: ir,itm,itl,itor
+
+  include 'fftw3.f03'
+
+  ! 1. Poisson bracket in real space
+  uv(:,:,i_omp) = (uxmany(:,:,f_j)*vymany(:,:,g_j)-uymany(:,:,f_j)*vxmany(:,:,g_j))/(nx*ny)
+
+  call fftw_execute_dft_r2c(plan_r2c,uv(:,:,i_omp),fx(:,:,i_omp))
+
+  ! NOTE: The FFT will generate an unwanted n=0,p=-nr/2 component
+  ! that will be filtered in the main time-stepping loop
+
+  ! this should really be accounted against nl_mem, but hard to do with OMP
+  do itm=1,n_toroidal_procs
+   do itl=1,nt_loc
+    itor=itl + (itm-1)*nt_loc
+    do ir=1,n_radial
+     ix = ir-1-nx0/2
+     if (ix < 0) ix = ix+nx
+     iy = itor-1
+     if (nl_idx==1) then
+       fA_nl(ir,itl,f_j,itm) = fx(iy,ix,i_omp)
+     else
+       fB_nl(ir,itl,f_j,itm) = fx(iy,ix,i_omp)
+     endif
+    enddo
+   enddo
+  enddo
+
+
+  ! 2. Poisson bracket in real space with Non_Zonal pairs
+
+  ! remove ky=0 in uxmany
+  y_mean = sum(uxmany(:,:,f_j) ,dim=1 ) / ny
+  do iy=0,ny-1
+    uxmany(iy,:,f_j) = uxmany(iy,:,f_j) -y_mean
+
+  end do
+
+  ! remove ky=0 in uymany
+  y_mean = sum(uymany(:,:,f_j) ,dim=1 ) / ny ! =0
+  do iy=0,ny-1
+    uymany(iy,:,f_j) = uymany(iy,:,f_j) -y_mean
+
+  end do
+
+  ! remove ky=0 in vx
+  y_mean = sum(vxmany(:,:,g_j) ,dim=1 ) / ny
+  do iy=0,ny-1
+    vxmany(iy,:,g_j) = vxmany(iy,:,g_j) -y_mean
+
+  end do
+
+  ! remove ky=0 in vy
+  y_mean = sum(vymany(:,:,g_j) ,dim=1 ) / ny ! =0
+  do iy=0,ny-1
+    vymany(iy,:,g_j) = vymany(iy,:,g_j) -y_mean
+
+  end do
+
+  uv(:,:,i_omp) = (uxmany(:,:,f_j)*vymany(:,:,g_j)-uymany(:,:,f_j)*vxmany(:,:,g_j))/(nx*ny)
+
+  call fftw_execute_dft_r2c(plan_r2c,uv(:,:,i_omp),fx(:,:,i_omp))
+
+  do itm=1,n_toroidal_procs
+   do itl=1,nt_loc
+    itor=itl + (itm-1)*nt_loc
+    do ir=1,n_radial
+     ix = ir-1-nx0/2
+     if (ix < 0) ix = ix+nx
+     iy = itor-1
+     if (nl_idx==1) then
+       eA_nl(ir,itl,f_j,itm) = fx(iy,ix,i_omp)
+     else
+       eB_nl(ir,itl,f_j,itm) = fx(iy,ix,i_omp)
+     endif
+    enddo
+   enddo
+  enddo
+
+end subroutine cgyro_nl_fftw_stepr_triad
+
 ! NOTE: call cgyro_nl_fftw_comm1 before cgyro_nl_fftw
-subroutine cgyro_nl_fftw
+subroutine cgyro_nl_fftw(ij)
 
   use timer_lib
   use parallel_lib
@@ -1315,8 +1412,11 @@ subroutine cgyro_nl_fftw
 
   implicit none
 
+
   !-----------------------------------
-  integer :: ix,iy
+  integer, intent(in) :: ij
+  !-----------------------------------
+  integer :: ix,iy,i_triad=0
   integer :: ir,it,itm,itl,it_loc
   integer :: itor,mytm
   integer :: j,p
@@ -1328,7 +1428,11 @@ subroutine cgyro_nl_fftw
   integer, external :: omp_get_thread_num
 
   include 'fftw3.f03'
-  
+
+  if (triad_print_flag == 1 .and. ij == 4) then
+   i_triad=1
+  endif
+
   call cgyro_nl_fftw_comm_test()
 
   ! time to wait for the FA_nl to become avaialble
@@ -1470,7 +1574,11 @@ subroutine cgyro_nl_fftw
         endif
 
         if (j<=nsplitA) then
-           call cgyro_nl_fftw_stepr(j, j, 1, i_omp)
+           if (i_triad == 1) then
+              call cgyro_nl_fftw_stepr_triad(j, j, 1, i_omp)
+           else
+              call cgyro_nl_fftw_stepr(j, j, 1, i_omp)
+           endif
         endif
         ! else we will do it in the next loop
   enddo ! j
@@ -1549,7 +1657,11 @@ subroutine cgyro_nl_fftw
           call cgyro_nl_fftw_comm_test()
         endif
 
-        call cgyro_nl_fftw_stepr(nsplitA+j, j, 2, i_omp)
+        if (i_triad == 1) then
+          call cgyro_nl_fftw_stepr_triad(nsplitA+j, j, 2, i_omp)
+        else
+          call cgyro_nl_fftw_stepr(nsplitA+j, j, 2, i_omp)
+        endif
    enddo ! j
 
    call timer_lib_out('nl')
@@ -1558,6 +1670,9 @@ subroutine cgyro_nl_fftw
    ! start the async reverse comm
    ! can reuse the same req, no overlap with forward fB_req
    call parallel_slib_r_nc_async(nsplitB,fB_nl,fpackB,fB_req)
+   if (i_triad == 1) then
+     call parallel_slib_r_nc_async(nsplitB,eB_nl,epackB,eB_req)
+   end if
    fB_req_valid = .TRUE.
    ! make sure reqs progress
    call cgyro_nl_fftw_comm_test()

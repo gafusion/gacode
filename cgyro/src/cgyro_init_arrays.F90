@@ -447,7 +447,14 @@ subroutine cgyro_init_arrays
                 + abs(omega_cdrift_r(it,is)*xi(ix))*vel(ie) &
                 + abs(omega_rot_drift_r(it,is)) &
                 + abs(omega_rot_edrift_r(it)))          
-             
+
+            ! (d/dr) upwind dissipation for triad energy transfer diagnostics
+            diss_r(ic,iv_loc,itor) = - (n_radial/length)*spectraldiss(u,nup_radial)*up_radial &
+             * (abs(omega_rdrift(it,is))*energy(ie)*(1.0+xi(ix)**2) &
+             + abs(omega_cdrift_r(it,is)*xi(ix))*vel(ie) &
+             + abs(omega_rot_drift_r(it,is)) &
+             + abs(omega_rot_edrift_r(it))) 
+
            ! omega_star 
            carg = &
                 -i_c*k_theta_base*itor*rho*(dlnndr(is)+dlntdr(is)*(energy(ie)-1.5)) &
