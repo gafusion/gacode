@@ -45,6 +45,8 @@ then
   echo "                = flux     (time-trace of fluxes for all species)"
   echo "                = ky_flux  (bar plot of flux versus ky)"
   echo "                = phi      (time-dependent ZF vs. finite-n intensities)"
+  echo "                = triad    (triad energy transfer for all ky)"
+  echo "                = triad_v2 (free energy balance of ky=0)"
   echo "                = ky_phi   (time-dependent ky-phi intensities)"
   echo "                = kx_phi   (average kx-phi intensities)"
   echo "                = kx_shift (kx-phi intensities in both domains)"
@@ -411,7 +413,7 @@ PYROOT=$GACODE_ROOT/f2py/pygacode/cgyro
 
 PLT="-m pygacode.cgyro.data_plot_single $TEX $FONTSIZE"
 
-PFLAGS="$PLOT_TYPE $LX $LY $W $NORM $EXT $TIME $FIELD $MOMENT $TMAX $THETA $YMIN $YMAX $KXMIN $KXMAX $N $ABS $FC $LOC $NSCALE $CFLUX $SPECIES $BAR $IE $MESH"
+PFLAGS="$PLOT_TYPE $LX $LY $W $NORM $EXT $TIME $FIELD $MOMENT $TMAX $THETA $YMIN $YMAX $KXMIN $KXMAX $N $ABS $FC $LOC $NSCALE $CFLUX $SPECIES $BAR $IE $MESH $DN"
 
 case "$VIS_TYPE" in
 
@@ -443,7 +445,7 @@ case "$PLOT_TYPE" in
    template)
        cp $PYROOT/plot_template.py . ;;
 
-   freq | ky_freq | error | geo | ball | ky_phi | phi | flux | rcorr_phi | low | zf | ky_flux | shift | corrug | kx_phi | kxky_phi | kx_shift | poly_phi | xflux | hb | hbcut | hball )
+   freq | ky_freq | error | geo | ball | ky_phi | phi | triad | triad_v2 | flux | rcorr_phi | low | zf | ky_flux | shift | corrug | kx_phi | kxky_phi | kx_shift | poly_phi | xflux | hb | hbcut | hball )
        python $PLT $PFLAGS ;;
   
    fluct)

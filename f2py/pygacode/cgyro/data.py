@@ -302,6 +302,13 @@ class cgyrodata:
       if fmt != 'null':
          print('INFO: (data.py) Read data in '+fmt+'.cgyro.kxky_v.   '+t)
          self.kxky_v = np.reshape(data[0:nd],(2,self.n_radial,self.theta_plot,self.n_species,self.n_n,nt),'F')
+
+      # 5. triad
+      t,fmt,data = self.extract('.cgyro.triad')
+      if fmt != 'null':
+         print('INFO: (data.py) Read data in '+fmt+'.cgyro.triad.   '+t)
+         nd = 2*self.n_n*self.n_radial*self.n_species*nt*8 
+         self.triad = np.reshape(data[0:nd],(2,self.n_species,self.n_radial,8,self.n_n,nt),'F')
       #-----------------------------------------------------------------
 
    def getgeo(self):

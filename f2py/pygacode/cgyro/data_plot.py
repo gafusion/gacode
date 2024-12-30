@@ -433,6 +433,199 @@ class cgyrodata_plot(data.cgyrodata):
       return head,self.t,y0,yn
 
 
+   def plot_triad(self,xin):
+
+      w       = xin['w']
+      theta   = xin['theta']
+      field   = xin['field']
+      ymin    = xin['ymin']
+      ymax    = xin['ymax']
+      absnorm = xin['abs']
+      moment  = xin['moment']
+      spec    = xin['spec']
+
+
+      t = self.getnorm(xin['norm'])
+
+      if xin['fig'] is None:
+         fig = plt.figure(MYDIR,figsize=(xin['lx'],xin['ly']))
+
+      self.getbigfield()
+
+      f = self.triad[0,spec,:,:,:,:]+1j*self.triad[1,spec,:,:,:,:]
+      # 0- Triad , 1- non-zonal pairs Triad , 2- d(Entropy)/dt, 3- W_k_{perp}/dt, 4- Entropy
+      # 5- Diss.(radial) , 6- Diss.(theta) , 7- Diss.(Collision)
+      f = f[:,0,:,:]
+
+      #======================================
+      # Set figure size and axes
+      ax = fig.add_subplot(111)
+      ax.grid(which="both",ls=":")
+      ax.grid(which="major",ls=":")
+      ax.set_xlabel(self.tstr)
+      ax.set_title(r'$\mathrm{Triad~energy~transfer~intensity}$'+ r'$-(L_{T_e}/Q_{GBD})$')
+      #======================================
+
+      if spec==1:
+         ft=r'{T_e}'
+      elif spec==0:
+         ft=r'{T_D}'
+      else:
+         ft=r'{T_%d}'%spec
+
+
+      # n=0 intensity
+      T0 = np.sum(f[:,0,:].real,axis=0)   
+      lab0=r'$\left\langle \left|'+ft+r'_0\right|\right\rangle$'   
+      ax.plot(t,T0,label=lab0,linewidth=4)
+
+      # n!=0 intensity
+      for i in range(1,self.n_n):
+         yn = np.sum(f[:,i,:].real,axis=(0)) *2.0 # (KY<0 domain)
+         labn=r'$\left\langle \left|'+ft+r'_{%d}\right|\right\rangle$'%i
+         if i>10:
+            ax.plot(t,yn,':',label=labn,linewidth=2)
+         else:
+            ax.plot(t,yn,label=labn,linewidth=2)
+
+      # total intensity
+      Tn = np.sum(f[:,1:,:].real,axis=(0,1))*2.0 + T0
+      ax.plot(self.t,Tn,'r',label='Total',linewidth=4)
+
+      ax.set_xlim(0,t[-1])
+      if ymax != 'auto':
+         ax.set_ylim(top=float(ymax))
+      if ymin != 'auto':
+         ax.set_ylim(bottom=float(ymin))
+      ax.legend(loc=3)
+
+      # JC: labels only correct for default norm
+      head = '(cs/a) t     Phi_0/rho_*    Phi_n/rho_*'
+
+      fig.tight_layout(pad=0.3)
+
+      return head
+
+
+   def plot_triad_v2(self,xin):
+
+      w       = xin['w']
+      theta   = xin['theta']
+      field   = xin['field']
+      ymin    = xin['ymin']
+      ymax    = xin['ymax']
+      absnorm = xin['abs']
+      moment  = xin['moment']
+      spec    = xin['spec']
+      dn      = xin['dn']
+
+
+      t = self.getnorm(xin['norm'])
+
+      if xin['fig'] is None:
+         fig = plt.figure(MYDIR,figsize=(xin['lx'],xin['ly']))
+
+      self.getbigfield()
+
+      if spec==-1:
+         f = (self.triad[0,:,:,:,:,:] + 1j*self.triad[1,:,:,:,:,:]).sum(axis=0)
+      else:
+         f  = self.triad[0,spec,:,:,:,:] + 1j*self.triad[1,spec,:,:,:,:]
+      # 0- Triad , 1- non-zonal pairs Triad , 2- d(Entropy)/dt, 3- W_k_{perp}/dt, 4- Entropy
+      # 5- Diss.(radial) , 6- Diss.(theta) , 7- Diss.(Collision)
+      T  = f[:,0,:,:].real
+      Ent= f[:,2,:,:].real
+      Wkt= self.triad[0,0,:,3,:,:].real
+      diss_r= f[:,5,:,:].real
+      diss_th=f[:,6,:,:].real
+      diss_c= f[:,7,:,:].real
+
+      ## get heat flux
+      usec = self.getflux(cflux='auto')
+
+      ys = np.sum(self.ky_flux,axis=(2,3))
+      y  = ys[:,1,:]  # 'Q'
+      yn = ys[:,0,:]  # 'Gamma'
+
+      #======================================
+      # Set figure size and axes
+      ax = fig.add_subplot(111)
+      ax.grid(which="both",ls=":")
+      ax.grid(which="major",ls=":")
+      ax.set_xlabel(self.tstr)
+      ax.set_title(r'$\mathrm{Triad~energy~transfer~intensity}$'+ r'$-(L_{T_e}/Q_{GBD})$')
+      #======================================
+
+      # n=0 intensity
+      print('HINT: adjust -dn to match experimental dn (rho/a and Lx/a will shrink)')
+      T0  = np.sum(T[:,0,:],axis=0)
+      Ent0= np.sum(Ent[:,0,:],axis=0) 
+      Wkt0= np.sum(Wkt[:,0,:],axis=0)  *dn**2
+      diss_r0 = np.sum(diss_r[:,0,:],axis=0)
+      diss_th0= np.sum(diss_th[:,0,:],axis=0)
+      diss_c0 = np.sum(diss_c[:,0,:],axis=0)
+
+      if spec == 1: # electron
+         ft = r'{L_{T_e} T_{NZF->ZF,e}/Q_{GBD}}'
+         Sft= r'{L_{T_e} {dS_e \over dt} /Q_{GBD}}'
+         Qft= r'{q_e/Q_{GBD}}'
+         Wft= r'{L_{T_e} W_{k_{\perp}}/Q_{GBD}}'
+         Q  = y[spec,:]
+         G  = (self.dlnndr[1] - 1.5*self.dlntdr[1] )*yn[spec,:] / self.dlntdr[1]
+
+      elif spec == 0: # main ion
+         ft = r'{L_{T_e} T_{NZF->ZF,D} /Q_{GBD}}'
+         Sft= r'{L_{T_e} {dS_D \over dt} /Q_{GBD}}'
+         Qft= r'{L_{T_e} q_D/Q_{GBD}L_{T_D}}'
+         Wft= r'{L_{T_e} W_{k_{\perp}}/Q_{GBD}}'
+         Q  = y[spec,:] * (self.dlntdr[0] /self.dlntdr[1] )
+         G  = (self.dlnndr[0] - 1.5*self.dlntdr[0] )*yn[spec,:] / self.dlntdr[1] *self.temp[0]
+       
+      elif spec == -1: # total
+         ft = r'{L_{T_e} \Sigma_s T_{NZF->ZF,s} /Q_{GBD}}'
+         Sft= r'{L_{T_e} \Sigma_s {dS_s \over dt} /Q_{GBD}}'
+         Qft= r'{L_{T_e} \Sigma_s q_s/Q_{GBD}L_{T_s}}'
+         Wft= r'{L_{T_e} W_{k_{\perp}}/Q_{GBD}}'
+         Q  = (y[:,:] * self.dlntdr[:,np.newaxis]).sum(axis=0)  /self.dlntdr[1]
+         G  = ( (self.dlnndr[:,np.newaxis] - 1.5*self.dlntdr[:,np.newaxis]) \
+             *yn[:,:] *self.temp[:,np.newaxis] ).sum(axis=0)   / self.dlntdr[1]
+      diss_rt = r'D_r'
+      diss_tht= r'D_\theta'
+      diss_ct = r'D_c'
+
+      lab0=r'$\left\langle \left|'+ft+r'\right|\right\rangle$'
+      lab1=r'$\left\langle \left|'+Sft+r'\right|\right\rangle$'
+      lab2=r'$\left\langle \left|'+Wft+r'\right|\right\rangle$'
+      lab3=r'$\left\langle \left|'+Qft+r'\right|\right\rangle$'
+      lab4=r'$\left\langle \left|'+diss_rt +r'\right|\right\rangle$'
+      lab5=r'$\left\langle \left|'+diss_tht+r'\right|\right\rangle$'
+      lab6=r'$\left\langle \left|'+diss_ct +r'\right|\right\rangle$'
+
+      ax.plot(self.t ,T0           ,label=lab0,linewidth=2)
+      ax.plot(self.t ,Ent0         ,label=lab1,linewidth=2)
+      ax.plot(self.t ,Wkt0         ,label=lab2,linewidth=2)
+      #ax.plot(self.t ,G+Q          ,label=lab3,linewidth=2) # q_s = (1/Ln-1.5/LT)T_s*Gamma_s + Q_s
+      ax.plot(self.t ,diss_r0      ,label=lab4,linewidth=2)
+      ax.plot(self.t ,diss_th0     ,label=lab5,linewidth=2)
+      ax.plot(self.t ,diss_c0      ,label=lab6,linewidth=2)
+      if spec == -1: ax.plot(self.t ,(T0 - Ent0) ,':k', label=r'$ZF: T0-S0 $',linewidth=2)
+      if spec == -1: ax.plot(self.t ,-(diss_r0+diss_th0+diss_c0) ,':r', label=r'$ZF: Dissipations $',linewidth=2)
+
+      ax.set_xlim(0,t[-1])
+      if ymax != 'auto':
+         ax.set_ylim(top=float(ymax))
+      if ymin != 'auto':
+         ax.set_ylim(bottom=float(ymin))
+      ax.legend(loc=1, ncol=3, framealpha=0)
+
+      # JC: labels only correct for default norm
+      head = '(cs/a) t     Phi_0/rho_*    Phi_n/rho_*'
+
+      fig.tight_layout(pad=0.3)
+
+      return head
+
+
    def plot_flux(self,xin):
       
       w      = xin['w']
