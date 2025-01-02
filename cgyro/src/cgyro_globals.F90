@@ -14,7 +14,9 @@ module cgyro_globals
 #endif
 
   use, intrinsic :: iso_fortran_env
-  
+
+  integer :: sbeta_const_flag
+  real :: sbeta_h
   
   !---------------------------------------------------------------
   ! Input parameters:

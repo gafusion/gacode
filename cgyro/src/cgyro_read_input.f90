@@ -144,6 +144,10 @@ subroutine cgyro_read_input
   call cgyro_readbc_real(nu_ee_scale)
   call cgyro_readbc_real(zf_scale)
 
+  call cgyro_readbc_int(sbeta_const_flag,'SBETA_CONST_FLAG')
+  call cgyro_readbc_real(sbeta_h)
+
+  
   if (i_proc == 0) close(1)
 
 end subroutine cgyro_read_input
