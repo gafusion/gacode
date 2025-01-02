@@ -154,6 +154,9 @@ x.add('BETAE_UNIT_SCALE','1.0')
 x.add('NU_EE_SCALE','1.0')
 x.add('ZF_SCALE','1.0')
 
+x.add('SBETA_CONST_FLAG','0')
+x.add('SBETA_H','0.0')
+
 # Perform the parsing
 x.read_input('input.cgyro')
 

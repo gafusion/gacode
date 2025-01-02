@@ -474,10 +474,10 @@ subroutine cgyro_init_arrays
            sm = sdlnndr(is)+sdlntdr(is)*(energy(ie)-1.5)
 
            ! generalized beta/drift shear (acts on H)
-           if (nup_alpha == 3) then
-              sb = -sbeta(is)*energy(ie)*xi(ix)**2/bmag(it)**3
-           else
+           if (sbeta_const_flag == 1) then
               sb = -sbeta(is)
+           else
+              sb = -sbeta(is)*energy(ie)*xi(ix)**2/bmag(it)**3
            endif
 
            arg = k_theta_base*itor*length/(2*pi)
