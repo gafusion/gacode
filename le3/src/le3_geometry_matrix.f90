@@ -2,7 +2,7 @@ subroutine le3_geometry_matrix
 
   use le3_globals
   implicit none
-  integer :: i,j,its,ips,kt,kp
+  integer :: i,j,k,its,ips,kt,kp
   
   real, dimension(:), allocatable :: vec_vdriftx
   real, dimension(:), allocatable :: vec_flux
@@ -17,6 +17,8 @@ subroutine le3_geometry_matrix
   real :: J_boozer, I_boozer
   real, dimension(:), allocatable :: vec_boozer_p, vec_boozer_t, vec_boozer
   real, dimension(:,:), allocatable :: mat_boozer, t_boozer, p_boozer
+  real, dimension(:,:), allocatable :: xtemp
+  real, dimension(:), allocatable :: tmap
   real :: xsum
   integer, dimension(:), allocatable :: i_piv
 
@@ -41,24 +43,35 @@ subroutine le3_geometry_matrix
        + dbdt*gc) / bmag**3
  
   ! (a/cs)*vdrift_gradB = 1/(cs*anorm*Omega_ca_unit)*(vperp^2/2+vpar^2)*[(1) d/d(r/a) + (2) (i k_theta a)]
+  ! Remap theta: 0..2pi -> -pi..pi
+
+  allocate(xtemp(nt,np))
+  allocate(tmap(nt))
+  do i=1,nt/2
+     k=nt/2+i
+     tmap(i) = t(k)-2*pi
+     tmap(k)   = t(i)
+  enddo
+
   vdrift_gk(:,:,1) = vdrift_x(:,:)
-  vdrift_gk(:,:,2)  = -iota*vdrift_dp(:,:) + vdrift_dt(:,:)
+  call remap_theta(vdrift_gk(:,:,1),xtemp(:,:),0.0)
+  vdrift_gk(:,:,1) = xtemp(:,:)
+
+  vdrift_gk(:,:,2)  = (-iota*vdrift_dp(:,:) + vdrift_dt(:,:))*rmin
+  call remap_theta(vdrift_gk(:,:,2),xtemp(:,:),0.0)
+  vdrift_gk(:,:,2) = xtemp(:,:)
   do i=1,nt
      do j=1,np
         vdrift_gk(i,j,2) = vdrift_gk(i,j,2) &
-             - vdrift_x(i,j) * rmin*(iota_p/iota)*t(i)
+             - vdrift_gk(i,j,1) * rmin**2 *(iota_p/iota)*tmap(i)
      enddo
   enddo
-  vdrift_gk(:,:,2) = vdrift_gk(:,:,2)*rmin
-  !i=1
-  !j=1
-  !print *, vdrift_gk(i,j,2), -iota*vdrift_dp(i,j)*rmin, vdrift_dt(i,j)*rmin
-  !print *, rmin*b1(i,j)/chi1(i,j)
-  !print *, g(i,j), b1(i,j)*bmag(i,j), chi1(i,j), bmag(i,j)
 
   ! (a/cs)*vdrift_gradp =  1/(cs*anorm*Omega_ca_unit)*(vpar^2) [(3) (i k_theta a)]
   vdrift_gk(:,:,3) = (-0.5*beta_star)/bmag(:,:)**2
-
+  call remap_theta(vdrift_gk(:,:,3),xtemp(:,:),0.0)
+  vdrift_gk(:,:,3) = xtemp(:,:)
+  
   ! grad_perpsq: (1) d^2/d(r/a)^2 + (2) (k_theta a)^2 + (3) (i k_theta a) d/d(r/a)
   grad_cc =  1.0/g**2 * (gtt * gpp - gpt**2)
   grad_tt =  1.0/g**2 * (gpp * gcc - gcp**2)
@@ -66,19 +79,41 @@ subroutine le3_geometry_matrix
   grad_pt =  1.0/g**2 * (gcp * gct - gpt*gcc)
   grad_ct =  1.0/g**2 * (gpt * gcp - gpp*gct)
   grad_cp =  1.0/g**2 * (gpt * gct - gtt*gcp)
+  
   grad_perpsq_gk(:,:,1) = 1.0/rmin**2 * grad_cc(:,:)
-  grad_perpsq_gk(:,:,2) = grad_pp + 1.0/iota**2*grad_tt - 2.0/iota*grad_pt 
+  call remap_theta(grad_perpsq_gk(:,:,1),xtemp(:,:),0.0)
+  grad_perpsq_gk(:,:,1) = xtemp(:,:)
+  
+  grad_perpsq_gk(:,:,2) = grad_pp + 1.0/iota**2*grad_tt - 2.0/iota*grad_pt
+  call remap_theta(grad_perpsq_gk(:,:,2),xtemp(:,:),0.0)
+  grad_perpsq_gk(:,:,2) = xtemp(:,:)
+  call remap_theta(grad_cc(:,:),xtemp(:,:),0.0)
   do i=1,nt
      do j=1,np
-        grad_perpsq_gk(i,j,2) = grad_perpsq_gk(i,j,2) + (iota_p/iota**2*t(i))**2 * grad_cc(i,j) &
-             + 2.0*iota_p/iota**2*t(i)*grad_cp(i,j) - 2.0*iota_p/iota**3*t(i)*grad_ct(i,j)
+        grad_perpsq_gk(i,j,2) = grad_perpsq_gk(i,j,2) + (iota_p/iota**2*tmap(i))**2 * xtemp(i,j)
+     enddo
+  enddo
+  call remap_theta(grad_cp(:,:),xtemp(:,:),0.0)
+    do i=1,nt
+     do j=1,np
+        grad_perpsq_gk(i,j,2) = grad_perpsq_gk(i,j,2) + 2.0*iota_p/iota**2*tmap(i)*xtemp(i,j)
+     enddo
+  enddo
+  call remap_theta(grad_ct(:,:),xtemp(:,:),0.0)
+    do i=1,nt
+     do j=1,np
+        grad_perpsq_gk(i,j,2) = grad_perpsq_gk(i,j,2) - 2.0*iota_p/iota**3*tmap(i)*xtemp(i,j)
      enddo
   enddo
   grad_perpsq_gk(:,:,2) = grad_perpsq_gk(:,:,2)*(iota*rmin)**2
+  
   grad_perpsq_gk(:,:,3) = grad_cp - 1.0/iota*grad_ct
+  call remap_theta(grad_perpsq_gk(:,:,3),xtemp(:,:),0.0)
+  grad_perpsq_gk(:,:,3) = xtemp(:,:)
+  call remap_theta(grad_cc(:,:),xtemp(:,:),0.0)
   do i=1,nt
      do j=1,np
-        grad_perpsq_gk(i,j,3) =  grad_perpsq_gk(i,j,3) + iota_p/iota**2*t(i)* grad_cc(i,j)
+        grad_perpsq_gk(i,j,3) =  grad_perpsq_gk(i,j,3) + iota_p/iota**2*tmap(i)* xtemp(i,j)
      enddo
   enddo
   grad_perpsq_gk(:,:,3) =  grad_perpsq_gk(:,:,3)*(-2.0*iota)
@@ -456,27 +491,34 @@ subroutine le3_geometry_matrix
   call le3_compute_theory
 
   ! Write out quantitites for GK-3D
-     
+  ! remap theta: 0..2pi -> -pi..pi
+  
   open(unit=1,file='out.le3.geogk',status='replace')
   write (1,'(i4)') nt
   write (1,'(i4)') np
-  write (1,'(e16.8)') t
+  write (1,'(e16.8)') tmap
   write (1,'(e16.8)') p
 
   ! theta_bar(theta,phi) and derivatives
-  write (1,'(e16.8)') tb(:,:)
-  write (1,'(e16.8)') dtbdt(:,:)
-  write (1,'(e16.8)') dtbdp(:,:)
+  call remap_theta(tb(:,:),xtemp(:,:),1.0)
+  write (1,'(e16.8)') xtemp(:,:)
+  call remap_theta(dtbdt(:,:),xtemp(:,:),0.0)
+  write (1,'(e16.8)') xtemp(:,:)
+  call remap_theta(dtbdp(:,:),xtemp(:,:),0.0)
+  write (1,'(e16.8)') xtemp(:,:)
   
   ! B/Bunit
-  write (1,'(e16.8)') bmag(:,:)
+  call remap_theta(bmag(:,:),xtemp(:,:),0.0)
+  write (1,'(e16.8)') xtemp(:,:)
   
   ! anorm*(bhat dot grad) = bdotgrad * (iota d/dt + d/dp) = (1) d/dt + (2) d/dp
-  write (1,'(e16.8)') bdotgrad(:,:)*iota
-  write (1,'(e16.8)') bdotgrad(:,:)
+  call remap_theta(bdotgrad(:,:),xtemp(:,:),0.0)
+  write (1,'(e16.8)') xtemp(:,:)*iota
+  write (1,'(e16.8)') xtemp(:,:)
   
   ! anorm*(bhat dot grad B)/B
-  write (1,'(e16.8)') bdotgradB_overB(:,:)
+  call remap_theta(bdotgradB_overB(:,:),xtemp(:,:),0.0)
+  write (1,'(e16.8)') xtemp(:,:)
   
   ! (a/cs)*vdrift_gradB = 1/(cs*anorm*Omega_ca_unit)*(vperp^2/2+vpar^2)*[(1) d/d(r/a) + (2) (i k_theta a)]
   write (1,'(e16.8)') vdrift_gk(:,:,1)
@@ -490,23 +532,24 @@ subroutine le3_geometry_matrix
   write (1,'(e16.8)') grad_perpsq_gk(:,:,2)
   write (1,'(e16.8)') grad_perpsq_gk(:,:,3)
 
-  write (1,'(e16.8)') b1(:,:)
+  call remap_theta(b1(:,:),xtemp(:,:),0.0)
+  write (1,'(e16.8)') xtemp(:,:)
 
-  write (1,'(e16.8)') dchi(:,:)
+  call remap_theta(chi1(:,:),xtemp(:,:),0.0)
+  write (1,'(e16.8)') xtemp(:,:)
 
-  write (1,'(e16.8)') dthetap(:,:)
+  call remap_theta(dchi(:,:),xtemp(:,:),0.0)
+  write (1,'(e16.8)') xtemp(:,:)
 
-  write (1,'(e16.8)') chi1(:,:)
+  call remap_theta(dtheta(:,:),xtemp(:,:),0.0)
+  write (1,'(e16.8)') xtemp(:,:)
 
-  write (1,'(e16.8)') b1_temp1(:,:)
-
-  write (1,'(e16.8)') b1_temp2(:,:)
-
-  write (1,'(e16.8)') b1_temp3(:,:)
-
-  write (1,'(e16.8)') dtheta(:,:)
+  call remap_theta(dtheta_t(:,:),xtemp(:,:),0.0)
+  write (1,'(e16.8)') xtemp(:,:)
   
   close(1)
+  deallocate(xtemp)
+  deallocate(tmap)
   
   deallocate(itype)
   deallocate(m_indx)
@@ -565,3 +608,18 @@ subroutine le3_geometry_matrix
   deallocate(vec_ntv)
 
 end subroutine le3_geometry_matrix
+
+subroutine remap_theta(xold,xnew,fac)
+  use le3_globals
+  implicit none
+  real, intent(inout), dimension(nt,np) :: xold,xnew
+  real, intent(in) :: fac
+  integer :: i,j,k
+  do i=1,nt/2
+     k=nt/2+i
+     do j=1,np
+        xnew(i,j)   = xold(k,j) - fac*2*pi
+        xnew(k,j)   = xold(i,j)
+     enddo
+  enddo
+end subroutine remap_theta

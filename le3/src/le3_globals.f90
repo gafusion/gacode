@@ -52,8 +52,8 @@ module le3_globals
   ! "Second order" quantities
   real, dimension(:,:), allocatable :: dtheta
   real, dimension(:,:), allocatable :: dchi
-  real, dimension(:,:), allocatable :: dthetap
-  real, dimension(:,:), allocatable :: b1, b1_temp1, b1_temp2, b1_temp3
+  real, dimension(:,:), allocatable :: dtheta_t, dtheta_p
+  real, dimension(:,:), allocatable :: b1
   real, dimension(:,:), allocatable :: gc
 
   !--------------------------------------------------------
