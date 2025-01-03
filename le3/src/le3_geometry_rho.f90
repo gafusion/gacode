@@ -240,8 +240,9 @@ subroutine le3_geometry_rho
 
         gtt_1 = 2.0 * x**2 * (1.0/rc(i,j)- chi1(i,j)*dtheta_t(i,j))
 
-        ! Not done
-        gpt_1 = 0.0
+        gpt_1 = x*(up - chi1(i,j)*x*dtheta_p(i,j)) &
+             + (x/rc(i,j) - chi1(i,j)*x*dtheta_t(i,j))*ycosuv &
+             - chi1t(i,j)/chi1(i,j)*ysinuv
         
         !-------------------------------------------------------------
 
