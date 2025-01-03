@@ -326,9 +326,9 @@ subroutine cgyro_nl_fftw_comm1_r_triad(ij)
   real :: dv,dvr,dvp,rval,rval2
   complex :: cprod,cprod2,thfac
 
-  triad_loc_old(:,:,:,3)=triad_loc(:,:,:,3)
-  triad_loc_old(:,:,:,4)=triad_loc(:,:,:,4)
-  triad_loc(:,:,:,:)=0.0
+  triad_loc_old(:,:,nt1:nt2,3) = triad_loc(:,:,nt1:nt2,3)
+  triad_loc_old(:,:,nt1:nt2,4) = triad_loc(:,:,nt1:nt2,4)
+  triad_loc(:,:,nt1:nt2,:) = 0.0
 
   call timer_lib_in('nl_comm')
   call parallel_slib_r_nc_wait(nsplitA,fA_nl,fpackA,fA_req)

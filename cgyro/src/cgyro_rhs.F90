@@ -35,7 +35,7 @@ subroutine cgyro_rhs_r_comm_async(ij)
   integer, intent(in) :: ij
 
   if (nonlinear_flag == 1) then
-     if (triad_print_flag == 1 .and. ij == 4) then
+     if (triad_print_flag == 1 .and. ij == 3) then
         call cgyro_nl_fftw_comm1_r_triad(ij)
      else
         call cgyro_nl_fftw_comm1_r(ij)

@@ -1429,7 +1429,7 @@ subroutine cgyro_nl_fftw(ij)
 
   include 'fftw3.f03'
 
-  if (triad_print_flag == 1 .and. ij == 4) then
+  if (triad_print_flag == 1 .and. ij == 3) then
    i_triad=1
   endif
 
@@ -1589,6 +1589,9 @@ subroutine cgyro_nl_fftw(ij)
   ! start the async reverse comm
   ! can reuse the same req, no overlap with forward fA_req
   call parallel_slib_r_nc_async(nsplitA,fA_nl,fpackA,fA_req)
+   if (i_triad == 1) then
+     call parallel_slib_r_nc_async(nsplitA,eA_nl,epackA,eA_req)
+   end if
   fA_req_valid = .TRUE.
 
   if (nsplitB > 0) then

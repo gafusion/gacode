@@ -85,6 +85,14 @@ elif plot_type == 'phi':
 
    head,x,y1,y2 = data_in.plot_phi(xin)
 
+elif plot_type == 'triad':
+
+   head = data_in.plot_triad(xin)
+
+elif plot_type == 'triad_v2':
+
+   head = data_in.plot_triad_v2(xin)
+
 elif plot_type == 'flux':
 
    if ftype == 'nox' or ftype == 'dump':
