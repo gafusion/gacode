@@ -1,0 +1,23 @@
+py.install_sources(
+    files(
+        '__init__.py',
+        'avconv_wrapper',
+        'conv_gs2.py',
+        'data_distill.py',
+        'data_dump.py',
+        'data_plot.py',
+        'data_plot_single.py',
+        'data.py',
+        'data_template.py',
+        'plot_fluct.py',
+        'plot_rt.py',
+        'plot_template.py',
+        'vis_mesh.py',
+        'vis_notes.jpg',
+        'vis_supertorus.py',
+        'vis_torcut.py',
+        'vis_wheel.py',
+    ),
+    pure: false,
+    subdir: 'pygacode/cgyro',
+)

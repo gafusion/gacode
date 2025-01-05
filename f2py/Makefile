@@ -10,7 +10,8 @@ vismod:
 	cd vis ; make
 
 pip:
-	python -m build
+	meson setup build
+	meson compile -C build
 
 clean:
 	cd geo ; make clean
@@ -19,5 +20,3 @@ clean:
 	rm -rf dist build *egg-info
 
 .IGNORE:
-
-
