@@ -16,7 +16,7 @@ class BuildF2PyExtension(build_ext):
     def build_extension(self, ext):
         output_module = ext.name
         env = os.environ.copy()
-        if sys.version_info < (3, 10):
+        if sys.version_info < (3, 12):
             env["SETUPTOOLS_USE_DISTUTILS"] = "1"
         subprocess.check_call([
             "f2py", "-c", "-m", output_module, *ext.fortran_sources
