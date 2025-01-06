@@ -31,4 +31,7 @@ try:
    __all__.extend(list(tmp.keys()))
 except:
    # Not using pygacode
-   pass   
+   pass
+
+from .gacodefuncs import *
+from .gacodeinput import *

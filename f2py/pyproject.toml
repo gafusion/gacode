@@ -1,16 +1,18 @@
 [build-system]
 requires = [
-    "meson-python>=0.12.0",
+    "setuptools>=41.2.0", "wheel",
     "oldest-supported-numpy; python_version=='3.8'",
-    "numpy>=2.0.0; python_version>='3.9'",
+    "numpy>=2.0.2; python_version>='3.9'",
+    "numpy>=2.1.3; python_version>='3.10'",
+    "meson; python_version>='3.12'",
 ]
-build-backend = "mesonpy"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "pygacode"
 version = "1.0.2"
 description = "Python-GACODE"
-license = {text = "MIT"}
+license = { text = "MIT" }
 requires-python = ">=3.8"
-urls = {Homepage = "https://gacode.io"}
+urls = { Homepage = "https://gacode.io" }
 dependencies = ["numpy"]
