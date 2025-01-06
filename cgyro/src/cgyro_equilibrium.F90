@@ -204,23 +204,23 @@ subroutine cgyro_equilibrium
   !
 
   ! EAB LE3 test
-  print *, geo_f, geo_ffprime/geo_f
-  open(unit=1,file='out.cgyro.geogk',status='replace')
-  write (1,'(i2)') n_theta
-  write (1,'(e16.8)') theta(:)
-  write (1,'(e16.8)') geo_b(:)
-  write (1,'(e16.8)') 1.0/(q*rmaj*geo_g_theta(:))
-  write (1,'(e16.8)') (geo_dbdt(:)/geo_b(:))/(q*rmaj*geo_g_theta(:))
-  write (1,'(e16.8)') -1.0/geo_b(:)*geo_grad_r(:)/rmaj*geo_gsin(:) 
-  write (1,'(e16.8)') -1.0/geo_b(:)*geo_gq(:)/rmaj&
-       *(geo_gcos1(:)+geo_gcos2(:)+geo_captheta(:)*geo_gsin(:))
-  write (1,'(e16.8)') 1.0/geo_b(:)*geo_gq(:)/rmaj*geo_gcos2(:)
-  write (1,'(e16.8)') geo_grad_r(:)**2
-  write (1,'(e16.8)') geo_gq(:)**2 * (1.0+geo_captheta(:)**2)
-  write (1,'(e16.8)') 2.0*geo_grad_r(:)*geo_gq(:)*geo_captheta(:)
-  write (1,'(e16.8)') geo_chi2(:)
-  write (1,'(e16.8)') -(geo_gcos1(:) + geo_gcos2(:))/rmaj
-  close(1)
+  !print *, geo_f, geo_ffprime/geo_f
+  !open(unit=1,file='out.cgyro.geogk',status='replace')
+  !write (1,'(i2)') n_theta
+  !write (1,'(e16.8)') theta(:)
+  !write (1,'(e16.8)') geo_b(:)
+  !write (1,'(e16.8)') 1.0/(q*rmaj*geo_g_theta(:))
+  !write (1,'(e16.8)') (geo_dbdt(:)/geo_b(:))/(q*rmaj*geo_g_theta(:))
+  !write (1,'(e16.8)') -1.0/geo_b(:)*geo_grad_r(:)/rmaj*geo_gsin(:) 
+  !write (1,'(e16.8)') -1.0/geo_b(:)*geo_gq(:)/rmaj&
+  !     *(geo_gcos1(:)+geo_gcos2(:)+geo_captheta(:)*geo_gsin(:))
+  !write (1,'(e16.8)') 1.0/geo_b(:)*geo_gq(:)/rmaj*geo_gcos2(:)
+  !write (1,'(e16.8)') geo_grad_r(:)**2
+  !write (1,'(e16.8)') geo_gq(:)**2 * (1.0+geo_captheta(:)**2)
+  !write (1,'(e16.8)') 2.0*geo_grad_r(:)*geo_gq(:)*geo_captheta(:)
+  !write (1,'(e16.8)') geo_chi2(:)
+  !write (1,'(e16.8)') -(geo_gcos1(:) + geo_gcos2(:))/rmaj
+  !close(1)
 
   do it=1,n_theta
 
