@@ -10,13 +10,12 @@ vismod:
 	cd vis ; make
 
 pip:
-	meson setup build
-	meson compile -C build
+	python setup.py build_ext
 
 clean:
 	cd geo ; make clean
 	cd expro ; make clean
 	cd vis ; make clean
-	rm -rf dist build *egg-info
+	rm -rf dist build *egg-info *.so
 
 .IGNORE:
