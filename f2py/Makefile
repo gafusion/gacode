@@ -10,7 +10,7 @@ vismod:
 	cd vis ; make
 
 pip:
-	python setup.py build_ext
+	python -m build
 
 clean:
 	cd geo ; make clean
