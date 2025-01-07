@@ -1,0 +1,37 @@
+#---------------------------------------------------
+# OSX,gfortran+openmpi from Homebrew
+# 
+# /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+# brew install gcc open-mpi netcdf netcdf-fortran fftw
+#---------------------------------------------------
+
+IDENTITY="OSX gfortran+openmpi from Homebrew"
+
+MAKE = make
+
+MF90 = mpif90
+
+# Compilers and flags
+
+FC  = ${MF90} -std=f2008 -fall-intrinsics -I$(FFTW_INC) -I$(GACODE_ROOT)/modules -J$(GACODE_ROOT)/modules -I/opt/local/include -fPIC
+F77 = ${MF90} -w -fallow-argument-mismatch
+
+FOMP	= -fopenmp
+FMATH	= -fdefault-real-8 -fdefault-double-8
+FOPT	= -O3 -m64 -framework Accelerate
+FDEBUG	= -Wall -g -fcheck=all -fbacktrace -fbounds-check -O0 -Wextra -finit-real=nan -Wunderflow -ffpe-trap=invalid,zero,overflow
+#F2PY    = f2py-2.7
+
+# System libraries
+
+LMATH = -L$(BREW_LIB) -lfftw3
+NETCDF = -L$(BREW_LIB) -lnetcdff -lnetcdf
+
+# Archive
+
+ARCH = ar cr
+
+ifdef FANN_ROOT
+   # neural net libraries
+   NN_LIB=-L$(GACODE_ROOT)/../neural/ -I$(GACODE_ROOT)/../neural/ -lbrainfuse -lfann
+endif
