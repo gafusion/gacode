@@ -302,10 +302,8 @@ subroutine cgyro_init_manager
      ! Nonlinear arrays
      if (nonlinear_flag == 1) then
         allocate(fA_nl(n_radial,nt_loc,nsplitA,n_toroidal_procs))
-        allocate(eA_nl(n_radial,nt_loc,nsplitA,n_toroidal_procs))
         allocate(g_nl(n_field,n_radial,n_jtheta,n_toroidal))
         allocate(fpackA(n_radial,nt_loc,nsplitA*n_toroidal_procs))
-        allocate(epackA(n_radial,nt_loc,nsplitA*n_toroidal_procs))
         allocate(gpack(n_field,n_radial,n_jtheta,n_toroidal))
         allocate(jvec_c_nl(n_field,n_radial,n_jtheta,nv_loc,n_toroidal))
 #if defined(OMPGPU)
@@ -313,16 +311,32 @@ subroutine cgyro_init_manager
 #elif defined(_OPENACC)
 !$acc enter data create(fpackA,gpack,fA_nl,g_nl,jvec_c_nl)
 #endif
+        if (triad_print_flag == 1) then
+          allocate(eA_nl(n_radial,nt_loc,nsplitA,n_toroidal_procs))
+          allocate(epackA(n_radial,nt_loc,nsplitA*n_toroidal_procs))
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:epackA,eA_nl)
+#elif defined(_OPENACC)
+!$acc enter data create(epackA,eA_nl)
+#endif
+        endif
         if (nsplitB > 0) then ! nsplitB can be zero at large MPI
           allocate(fB_nl(n_radial,nt_loc,nsplitB,n_toroidal_procs))
           allocate(fpackB(n_radial,nt_loc,nsplitB*n_toroidal_procs))
-          allocate(eB_nl(n_radial,nt_loc,nsplitB,n_toroidal_procs))
-          allocate(epackB(n_radial,nt_loc,nsplitB*n_toroidal_procs))
 #if defined(OMPGPU)
 !$omp target enter data map(alloc:fpackB,fB_nl)
 #elif defined(_OPENACC)
 !$acc enter data create(fpackB,fB_nl)
 #endif
+          if (triad_print_flag == 1) then
+            allocate(epackB(n_radial,nt_loc,nsplitB*n_toroidal_procs))
+            allocate(eB_nl(n_radial,nt_loc,nsplitB,n_toroidal_procs))
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:epackB,eB_nl)
+#elif defined(_OPENACC)
+!$acc enter data create(epackB,eB_nl)
+#endif
+          endif
         endif
      endif
 

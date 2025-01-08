@@ -133,6 +133,12 @@ subroutine cgyro_check_memory(datafile)
         call cgyro_alloc_add_3d(io,n_radial,nt_loc,nsplitA*n_toroidal_procs,16,'fpackA')
         call cgyro_alloc_add_3d(io,n_radial,nt_loc,nsplitB*n_toroidal_procs,16,'fpackB')
         call cgyro_alloc_add_4d(io,n_field,n_radial,n_jtheta,n_toroidal,16,'gpack')
+        if (triad_print_flag == 1) then
+          call cgyro_alloc_add_4d(io,n_radial,nt_loc,nsplitA,n_toroidal_procs,16,'eA_nl')
+          call cgyro_alloc_add_4d(io,n_radial,nt_loc,nsplitB,n_toroidal_procs,16,'eB_nl')
+          call cgyro_alloc_add_3d(io,n_radial,nt_loc,nsplitA*n_toroidal_procs,16,'epackA')
+          call cgyro_alloc_add_3d(io,n_radial,nt_loc,nsplitB*n_toroidal_procs,16,'epackB')
+        endif
      endif
 
      write(io,*)
