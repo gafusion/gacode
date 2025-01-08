@@ -48,10 +48,10 @@ subroutine qlgyro_run_cgyro_balloon
   call allocate_cgyro_interface
   if (i_proc_global .eq. 0)  call tglf_dump_local
 
-  if (transport_method .eq. 0) then
-     ky_min = cgyro_ky_in
-  else if (transport_method .eq. 1) then
+  if (kygrid_model .eq. -1) then
      ky_min = cgyro_q_in / cgyro_rmin_in * cgyro_rho_star_norm_in
+  else
+     ky_min = cgyro_ky_in
   end if
 
   call qlgyro_ky_spectrum(ky_min)
@@ -167,8 +167,6 @@ subroutine qlgyro_run_cgyro_balloon
      
      ! If run is being done then skip to next ky
      if (loop_cycle) then
-        ! Give some time to allow for other statuses to be set
-        call sleep(2)
         call MPI_barrier(CGYRO_COMM_WORLD, ierr)
         cycle
      end if
@@ -183,6 +181,7 @@ subroutine qlgyro_run_cgyro_balloon
 
      if (adjoint .eq. 0) then
         call system("mkdir -p "//runpath)
+        if (cgyro_profile_model_in .eq. 2) call system("cp "//trim(path)//"input.gacode "//runpath)
         if (transport_method .eq. 0) then
            write(*,*) ' '
            write(*,21) 'Group ',  color, ' running in folder ', trim(runpath), ky_color(i_kypx0)

@@ -27,7 +27,7 @@
       real, dimension(n_ky) :: ql_metric_ky
       real :: ql_metric
       real :: px0_max, max_gam
-      real :: facnorm, b, a
+      real :: Q0, alpha
 
       call calculate_ql_metric(ql_metric_ky_px0)
 
@@ -79,22 +79,19 @@
                   end if
                end do
                
-               call trapezoid_flux(px0_spectrum, px0_max_index, qlgyro_flux_spectrum_out(:, :, :, i_ky_local, :) &
+               call trapezoid_flux(px0_spectrum, px0_max, px0_max_index, qlgyro_flux_spectrum_out(:, :, :, i_ky_local, :) &
                , tglf_flux_spectrum_out(:, :, :, i_ky_local, 1))
-               call trapezoid_metric_px0(px0_spectrum, px0_max_index, ql_metric_ky_px0(i_ky_local, :), ql_metric_ky(i_ky_local))
+               call trapezoid_metric_px0(px0_spectrum, px0_max, px0_max_index, ql_metric_ky_px0(i_ky_local, :), ql_metric_ky(i_ky_local))
             end if
          end do 
       end if
  
       call trapezoid_ky(tglf_ky_spectrum_out, ql_metric_ky, ql_metric)
 
-      a = 2.1
+      alpha = 2.5
+      Q0 = 25.0 * bgs2**(-2)
 
-      ! Convert from using rho_s(B0) to rho_s(Bunit) by (bgs2**-2)
-      facnorm = bgs2**(-2)
-
-      b = exp(3.0)
-      tglf_flux_spectrum_out = tglf_flux_spectrum_out * facnorm * b * ql_metric ** (a-1)
+      tglf_flux_spectrum_out = Q0 * tglf_flux_spectrum_out * ql_metric ** (alpha-1)
       tglf_eigenvalue_spectrum_out = qlgyro_eigenvalue_spectrum_out
 
     END SUBROUTINE qlgyro_sat_mg
@@ -121,8 +118,10 @@
             denom(i_field, i_thetab, :, :) = numer(i_field, i_thetab, :, :) * qlgyro_k_perp(i_thetab, :, :)**2
          end do
       end do
-      
+
       max_field = maxval(field_sq, dim=2)
+      ! Account for GS2 field normalisation of A||
+      max_field(1, :, :) = max_field(1, :, :) * 0.25
       
       call trapezoid_field(qlgyro_theta_ballooning, numer, numer_trapz)
       call trapezoid_field(qlgyro_theta_ballooning, denom, denom_trapz)
@@ -158,7 +157,7 @@
     end subroutine trapezoid_field
       
     
-    subroutine trapezoid_flux(px0, px0_max, integrand, integral)
+    subroutine trapezoid_flux(px0, px0_max, px0_max_index, integrand, integral)
 
       use qlgyro_globals
       implicit none
@@ -166,22 +165,23 @@
       real, dimension(n_px0), intent(in) :: px0
       real, dimension(5, n_species, n_field, n_px0), intent(in) :: integrand
       real, dimension(5, n_species, n_field), intent(out) :: integral
-      integer, intent(in) :: px0_max
+      real, intent(in) :: px0_max
+      integer, intent(in) :: px0_max_index
       integer :: i_px0_local
       real :: dpx0
       
       integral = 0.0
 
-      do i_px0_local=1, px0_max - 1
+      do i_px0_local=1, px0_max_index - 1
          dpx0 = px0(i_px0_local+1) - px0(i_px0_local)
          integral = integral + dpx0 * (integrand(:, :, :, i_px0_local+1) + integrand(:, :, :, i_px0_local)) / 2
       end do
 
-      integral = integral / px0(px0_max)
+      integral = integral / px0_max
 
     end subroutine trapezoid_flux
     
-    subroutine trapezoid_metric_px0(px0, px0_max, integrand, integral)
+    subroutine trapezoid_metric_px0(px0, px0_max, px0_max_index, integrand, integral)
 
       use qlgyro_globals
       implicit none
@@ -189,18 +189,19 @@
       real, dimension(n_px0), intent(in) :: px0
       real, dimension(n_px0), intent(in) :: integrand
       real, intent(out) :: integral
-      integer, intent(in) :: px0_max
+      real, intent(in) :: px0_max
+      integer, intent(in) :: px0_max_index
       integer :: i_px0_local
       real :: dpx0
       
       integral = 0.0
       
-      do i_px0_local=1, px0_max - 1
+      do i_px0_local=1, px0_max_index - 1
          dpx0 = px0(i_px0_local+1) - px0(i_px0_local)
          integral = integral + dpx0 * (integrand(i_px0_local+1) + integrand(i_px0_local)) / 2
       end do
 
-      integral = integral / px0(px0_max)
+      integral = integral / px0_max
 
     end subroutine trapezoid_metric_px0
     
