@@ -1278,9 +1278,11 @@ subroutine cgyro_nl_fftw_stepr(g_j, f_j, nl_idx, i_omp)
 
   implicit none
 
+  !-----------------------------------
   integer, intent(in) :: g_j, f_j
   integer,intent(in) :: nl_idx ! 1=>A, 2=>B
   integer,intent(in) :: i_omp
+  !-----------------------------------
   integer :: ix,iy
   integer :: ir,itm,itl,itor
 
@@ -1313,6 +1315,7 @@ subroutine cgyro_nl_fftw_stepr(g_j, f_j, nl_idx, i_omp)
 
 end subroutine cgyro_nl_fftw_stepr
 
+  ! assumes cgyro_nl_fftw_stepr has already been called
 subroutine cgyro_nl_fftw_stepr_triad(g_j, f_j, nl_idx, i_omp)
 
   use timer_lib
@@ -1321,40 +1324,18 @@ subroutine cgyro_nl_fftw_stepr_triad(g_j, f_j, nl_idx, i_omp)
 
   implicit none
 
+  !-----------------------------------
   integer, intent(in) :: g_j, f_j
   integer,intent(in) :: nl_idx ! 1=>A, 2=>B
   integer,intent(in) :: i_omp
+  !-----------------------------------
   real :: y_mean(nx)
   integer :: ix,iy
   integer :: ir,itm,itl,itor
 
   include 'fftw3.f03'
 
-  ! 1. Poisson bracket in real space
-  uv(:,:,i_omp) = (uxmany(:,:,f_j)*vymany(:,:,g_j)-uymany(:,:,f_j)*vxmany(:,:,g_j))/(nx*ny)
-
-  call fftw_execute_dft_r2c(plan_r2c,uv(:,:,i_omp),fx(:,:,i_omp))
-
-  ! NOTE: The FFT will generate an unwanted n=0,p=-nr/2 component
-  ! that will be filtered in the main time-stepping loop
-
-  ! this should really be accounted against nl_mem, but hard to do with OMP
-  do itm=1,n_toroidal_procs
-   do itl=1,nt_loc
-    itor=itl + (itm-1)*nt_loc
-    do ir=1,n_radial
-     ix = ir-1-nx0/2
-     if (ix < 0) ix = ix+nx
-     iy = itor-1
-     if (nl_idx==1) then
-       fA_nl(ir,itl,f_j,itm) = fx(iy,ix,i_omp)
-     else
-       fB_nl(ir,itl,f_j,itm) = fx(iy,ix,i_omp)
-     endif
-    enddo
-   enddo
-  enddo
-
+  ! 1. Poisson bracket in real space was done in cgyro_nl_fftw_stepr
 
   ! 2. Poisson bracket in real space with Non_Zonal pairs
 
@@ -1576,10 +1557,14 @@ subroutine cgyro_nl_fftw(i_triad)
         endif
 
         if (j<=nsplitA) then
+           call cgyro_nl_fftw_stepr(j, j, 1, i_omp)
+           if (i_omp==1) then
+             ! use the main thread to progress the async MPI
+             call cgyro_nl_fftw_comm_test()
+           endif
+
            if (i_triad == 1) then
               call cgyro_nl_fftw_stepr_triad(j, j, 1, i_omp)
-           else
-              call cgyro_nl_fftw_stepr(j, j, 1, i_omp)
            endif
         endif
         ! else we will do it in the next loop
@@ -1662,10 +1647,14 @@ subroutine cgyro_nl_fftw(i_triad)
           call cgyro_nl_fftw_comm_test()
         endif
 
+        call cgyro_nl_fftw_stepr(nsplitA+j, j, 2, i_omp)
+        if (i_omp==1) then
+         ! use the main thread to progress the async MPI
+          call cgyro_nl_fftw_comm_test()
+        endif
+
         if (i_triad == 1) then
           call cgyro_nl_fftw_stepr_triad(nsplitA+j, j, 2, i_omp)
-        else
-          call cgyro_nl_fftw_stepr(nsplitA+j, j, 2, i_omp)
         endif
    enddo ! j
 
