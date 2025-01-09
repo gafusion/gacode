@@ -1285,11 +1285,17 @@ subroutine cgyro_nl_fftw_stepr(g_j, f_j, nl_idx, i_omp)
   !-----------------------------------
   integer :: ix,iy
   integer :: ir,itm,itl,itor
+  real :: inv_nxny
 
   include 'fftw3.f03'
 
+  inv_nxny = 1.0/(nx*ny)
   ! Poisson bracket in real space
-  uv(:,:,i_omp) = (uxmany(:,:,f_j)*vymany(:,:,g_j)-uymany(:,:,f_j)*vxmany(:,:,g_j))/(nx*ny)
+  do ix=0,nx-1
+    do iy=0,ny-1
+      uv(iy,ix,i_omp) = (uxmany(iy,ix,f_j)*vymany(iy,ix,g_j)-uymany(iy,ix,f_j)*vxmany(iy,ix,g_j)) * inv_nxny
+    enddo
+  enddo
 
   call fftw_execute_dft_r2c(plan_r2c,uv(:,:,i_omp),fx(:,:,i_omp))
 
@@ -1329,45 +1335,41 @@ subroutine cgyro_nl_fftw_stepr_triad(g_j, f_j, nl_idx, i_omp)
   integer,intent(in) :: nl_idx ! 1=>A, 2=>B
   integer,intent(in) :: i_omp
   !-----------------------------------
-  real :: y_mean(nx)
+  real :: y_mean_ux, y_mean_uy, y_mean_vx, y_mean_vy
+  real :: r_ux, r_uy, r_vx, r_vy
   integer :: ix,iy
   integer :: ir,itm,itl,itor
+  real :: inv_nxny,inv_ny
 
   include 'fftw3.f03'
 
+  inv_ny = 1.0/ny
+  inv_nxny = 1.0/(nx*ny)
   ! 1. Poisson bracket in real space was done in cgyro_nl_fftw_stepr
 
   ! 2. Poisson bracket in real space with Non_Zonal pairs
 
-  ! remove ky=0 in uxmany
-  y_mean = sum(uxmany(:,:,f_j) ,dim=1 ) / ny
-  do iy=0,ny-1
-    uxmany(iy,:,f_j) = uxmany(iy,:,f_j) -y_mean
+  do ix=0,nx-1
+    y_mean_ux = sum(uxmany(:,ix,f_j) ,dim=1 ) * inv_ny
+    y_mean_uy = sum(uymany(:,ix,f_j) ,dim=1 ) * inv_ny
+    y_mean_vx = sum(vxmany(:,ix,f_j) ,dim=1 ) * inv_ny
+    y_mean_vy = sum(vymany(:,ix,f_j) ,dim=1 ) * inv_ny
+    do iy=0,ny-1
+      ! remove ky=0
+      r_ux = uxmany(iy,ix,f_j) - y_mean_ux
+      r_uy = uymany(iy,ix,f_j) - y_mean_uy
+      r_vx = vxmany(iy,ix,f_j) - y_mean_vx
+      r_vy = vymany(iy,ix,f_j) - y_mean_vy
+      ! we could save, but we do not really need to (not used outside from this function)
+      !uxmany(iy,ix,f_j) = r_ux
+      !uymany(iy,ix,f_j) = r_y
+      !vxmany(iy,ix,f_j) = r_vx
+      !vymany(iy,ix,f_j) = r_vy
 
-  end do
-
-  ! remove ky=0 in uymany
-  y_mean = sum(uymany(:,:,f_j) ,dim=1 ) / ny ! =0
-  do iy=0,ny-1
-    uymany(iy,:,f_j) = uymany(iy,:,f_j) -y_mean
-
-  end do
-
-  ! remove ky=0 in vx
-  y_mean = sum(vxmany(:,:,g_j) ,dim=1 ) / ny
-  do iy=0,ny-1
-    vxmany(iy,:,g_j) = vxmany(iy,:,g_j) -y_mean
-
-  end do
-
-  ! remove ky=0 in vy
-  y_mean = sum(vymany(:,:,g_j) ,dim=1 ) / ny ! =0
-  do iy=0,ny-1
-    vymany(iy,:,g_j) = vymany(iy,:,g_j) -y_mean
-
-  end do
-
-  uv(:,:,i_omp) = (uxmany(:,:,f_j)*vymany(:,:,g_j)-uymany(:,:,f_j)*vxmany(:,:,g_j))/(nx*ny)
+      ! compute and save uv
+      uv(iy,ix,i_omp) = (r_ux*r_vy-r_uy*r_vx) * inv_nxny
+    enddo
+  enddo
 
   call fftw_execute_dft_r2c(plan_r2c,uv(:,:,i_omp),fx(:,:,i_omp))
 
