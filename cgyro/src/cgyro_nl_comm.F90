@@ -366,11 +366,16 @@ subroutine cgyro_nl_fftw_comm1_r_triad(ij)
 #if defined(OMPGPU)
 !$omp target teams distribute parallel do simd collapse(4) &
 !$omp&         private(iexch0,itor0,isplit0,iexch_base) &
+!$omp&         private(id,itorbox,jr0,jc,itd,itd_class,thfac) &
 !$omp&         private(ic_loc_m,my_psi)
 #elif defined(_OPENACC)
 !$acc parallel loop collapse(4) gang vector independent private(ic_loc_m,my_psi) &
 !$acc&         private(iexch0,itor0,isplit0,iexch_base) &
-!$acc&         present(ic_c,px,rhs,fpackA,fpackB,epackA,epackB,diss_r,triad_loc) copyin(psi_mul,zf_scale) &
+!$acc&         private(id,itorbox,jr0,jc,itd,itd_class,thfac) &
+!$acc&         present(h_x,g_x,cap_h_c,cap_h_ct,field,dvjvec_c,jvec_c) &
+!$acc&         present(ic_c,is_v,ix_v,ie_v,w_exi,w_theta,dens2_rot,z,temp) &
+!$acc&         present(omega_stream,vel,xi,thfac_itor,cderiv,uderiv) &
+!$acc&         present(px,rhs,fpackA,fpackB,epackA,epackB,diss_r,triad_loc) copyin(psi_mul,zf_scale) &
 !$acc&         present(nt1,nt2,nv_loc,n_theta,n_radial,nsplit,nsplitA,nsplitB) copyin(ij) default(none)
 #else
 !$omp parallel do collapse(2) private(ic_loc_m,my_psi) &
@@ -380,12 +385,12 @@ subroutine cgyro_nl_fftw_comm1_r_triad(ij)
   do itor=nt1,nt2
     do iv_loc_m=1,nv_loc
       do ir=1,n_radial
-        itorbox = itor*box_size*sign_qs
-        jr0(0) = n_theta*modulo(ir-itorbox-1,n_radial)
-        jr0(1) = n_theta*(ir-1)
-        jr0(2) = n_theta*modulo(ir+itorbox-1,n_radial)
-
         do it=1,n_theta
+           itorbox = itor*box_size*sign_qs
+           jr0(0) = n_theta*modulo(ir-itorbox-1,n_radial)
+           jr0(1) = n_theta*(ir-1)
+           jr0(2) = n_theta*modulo(ir+itorbox-1,n_radial)
+
            ic_loc_m = ic_c(ir,it)
 
            is = is_v(iv_loc_m +nv1 -1 )
@@ -505,11 +510,16 @@ subroutine cgyro_nl_fftw_comm1_r_triad(ij)
 #if defined(OMPGPU)
 !$omp target teams distribute parallel do simd collapse(4) &
 !$omp&         private(iexch0,itor0,isplit0,iexch_base) &
+!$omp&         private(id,itorbox,jr0,jc,itd,itd_class,thfac) &
 !$omp&         private(ic_loc_m,my_psi)
 #elif defined(_OPENACC)
 !$acc parallel loop collapse(4) gang vector independent private(ic_loc_m,my_psi) &
 !$acc&         private(iexch0,itor0,isplit0,iexch_base) &
-!$acc&         present(ic_c,px,rhs,fpackA,epackA,diss_r,triad_loc) copyin(psi_mul,zf_scale) &
+!$acc&         private(id,itorbox,jr0,jc,itd,itd_class,thfac) &
+!$acc&         present(h_x,g_x,cap_h_c,cap_h_ct,field,dvjvec_c,jvec_c) &
+!$acc&         present(ic_c,is_v,ix_v,ie_v,w_exi,w_theta,dens2_rot,z,temp) &
+!$acc&         present(omega_stream,vel,xi,thfac_itor,cderiv,uderiv) &
+!$acc&         present(px,rhs,fpackA,epackA,diss_r,triad_loc) copyin(psi_mul,zf_scale) &
 !$acc&         present(nt1,nt2,nv_loc,n_theta,n_radial,nsplit,nsplitA) copyin(ij) default(none)
 #else
 !$omp parallel do collapse(2) private(ic_loc_m,my_psi) &
@@ -519,12 +529,12 @@ subroutine cgyro_nl_fftw_comm1_r_triad(ij)
   do itor=nt1,nt2
     do iv_loc_m=1,nv_loc
       do ir=1,n_radial
-        itorbox = itor*box_size*sign_qs
-        jr0(0) = n_theta*modulo(ir-itorbox-1,n_radial)
-        jr0(1) = n_theta*(ir-1)
-        jr0(2) = n_theta*modulo(ir+itorbox-1,n_radial)
-
         do it=1,n_theta
+           itorbox = itor*box_size*sign_qs
+           jr0(0) = n_theta*modulo(ir-itorbox-1,n_radial)
+           jr0(1) = n_theta*(ir-1)
+           jr0(2) = n_theta*modulo(ir+itorbox-1,n_radial)
+
            ic_loc_m = ic_c(ir,it)
 
            is = is_v(iv_loc_m +nv1 -1 )
