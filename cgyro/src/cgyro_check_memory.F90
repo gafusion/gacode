@@ -106,6 +106,9 @@ subroutine cgyro_check_memory(datafile)
      call cgyro_alloc_add_4d(io,n_field,nc,nv_loc,nt_loc,16,'omega_ss')
      call cgyro_alloc_add_3d(io,nc,nv_loc,nt_loc,16,'omega_cap_h')
      call cgyro_alloc_add_3d(io,nc,nv_loc,nt_loc,16,'omega_h')
+     if (triad_print_flag == 1) then
+       call cgyro_alloc_add_3d(io,nc,nv_loc,nt_loc,16,'diss_r')
+     endif
      call cgyro_alloc_add_3d(io,nc,nv_loc,nt_loc,16,'h_x')
      call cgyro_alloc_add_3d(io,nc,nv_loc,nt_loc,16,'h0_x')
      call cgyro_alloc_add_3d(io,nc,nv_loc,nt_loc,16,'g_x')

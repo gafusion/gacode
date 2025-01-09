@@ -137,6 +137,18 @@ subroutine cgyro_cleanup
       ccl_del_device(source)      
      deallocate(source)
   endif
+  if(allocated(triad)) then
+      ccl_del_device(triad)      
+     deallocate(triad)
+  endif
+  if(allocated(triad_loc)) then
+      ccl_del_device(triad_loc)      
+     deallocate(triad_loc)
+  endif
+  if(allocated(triad_loc_old)) then
+      ccl_del_device(triad_loc_old)      
+     deallocate(triad_loc_old)
+  endif
   if(allocated(thfac_itor)) then
       ccl_del_device(thfac_itor)
      deallocate(thfac_itor)
@@ -200,6 +212,10 @@ subroutine cgyro_cleanup
   if(allocated(omega_sbeta)) then
      ccl_del_device(omega_sbeta)        
      deallocate(omega_sbeta)
+  endif
+  if(allocated(diss_r)) then
+     ccl_del_device(diss_r)        
+     deallocate(diss_r)
   endif
   if(allocated(jvec_c))  then
      ccl_del_device(jvec_c)     

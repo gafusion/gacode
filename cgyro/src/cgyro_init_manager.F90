@@ -179,10 +179,6 @@ subroutine cgyro_init_manager
      allocate(    gflux(0:n_global,n_species,4,n_field,nt1:nt2))
      allocate(gflux_loc(0:n_global,n_species,4,n_field,nt1:nt2))
 
-     allocate(    triad(n_species,n_radial,nt1:nt2,8))
-     allocate(triad_loc(n_species,n_radial,nt1:nt2,7))
-     allocate(triad_loc_old(n_species,n_radial,nt1:nt2,8))
-
      allocate(cflux_tave(n_species,4))
      allocate(gflux_tave(n_species,4))
 
@@ -195,6 +191,16 @@ subroutine cgyro_init_manager
 #elif defined(_OPENACC)
 !$acc enter data create(fcoef,gcoef,field,field_loc,source)
 #endif
+     if (triad_print_flag == 1) then
+        allocate(    triad(n_species,n_radial,nt1:nt2,8))
+        allocate(triad_loc(n_species,n_radial,nt1:nt2,7))
+        allocate(triad_loc_old(n_species,n_radial,nt1:nt2,8))
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:triad,triad_loc,triad_loc_old)
+#elif defined(_OPENACC)
+!$acc enter data create(triad,triad_loc,triad_loc_old)
+#endif
+     endif
 
      if ((collision_model /= 5) .AND. (collision_field_model == 1)) then
        ! nc and nc_loc must be last, since it will be collated     
@@ -262,7 +268,9 @@ subroutine cgyro_init_manager
      allocate(cap_h_v(nc_loc,nt1:nt2,nv))
      allocate(omega_cap_h(nc,nv_loc,nt1:nt2))
      allocate(omega_h(nc,nv_loc,nt1:nt2))
-     allocate(diss_r(nc,nv_loc,nt1:nt2))
+     if (triad_print_flag == 1) then
+        allocate(diss_r(nc,nv_loc,nt1:nt2))
+     endif
      allocate(omega_s(n_field,nc,nv_loc,nt1:nt2))
      allocate(omega_ss(n_field,nc,nv_loc,nt1:nt2))
      allocate(omega_sbeta(nc,nv_loc,nt1:nt2))

@@ -194,8 +194,9 @@ subroutine cgyro_flux
   ! 2-1. Compute Triad energy transfer
   !-------------------------------------------------------------
 
-     kx = 2*pi*rho/length
-     do is=1,n_species
+     if (triad_print_flag == 1) then
+      kx = 2*pi*rho/length
+      do is=1,n_species
         ! Triad energy transfer   :   T_k
         triad_loc_old(is,:,itor,1) = triad_loc(is,:,itor,1) *temp(is)/dlntdr(is_ele)
         ! From Nonzonal Triad energy transfer   :   T_k [NZ(k',k")->k]
@@ -214,7 +215,8 @@ subroutine cgyro_flux
         triad_loc_old(is,:,itor,7) = triad_loc(is,:,itor,6) *temp(is)/dlntdr(is_ele)
         ! Diss. (Coll. )
         triad_loc_old(is,:,itor,8) = triad_loc(is,:,itor,7) *temp(is)/dlntdr(is_ele)
-     enddo
+      enddo
+     endif
 
 
      !-----------------------------------------------------
@@ -279,14 +281,16 @@ subroutine cgyro_flux
        NEW_COMM_1, &
        i_err)
 
-  ! Reduced complex triad(ns,kx), below, is still distributed over n 
-  call MPI_ALLREDUCE(triad_loc_old(:,:,:,:), &
+  if (triad_print_flag == 1) then
+   ! Reduced complex triad(ns,kx), below, is still distributed over n 
+   call MPI_ALLREDUCE(triad_loc_old(:,:,:,:), &
        triad, &
        size(triad), &
        MPI_DOUBLE_COMPLEX, &
        MPI_SUM, &
        NEW_COMM_1, &
        i_err)
+  endif
 
 
   tave_step = tave_step + 1
