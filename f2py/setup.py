@@ -2,8 +2,10 @@ from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext
 from importlib.machinery import EXTENSION_SUFFIXES
 import os
+import shutil
 import sys
 import subprocess
+import sysconfig
 
 
 class F2PyExtension(Extension):
@@ -21,6 +23,16 @@ class BuildF2PyExtension(build_ext):
         subprocess.check_call([
             "f2py", "-c", "-m", output_module, *ext.fortran_sources
         ], env=env)
+
+        ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
+        lib_name = f"{output_module}{ext_suffix}"
+
+        ext_path = self.get_ext_fullpath(ext.name)
+        ext_dir = os.path.dirname(ext_path)
+        if not os.path.exists(ext_dir):
+            os.makedirs(ext_dir)
+
+        shutil.move(lib_name, ext_path)
 
 
 ext = F2PyExtension('gacode_ext',
