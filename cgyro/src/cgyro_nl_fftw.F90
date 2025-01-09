@@ -378,7 +378,7 @@ subroutine cgyro_nl_fftw_mul(sz,uvm,uxm,vym,uym,vxm,inv_nxny)
 
 end subroutine
 
-subroutine cgyro_nl_fftw(ij)
+subroutine cgyro_nl_fftw(i_triad)
 
 #if defined(HIPGPU)
   use hipfort
@@ -398,7 +398,7 @@ subroutine cgyro_nl_fftw(ij)
   include 'fftw/fftw3.f'
 #endif
   !-----------------------------------
-  integer, intent(in) :: ij
+  integer, intent(in) :: i_triad
   !-----------------------------------
   integer :: j,p,iexch
   integer :: it,ir,itm,itl,ix,iy
@@ -1403,7 +1403,7 @@ subroutine cgyro_nl_fftw_stepr_triad(g_j, f_j, nl_idx, i_omp)
 end subroutine cgyro_nl_fftw_stepr_triad
 
 ! NOTE: call cgyro_nl_fftw_comm1 before cgyro_nl_fftw
-subroutine cgyro_nl_fftw(ij)
+subroutine cgyro_nl_fftw(i_triad)
 
   use timer_lib
   use parallel_lib
@@ -1414,9 +1414,9 @@ subroutine cgyro_nl_fftw(ij)
 
 
   !-----------------------------------
-  integer, intent(in) :: ij
+  integer, intent(in) :: i_triad
   !-----------------------------------
-  integer :: ix,iy,i_triad=0
+  integer :: ix,iy
   integer :: ir,it,itm,itl,it_loc
   integer :: itor,mytm
   integer :: j,p
@@ -1428,10 +1428,6 @@ subroutine cgyro_nl_fftw(ij)
   integer, external :: omp_get_thread_num
 
   include 'fftw3.f03'
-
-  if (triad_print_flag == 1 .and. ij == 3) then
-   i_triad=1
-  endif
 
   call cgyro_nl_fftw_comm_test()
 

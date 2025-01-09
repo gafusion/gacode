@@ -393,6 +393,7 @@ subroutine cgyro_rhs(ij,update_cap)
   integer, intent(in) :: ij
   logical, intent(in) :: update_cap
   !--------------------------------
+  integer :: i_triad
 
   ! fields is ready by now
   call cgyro_rhs_comm_async_fd
@@ -412,9 +413,13 @@ subroutine cgyro_rhs(ij,update_cap)
 
   ! Nonlinear evaluation [f,g]
   if (nonlinear_flag == 1) then
+     i_triad=0
+     if (triad_print_flag == 1 .and. ij == 3) then
+       i_triad=1
+     endif
      ! assumes someone already started the input comm
      ! and will finish the output comm
-     call cgyro_nl_fftw(ij)
+     call cgyro_nl_fftw(i_triad)
   endif
 
   call cgyro_upwind_complete
