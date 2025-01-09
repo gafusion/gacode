@@ -978,6 +978,9 @@ subroutine cgyro_nl_fftw(i_triad)
   ! start the async reverse comm
   ! can reuse the same req, no overlap with forward fA_req
   call parallel_slib_r_nc_async(nsplitA,fA_nl,fpackA,fA_req)
+  if (i_triad == 1) then
+     call parallel_slib_r_nc_async(nsplitA,eA_nl,epackA,eA_req)
+  end if
   fA_req_valid = .TRUE.
 
   if (nsplitB > 0) then
@@ -1253,6 +1256,9 @@ subroutine cgyro_nl_fftw(i_triad)
   ! start the async reverse comm
   ! can reuse the same req, no overlap with forward fB_req
   call parallel_slib_r_nc_async(nsplitB,fB_nl,fpackB,fB_req)
+  if (i_triad == 1) then
+     call parallel_slib_r_nc_async(nsplitB,eB_nl,epackB,eB_req)
+  end if
   fB_req_valid = .TRUE.
   ! make sure reqs progress
   call cgyro_nl_fftw_comm_test()
