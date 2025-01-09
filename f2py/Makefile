@@ -16,6 +16,8 @@ clean:
 	cd geo ; make clean
 	cd expro ; make clean
 	cd vis ; make clean
-	rm -rf dist build *egg-info *.so
+	rm -rf dist build *egg-info
 
 .IGNORE:
+
+
