@@ -111,6 +111,12 @@ subroutine cgyro_init_manager
      enddo
   enddo
 
+#if defined(OMPGPU)
+!$omp target enter data map(to:w_exi,w_e,w_xi)
+#elif defined(_OPENACC)
+!$acc enter data copyin(w_exi,w_e,w_xi)
+#endif
+
   allocate(theta(n_theta))
   allocate(thetab(n_theta,n_radial/box_size))
   allocate(w_theta(n_theta))
