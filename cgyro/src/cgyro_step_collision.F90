@@ -1049,6 +1049,38 @@ subroutine cgyro_step_collision_gpu(use_simple)
   call timer_lib_in('coll')
 
   ! Compute H given h and [phi(h), apar(h)]
+ if (triad_print_flag == 1 ) then
+
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd collapse(3) &
+!$omp&         private(iv_loc,is,my_psi,my_ch)
+#else
+!$acc parallel loop collapse(3) gang vector private(iv_loc,is,my_psi,my_ch) &
+!$acc&         present(is_v,cap_h_c,cap_h_ct,cap_h_c,jvec_c,field,z,temp,h_x) &
+!$acc&         present(nt1,nt2,nv1,nv2,nc) default(none)
+#endif
+  do itor=nt1,nt2
+   do iv=nv1,nv2
+     do ic=1,nc
+        iv_loc = iv-nv1+1
+        is = is_v(iv)
+
+        ! Save collisional diss. 
+        my_ch = cap_h_ct(iv_loc,itor,ic)
+        my_psi = sum(jvec_c(:,ic,iv_loc,itor)*field(:,ic,itor))
+           
+        my_psi = my_ch-my_psi*(z(is)/temp(is))
+        cap_h_ct(iv_loc,itor,ic) = (cap_h_c(ic,iv_loc,itor) + my_ch) / 2.0
+        cap_h_ct(iv_loc,itor,ic) = conjg(cap_h_ct(iv_loc,itor,ic)) &
+          * ( my_psi - h_x(ic,iv_loc,itor) )
+
+        h_x(ic,iv_loc,itor) = my_psi
+        cap_h_c(ic,iv_loc,itor) = my_ch
+     enddo
+   enddo
+  enddo
+
+ else
 
 #if defined(OMPGPU)
 !$omp target teams distribute parallel do simd collapse(3) &
@@ -1070,6 +1102,8 @@ subroutine cgyro_step_collision_gpu(use_simple)
      enddo
    enddo
   enddo
+
+ end if ! (triad_print_flag == 1 )
 
   call timer_lib_out('coll')
 
