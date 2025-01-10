@@ -510,6 +510,10 @@ subroutine le3_geometry_matrix
   ! B/Bunit
   call remap_theta(bmag(:,:),xtemp(:,:),0.0)
   write (1,'(e16.8)') xtemp(:,:)
+
+  ! Btor/Bunit
+  call remap_theta(btor(:,:),xtemp(:,:),0.0)
+  write (1,'(e16.8)') xtemp(:,:)
   
   ! anorm*(bhat dot grad) = bdotgrad * (iota d/dt + d/dp) = (1) d/dt + (2) d/dp
   call remap_theta(bdotgrad(:,:),xtemp(:,:),0.0)
@@ -532,9 +536,6 @@ subroutine le3_geometry_matrix
   write (1,'(e16.8)') grad_perpsq_gk(:,:,2)
   write (1,'(e16.8)') grad_perpsq_gk(:,:,3)
 
-  call remap_theta(b1(:,:),xtemp(:,:),0.0)
-  write (1,'(e16.8)') xtemp(:,:)
-
   call remap_theta(chi1(:,:),xtemp(:,:),0.0)
   write (1,'(e16.8)') xtemp(:,:)
 
@@ -542,9 +543,6 @@ subroutine le3_geometry_matrix
   write (1,'(e16.8)') xtemp(:,:)
 
   call remap_theta(dtheta(:,:),xtemp(:,:),0.0)
-  write (1,'(e16.8)') xtemp(:,:)
-
-  call remap_theta(dtheta_t(:,:),xtemp(:,:),0.0)
   write (1,'(e16.8)') xtemp(:,:)
   
   close(1)
