@@ -626,6 +626,92 @@ class cgyrodata_plot(data.cgyrodata):
       return head
 
 
+  def plot_triad_v3(self,xin):
+
+      w       = xin['w']
+      theta   = xin['theta']
+      field   = xin['field']
+      ymin    = xin['ymin']
+      ymax    = xin['ymax']
+      absnorm = xin['abs']
+      moment  = xin['moment']
+
+      t = self.getnorm(xin['norm'])
+      ky = self.kynorm
+      nx = self.n_radial
+
+      if self.n_n == 1:
+         print('ERROR: (plot_ky_flux) Plot not available with a single mode.')
+         return
+
+      imin,imax=time_index(t,w) 
+      mpre,mwin = wintxt(imin,imax,t,fc=1,field=field)
+
+      self.getbigfield()
+
+      f = self.triad[0,:,:,:,:,:].sum(axis=0)
+      # 0- Triad , 1- non-zonal pairs Triad , 2- d(Entropy)/dt, 3- W_k_{perp}/dt, 4- Entropy
+      # 5- Diss.(radial) , 6- Diss.(theta) , 7- Diss.(Collision)
+      Ent = f[:,4,:,:]
+      Ent_avg = Ent[:,:,imin:imax].mean(axis=2)
+
+      if xin['fig'] is None:
+         fig = plt.figure(MYDIR,figsize=(xin['lx'],xin['ly']))
+      #======================================
+      # Set figure size and axes
+      ax = fig.add_subplot(111)
+      ax.grid(which="both",ls=":")
+      ax.grid(which="major",ls=":")
+      ax.set_xlabel(self.kystr)
+      ax.set_ylabel(self.fstr[1])
+      ax.set_title('Effective growth rate(NZ,Z) '+mwin,fontsize=16)
+      #======================================
+
+      #======================================
+      def get_value(f,TYPE):
+         if TYPE==0:
+            T = f[:,0,:,:] # {NZ,NZ} ->NZ  , {NZ,NZ} ->Z  , {NZ,Z} ->NZ
+         elif TYPE==1:
+            T = f[:,1,:,:]
+            T[:,0,:] = 0.0  # {NZ,NZ} ->NZ
+         elif TYPE==2:
+            T = f[:,1,:,:]
+            T[:,0,:] = 0.0
+            T = f[:,0,:,:] - T  #  {NZ,NZ} ->Z  , {NZ,Z} ->NZ
+
+         elif TYPE==3:
+            diss_r  = f[:,5,:,:]
+            diss_th = f[:,6,:,:]
+            diss_c  = f[:,7,:,:]
+            T = diss_r + diss_th + diss_c
+
+         return T[:,:,imin:imax].mean( axis=2 )
+      #======================================
+      A = get_value(f,TYPE = 1)
+      gamma_eff_NZ  = np.divide(-A, 2 * Ent_avg, out=np.full_like(A, np.nan), where=Ent_avg != 0)
+      A = get_value(f,TYPE = 2)
+      gamma_eff_Z   = np.divide(-A, 2 * Ent_avg, out=np.full_like(A, np.nan), where=Ent_avg != 0)
+      A = get_value(f,TYPE = 3)
+      gamma_eff_diss = np.divide(-A, 2 * Ent_avg, out=np.full_like(A, np.nan), where=Ent_avg != 0)
+
+      if ky[-1] < 0.0:
+         ky = -ky
+ 
+      label=r'$\gamma_{eff}$'   
+      ax.plot(ky, gamma_eff_NZ[nx//2],'-sg',label=r'$\gamma_{eff}^{NZ}$',linewidth=4,markersize=8)
+      ax.plot(ky, gamma_eff_Z[nx//2] ,'-^r',label=r'$\gamma_{eff}^Z$',linewidth=4,markersize=8)
+      ax.plot(ky, gamma_eff_Z[nx//2] + gamma_eff_NZ[nx//2] ,'--k',label=r'$\gamma_{NL}^Z$',linewidth=4)
+
+      ax.legend(loc=1, ncol=3, framealpha=0)
+
+      # JC: labels only correct for default norm
+      head = '(cs/a) t     Phi_0/rho_*    Phi_n/rho_*'
+
+      fig.tight_layout(pad=0.3)
+
+      return head
+
+
    def plot_flux(self,xin):
       
       w      = xin['w']
