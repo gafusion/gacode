@@ -43,21 +43,33 @@ subroutine cgyro_cleanup
      ccl_del_device(vel2)
      deallocate(vel2)
   endif
-  if(allocated(w_e))           deallocate(w_e)
+  if(allocated(w_e))   then
+     ccl_del_device(w_e)
+     deallocate(w_e)
+  endif
   if(allocated(e_deriv1_mat))  deallocate(e_deriv1_mat)
   if(allocated(e_deriv1_rot_mat))  deallocate(e_deriv1_rot_mat)
   if(allocated(xi))            then
      ccl_del_device(xi)
      deallocate(xi)
   endif
-  if(allocated(w_xi))          deallocate(w_xi)
-  if(allocated(w_exi))         deallocate(w_exi)
+  if(allocated(w_xi))   then
+     ccl_del_device(w_xi)
+     deallocate(w_xi)
+  endif
+  if(allocated(w_exi))   then
+     ccl_del_device(w_exi)
+     deallocate(w_exi)
+  endif
   if(allocated(xi_lor_mat))    deallocate(xi_lor_mat)
   if(allocated(xi_deriv_mat))  deallocate(xi_deriv_mat)
   
   if(allocated(theta))          deallocate(theta)
   if(allocated(thetab))         deallocate(thetab)
-  if(allocated(w_theta))        deallocate(w_theta)
+  if(allocated(w_theta))   then
+     ccl_del_device(w_theta)
+     deallocate(w_theta)
+  endif
   if(allocated(g_theta))        deallocate(g_theta)
   if(allocated(g_theta_geo))    deallocate(g_theta_geo)
   if(allocated(bmag))           deallocate(bmag)
@@ -83,7 +95,10 @@ subroutine cgyro_cleanup
   if(allocated(lambda_rot))          deallocate(lambda_rot)
   if(allocated(dlambda_rot))         deallocate(dlambda_rot)
   if(allocated(dens_rot))            deallocate(dens_rot)
-  if(allocated(dens2_rot))           deallocate(dens2_rot)
+  if(allocated(dens2_rot))   then
+     ccl_del_device(dens2_rot)
+     deallocate(dens2_rot)
+  endif
   if(allocated(dens_ele_rot))        deallocate(dens_ele_rot)
   if(allocated(dens_avg_rot))        deallocate(dens_avg_rot)
   if(allocated(dlnndr_avg_rot))      deallocate(dlnndr_avg_rot)
@@ -136,6 +151,18 @@ subroutine cgyro_cleanup
   if(allocated(source)) then
       ccl_del_device(source)      
      deallocate(source)
+  endif
+  if(allocated(triad)) then
+      ccl_del_device(triad)      
+     deallocate(triad)
+  endif
+  if(allocated(triad_loc)) then
+      ccl_del_device(triad_loc)      
+     deallocate(triad_loc)
+  endif
+  if(allocated(triad_loc_old)) then
+      ccl_del_device(triad_loc_old)      
+     deallocate(triad_loc_old)
   endif
   if(allocated(thfac_itor)) then
       ccl_del_device(thfac_itor)
@@ -201,6 +228,10 @@ subroutine cgyro_cleanup
      ccl_del_device(omega_sbeta)        
      deallocate(omega_sbeta)
   endif
+  if(allocated(diss_r)) then
+     ccl_del_device(diss_r)        
+     deallocate(diss_r)
+  endif
   if(allocated(jvec_c))  then
      ccl_del_device(jvec_c)     
      deallocate(jvec_c)
@@ -261,6 +292,14 @@ subroutine cgyro_cleanup
      ccl_del_device(g_nl)
      deallocate(g_nl)
   endif
+  if(allocated(eA_nl))   then
+     ccl_del_device(eA_nl)
+     deallocate(eA_nl)
+  endif
+  if(allocated(eB_nl))   then
+     ccl_del_device(eB_nl)
+     deallocate(eB_nl)
+  endif
   if(allocated(fpackA))   then
      ccl_del_device(fpackA)
      deallocate(fpackA)
@@ -272,6 +311,14 @@ subroutine cgyro_cleanup
   if(allocated(gpack))   then
      ccl_del_device(gpack)
      deallocate(gpack)
+  endif
+  if(allocated(epackA))   then
+     ccl_del_device(epackA)
+     deallocate(epackA)
+  endif
+  if(allocated(epackB))   then
+     ccl_del_device(epackB)
+     deallocate(epackB)
   endif
   if (allocated(cmat)) then
      ccl_del_bigdevice(cmat)

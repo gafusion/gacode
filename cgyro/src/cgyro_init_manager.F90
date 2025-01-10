@@ -111,6 +111,12 @@ subroutine cgyro_init_manager
      enddo
   enddo
 
+#if defined(OMPGPU)
+!$omp target enter data map(to:w_exi,w_e,w_xi)
+#elif defined(_OPENACC)
+!$acc enter data copyin(w_exi,w_e,w_xi)
+#endif
+
   allocate(theta(n_theta))
   allocate(thetab(n_theta,n_radial/box_size))
   allocate(w_theta(n_theta))
@@ -179,10 +185,6 @@ subroutine cgyro_init_manager
      allocate(    gflux(0:n_global,n_species,4,n_field,nt1:nt2))
      allocate(gflux_loc(0:n_global,n_species,4,n_field,nt1:nt2))
 
-     allocate(    triad(n_species,n_radial,nt1:nt2,8))
-     allocate(triad_loc(n_species,n_radial,nt1:nt2,7))
-     allocate(triad_loc_old(n_species,n_radial,nt1:nt2,8))
-
      allocate(cflux_tave(n_species,4))
      allocate(gflux_tave(n_species,4))
 
@@ -195,6 +197,16 @@ subroutine cgyro_init_manager
 #elif defined(_OPENACC)
 !$acc enter data create(fcoef,gcoef,field,field_loc,source)
 #endif
+     if (triad_print_flag == 1) then
+        allocate(    triad(n_species,n_radial,nt1:nt2,8))
+        allocate(triad_loc(n_species,n_radial,nt1:nt2,7))
+        allocate(triad_loc_old(n_species,n_radial,nt1:nt2,8))
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:triad,triad_loc,triad_loc_old)
+#elif defined(_OPENACC)
+!$acc enter data create(triad,triad_loc,triad_loc_old)
+#endif
+     endif
 
      if ((collision_model /= 5) .AND. (collision_field_model == 1)) then
        ! nc and nc_loc must be last, since it will be collated     
@@ -262,7 +274,9 @@ subroutine cgyro_init_manager
      allocate(cap_h_v(nc_loc,nt1:nt2,nv))
      allocate(omega_cap_h(nc,nv_loc,nt1:nt2))
      allocate(omega_h(nc,nv_loc,nt1:nt2))
-     allocate(diss_r(nc,nv_loc,nt1:nt2))
+     if (triad_print_flag == 1) then
+        allocate(diss_r(nc,nv_loc,nt1:nt2))
+     endif
      allocate(omega_s(n_field,nc,nv_loc,nt1:nt2))
      allocate(omega_ss(n_field,nc,nv_loc,nt1:nt2))
      allocate(omega_sbeta(nc,nv_loc,nt1:nt2))
@@ -302,10 +316,8 @@ subroutine cgyro_init_manager
      ! Nonlinear arrays
      if (nonlinear_flag == 1) then
         allocate(fA_nl(n_radial,nt_loc,nsplitA,n_toroidal_procs))
-        allocate(eA_nl(n_radial,nt_loc,nsplitA,n_toroidal_procs))
         allocate(g_nl(n_field,n_radial,n_jtheta,n_toroidal))
         allocate(fpackA(n_radial,nt_loc,nsplitA*n_toroidal_procs))
-        allocate(epackA(n_radial,nt_loc,nsplitA*n_toroidal_procs))
         allocate(gpack(n_field,n_radial,n_jtheta,n_toroidal))
         allocate(jvec_c_nl(n_field,n_radial,n_jtheta,nv_loc,n_toroidal))
 #if defined(OMPGPU)
@@ -313,16 +325,32 @@ subroutine cgyro_init_manager
 #elif defined(_OPENACC)
 !$acc enter data create(fpackA,gpack,fA_nl,g_nl,jvec_c_nl)
 #endif
+        if (triad_print_flag == 1) then
+          allocate(eA_nl(n_radial,nt_loc,nsplitA,n_toroidal_procs))
+          allocate(epackA(n_radial,nt_loc,nsplitA*n_toroidal_procs))
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:epackA,eA_nl)
+#elif defined(_OPENACC)
+!$acc enter data create(epackA,eA_nl)
+#endif
+        endif
         if (nsplitB > 0) then ! nsplitB can be zero at large MPI
           allocate(fB_nl(n_radial,nt_loc,nsplitB,n_toroidal_procs))
           allocate(fpackB(n_radial,nt_loc,nsplitB*n_toroidal_procs))
-          allocate(eB_nl(n_radial,nt_loc,nsplitB,n_toroidal_procs))
-          allocate(epackB(n_radial,nt_loc,nsplitB*n_toroidal_procs))
 #if defined(OMPGPU)
 !$omp target enter data map(alloc:fpackB,fB_nl)
 #elif defined(_OPENACC)
 !$acc enter data create(fpackB,fB_nl)
 #endif
+          if (triad_print_flag == 1) then
+            allocate(epackB(n_radial,nt_loc,nsplitB*n_toroidal_procs))
+            allocate(eB_nl(n_radial,nt_loc,nsplitB,n_toroidal_procs))
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:epackB,eB_nl)
+#elif defined(_OPENACC)
+!$acc enter data create(epackB,eB_nl)
+#endif
+          endif
         endif
      endif
 

@@ -135,6 +135,13 @@ subroutine cgyro_kernel
         ! wait for cap_h_c to be synched into system memory, used by cgyro_write_timedata
 !$acc wait(4)
 #endif
+       if (triad_print_flag == 1) then
+#if defined(OMPGPU)
+!$omp target update from(triad_loc)
+#elif defined(_OPENACC)
+!$acc update host(triad_loc)
+#endif
+       endif
        call timer_lib_out('coll_mem')
 
        call timer_lib_in('io')

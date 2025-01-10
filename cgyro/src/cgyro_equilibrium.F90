@@ -277,9 +277,9 @@ subroutine cgyro_equilibrium
   enddo
 
 #if defined(OMPGPU)
-!$omp target enter data map(to:xi,omega_stream)
+!$omp target enter data map(to:xi,omega_stream,w_theta,dens2_rot)
 #elif defined(_OPENACC)
-!$acc enter data copyin(xi,omega_stream)
+!$acc enter data copyin(xi,omega_stream,w_theta,dens2_rot)
 #endif
 
 #if defined(OMPGPU) || defined(_OPENACC)

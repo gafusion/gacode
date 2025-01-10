@@ -378,7 +378,63 @@ subroutine cgyro_nl_fftw_mul(sz,uvm,uxm,vym,uym,vxm,inv_nxny)
 
 end subroutine
 
-subroutine cgyro_nl_fftw(ij)
+subroutine cgyro_nl_fftw_mul_sub_mean(ny,nx,nt,uvm,uxm,vym,uym,vxm,inv_nxny)
+  implicit none
+
+  integer, intent(in) :: ny,nx,nt
+  real, dimension(*),intent(out) :: uvm
+  real, dimension(*),intent(in) :: uxm,vym,uym,vxm
+  real, intent(in) :: inv_nxny
+
+  integer :: iy,ix,it
+  integer :: sz,sz_t
+  integer :: i,i_xt
+  real :: y_mean_ux, y_mean_uy, y_mean_vx, y_mean_vy
+  real :: r_ux, r_uy, r_vx, r_vy
+  real :: inv_ny
+
+  sz = ny*nx*nt
+  sz_t = ny*nx
+  inv_ny = 1.0/ny
+
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do collapse(2) &
+!$omp&  private(iy,i_xt,y_mean_ux,y_mean_uy,y_mean_vx,y_mean_vy) &
+!$omp&  private(i,r_ux,r_uy,r_vx,r_vy) &
+!$omp&  map(to:uxm(1:sz),vym(1:sz),uym(1:sz),vxm(1:sz)) &
+!$omp&  map(from:uvm(1:sz))
+#else
+!$acc parallel loop independent gang collapse(2) &
+!$acc&         private(iy,i_xt,y_mean_ux,y_mean_uy,y_mean_vx,y_mean_vy) &
+!$acc&         present(uvm,uxm,vym,uym,vxm)
+#endif
+  do it=0,nt-1
+   do ix=0,nx-1
+    i_xt = (it*sz_t) + ix*ny;
+    y_mean_ux = sum(uxm(i_xt+1:i_xt+ny) ) * inv_ny
+    y_mean_uy = sum(uym(i_xt+1:i_xt+ny) ) * inv_ny
+    y_mean_vx = sum(vxm(i_xt+1:i_xt+ny) ) * inv_ny
+    y_mean_vy = sum(vym(i_xt+1:i_xt+ny) ) * inv_ny
+#if (!defined(OMPGPU)) && defined(_OPENACC)
+!$acc loop vector private(i,r_ux,r_uy,r_vx,r_vy)
+#endif
+    do iy=1,ny
+      i = i_xt+iy
+      ! remove ky=0
+      r_ux = uxm(i) - y_mean_ux
+      r_uy = uym(i) - y_mean_uy
+      r_vx = vxm(i) - y_mean_vx
+      r_vy = vym(i) - y_mean_vy
+
+      ! compute and save uv
+      uvm(i) = (uxm(i)*vym(i)-uym(i)*vxm(i))*inv_nxny
+    enddo
+   enddo
+  enddo
+
+end subroutine
+
+subroutine cgyro_nl_fftw(i_triad)
 
 #if defined(HIPGPU)
   use hipfort
@@ -398,7 +454,7 @@ subroutine cgyro_nl_fftw(ij)
   include 'fftw/fftw3.f'
 #endif
   !-----------------------------------
-  integer, intent(in) :: ij
+  integer, intent(in) :: i_triad
   !-----------------------------------
   integer :: j,p,iexch
   integer :: it,ir,itm,itl,ix,iy
@@ -477,7 +533,7 @@ subroutine cgyro_nl_fftw(ij)
 
   call timer_lib_in('nl')
 #if !defined(OMPGPU)
-!$acc  data present(fA_nl)  &
+!$acc  data present(fA_nl,eA_nl)  &
 !$acc&      present(fxmany,fymany,gxmany,gymany) &
 !$acc&      present(uxmany,uymany,vxmany,vymany) &
 !$acc&      present(uvmany)
@@ -929,8 +985,99 @@ subroutine cgyro_nl_fftw(ij)
    enddo
   enddo
 
+  if (i_triad == 1) then
+    call timer_lib_out('nl_mem')
+    call timer_lib_in('nl')
+    ! 2. Poisson bracket in real space with Non_Zonal pairs
+
+    call cgyro_nl_fftw_mul_sub_mean(size(uvmany,1),size(uvmany,2),nsplitA, &
+                         uvmany, &
+                         uxmany,vymany(:,:,1:nsplitA), &
+                         uymany,vxmany(:,:,1:nsplitA), &
+                         inv_nxny)
+
+    ! make sure reqs progress
+    call cgyro_nl_fftw_comm_test()
+
+    ! ------------------
+    ! Transform uv to fx
+    ! ------------------
+
+#if defined(OMPGPU)
+
+#if defined(MKLGPU)
+!$omp target data map(tofrom: uvmany,fxmany)
+#else
+!$omp target data use_device_ptr(uvmany,fxmany)
+#endif
+
+#else
+!$acc wait
+!$acc  host_data use_device(uvmany,fxmany)
+#endif
+
+#if defined(HIPGPU)
+    rc = hipfftExecD2Z(hip_plan_r2c_manyA,c_loc(uvmany),c_loc(fxmany))
+#elif defined(MKLGPU)
+  !$omp dispatch
+    call dfftw_execute_dft_r2c(dfftw_plan_r2c_manyA,uvmany,fxmany)
+    rc = 0
+#else
+    rc = cufftExecD2Z(cu_plan_r2c_manyA,uvmany,fxmany)
+#endif
+
+#ifdef HIPGPU
+    ! hipfftExec is asynchronous, will need the results below
+    rc = hipDeviceSynchronize()
+#endif
+
+#if defined(OMPGPU)
+!$omp end target data
+#else
+!$acc wait
+!$acc end host_data
+#endif
+
+    ! make sure reqs progress
+    call cgyro_nl_fftw_comm_test()
+
+    call timer_lib_out('nl')
+    call timer_lib_in('nl_mem')
+
+    ! tile for performance, since this is effectively a transpose
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do collapse(5) &
+!$omp&   private(iy,ir,itm,itl,ix)
+#else
+!$acc parallel loop independent collapse(5) gang &
+!$acc&         private(iy,ir,itm,itl,ix) present(eA_nl,fxmany)
+#endif
+    do j=1,nsplitA
+     do iy0=0,n_toroidal+(R_TORTILE-1)-1,R_TORTILE  ! round up
+      do ir0=0,n_radial+(R_RADTILE-1)-1,R_RADTILE  ! round up
+       do iy1=0,(R_TORTILE-1)   ! tile
+        do ir1=0,(R_RADTILE-1)  ! tile
+         iy = iy0 + iy1
+         ir = 1 + ir0 + ir1
+         if ((iy < n_toroidal) .and. (ir <= n_radial)) then
+           ! itor = iy+1
+           itm = 1 + iy/nt_loc
+           itl = 1 + modulo(iy,nt_loc)
+           ix = ir-1-nx0/2
+           if (ix < 0) ix = ix+nx
+
+           eA_nl(ir,itl,j,itm) = fxmany(iy,ix,j)
+          endif
+        enddo
+       enddo
+      enddo
+     enddo
+    enddo
+
+  endif ! i_triad==1
+
 #if !defined(OMPGPU)
-  ! end data fA_nl
+  ! end data fA_nl,eA_nl
 !$acc end data
 #endif
 
@@ -978,6 +1125,9 @@ subroutine cgyro_nl_fftw(ij)
   ! start the async reverse comm
   ! can reuse the same req, no overlap with forward fA_req
   call parallel_slib_r_nc_async(nsplitA,fA_nl,fpackA,fA_req)
+  if (i_triad == 1) then
+     call parallel_slib_r_nc_async(nsplitA,eA_nl,epackA,eA_req)
+  end if
   fA_req_valid = .TRUE.
 
   if (nsplitB > 0) then
@@ -993,7 +1143,7 @@ subroutine cgyro_nl_fftw(ij)
 
   call timer_lib_in('nl')
 #if !defined(OMPGPU)
-!$acc  data present(fB_nl)  &
+!$acc  data present(fB_nl,eB_nl)  &
 !$acc&      present(fxmany,fymany,gxmany,gymany) &
 !$acc&      present(uxmany,uymany,vxmany,vymany) &
 !$acc&      present(uvmany)
@@ -1242,8 +1392,105 @@ subroutine cgyro_nl_fftw(ij)
    enddo
   enddo
 
+  if (i_triad == 1) then
+    call timer_lib_out('nl_mem')
+    call timer_lib_in('nl')
+    ! 2. Poisson bracket in real space with Non_Zonal pairs
+    call cgyro_nl_fftw_mul(size(uvmany,1)*size(uvmany,2)*nsplitB, &
+                         uvmany, &
+                         uxmany,vymany(:,:,(nsplitA+1):nsplit), &
+                         uymany,vxmany(:,:,(nsplitA+1):nsplit), &
+                         inv_nxny)
+
+    ! make sure reqs progress
+    call cgyro_nl_fftw_comm_test()
+
+    ! ------------------
+    ! Transform uv to fx
+    ! ------------------
+
+#if defined(OMPGPU)
+
+#if defined(MKLGPU)
+!$omp target data map(tofrom: uvmany,fxmany)
+#else
+!$omp target data use_device_ptr(uvmany,fxmany)
+#endif
+
+#else
+!$acc wait
+!$acc  host_data use_device(uvmany,fxmany)
+#endif
+
+#if defined(HIPGPU)
+    rc = hipfftExecD2Z(hip_plan_r2c_manyB,c_loc(uvmany),c_loc(fxmany))
+#elif defined(MKLGPU)
+    !$omp dispatch
+    call dfftw_execute_dft_r2c(dfftw_plan_r2c_manyB,uvmany,fxmany)
+    rc = 0
+#else
+    rc = cufftExecD2Z(cu_plan_r2c_manyB,uvmany,fxmany)
+#endif
+
+#ifdef HIPGPU
+    ! make sure reqs progress
+    call cgyro_nl_fftw_comm_test()
+    ! hipfftExec is asynchronous, will need the results below
+    rc = hipDeviceSynchronize()
+#endif
+
+#if defined(OMPGPU)
+!$omp end target data
+#else
+    ! make sure reqs progress
+    call cgyro_nl_fftw_comm_test()
+!$acc wait
+!$acc end host_data
+#endif
+
+    ! make sure reqs progress
+    call cgyro_nl_fftw_comm_test()
+
+    call timer_lib_out('nl')
+    call timer_lib_in('nl_mem')
+
+    ! NOTE: The FFT will generate an unwanted n=0,p=-nr/2 component
+    ! that will be filtered in the main time-stepping loop
+
+    ! tile for performance, since this is effectively a transpose
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do collapse(5) &
+!$omp&   private(iy,ir,itm,itl,ix)
+#else
+!$acc parallel loop independent collapse(5) gang &
+!$acc&         private(iy,ir,itm,itl,ix) present(eB_nl,fxmany)
+#endif
+    do j=1,nsplitB
+     do iy0=0,n_toroidal+(R_TORTILE-1)-1,R_TORTILE  ! round up
+      do ir0=0,n_radial+(R_RADTILE-1)-1,R_RADTILE  ! round up
+       do iy1=0,(R_TORTILE-1)   ! tile
+        do ir1=0,(R_RADTILE-1)  ! tile
+         iy = iy0 + iy1
+         ir = 1 + ir0 + ir1
+         if ((iy < n_toroidal) .and. (ir <= n_radial)) then
+           ! itor = iy+1
+           itm = 1 + iy/nt_loc
+           itl = 1 + modulo(iy,nt_loc)
+           ix = ir-1-nx0/2
+           if (ix < 0) ix = ix+nx
+
+           eB_nl(ir,itl,j,itm) = fxmany(iy,ix,j)
+         endif
+        enddo
+       enddo
+      enddo
+     enddo
+    enddo
+
+  endif ! if i_triad
+
 #if !defined(OMPGPU)
-  ! end data fB_nl
+  ! end data fB_nl,eB_nl
 !$acc end data
 #endif
 
@@ -1253,6 +1500,9 @@ subroutine cgyro_nl_fftw(ij)
   ! start the async reverse comm
   ! can reuse the same req, no overlap with forward fB_req
   call parallel_slib_r_nc_async(nsplitB,fB_nl,fpackB,fB_req)
+  if (i_triad == 1) then
+     call parallel_slib_r_nc_async(nsplitB,eB_nl,epackB,eB_req)
+  end if
   fB_req_valid = .TRUE.
   ! make sure reqs progress
   call cgyro_nl_fftw_comm_test()
@@ -1272,16 +1522,24 @@ subroutine cgyro_nl_fftw_stepr(g_j, f_j, nl_idx, i_omp)
 
   implicit none
 
+  !-----------------------------------
   integer, intent(in) :: g_j, f_j
   integer,intent(in) :: nl_idx ! 1=>A, 2=>B
   integer,intent(in) :: i_omp
+  !-----------------------------------
   integer :: ix,iy
   integer :: ir,itm,itl,itor
+  real :: inv_nxny
 
   include 'fftw3.f03'
 
+  inv_nxny = 1.0/(nx*ny)
   ! Poisson bracket in real space
-  uv(:,:,i_omp) = (uxmany(:,:,f_j)*vymany(:,:,g_j)-uymany(:,:,f_j)*vxmany(:,:,g_j))/(nx*ny)
+  do ix=0,nx-1
+    do iy=0,ny-1
+      uv(iy,ix,i_omp) = (uxmany(iy,ix,f_j)*vymany(iy,ix,g_j)-uymany(iy,ix,f_j)*vxmany(iy,ix,g_j)) * inv_nxny
+    enddo
+  enddo
 
   call fftw_execute_dft_r2c(plan_r2c,uv(:,:,i_omp),fx(:,:,i_omp))
 
@@ -1307,6 +1565,7 @@ subroutine cgyro_nl_fftw_stepr(g_j, f_j, nl_idx, i_omp)
 
 end subroutine cgyro_nl_fftw_stepr
 
+  ! assumes cgyro_nl_fftw_stepr has already been called
 subroutine cgyro_nl_fftw_stepr_triad(g_j, f_j, nl_idx, i_omp)
 
   use timer_lib
@@ -1315,72 +1574,46 @@ subroutine cgyro_nl_fftw_stepr_triad(g_j, f_j, nl_idx, i_omp)
 
   implicit none
 
+  !-----------------------------------
   integer, intent(in) :: g_j, f_j
   integer,intent(in) :: nl_idx ! 1=>A, 2=>B
   integer,intent(in) :: i_omp
-  real :: y_mean(nx)
+  !-----------------------------------
+  real :: y_mean_ux, y_mean_uy, y_mean_vx, y_mean_vy
+  real :: r_ux, r_uy, r_vx, r_vy
   integer :: ix,iy
   integer :: ir,itm,itl,itor
+  real :: inv_nxny,inv_ny
 
   include 'fftw3.f03'
 
-  ! 1. Poisson bracket in real space
-  uv(:,:,i_omp) = (uxmany(:,:,f_j)*vymany(:,:,g_j)-uymany(:,:,f_j)*vxmany(:,:,g_j))/(nx*ny)
-
-  call fftw_execute_dft_r2c(plan_r2c,uv(:,:,i_omp),fx(:,:,i_omp))
-
-  ! NOTE: The FFT will generate an unwanted n=0,p=-nr/2 component
-  ! that will be filtered in the main time-stepping loop
-
-  ! this should really be accounted against nl_mem, but hard to do with OMP
-  do itm=1,n_toroidal_procs
-   do itl=1,nt_loc
-    itor=itl + (itm-1)*nt_loc
-    do ir=1,n_radial
-     ix = ir-1-nx0/2
-     if (ix < 0) ix = ix+nx
-     iy = itor-1
-     if (nl_idx==1) then
-       fA_nl(ir,itl,f_j,itm) = fx(iy,ix,i_omp)
-     else
-       fB_nl(ir,itl,f_j,itm) = fx(iy,ix,i_omp)
-     endif
-    enddo
-   enddo
-  enddo
-
+  inv_ny = 1.0/ny
+  inv_nxny = 1.0/(nx*ny)
+  ! 1. Poisson bracket in real space was done in cgyro_nl_fftw_stepr
 
   ! 2. Poisson bracket in real space with Non_Zonal pairs
 
-  ! remove ky=0 in uxmany
-  y_mean = sum(uxmany(:,:,f_j) ,dim=1 ) / ny
-  do iy=0,ny-1
-    uxmany(iy,:,f_j) = uxmany(iy,:,f_j) -y_mean
+  do ix=0,nx-1
+    y_mean_ux = sum(uxmany(:,ix,f_j) ,dim=1 ) * inv_ny
+    y_mean_uy = sum(uymany(:,ix,f_j) ,dim=1 ) * inv_ny
+    y_mean_vx = sum(vxmany(:,ix,f_j) ,dim=1 ) * inv_ny
+    y_mean_vy = sum(vymany(:,ix,f_j) ,dim=1 ) * inv_ny
+    do iy=0,ny-1
+      ! remove ky=0
+      r_ux = uxmany(iy,ix,f_j) - y_mean_ux
+      r_uy = uymany(iy,ix,f_j) - y_mean_uy
+      r_vx = vxmany(iy,ix,f_j) - y_mean_vx
+      r_vy = vymany(iy,ix,f_j) - y_mean_vy
+      ! we could save, but we do not really need to (not used outside from this function)
+      !uxmany(iy,ix,f_j) = r_ux
+      !uymany(iy,ix,f_j) = r_y
+      !vxmany(iy,ix,f_j) = r_vx
+      !vymany(iy,ix,f_j) = r_vy
 
-  end do
-
-  ! remove ky=0 in uymany
-  y_mean = sum(uymany(:,:,f_j) ,dim=1 ) / ny ! =0
-  do iy=0,ny-1
-    uymany(iy,:,f_j) = uymany(iy,:,f_j) -y_mean
-
-  end do
-
-  ! remove ky=0 in vx
-  y_mean = sum(vxmany(:,:,g_j) ,dim=1 ) / ny
-  do iy=0,ny-1
-    vxmany(iy,:,g_j) = vxmany(iy,:,g_j) -y_mean
-
-  end do
-
-  ! remove ky=0 in vy
-  y_mean = sum(vymany(:,:,g_j) ,dim=1 ) / ny ! =0
-  do iy=0,ny-1
-    vymany(iy,:,g_j) = vymany(iy,:,g_j) -y_mean
-
-  end do
-
-  uv(:,:,i_omp) = (uxmany(:,:,f_j)*vymany(:,:,g_j)-uymany(:,:,f_j)*vxmany(:,:,g_j))/(nx*ny)
+      ! compute and save uv
+      uv(iy,ix,i_omp) = (r_ux*r_vy-r_uy*r_vx) * inv_nxny
+    enddo
+  enddo
 
   call fftw_execute_dft_r2c(plan_r2c,uv(:,:,i_omp),fx(:,:,i_omp))
 
@@ -1403,7 +1636,7 @@ subroutine cgyro_nl_fftw_stepr_triad(g_j, f_j, nl_idx, i_omp)
 end subroutine cgyro_nl_fftw_stepr_triad
 
 ! NOTE: call cgyro_nl_fftw_comm1 before cgyro_nl_fftw
-subroutine cgyro_nl_fftw(ij)
+subroutine cgyro_nl_fftw(i_triad)
 
   use timer_lib
   use parallel_lib
@@ -1414,9 +1647,9 @@ subroutine cgyro_nl_fftw(ij)
 
 
   !-----------------------------------
-  integer, intent(in) :: ij
+  integer, intent(in) :: i_triad
   !-----------------------------------
-  integer :: ix,iy,i_triad=0
+  integer :: ix,iy
   integer :: ir,it,itm,itl,it_loc
   integer :: itor,mytm
   integer :: j,p
@@ -1428,10 +1661,6 @@ subroutine cgyro_nl_fftw(ij)
   integer, external :: omp_get_thread_num
 
   include 'fftw3.f03'
-
-  if (triad_print_flag == 1 .and. ij == 3) then
-   i_triad=1
-  endif
 
   call cgyro_nl_fftw_comm_test()
 
@@ -1574,10 +1803,14 @@ subroutine cgyro_nl_fftw(ij)
         endif
 
         if (j<=nsplitA) then
+           call cgyro_nl_fftw_stepr(j, j, 1, i_omp)
+           if (i_omp==1) then
+             ! use the main thread to progress the async MPI
+             call cgyro_nl_fftw_comm_test()
+           endif
+
            if (i_triad == 1) then
               call cgyro_nl_fftw_stepr_triad(j, j, 1, i_omp)
-           else
-              call cgyro_nl_fftw_stepr(j, j, 1, i_omp)
            endif
         endif
         ! else we will do it in the next loop
@@ -1660,10 +1893,14 @@ subroutine cgyro_nl_fftw(ij)
           call cgyro_nl_fftw_comm_test()
         endif
 
+        call cgyro_nl_fftw_stepr(nsplitA+j, j, 2, i_omp)
+        if (i_omp==1) then
+         ! use the main thread to progress the async MPI
+          call cgyro_nl_fftw_comm_test()
+        endif
+
         if (i_triad == 1) then
           call cgyro_nl_fftw_stepr_triad(nsplitA+j, j, 2, i_omp)
-        else
-          call cgyro_nl_fftw_stepr(nsplitA+j, j, 2, i_omp)
         endif
    enddo ! j
 

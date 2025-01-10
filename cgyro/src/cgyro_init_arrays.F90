@@ -448,12 +448,14 @@ subroutine cgyro_init_arrays
                 + abs(omega_rot_drift_r(it,is)) &
                 + abs(omega_rot_edrift_r(it)))          
 
-            ! (d/dr) upwind dissipation for triad energy transfer diagnostics
-            diss_r(ic,iv_loc,itor) = - (n_radial/length)*spectraldiss(u,nup_radial)*up_radial &
-             * (abs(omega_rdrift(it,is))*energy(ie)*(1.0+xi(ix)**2) &
-             + abs(omega_cdrift_r(it,is)*xi(ix))*vel(ie) &
-             + abs(omega_rot_drift_r(it,is)) &
-             + abs(omega_rot_edrift_r(it))) 
+            if (triad_print_flag == 1) then
+              ! (d/dr) upwind dissipation for triad energy transfer diagnostics
+              diss_r(ic,iv_loc,itor) = - (n_radial/length)*spectraldiss(u,nup_radial)*up_radial &
+               * (abs(omega_rdrift(it,is))*energy(ie)*(1.0+xi(ix)**2) &
+               + abs(omega_cdrift_r(it,is)*xi(ix))*vel(ie) &
+               + abs(omega_rot_drift_r(it,is)) &
+               + abs(omega_rot_edrift_r(it))) 
+            endif
 
            ! omega_star 
            carg = &
@@ -487,6 +489,13 @@ subroutine cgyro_init_arrays
 #elif defined(_OPENACC)
 !$acc enter data copyin(omega_cap_h,omega_h,omega_s,omega_ss,omega_sbeta)
 #endif
+  if (triad_print_flag == 1) then
+#if defined(OMPGPU)
+!$omp target enter data map(to:diss_r)
+#elif defined(_OPENACC)
+!$acc enter data copyin(diss_r)
+#endif
+  endif
   !-------------------------------------------------------------------------
 
   deallocate(gdlnndr,gdlntdr)
