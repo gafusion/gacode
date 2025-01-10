@@ -15,7 +15,7 @@ subroutine le3_geometry_rho
   real :: up,pp,pt
   real :: d0, eta, d1, gpp_1, gtt_1, gpt_1
   real :: sum1, sum2, sum3, sum4
-
+  
   real, dimension(:,:), allocatable :: s1a,s1b
   real, dimension(:,:), allocatable :: s2a,s2b
   real, dimension(:,:), allocatable :: a11a,a11b
@@ -279,35 +279,31 @@ subroutine le3_geometry_rho
   !--------------------------------------------------------------------
   ! Check with GEO result
   !
-  if (equilibrium_model == 0) then
-     GEO_model_in = 0
-     GEO_rmin_in = rmin
-     GEO_rmaj_in = rmaj
-     GEO_drmaj_in = shift
-     GEO_zmag_in = zmag
-     GEO_dzmag_in = dzmag
-     GEO_q_in = q
-     GEO_s_in = s
-     GEO_kappa_in = kappa
-     GEO_s_kappa_in = s_kappa
-     GEO_delta_in = delta
-     GEO_s_delta_in = s_delta
-     GEO_zeta_in = zeta
-     GEO_s_zeta_in = s_zeta
-     GEO_beta_star_in = beta_star
-     !call GEO_alloc(1)
-     !call GEO_do()
-     !open(unit=1,file='out.miller',status='replace')
-     !do i=1,n_theta
-     !   theta = (i-1)*2*pi/(n_theta-1)-pi
-     !   call GEO_interp(theta)
-     !   print '(2(1pe12.5,1x))', GEO_theta_s,GEO_chi2
-     !   write(1,*) GEO_theta_s,GEO_chi2
-     !enddo
-     !close(1)
-     !call GEO_alloc(0)
-
-  endif
+  !if (equilibrium_model == 0) then
+  !   GEO_model_in = 0
+  !   GEO_rmin_in = rmin
+  !   GEO_rmaj_in = rmaj
+  !   GEO_drmaj_in = shift
+  !   GEO_zmag_in = zmag
+  !   GEO_dzmag_in = dzmag
+  !   GEO_q_in = q
+  !   GEO_s_in = s
+  !   GEO_kappa_in = kappa
+  !   GEO_s_kappa_in = s_kappa
+  !   GEO_delta_in = delta
+  !   GEO_s_delta_in = s_delta
+  !   GEO_zeta_in = zeta
+  !   GEO_s_zeta_in = s_zeta
+  !   GEO_beta_star_in = beta_star
+  !   call GEO_alloc(1)
+  !   call GEO_do()
+  !call GEO_interp(nt,tb(:,1),.false.)
+  !do i=1,nt
+  !   print *, tb(i,1), btor(i,1), GEO_bt(i), bpol(i,1), GEO_bp(i)
+  !enddo
+  !close(1)
+  !call GEO_alloc(0)
+  !endif
   !--------------------------------------------------------------------
   
   deallocate(sys_m)

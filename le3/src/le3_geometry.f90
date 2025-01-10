@@ -126,7 +126,7 @@ subroutine le3_geometry
   ! cos(u) = Z_t/sqrt(g_tt)
   cosu(:,:) = dzdt/sqrt(gtt)
 
-  btor(:,:) = 1.0/(r*g)
+  btor(:,:) = 1.0/g*sqrt(gpp)
 
   bpol(:,:) = 1.0/g*(gpt/sqrt(gtt)+iota*sqrt(gtt))
 
