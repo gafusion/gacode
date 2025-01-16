@@ -12,6 +12,9 @@ from cgyro.data import cgyrodata
 # Number of roots to test
 nmode = 16
 
+# Default output file name
+outfile = 'out.cgyro.dmd'
+
 # Command line option parser
 def opts():
 
@@ -48,13 +51,17 @@ def opts():
                         help='Root acceptance tolerance (default=0.005)',
                         type=float,
                         default=0.005)
+    parser.add_argument('-ext',
+                        help='Plotting file format [png,pdf] (default: screen)',
+                        type=str,
+                        default='screen')
     parser.add_argument('-noplot',
                         help='Switch off plotting',
                         action='store_true')
 
     args=parser.parse_args()
 
-    return args.e,args.tmax,args.dt,args.obs,args.tol,args.noplot
+    return args.e,args.tmax,args.dt,args.obs,args.tol,args.ext,args.noplot
 
 # DMD utility: helper function for plotting
 def axishelp(ax,x,ylabel):
@@ -102,7 +109,7 @@ def downsample(f,n,eps=0.01):
 
 #------------------------------------------------------------------------
 #
-mydir,tmax,k,obs,tol,noplot = opts()
+mydir,tmax,k,obs,tol,ext,noplot = opts()
 
 # process inputs
 mydir = mydir+'/'
@@ -225,8 +232,6 @@ for x in ostr:
     edict[x] = 1j*np.log(dmd.eigs)/dt
     mdict[x] = dmd.modes
 
-# determine most unstable modes (zvec)
-
 # vector of sorted eigenvalues
 evec = np.zeros([3,nmode],dtype=complex)
 # vector of sorted eigenmodes
@@ -263,29 +268,37 @@ for v in m01:
             # 3-way match
             jm.append([v[0],v[1],w[1]])
 
+# Exit if no modes found
 nm = len(jm)
+if nm < 1:
+   print('ERROR: (cgyrodmd) No modes found. Try increasing run length.')
+   sys.exit()
 
+error = np.zeros(nm)
 efreq = np.zeros(nm,dtype=complex)
 emode = np.zeros([3,n_radial*n_theta,nm],dtype=complex)
 
 # Collect eigenmodes (emode) and eigenfrequencies (efreq)
 for m in range(nm):
     j = np.array(jm[m])
-    e0  = np.trace(evec[:,j[:]])/3
-    err = np.trace(abs(evec[:,j[:]]-e0))
-    print("gamma = {:+.3f} omega = {:+.3f} | err = {:.3e}".format(e0.imag,e0.real,err))
+    efreq[m] = np.trace(evec[:,j[:]])/3
+    error[m] = np.trace(abs(evec[:,j[:]]-efreq[m]))
     for i in range(3):
-        emode[i,:,m] = mvec[i,:,j[i]]
-    efreq[m] = e0
+       emode[i,:,m] = mvec[i,:,j[i]]
 
-if nm < 1:
-   print('NO MODES FOUND. INCREASE RUN LENGTH')
-   sys.exit()
-
-
+# OUTPUT
 print()
 print('tmax = {:.1f} a/cs | w*tmax = {:.2f}'.format(t[imax-1],abs(efreq[0])*t[imax-1]))
 print('dt   = {:.3f} a/cs | w*dt   = {:.3f}'.format(dt,abs(efreq[0])*dt))
+print()
+
+f = open(outfile,'w')
+for m in range(nm):
+   data = (efreq[m].imag,efreq[m].real,error[m])  
+   str1 = 'gamma = {:+.3f} omega = {:+.3f} | err = {:.3e}'.format(*data)
+   str2 = '{:+.4f} {:+.4f} {:.4e}'.format(*data)
+   print(str1)
+   f.write(str2)
 
 if noplot:
     sys.exit()
@@ -330,7 +343,10 @@ ax.axhline(0,color='k',linestyle=':')
 ax.legend()
 
 plt.tight_layout()
-plt.show()
+if ext == 'screen':
+    plt.show()
+else:
+    plt.savefig('out.cgyro.dmd_freq.'+ext)
 
 #-------------------------------------------------------------
 dtheta = 2*np.pi/n_theta
@@ -371,4 +387,7 @@ for m in range(nm):
         ax.plot(xt,yi,color='r',linewidth=1)
 
 plt.tight_layout(pad=0.15)
-plt.show()
+if ext == 'screen':
+    plt.show()
+else:
+    plt.savefig('out.cgyro.dmd_mode.'+ext)
