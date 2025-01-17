@@ -300,6 +300,7 @@ module tgyro_globals
   integer :: tgyro_tglf_revision
   integer :: tgyro_tglf_dump_flag
   integer :: tgyro_tglf_ptot_flag
+  integer :: tgyro_tglf_mxh_flag
   integer :: tgyro_glf23_revision
   integer :: tgyro_glf23_dump_flag
   integer :: loc_ti_feedback_flag

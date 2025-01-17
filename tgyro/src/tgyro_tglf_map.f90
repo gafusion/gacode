@@ -22,7 +22,8 @@ subroutine tgyro_tglf_map
   real :: gamma_eb0
   real :: gamma_p0
 
-
+  real :: shape_fac
+  
   q_abs = abs(q(i_r))
 
   ! Initialize TGLF
@@ -119,7 +120,16 @@ subroutine tgyro_tglf_map
   tglf_ft_model_sa_in = 1
 
   ! Model (Miller) shape
+  ! Force Miller geometry in TGLF for now
+  ! In subsequent edits, maybe propagate the XMH flag to TGLF
+  ! Match the XMH flag to an available tglf_geometry_flag
   tglf_geometry_flag_in = 1 
+  select case( tgyro_tglf_mxh_flag )
+  case ( 1 )
+     shape_fac = 1.0 !Strictly Miller geometry for default geometry flag == 1
+  case default
+     shape_fac = 0.0
+  end select
 
   tglf_rmin_loc_in    = r(i_r)/r_min
   tglf_rmaj_loc_in    = r_maj(i_r)/r_min
@@ -132,6 +142,31 @@ subroutine tgyro_tglf_map
   tglf_s_delta_loc_in = s_delta(i_r)
   tglf_zeta_loc_in    = zeta(i_r)
   tglf_s_zeta_loc_in  = s_zeta(i_r)
+  ! eXtended Miller Harmonic shape coefficients
+
+  tglf_shape_sin3_loc_in   = shape_fac * shape_sin3(i_r)
+  tglf_shape_s_sin3_loc_in = shape_fac * shape_ssin3(i_r)
+!  tglf_shape_sin4_loc_in   = 0.0 ! XMH coefficients defined up to n=3 in tgyro_globals.f90
+!  tglf_shape_s_sin4_loc_in = 0.0 ! leave additional coefficients available within TGLF
+!  tglf_shape_sin5_loc_in   = 0.0 ! with their TGLF default values
+!  tglf_shape_s_sin5_loc_in = 0.0
+!  tglf_shape_sin6_loc_in   = 0.0
+!  tglf_shape_s_sin6_loc_in = 0.0
+  tglf_shape_cos0_loc_in   = shape_fac * shape_cos0(i_r)
+  tglf_shape_s_cos0_loc_in = shape_fac * shape_scos0(i_r)
+  tglf_shape_cos1_loc_in   = shape_fac * shape_cos1(i_r)
+  tglf_shape_s_cos1_loc_in = shape_fac * shape_scos1(i_r)
+  tglf_shape_cos2_loc_in   = shape_fac * shape_cos2(i_r)
+  tglf_shape_s_cos2_loc_in = shape_fac * shape_scos2(i_r)
+  tglf_shape_cos3_loc_in   = shape_fac * shape_cos3(i_r)
+  tglf_shape_s_cos3_loc_in = shape_fac * shape_scos3(i_r)
+!  tglf_shape_cos4_loc_in   = 0.0  ! XMH coefficients defined up to n=3 in tgyro_globals.f90
+!  tglf_shape_s_cos4_loc_in = 0.0
+!  tglf_shape_cos5_loc_in   = 0.0
+!  tglf_shape_s_cos5_loc_in = 0.0
+!  tglf_shape_cos6_loc_in   = 0.0
+!  tglf_shape_s_cos6_loc_in = 0.0
+  !
   tglf_q_loc_in       = q_abs
   tglf_q_prime_loc_in = q_prime
   tglf_p_prime_loc_in = p_prime
