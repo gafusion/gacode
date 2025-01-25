@@ -133,9 +133,6 @@ def rundmd(k):
       mdict[x] = dmd.modes
       if len(dmd.eigs) < nmode:
          nmode = len(dmd.eigs)
-
-   print(edict)
-   print(nmode)
    
    # vector of sorted eigenvalues
    evec = np.zeros([3,nmode],dtype=complex)
@@ -327,24 +324,26 @@ else:
       nm,jm,dt,efreq,emode,error,edict,evec = rundmd(kmin)
 
 # OUTPUT
-stra = 'k = {}\n'.format(kmin)
-strb = 'tmax = {:.1f} a/cs | w*tmax = {:.2f}\n'.format(t[imax-1],abs(efreq[0])*t[imax-1])
-strc = 'dt   = {:.3f} a/cs | w*dt   = {:.3f}\n'.format(dt,abs(efreq[0])*dt)
-
-print()
+str1 = '# cgyrodmd\n'
+str2 = '# k = {}\n'.format(kmin)
+str3 = '# tmax = {:.1f} a/cs | w*tmax = {:.2f}\n'.format(t[imax-1],abs(efreq[0])*t[imax-1])
+str4 = '# dt   = {:.3f} a/cs | w*dt   = {:.3f}\n'.format(dt,abs(efreq[0])*dt)
+str5 = '# gamma     omega     error\n'
 
 f = open(mydir+outfile,'w')
-f.write(stra)
-f.write(strb)
-f.write(strc)
+f.write(str1)
+f.write(str2)
+f.write(str3)
+f.write(str4)
+f.write(str5)
 for m in range(nm):
    data = (efreq[m].imag,efreq[m].real,error[m])  
-   str1 = 'gamma = {:+.3f} omega = {:+.3f} | err = {:.3e}\n'.format(*data)
-   str2 = '{:+.4f} {:+.4f} {:.4e} \n'.format(*data)
+   str1 = '{:+.5f}  {:+.5f}  {:.4e} \n'.format(*data)
    f.write(str1)
 
 f.close()
 
+print()
 os.system('cat '+mydir+outfile)
 
 if noplot:
