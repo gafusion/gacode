@@ -10,7 +10,7 @@ from pydmd import DMD
 from cgyro.data import cgyrodata
 
 # Number of roots to test
-nmode = 16
+nmode_max = 16
 
 # Default output file name
 outfile = 'out.cgyro.dmd'
@@ -39,10 +39,14 @@ def opts():
                         help='Fraction of time samples to retain (default=1.0)',
                         type=float,
                         default=1.0)
-    parser.add_argument('-dt',
-                        help='Time sample spacing (default=1)',
+    parser.add_argument('-k',
+                        help='Time sample spacing (default=-1 [automatic])',
                         type=int,
-                        default=1)
+                        default=-1)
+    parser.add_argument('-mmin',
+                        help='Minimum number of modes for auto search (default=3)',
+                        type=int,
+                        default=3)
     parser.add_argument('-obs',
                         help="Comma-separated list of 3 observables",
                         type=str,
@@ -58,10 +62,13 @@ def opts():
     parser.add_argument('-noplot',
                         help='Switch off plotting',
                         action='store_true')
+    parser.add_argument('-noeig',
+                        help='Switch off eigenmode plotting',
+                        action='store_true')
 
     args=parser.parse_args()
 
-    return args.e,args.tmax,args.dt,args.obs,args.tol,args.ext,args.noplot
+    return args.e,args.tmax,args.k,args.mmin,args.obs,args.tol,args.ext,args.noplot,args.noeig
 
 # DMD utility: helper function for plotting
 def axishelp(ax,x,ylabel):
@@ -107,9 +114,88 @@ def downsample(f,n,eps=0.01):
     fdown = np.sum(f[:,:m].reshape(npar,-1,n)*w[None,None,:],axis=2)
     return fdown
 
+def rundmd(k):
+
+   # Start by limiting the max number of dmd modes
+   nmode = nmode_max
+
+   # step for DMD
+   dt = k*(t[1]-t[0])
+
+   # dictionary of eigenvalues
+   edict = {}
+   # dictionary of eigenmodes
+   mdict = {}
+   for x in ostr:
+      down = downsample(ovec[x],k)
+      dmd.fit(down)
+      edict[x] = 1j*np.log(dmd.eigs)/dt
+      mdict[x] = dmd.modes
+      if len(dmd.eigs) < nmode:
+         nmode = len(dmd.eigs)
+
+   print(edict)
+   print(nmode)
+   
+   # vector of sorted eigenvalues
+   evec = np.zeros([3,nmode],dtype=complex)
+   # vector of sorted eigenmodes
+   mvec = np.zeros([3,n_radial*n_theta,nmode],dtype=complex)
+   for i,x in enumerate(ostr):
+      z  = edict[x]
+      zi = z.imag
+      k = np.flip(np.argsort(zi))
+      evec[i,:] = z[k[:nmode]]
+      mvec[i,:,:] = mdict[x][:,k[:nmode]]
+
+   # find true eigenmodes and compute errors
+   m01 = []
+   m02 = []
+   for i in range(nmode):
+      for j in range(nmode):
+         em = abs(evec[0,i]-evec[1,j])
+         en = abs(evec[0,i]-evec[2,j])
+         if em < tol:
+            # observable 1-i close to observable 2-j
+            m01.append([i,j])
+         if en < tol:
+            # observable 1-i close to observable 3-j 
+            m02.append([i,j])
+
+   # Get legitimate modes
+   # v[0] -> obs1 index 
+   # v[1] -> obs2 index 
+   # w[0] -> obs3 index
+   jm = []
+   for v in m01:
+      for w in m02:
+         if v[0] == w[0]:
+            # 3-way match
+            jm.append([v[0],v[1],w[1]])
+
+   # Exit if no modes found
+   nm = len(jm)
+   if nm < 1:
+      print('ERROR: (cgyrodmd) No modes found. Try increasing run length.')
+      return 0,[],dt,[],[],[1],[],[]
+   else:
+      error = np.zeros(nm)
+      efreq = np.zeros(nm,dtype=complex)
+      emode = np.zeros([3,n_radial*n_theta,nm],dtype=complex)
+
+      # Collect eigenmodes (emode) and eigenfrequencies (efreq)
+      for m in range(nm):
+         j = np.array(jm[m])
+         efreq[m] = np.trace(evec[:,j[:]])/3
+         error[m] = np.trace(abs(evec[:,j[:]]-efreq[m]))
+         for i in range(3):
+            emode[i,:,m] = mvec[i,:,j[i]]
+
+      return nm,jm,dt,efreq,emode,error,edict,evec
+
 #------------------------------------------------------------------------
 #
-mydir,tmax,k,obs,tol,ext,noplot = opts()
+mydir,tmax,k,nmode_min,obs,tol,ext,noplot,noeig = opts()
 
 # process inputs
 mydir = mydir+'/'
@@ -215,90 +301,51 @@ if len(mykeys) < 3:
     print('NOT ENOUGH DATA')
     sys.exit()
 
-# step for DMD
-dt = k*(t[1]-t[0])
-
 #---------------------------------------------------------------------------
 # Initialize (classic) DMD object
 dmd = DMD(svd_rank=0,exact=True,sorted_eigs='abs')
 
-# dictionary of eigenvalues
-edict = {}
-# dictionary of eigenmodes
-mdict = {}
-for x in ostr:
-    down = downsample(ovec[x],k)
-    dmd.fit(down)
-    edict[x] = 1j*np.log(dmd.eigs)/dt
-    mdict[x] = dmd.modes
+if k > 0:
+   nm,jm,dt,efreq,emode,error,edict,evec = rundmd(k)
+   kmin = k
+else:
+   k = len(t)//20
+   emin = 1
+   kmin = -1
 
-# vector of sorted eigenvalues
-evec = np.zeros([3,nmode],dtype=complex)
-# vector of sorted eigenmodes
-mvec = np.zeros([3,n_radial*n_theta,nmode],dtype=complex)
-for i,x in enumerate(ostr):
-    z  = edict[x]
-    zi = z.imag
-    k = np.flip(np.argsort(zi))
-    evec[i,:] = z[k[:nmode]]
-    mvec[i,:,:] = mdict[x][:,k[:nmode]]
+   for k0 in range(1,k+1):
+      nm,jm,dt,efreq,emode,error,edict,evec = rundmd(k0)
+      esum = sum(error[:nmode_min])
+      if esum < emin and len(error) >= nmode_min:
+         emin = esum
+         kmin = k0
 
-# find true eigenmodes and compute errors
-m01 = []
-m02 = []
-for i in range(nmode):
-    for j in range(nmode):
-        em = abs(evec[0,i]-evec[1,j])
-        en = abs(evec[0,i]-evec[2,j])
-        if em < tol:
-            # observable 1-i close to observable 2-j
-            m01.append([i,j])
-        if en < tol:
-            # observable 1-i close to observable 3-j 
-            m02.append([i,j])
-
-# Get legitimate modes
-# v[0] -> obs1 index 
-# v[1] -> obs2 index 
-# w[0] -> obs3 index
-jm = []
-for v in m01:
-    for w in m02:
-        if v[0] == w[0]:
-            # 3-way match
-            jm.append([v[0],v[1],w[1]])
-
-# Exit if no modes found
-nm = len(jm)
-if nm < 1:
-   print('ERROR: (cgyrodmd) No modes found. Try increasing run length.')
-   sys.exit()
-
-error = np.zeros(nm)
-efreq = np.zeros(nm,dtype=complex)
-emode = np.zeros([3,n_radial*n_theta,nm],dtype=complex)
-
-# Collect eigenmodes (emode) and eigenfrequencies (efreq)
-for m in range(nm):
-    j = np.array(jm[m])
-    efreq[m] = np.trace(evec[:,j[:]])/3
-    error[m] = np.trace(abs(evec[:,j[:]]-efreq[m]))
-    for i in range(3):
-       emode[i,:,m] = mvec[i,:,j[i]]
+   if kmin == -1:
+      print('ERROR -- could not find nmode_min modes')
+      sys.exit()
+   else:
+      nm,jm,dt,efreq,emode,error,edict,evec = rundmd(kmin)
 
 # OUTPUT
-print()
-print('tmax = {:.1f} a/cs | w*tmax = {:.2f}'.format(t[imax-1],abs(efreq[0])*t[imax-1]))
-print('dt   = {:.3f} a/cs | w*dt   = {:.3f}'.format(dt,abs(efreq[0])*dt))
+stra = 'k = {}\n'.format(kmin)
+strb = 'tmax = {:.1f} a/cs | w*tmax = {:.2f}\n'.format(t[imax-1],abs(efreq[0])*t[imax-1])
+strc = 'dt   = {:.3f} a/cs | w*dt   = {:.3f}\n'.format(dt,abs(efreq[0])*dt)
+
 print()
 
-f = open(outfile,'w')
+f = open(mydir+outfile,'w')
+f.write(stra)
+f.write(strb)
+f.write(strc)
 for m in range(nm):
    data = (efreq[m].imag,efreq[m].real,error[m])  
-   str1 = 'gamma = {:+.3f} omega = {:+.3f} | err = {:.3e}'.format(*data)
-   str2 = '{:+.4f} {:+.4f} {:.4e}'.format(*data)
-   print(str1)
-   f.write(str2)
+   str1 = 'gamma = {:+.3f} omega = {:+.3f} | err = {:.3e}\n'.format(*data)
+   str2 = '{:+.4f} {:+.4f} {:.4e} \n'.format(*data)
+   f.write(str1)
+
+f.close()
+
+os.system('cat '+mydir+outfile)
 
 if noplot:
     sys.exit()
@@ -346,8 +393,11 @@ plt.tight_layout()
 if ext == 'screen':
     plt.show()
 else:
-    plt.savefig('out.cgyro.dmd_freq.'+ext)
+    plt.savefig(mydir+'out.cgyro.dmd_freq.'+ext)
 
+if noeig:
+    sys.exit()
+    
 #-------------------------------------------------------------
 dtheta = 2*np.pi/n_theta
 thetab = np.arange(n_theta*n_radial)*dtheta-(n_radial+1)*np.pi
@@ -390,4 +440,4 @@ plt.tight_layout(pad=0.15)
 if ext == 'screen':
     plt.show()
 else:
-    plt.savefig('out.cgyro.dmd_mode.'+ext)
+    plt.savefig(mydir+'out.cgyro.dmd_mode.'+ext)
