@@ -306,7 +306,7 @@ if k > 0:
    nm,jm,dt,efreq,emode,error,edict,evec = rundmd(k)
    kmin = k
 else:
-   k = len(t)//20
+   k = len(t)//50
    emin = 1
    kmin = -1
 
