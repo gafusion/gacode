@@ -73,12 +73,17 @@ def opts():
 # DMD utility: helper function for plotting
 def axishelp(ax,x,ylabel):
 
-    ax.set_xlabel(r"$\theta_*$")
-    ax.set_ylabel(ylabel)
-    ax.grid(which="both",ls=":")
-    ax.grid(which="major",ls=":")
+    x0 = max(xt)
+    y0 = 1.02
 
-    ax.set_xlim(-max(x),max(x))
+    ax.set_xlabel(r"$\theta_*$")
+    ax.text(-0.88*x0,0.74*y0,r'\fbox{'+ylabel+'}')
+    
+    ax.plot([-x0,x0],[0,0],linestyle=':',alpha=0.2,color='k')
+    ax.plot([0,0],[-y0,y0],linestyle=':',alpha=0.2,color='k')
+    ax.set_xlim(-x0,x0) 
+    ax.set_ylim(-y0,y0) 
+
     return ax
 
 # DMD utility: Map from (kx,theta) to theta_*
@@ -198,15 +203,15 @@ mydir,tmax,k,nmode_min,obs,tol,ext,noplot,noeig = opts()
 mydir = mydir+'/'
 ostr  = obs.split(',')
 
-fdict = {'phi' :r'$\phi$',
-         'apar':r'$A_\parallel$',
-         'bpar':r'$B_\parallel$',
-         'ni':'$n_i$',
-         'ne':'$n_e$',
-         'vi':'$v_i$',
-         've':'$v_e$',
-         'ei':'$E_i$',
-         'ee':'$E_e$'}
+fdict = {'phi' :r'$\delta \widetilde{\phi}$',
+         'apar':r'$\delta \hskip -1pt \widetilde{A_\parallel}$',
+         'bpar':r'$\delta \hskip -1pt \widetilde{B_\parallel}$',
+         'ni':r'$\delta n_i$',
+         'ne':r'$\delta \widetilde{n_e}$',
+         'vi':r'$\delta v_i$',
+         've':r'$\delta \widetilde{v_e}$',
+         'ei':r'$\delta E_i$',
+         'ee':r'$\delta \widetilde{E_e}$'}
 
 # symbols
 args = {}
@@ -352,10 +357,13 @@ if noplot:
 #---------------------------------------------------------------------------
 # PLOTTING
 
-rc('font',size=20)
+mlabel = [r'$\mathrm{KBM}$',r'$\mathrm{TEM}$',r'$\mathrm{ITG}$']
+yeps = 0.004
+
+rc('font',size=24)
 rc('text',usetex=True)
 
-fig = plt.figure(figsize=(10,8))
+fig = plt.figure(figsize=(9,7.5))
 ax = fig.add_subplot(111)
 
 ax.set_xlabel(r"$(a/c_s)\,\omega$")
@@ -365,28 +373,30 @@ ax.grid(which="major",ls=":")
 
 # First plot all modes
 for x in ostr:
-    ax.scatter(edict[x].real,edict[x].imag,s=60,**args[x],alpha=0.15)
+    ax.scatter(edict[x].real,edict[x].imag,s=60,**args[x],alpha=0.4)
 
 # Next plot legitimate modes
 haslabel = False
 for m in range(nm):
     j = np.array(jm[m])
     for i,x in enumerate(ostr):
+        x0 = evec[i,j[i]].real ; y0 = evec[i,j[i]].imag
         if haslabel:
-            ax.scatter(evec[i,j[i]].real,evec[i,j[i]].imag,s=60,**args[x])
+            ax.scatter(x0,y0,s=80,**args[x])
         else:
-            ax.scatter(evec[i,j[i]].real,evec[i,j[i]].imag,s=60,**args[x],label=fdict[x])
+            ax.scatter(x0,y0,s=80,**args[x],label=fdict[x])
     haslabel = True
+    ax.text(x0,y0+yeps,mlabel[m],verticalalignment='bottom',horizontalalignment='center')
 
-xmax = max(np.real(efreq))+0.05
-xmin = min(np.real(efreq))-0.05
-ymax = max(np.imag(efreq))+0.05
-ymin = min(np.imag(efreq))-0.05
+xmax = max(np.real(efreq))+0.07
+xmin = min(np.real(efreq))-0.07
+ymax = max(np.imag(efreq))+0.07
+ymin = min(np.imag(efreq))-0.1
 ax.set_xlim([xmin,xmax])
 ax.set_ylim([ymin,ymax])
 ax.axvline(0,color='k',linestyle=':')
 ax.axhline(0,color='k',linestyle=':')
-ax.legend()
+ax.legend(loc=4)
 
 plt.tight_layout()
 if ext == 'screen':
@@ -411,14 +421,14 @@ if nm < 4:
 else:
     ly = 9
 
-fig = plt.figure(figsize=(12,ly))
+fig = plt.figure(figsize=(8,ly))
 
 for m in range(nm):
     for i,x in enumerate(ostr):
         ax = fig.add_subplot(nm,3,i+1+3*m)
         ax = axishelp(ax,xt,fdict[x])
 
-        if m == 0:
+        if m == -1:
             # plot initial-value
             p = np.argmax(abs(ovec[x][:,-1]))
             a00 = ovec[x][p,-1]
@@ -434,8 +444,17 @@ for m in range(nm):
         yi = np.imag(emode[i,:,m]/a0d)
         ax.plot(xt,yr,color='k',linewidth=1)
         ax.plot(xt,yi,color='r',linewidth=1)
+        if m+1 < nm: 
+            ax.set_yticks([])
+            ax.set_xticks([])
+            ax.set_xlabel('')
+            ax.set_ylabel('')
+        else:
+            ax.set_yticks([])
+            ax.set_ylabel('')
+            ax.grid(False)
 
-plt.tight_layout(pad=0.15)
+plt.tight_layout(pad=0.05)
 if ext == 'screen':
     plt.show()
 else:
