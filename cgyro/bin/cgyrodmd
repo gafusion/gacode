@@ -70,22 +70,6 @@ def opts():
 
     return args.e,args.tmax,args.k,args.mmin,args.obs,args.tol,args.ext,args.noplot,args.noeig
 
-# DMD utility: helper function for plotting
-def axishelp(ax,x,ylabel):
-
-    x0 = max(xt)
-    y0 = 1.02
-
-    ax.set_xlabel(r"$\theta_*$")
-    ax.text(-0.88*x0,0.74*y0,r'\fbox{'+ylabel+'}')
-    
-    ax.plot([-x0,x0],[0,0],linestyle=':',alpha=0.2,color='k')
-    ax.plot([0,0],[-y0,y0],linestyle=':',alpha=0.2,color='k')
-    ax.set_xlim(-x0,x0) 
-    ax.set_ylim(-y0,y0) 
-
-    return ax
-
 # DMD utility: Map from (kx,theta) to theta_*
 def map1d(f2d,q):
     nr    = f2d.shape[0]
@@ -204,14 +188,14 @@ mydir = mydir+'/'
 ostr  = obs.split(',')
 
 fdict = {'phi' :r'$\delta \widetilde{\phi}$',
-         'apar':r'$\delta \hskip -1pt \widetilde{A_\parallel}$',
-         'bpar':r'$\delta \hskip -1pt \widetilde{B_\parallel}$',
+         'apar':r'$\delta \hskip -1pt \widetilde{A}_\parallel$',
+         'bpar':r'$\delta \hskip -1pt \widetilde{B}_\parallel$',
          'ni':r'$\delta n_i$',
-         'ne':r'$\delta \widetilde{n_e}$',
+         'ne':r'$\delta \widetilde{n}_e$',
          'vi':r'$\delta v_i$',
-         've':r'$\delta \widetilde{v_e}$',
+         've':r'$\delta \widetilde{v}_e$',
          'ei':r'$\delta E_i$',
-         'ee':r'$\delta \widetilde{E_e}$'}
+         'ee':r'$\delta \widetilde{E}_e$'}
 
 # symbols
 args = {}
@@ -359,8 +343,9 @@ if noplot:
 
 mlabel = [r'$\mathrm{KBM}$',r'$\mathrm{TEM}$',r'$\mathrm{ITG}$']
 yeps = 0.004
+ss   = 200
 
-rc('font',size=24)
+rc('font',size=28)
 rc('text',usetex=True)
 
 fig = plt.figure(figsize=(9,7.5))
@@ -373,7 +358,7 @@ ax.grid(which="major",ls=":")
 
 # First plot all modes
 for x in ostr:
-    ax.scatter(edict[x].real,edict[x].imag,s=60,**args[x],alpha=0.4)
+    ax.scatter(edict[x].real,edict[x].imag,s=ss,**args[x],alpha=0.4)
 
 # Next plot legitimate modes
 haslabel = False
@@ -382,14 +367,14 @@ for m in range(nm):
     for i,x in enumerate(ostr):
         x0 = evec[i,j[i]].real ; y0 = evec[i,j[i]].imag
         if haslabel:
-            ax.scatter(x0,y0,s=80,**args[x])
+            ax.scatter(x0,y0,s=ss,**args[x])
         else:
-            ax.scatter(x0,y0,s=80,**args[x],label=fdict[x])
+            ax.scatter(x0,y0,s=ss,**args[x],label=fdict[x])
     haslabel = True
     ax.text(x0,y0+yeps,mlabel[m],verticalalignment='bottom',horizontalalignment='center')
 
-xmax = max(np.real(efreq))+0.07
-xmin = min(np.real(efreq))-0.07
+xmax = max(np.real(efreq))+0.09
+xmin = min(np.real(efreq))-0.09
 ymax = max(np.imag(efreq))+0.07
 ymin = min(np.imag(efreq))-0.1
 ax.set_xlim([xmin,xmax])
@@ -398,7 +383,7 @@ ax.axvline(0,color='k',linestyle=':')
 ax.axhline(0,color='k',linestyle=':')
 ax.legend(loc=4)
 
-plt.tight_layout()
+plt.tight_layout(pad=0.3)
 if ext == 'screen':
     plt.show()
 else:
@@ -413,15 +398,31 @@ thetab = np.arange(n_theta*n_radial)*dtheta-(n_radial+1)*np.pi
 xt = thetab/np.pi
 p0 = n_radial//2*n_theta+n_theta//2
 
-rc('font',size=15)
+rc('font',size=18)
 
 #-------------------------------------------------------------
+# DMD utility: helper function for plotting
+def axishelp(ax,x,ylabel):
+
+    x0 = max(xt)
+    y0 = 1.02
+
+    ax.set_xlabel(r"$\theta_p/\pi$")
+    ax.text(-0.88*x0,0.65*y0,r'\fbox{'+ylabel+'}')
+    
+    ax.plot([-x0,x0],[0,0],linestyle=':',alpha=0.2,color='k')
+    ax.plot([0,0],[-y0,y0],linestyle=':',alpha=0.2,color='k')
+    ax.set_xlim(-x0,x0) 
+    ax.set_ylim(-y0,y0) 
+
+    return ax
+
 if nm < 4:
     ly = 1+2*nm
 else:
     ly = 9
 
-fig = plt.figure(figsize=(8,ly))
+fig = plt.figure(figsize=(9,ly))
 
 for m in range(nm):
     for i,x in enumerate(ostr):
