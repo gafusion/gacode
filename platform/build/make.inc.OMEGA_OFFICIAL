@@ -1,0 +1,30 @@
+#---------------------------------------------------
+# Linux Mint 
+#---------------------------------------------------
+
+IDENTITY="Linux Mint gfortran+mpich+OpenBLAS (/usr)"
+CORES_PER_NODE=4
+NUMAS_PER_NODE=1
+
+FFTWDIR=/home/candy/lib
+ROOT=/home/candy/GIT
+
+# Compilers
+FC     = mpif90 -std=f2018 -fall-intrinsics -I $(GACODE_ROOT)/modules -J $(GACODE_ROOT)/modules -fPIC
+F77    = mpif77
+FOMP   =-fopenmp
+FMATH  =-fdefault-real-8 -fdefault-double-8
+FOPT   =-Ofast
+FDEBUG =-Wall -W -fcheck=all -g -fbacktrace -ffpe-trap=invalid,zero,overflow -fimplicit-none -finit-real=nan
+F2PY   = f2py
+
+# System math libraries
+LMATH = ${ROOT}/OpenBLAS/libopenblas.a $(FFTWDIR)/libfftw3.a $(FFTWDIR)/libfftw3_omp.a
+FFTW_INC=/home/candy/include
+
+# OPTIONAL NetCDF:
+NETCDF=-L${NETCDF_F_DIR}/lib -lnetcdff -L${NETCDF_DIR}/lib -lnetcdf -lnetcdf -lm -ldl
+NETCDF_INC=${NETCDF_F_DIR}/include
+
+# Archive 
+ARCH = ar cr
