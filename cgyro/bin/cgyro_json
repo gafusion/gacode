@@ -1,85 +1,254 @@
 #!/usr/bin/env python
 
+import os
+import sys
 import json
 import numpy as np
-
+import argparse
+import textwrap
 from pygacode.cgyro import data
 
-sim = data.cgyrodata('./')
+garoot = os.environ['GACODE_ROOT']
+
+def opts():
+
+    mytext = '''\
+    output:
+      out.cgyro.localdump  (complete localdump file)
+      json.cgyro.imas      (IMAS data dictionary of inputs)
+      json.cgyro.localdump (useless JSON file containing inputs)
+      input.tglf 
+    '''
+    
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawTextHelpFormatter,
+        prog = 'cgyro_json',
+        description="CGYRO localdump utility",
+        epilog=textwrap.dedent(mytext))
+    
+    parser.add_argument('-e',
+                        help="working directory (default: cwd)",
+                        type=str,
+                        default='.')
+    
+    args=parser.parse_args()
+
+    return args.e
+
+mydir = opts()
+
+mydir = mydir+'/'
+
+# Sanity checks:
+if not os.path.isdir(mydir):
+   # No directory
+   print('cgyro_json: (ERROR) directory does not exist')
+   sys.exit()
+else:
+   if not os.path.isfile(mydir+'input.cgyro.gen'):
+      # No data
+      print('cgyro_json: (ERROR) input.cgyro.gen missing')
+      sys.exit()
+   else:
+      # Read data
+      sim = data.cgyrodata(mydir)
 
 try:
-   with open('out.cgyro.version', 'r') as file:
-      version = file.read().rstrip()
+   with open(mydir+'out.cgyro.version', 'r') as file:
+      for line in file:
+         pass
+      version = line.strip()
 except:
    version = 'unavailable'
-    
+   print('cgyro_json: (WARNING) CGYRO version not available')
 
-#--------------------------------------------------------------
+if sim.n_species == 1:
+   print('cgyro_json: (ERROR) Conversion not implemented for adiabatic electrons.')
+   sys.exit()
+   
+# Electron index
+for i in range(sim.n_species):
+   if sim.z[i] < 0.0:
+      ielec = i
+
+#==================================================================
 # json.cgyro.localdump
 
 d = {}
+tglf={}
+with open(garoot+'/cgyro/bin/input.json','r') as file:
+   default = json.load(file)
+   
+# Determine non-default values in input.cgyro
+with open(mydir+'input.cgyro.gen','r') as file:
+   for line in file:
+      u = line.split()
+      key = u[1]
+      value = u[0]
+      if key in default.keys() and 'SHAPE' not in key:
+         if str(value) != str(default[key]): 
+            d[key] = value
 
+# Code-specific parameters
+d['N_ENERGY'] = sim.n_energy
+d['N_XI'] = sim.n_xi
+d['N_THETA'] = sim.n_theta
+d['N_RADIAL'] = sim.n_radial
+d['N_TOROIDAL'] = sim.n_n
+d['N_FIELD'] = sim.n_field
+
+# Physics parameters
 d['RMIN'] = sim.rmin
+tglf['RMIN_LOC']=sim.rmin
 d['RMAJ'] = sim.rmaj
+tglf['RMAJ_LOC'] = sim.rmaj
 d['Q'] = sim.q
-d['SHEAR'] = sim.shear
-d['MACH'] = sim.mach
-d['GAMMA_E'] = sim.gamma_e
-d['GAMMA_P'] = sim.gamma_p
-d['BETAE_UNIT'] = sim.betae_unit
+tglf['Q_LOC'] = abs(sim.q)
+tglf['Q_PRIME_LOC'] = sim.shear*(tglf['Q_LOC']/tglf['RMIN_LOC'])**2
+tglf['P_PRIME_LOC'] = ( -sim.beta_star/8/np.pi)*abs(tglf['Q_LOC']/tglf['RMIN_LOC'])
+d['S'] = sim.shear
 
-d['Z'] = sim.z[:].tolist()
-d['MASS'] = sim.mass[:].tolist()
-d['DENS'] = sim.dens[:].tolist()
-d['TEMP'] = sim.temp[:].tolist()
-d['DLNNDR'] = sim.dlnndr[:].tolist()
-d['DLNTDR'] = sim.dlntdr[:].tolist()
+d['MACH'] = sim.mach
+tglf['NS']=sim.n_species
+for i in range(1,tglf['NS']+1):
+   tglf[f'VPAR_{i}']=abs(sim.mach)
+   tglf[f'VPAR_SHEAR_{i}']=abs(sim.gamma_p)
+
+d['GAMMA_E'] = sim.gamma_e
+
+tglf['VEXB_SHEAR']=sim.gamma_e
+d['GAMMA_P'] = sim.gamma_p
+
+d['BETAE_UNIT'] = sim.betae_unit
+tglf['BETAE']=sim.betae_unit
+d['NU_EE'] = sim.nu[ielec]
+tglf['XNUE']=sim.nu[ielec]
+tglf['DEBYE']=sim.lambda_star
+
+#d['Z_EFF'] = sim.z_eff
 
 d['ZMAG'] = sim.zmag
+tglf['ZMAJ_LOC']=sim.zmag
 d['DZMAG'] = sim.dzmag
+tglf['DZMAJDX_LOC']=sim.dzmag
 d['SHIFT'] = sim.shift
+tglf['DRMAJDX_LOC']=sim.shift
+
+
 d['KAPPA'] = sim.kappa
+tglf['KAPPA_LOC'] = sim.kappa
 d['S_KAPPA'] = sim.s_kappa
+tglf['S_KAPPA_LOC'] = sim.s_kappa
 d['DELTA'] = sim.delta
+tglf['DELTA_LOC'] = sim.delta
 d['S_DELTA'] = sim.s_delta
+tglf['S_DELTA_LOC'] = sim.s_delta
 d['ZETA'] = sim.zeta
+tglf['ZETA_LOC'] = sim.zeta
 d['S_ZETA'] = sim.s_zeta
+tglf['S_ZETA_LOC'] = sim.s_zeta
 
 d['SHAPE_SIN'] = sim.shape_sin[:].tolist()
-
+for i in range(3,len(d['SHAPE_SIN'])):
+   tglf[f'SHAPE_SIN{i}']=d['SHAPE_SIN'][i]
 d['SHAPE_COS'] = sim.shape_cos[:].tolist()
+for i in range(0,len(d['SHAPE_COS'])):
+   tglf[f'SHAPE_COS{i}']=d['SHAPE_COS'][i]
+d['SHAPE_S_SIN'] = sim.shape_s_sin[:].tolist()
+for i in range(3,len(d['SHAPE_S_SIN'])):
+   tglf[f'SHAPE_S_SIN{i}']=d['SHAPE_S_SIN'][i]
+d['SHAPE_S_COS'] = sim.shape_s_cos[:].tolist()
+for i in range(0,len(d['SHAPE_S_COS'])):
+   tglf[f'SHAPE_S_COS{i}']=d['SHAPE_S_COS'][i]
+
+d['Z'] = sim.z[:].tolist()
+tglf['ZS_1'] = d['Z'][-1]
+for i in range(2,len(d['Z'])+1):
+   tglf[f'ZS_{i}']=d['Z'][i-2]
+    
+
+d['MASS'] = sim.mass[:].tolist()
+tglf['MASS_1']=d['MASS'][-1]
+for i in range(2,len(d['MASS'])+1):
+   tglf[f'MASS_{i}']=d['MASS'][i-2]
+d['DENS'] = sim.dens[:].tolist()
+tglf['AS_1']=d['DENS'][-1]
+for i in range(2,len(d['DENS'])+1):
+   tglf[f'AS_{i}']=d['DENS'][i-2]
+d['TEMP'] = sim.temp[:].tolist()
+tglf['TAUS_1']=d['TEMP'][-1]
+for i in range(2,len(d['TEMP'])+1):
+   tglf[f'TAUS_{i}']=d['TEMP'][i-2]
+d['DLNNDR'] = sim.dlnndr[:].tolist()
+tglf['RLNS_1']=d['DLNNDR'][-1]
+for i in range(2,len(d['DLNNDR'])+1):
+   tglf[f'RLNS_{i}']=d['DLNNDR'][i-2]
+d['DLNTDR'] = sim.dlntdr[:].tolist()
+tglf['RLTS_1']=d['DLNTDR'][-1]
+for i in range(2,len(d['DLNTDR'])+1):
+   tglf[f'RLTS_{i}']=d['DLNTDR'][i-2]
+
+
 
 # JSON output
-with open('json.cgyro.localdump','w') as f:
+with open(mydir+'json.cgyro.localdump','w') as f:
    json.dump(d,f,indent=2,sort_keys=True)
+   print('cgyro_json: wrote json.cgyro.localdump')
 
+# TGLF input file
+
+
+#print(tin)
+# write input.tglf
+with open(mydir+'input.tglf','w') as f:
+    for item in tglf:
+        f.write(item+'='+str(tglf[item]))
+        f.write('\n')
+#==================================================================
+
+#==================================================================
 # standard localdump output
+#
 nmax = 0
-with open('out.cgyro.localdump','w') as f:
+with open(mydir+'out.cgyro.localdump','w') as f:
    for key in d:
       x = d[key]
       if 'SHAPE' in key:
+         # shape parameter
          for i in range(len(x)):
             if not x[i] == 0.0:
-               f.write(key+'_'+str(i)+'='+str(x[i])+'\n')
+               f.write(key+str(i)+'='+str(x[i])+'\n')
                if i > nmax:
                   nmax = i
       elif isinstance(x,list):
+         # species parameter
          for i in range(len(x)):
             f.write(key+'_'+str(i+1)+'='+str(x[i])+'\n')
       else:
+         # standard scalar parameter
          f.write(key+'='+str(x)+'\n')
-         
-#--------------------------------------------------------------
+
+print('cgyro_json: wrote out.cgyro.localdump')
+#==================================================================
+
+#==================================================================
 # json.cgyro.imas
 
 nmax = nmax+1
 
+if nmax < 3:
+    nmax = 3
+    
+# Reference dimensions in CGYRO units
 lref=sim.rmaj
 vthref = np.sqrt(2.0)
 bref = sim.b_gs2
 
+# Initialize dictionary
 d = {}
+
+#--------------------------------------------------------------------
+# Species and profiles
 
 d['name'] = 'CGYRO'
 d['version'] = version
@@ -92,15 +261,27 @@ d['density_norm'] = sim.dens[:].tolist()
 d['temperature_norm'] = sim.temp[:].tolist()
 d['density_log_gradient_norm'] = (lref*sim.dlnndr[:]).tolist()
 d['temperature_log_gradient_norm'] = (lref*sim.dlntdr[:]).tolist()
+#--------------------------------------------------------------------
 
-# Rotation parameters
+#--------------------------------------------------------------------
+# Rotation, collisons, beta
 d['velocity_tor_norm'] = sim.mach/vthref
 # -L/v 1/B (r/q Bu) (-dw/dr) = L/v Bu/B (r/q dw/dr) = L/v Bu/B (-GAMMA_E)
 d['shearing_rate_norm'] = -(lref/vthref)/bref*sim.gamma_e
 # -L^2/v dw/dr = -L/v (L dw/dr) = -L/v (-GAMMA_P)
 d['velocity_tor_gradient_norm'] = lref/vthref*sim.gamma_p
-
+# nu_ee
+d['collisionality_norm'] = (lref/vthref)*sim.nu[ielec]
+# electron beta
 d['beta_reference'] = sim.betae_unit/bref**2
+# pressure gradient
+d['pressure_gradient_norm'] = -lref*sim.beta_star/bref**2
+# Debye length (normalized to lref)
+d['debye_length_reference'] = sim.lambda_star*sim.rho_star_norm/lref
+#-----------------------------------------------------------------------
+
+#-----------------------------------------------------------------------
+# Geometry
 
 d['dgeometric_axis_r_dr_minor'] = sim.shift
 d['dgeometric_axis_z_dr_minor'] = sim.dzmag
@@ -119,7 +300,11 @@ d['dc_dr_minor_norm'] = (sim.shape_s_cos[:nmax]*lref/sim.rmin).tolist()
 d['ds_dr_minor_norm'] = (sim.shape_s_sin[:nmax]*lref/sim.rmin).tolist()
 d['ds_dr_minor_norm'][1] = sim.s_delta*lref/sim.rmin/np.cos(np.arcsin(sim.delta))
 d['ds_dr_minor_norm'][2] = -sim.s_zeta*lref/sim.rmin 
+#-----------------------------------------------------------------------
 
-with open('json.cgyro.imas','w') as f:
+with open(mydir+'json.cgyro.imas','w') as f:
    json.dump(d,f,indent=2,sort_keys=True)
+   print('cgyro_json: wrote json.cgyro.imas')
+#==================================================================
 
+#tglf 
