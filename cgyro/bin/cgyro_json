@@ -156,6 +156,7 @@ for i in range(1,tglf['NS']+1):
 tglf['VEXB_SHEAR'] = sim.gamma_e
 tglf['BETAE'] = sim.betae_unit
 tglf['XNUE'] = sim.nu[ielec]
+tglf['ZEFF'] = sim.z_eff
 tglf['DEBYE'] = sim.lambda_star
 
 tglf['ZMAJ_LOC']=sim.zmag
