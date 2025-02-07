@@ -17,6 +17,7 @@ def opts():
       out.cgyro.localdump  (complete localdump file)
       json.cgyro.imas      (IMAS data dictionary of inputs)
       json.cgyro.localdump (useless JSON file containing inputs)
+      out.cgyro.tglf       (equivalent TGLF input)
     '''
     
     parser = argparse.ArgumentParser(
@@ -133,7 +134,83 @@ d['DLNTDR'] = sim.dlntdr[:].tolist()
 # JSON output
 with open(mydir+'json.cgyro.localdump','w') as f:
    json.dump(d,f,indent=2,sort_keys=True)
-   print('cgyro_json: wrote json.cgyro.localdump')
+print('cgyro_json: wrote json.cgyro.localdump')
+#==================================================================
+
+#==================================================================
+# Construct TGLF input file
+
+tglf = {}
+
+tglf['RMIN_LOC']=sim.rmin
+tglf['RMAJ_LOC'] = sim.rmaj
+tglf['Q_LOC'] = abs(sim.q)
+tglf['Q_PRIME_LOC'] = sim.shear*(tglf['Q_LOC']/tglf['RMIN_LOC'])**2
+tglf['P_PRIME_LOC'] = ( -sim.beta_star/8/np.pi)*abs(tglf['Q_LOC']/tglf['RMIN_LOC'])
+
+tglf['NS']=sim.n_species
+for i in range(1,tglf['NS']+1):
+   tglf[f'VPAR_{i}']=abs(sim.mach)
+   tglf[f'VPAR_SHEAR_{i}']=abs(sim.gamma_p)
+
+tglf['VEXB_SHEAR'] = sim.gamma_e
+tglf['BETAE'] = sim.betae_unit
+tglf['XNUE'] = sim.nu[ielec]
+tglf['DEBYE'] = sim.lambda_star
+
+tglf['ZMAJ_LOC']=sim.zmag
+tglf['DZMAJDX_LOC']=sim.dzmag
+tglf['DRMAJDX_LOC']=sim.shift
+
+tglf['KAPPA_LOC'] = sim.kappa
+tglf['S_KAPPA_LOC'] = sim.s_kappa
+tglf['DELTA_LOC'] = sim.delta
+tglf['S_DELTA_LOC'] = sim.s_delta
+tglf['ZETA_LOC'] = sim.zeta
+tglf['S_ZETA_LOC'] = sim.s_zeta
+
+x = d['SHAPE_SIN']
+for i in range(3,len(x)):
+    if x[i] != 0.0: 
+        tglf[f'SHAPE_SIN{i}']=x[i]
+x = d['SHAPE_COS']
+for i in range(0,len(x)):
+    if x[i] != 0:
+        tglf[f'SHAPE_COS{i}']=x[i]
+x = d['SHAPE_S_SIN']
+for i in range(3,len(x)):
+    if x[i] != 0:
+        tglf[f'SHAPE_S_SIN{i}']=x[i]
+x = d['SHAPE_S_COS']
+for i in range(0,len(x)):
+    if x[i] != 0:
+        tglf[f'SHAPE_S_COS{i}']=x[i]
+
+tglf['ZS_1'] = d['Z'][-1]
+for i in range(2,len(d['Z'])+1):
+   tglf[f'ZS_{i}']=d['Z'][i-2]
+    
+tglf['MASS_1']=d['MASS'][-1]
+for i in range(2,len(d['MASS'])+1):
+   tglf[f'MASS_{i}']=d['MASS'][i-2]
+tglf['AS_1']=d['DENS'][-1]
+for i in range(2,len(d['DENS'])+1):
+   tglf[f'AS_{i}']=d['DENS'][i-2]
+tglf['TAUS_1']=d['TEMP'][-1]
+for i in range(2,len(d['TEMP'])+1):
+   tglf[f'TAUS_{i}']=d['TEMP'][i-2]
+tglf['RLNS_1']=d['DLNNDR'][-1]
+for i in range(2,len(d['DLNNDR'])+1):
+   tglf[f'RLNS_{i}']=d['DLNNDR'][i-2]
+tglf['RLTS_1']=d['DLNTDR'][-1]
+for i in range(2,len(d['DLNTDR'])+1):
+   tglf[f'RLTS_{i}']=d['DLNTDR'][i-2]
+
+with open(mydir+'out.cgyro.tglf','w') as f:
+    for item in tglf:
+        f.write(item+'='+str(tglf[item])+'\n')
+
+print('cgyro_json: wrote out.cgyro.tglf')
 #==================================================================
 
 #==================================================================
@@ -234,6 +311,6 @@ d['ds_dr_minor_norm'][2] = -sim.s_zeta*lref/sim.rmin
 
 with open(mydir+'json.cgyro.imas','w') as f:
    json.dump(d,f,indent=2,sort_keys=True)
-   print('cgyro_json: wrote json.cgyro.imas')
+print('cgyro_json: wrote json.cgyro.imas')
 #==================================================================
 
