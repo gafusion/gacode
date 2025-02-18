@@ -1,0 +1,4 @@
+module purge
+module load python/3
+module load Aurora
+python3 aurora_cheb.py

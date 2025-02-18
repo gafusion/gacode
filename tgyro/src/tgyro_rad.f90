@@ -148,7 +148,8 @@ end subroutine rad_ion_adas
 ! - Aurora follows the radiation nomenclature of ADAS (as described here), separating
 !   "line" and "continuum" radiation. Line radiation basically comes from ADF11 PLT
 !   files and continuum radiation comes from ADF11 PRB files. Bremsstrahlung is
-!   included in the continuum term. 
+!   included in the continuum term.
+! - For generation of fit coefficients, see tgyro/tools/radiation
 !-------------------------------------------------------------------------------------
 
 subroutine adas21(te,name,lz,n)
@@ -238,6 +239,10 @@ subroutine adas21(te,name,lz,n)
      c(:) = (/-4.883447566291e+01,-8.543314577695e-01,+1.305444973614e+00,-4.830394934711e-01,&
               +1.005512839480e-01,+1.392590190604e-02,-1.980609625444e-02,+5.342857189984e-03,&
               +2.324970825974e-03,-2.466382923947e-03,+1.073116177574e-03,-9.834117466066e-04/)
+  else if (name == 'Li') then
+     c(:) = (/-4.978562496154e+01,-2.505216545881e-01,+8.650665756334e-01,-1.291711692636e-01,&
+              -1.599934526332e-01,+1.322662928235e-01,-5.487930945808e-03,-6.479708903897e-02,&
+              +4.332749716030e-02,+1.391112355350e-02,-3.887843175798e-02,+1.377942187934e-02/)
   else if (name == 'He') then
      c(:) = (/-5.128490291648e+01,+7.743125302555e-01,+4.674917416545e-01,-2.087203609904e-01,&
               +7.996303682551e-02,-2.450841492530e-02,+4.177032799848e-03,+1.109529527611e-03,&
@@ -266,7 +271,7 @@ subroutine adas21(te,name,lz,n)
      do i=1,nc
         s = s+c(i)*cos((i-1)*acos(x))
      enddo
-     ! Lz (cooling rate) in erg cm^3/s
+     ! Lz (cooling rate) in erg/cm^3/s
      lz(j) = exp(s)
   enddo
   
