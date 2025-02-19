@@ -27,7 +27,9 @@ contains
 
   subroutine THEORY_alloc(flag)
     use neo_globals
+#ifndef NO_NCLASS_NEO
     use neo_nclass_dr
+#endif
     implicit none
     integer, intent (in) :: flag  ! flag=1: allocate; else deallocate
 
@@ -42,9 +44,11 @@ contains
           close(io)
        end if
 
+#ifndef NO_NCLASS_NEO
        if(sim_model == 1 .or. sim_model == 3) then
           call NCLASS_DR_alloc(1)
        endif
+#endif
 
        initialized = .true.
 
@@ -52,9 +56,11 @@ contains
        if(.NOT. initialized) return
        deallocate(pflux_multi_HS)
        deallocate(eflux_multi_HS)
+#ifndef NO_NCLASS_NEO
        if(sim_model == 1 .or. sim_model == 3) then
           call NCLASS_DR_alloc(0)
        endif
+#endif
        initialized = .false.
     end if
 
@@ -66,7 +72,9 @@ contains
   subroutine THEORY_do(ir)
     use neo_globals
     use neo_equilibrium
+#ifndef NO_NCLASS_NEO
     use neo_nclass_dr
+#endif
     implicit none
     integer, intent (in) :: ir
     integer :: is
@@ -170,9 +178,18 @@ contains
        close(io)
     end if
 
+#ifndef NO_NCLASS_NEO
     if(sim_model == 1 .or. sim_model == 3) then
        call NCLASS_DR_do(ir)
     endif
+#else
+    if(silent_flag==0 .and. i_proc==0) then
+      open(unit=io_neoout,file=trim(path)//runfile_neoout,&
+           status='old',position='append')
+      write(io_neoout,*) 'Error: NCLASS computation is not supported in this version!'
+      close(io_neoout)          
+    endif
+#endif
 
   end subroutine THEORY_do
 

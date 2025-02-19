@@ -19,7 +19,9 @@ subroutine neo_do
   use neo_rotation
   use neo_transport
   use neo_theory
+#ifndef NO_NCLASS_NEO
   use neo_nclass_dr
+#endif
   use neo_g_velocitygrids
   use neo_allocate_profile
   use neo_3d_driver
@@ -534,9 +536,11 @@ subroutine neo_do
         neo_th_out(8)     = jtor_S
         neo_th_out(9)     = jpar_Smod
         neo_th_out(10)    = jtor_Smod
+#ifndef NO_NCLASS_NEO
         if(sim_model == 1) then
            neo_th_out(7)     = jbs_nc
         endif
+#endif
         neo_thHS_out(:,:) = 0.0
         do is=1, n_species
            neo_thHS_out(is,1) = pflux_multi_HS(is) 
