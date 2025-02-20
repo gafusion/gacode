@@ -139,7 +139,7 @@ module cgyro_globals
   real, dimension(11) :: dlntdr
   real, dimension(11) :: sdlnndr
   real, dimension(11) :: sdlntdr
-  real, dimension(11) :: sbeta
+  real :: sbeta
 
   integer :: subroutine_flag  ! only used for cgyro_read_input
 

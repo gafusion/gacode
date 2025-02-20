@@ -513,8 +513,9 @@ class cgyrodata:
       for i in range(ns):
          self.sdlnndr[i],p = self.eget(data,p) 
          self.sdlntdr[i],p = self.eget(data,p)
-         self.sbeta[i],p = self.eget(data,p)
-      # Added 17 Dec 2024
+
+      # Updated 19 Feb 2025
+      self.sbeta,p = self.eget(data,p)
       self.z_eff,p = self.eget(data,p) 
       self.hiprec_flag,p = self.eget(data,p) 
 
