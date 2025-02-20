@@ -113,8 +113,8 @@ subroutine locpargen_cgyro
      write(1,10) 'DLNTDR_'//tag(is)//'=',dlntdr_loc(is)
      write(1,10) 'SDLNNDR_'//tag(is)//'=',sdlnndr_loc(is)
      write(1,10) 'SDLNTDR_'//tag(is)//'=',sdlntdr_loc(is)
-     write(1,10) 'SBETA_'//tag(is)//'=',sbeta_loc(is)
   enddo
+  write(1,10) 'SBETA=',sbeta_loc
   close(1)
 
 10 format(a,sp,1pe12.5)

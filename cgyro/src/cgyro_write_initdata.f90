@@ -132,12 +132,12 @@ subroutine cgyro_write_initdata
      ! where x = r/rho. The half-domain has -L/4 < r < L/4.
      if (global_flag == 1) then
         write(io,*)
-        write(io,'(a)') ' i  s(a/Ln)  (a/Ln)_L  (a/Ln)_R  |  s(a/Lt)  (a/Lt)_L  (a/Lt)_R  |  sbeta_*' 
+        write(io,'(a)') ' i  s(a/Ln)  (a/Ln)_L  (a/Ln)_R  |  s(a/Lt)  (a/Lt)_L  (a/Lt)_R  |  sbeta' 
         do is=1,n_species
            dn = sdlnndr(is)*length/rho/4
            dt = sdlntdr(is)*length/rho/4
            write(io,'(t1,i2,3(1x,1pe9.2),2x,3(1x,1pe9.2),2x,1(1x,1pe9.2))') &
-             is,sdlnndr(is),dlnndr(is)-dn,dlnndr(is)+dn,sdlntdr(is),dlntdr(is)-dt,dlntdr(is)+dt,sbeta(is)
+             is,sdlnndr(is),dlnndr(is)-dn,dlnndr(is)+dn,sdlntdr(is),dlntdr(is)-dt,dlntdr(is)+dt,sbeta
         enddo
      endif
 
@@ -227,8 +227,8 @@ subroutine cgyro_write_initdata
      do is=1,n_species
         write (io,fmtstr) sdlnndr(is)
         write (io,fmtstr) sdlntdr(is)
-        write (io,fmtstr) sbeta(is)
      enddo
+     write (io,fmtstr) sbeta
      ! Added 17 Dec 2024
      write (io,fmtstr) z_eff
      write (io,'(i0)') hiprec_flag

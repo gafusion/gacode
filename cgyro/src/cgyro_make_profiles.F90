@@ -128,7 +128,7 @@ subroutine cgyro_make_profiles
      dlntdr(1:n_species)  = dlntdr_loc(1:n_species)
      sdlnndr(1:n_species) = sdlnndr_loc(1:n_species)     
      sdlntdr(1:n_species) = sdlntdr_loc(1:n_species)     
-     sbeta(1:n_species)   = sbeta_loc(1:n_species)     
+     sbeta                = sbeta_loc
  
      if (ae_flag == 1) then
         is_ele = n_species+1
@@ -434,7 +434,7 @@ subroutine cgyro_make_profiles
   else
      sdlnndr(1:n_species) = 0.0
      sdlntdr(1:n_species) = 0.0
-     sbeta(1:n_species)   = 0.0
+     sbeta                = 0.0
   endif
 
 

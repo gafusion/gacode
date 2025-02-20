@@ -21,7 +21,7 @@ subroutine cgyro_source
   call timer_lib_in('shear')
 
   if (nu_global > 0.0) then
-     nu_eff = nu_global*(abs(gamma_e)+maxval(abs(sdlnndr(:)))+maxval(abs(sdlntdr(:)))+maxval(abs(sbeta(:))))
+     nu_eff = nu_global*(abs(gamma_e)+maxval(abs(sdlnndr(:)))+maxval(abs(sdlntdr(:)))+abs(sbeta))
   else
      nu_eff = abs(nu_global)
   endif
