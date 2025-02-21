@@ -55,6 +55,10 @@ def opts():
                         help='Root acceptance tolerance (default=0.005)',
                         type=float,
                         default=0.005)
+    parser.add_argument('-eps',
+                        help='Averaging sharpness',
+                        type=float,
+                        default=0.01)
     parser.add_argument('-ext',
                         help='Plotting file format [png,pdf] (default: screen)',
                         type=str,
@@ -68,7 +72,7 @@ def opts():
 
     args=parser.parse_args()
 
-    return args.e,args.tmax,args.k,args.mmin,args.obs,args.tol,args.ext,args.noplot,args.noeig
+    return args.e,args.tmax,args.k,args.mmin,args.obs,args.tol,args.eps,args.ext,args.noplot,args.noeig
 
 # DMD utility: Map from (kx,theta) to theta_*
 def map1d(f2d,q):
@@ -116,7 +120,7 @@ def rundmd(k):
    # dictionary of eigenmodes
    mdict = {}
    for x in ostr:
-      down = downsample(ovec[x],k)
+      down = downsample(ovec[x],k,eps=eps)
       dmd.fit(down)
       edict[x] = 1j*np.log(dmd.eigs)/dt
       mdict[x] = dmd.modes
@@ -181,7 +185,7 @@ def rundmd(k):
 
 #------------------------------------------------------------------------
 #
-mydir,tmax,k,nmode_min,obs,tol,ext,noplot,noeig = opts()
+mydir,tmax,k,nmode_min,obs,tol,eps,ext,noplot,noeig = opts()
 
 # process inputs
 mydir = mydir+'/'
