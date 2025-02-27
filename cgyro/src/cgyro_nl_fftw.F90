@@ -1396,7 +1396,7 @@ subroutine cgyro_nl_fftw(i_triad)
     call timer_lib_out('nl_mem')
     call timer_lib_in('nl')
     ! 2. Poisson bracket in real space with Non_Zonal pairs
-    call cgyro_nl_fftw_mul(size(uvmany,1)*size(uvmany,2)*nsplitB, &
+    call cgyro_nl_fftw_mul_sub_mean(size(uvmany,1)*size(uvmany,2)*nsplitB, &
                          uvmany, &
                          uxmany,vymany(:,:,(nsplitA+1):nsplit), &
                          uymany,vxmany(:,:,(nsplitA+1):nsplit), &
@@ -1596,19 +1596,19 @@ subroutine cgyro_nl_fftw_stepr_triad(g_j, f_j, nl_idx, i_omp)
   do ix=0,nx-1
     y_mean_ux = sum(uxmany(:,ix,f_j) ,dim=1 ) * inv_ny
     y_mean_uy = sum(uymany(:,ix,f_j) ,dim=1 ) * inv_ny
-    y_mean_vx = sum(vxmany(:,ix,f_j) ,dim=1 ) * inv_ny
-    y_mean_vy = sum(vymany(:,ix,f_j) ,dim=1 ) * inv_ny
+    y_mean_vx = sum(vxmany(:,ix,g_j) ,dim=1 ) * inv_ny
+    y_mean_vy = sum(vymany(:,ix,g_j) ,dim=1 ) * inv_ny
     do iy=0,ny-1
       ! remove ky=0
       r_ux = uxmany(iy,ix,f_j) - y_mean_ux
       r_uy = uymany(iy,ix,f_j) - y_mean_uy
-      r_vx = vxmany(iy,ix,f_j) - y_mean_vx
-      r_vy = vymany(iy,ix,f_j) - y_mean_vy
+      r_vx = vxmany(iy,ix,g_j) - y_mean_vx
+      r_vy = vymany(iy,ix,g_j) - y_mean_vy
       ! we could save, but we do not really need to (not used outside from this function)
       !uxmany(iy,ix,f_j) = r_ux
       !uymany(iy,ix,f_j) = r_y
-      !vxmany(iy,ix,f_j) = r_vx
-      !vymany(iy,ix,f_j) = r_vy
+      !vxmany(iy,ix,g_j) = r_vx
+      !vymany(iy,ix,g_j) = r_vy
 
       ! compute and save uv
       uv(iy,ix,i_omp) = (r_ux*r_vy-r_uy*r_vx) * inv_nxny
