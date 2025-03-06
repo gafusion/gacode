@@ -51,6 +51,7 @@ xin['spec']   = int(sys.argv[25])
 xin['bar']    = bool(int(sys.argv[26]))
 xin['ie']     = int(sys.argv[27])
 xin['mesh']   = int(sys.argv[28])
+xin['dn']   = int(sys.argv[29])
 
 # plotting control
 ftype   = xin['ftype']
