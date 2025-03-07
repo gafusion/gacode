@@ -1,5 +1,5 @@
 #---------------------------------------------------
-# PSFC Engaging Cluster (orcd-login###.mit.edu) [GCC]
+# MIT Engaging Cluster (orcd-login###.mit.edu) [GCC]
 #
 #   export GACODE_ROOT=<top_of_cloned_repo>
 #   export GACODE_PLATFORM=ENGAGING_ROCKY8

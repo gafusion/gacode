@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "-queue: sched_mit_psfc_r8"
+echo "-queue: mit_normal"
 
 # Default queue
 if [ "$QUEUE" == "null_queue" ] ; then
