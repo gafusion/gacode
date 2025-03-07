@@ -1,0 +1,21 @@
+#!/bin/bash
+
+echo "-queue: sched_mit_psfc_r8"
+
+# Default queue
+if [ "$QUEUE" == "null_queue" ] ; then
+   QUEUE=sched_mit_psfc_r8
+fi
+
+bfile=$SIMDIR/batch.src
+
+echo "#!/bin/bash -l" > $bfile
+echo "#SBATCH -J $LOCDIR" >> $bfile
+echo "#SBATCH -o $SIMDIR/batch.out" >> $bfile
+echo "#SBATCH -e $SIMDIR/batch.err" >> $bfile
+echo "#SBATCH -p $QUEUE" >> $bfile
+echo "#SBATCH -t $WALLTIME" >> $bfile
+echo "#SBATCH -N $nodes" >> $bfile
+echo "#SBATCH -n $cores_used" >> $bfile
+
+echo "$CODE -e $LOCDIR -n $nmpi -p $SIMROOT" >> $bfile 

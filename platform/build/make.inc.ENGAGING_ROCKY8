@@ -1,0 +1,50 @@
+#---------------------------------------------------
+# PSFC Engaging Cluster (orcd-login###.mit.edu) [GCC]
+#
+#   export GACODE_ROOT=<top_of_cloned_repo>
+#   export GACODE_PLATFORM=ENGAGING_ROCKY8
+#   source ${GACODE_ROOT}/platform/env/env.${GACODE_PLATFORM}
+#   source ${GACODE_ROOT}/shared/bin/gacode_setup
+#
+#---------------------------------------------------
+
+#  FIXED Hardware parameters
+CORES_PER_NODE=64
+NUMAS_PER_NODE=1
+
+MAKE           := make
+LIB_PATH       := $(subst :, ,${CMAKE_PREFIX_PATH})
+OPENBLAS_PATH  := $(strip $(foreach x,${LIB_PATH},$(if $(findstring openblas,${x}),${x})))
+FFTW_PATH      := $(strip $(foreach x,${LIB_PATH},$(if $(findstring fftw,${x}),${x})))
+HDF5_PATH      := $(strip $(foreach x,${LIB_PATH},$(if $(findstring hdf5,${x}),${x})))
+NETCDF_PATH    := $(strip $(foreach x,${LIB_PATH},$(if $(findstring netcdf-c,${x}),${x})))
+NETCDFF_PATH   := $(strip $(foreach x,${LIB_PATH},$(if $(findstring netcdf-fortran,${x}),${x})))
+LIB_PATH       := $(filter-out ${OPENBLAS_PATH} ${FFTW_PATH} ${NETCDF_PATH},${LIB_PATH})
+LIB            := $(foreach x,${LIB_PATH},-L$(strip ${x})/lib)
+INCLUDE        := -I/usr/include $(foreach x,${LIB_PATH},-I$(strip ${x})/include) -I${OPENBLAS_PATH}/include -I${FFTW_PATH}/include
+MF90           := mpif90
+
+# Compilers and flags
+
+FC     = ${MF90} -std=f2008 -fall-intrinsics -fPIC -I$(GACODE_ROOT)/modules -J$(GACODE_ROOT)/modules -g ${INCLUDE} ${LIB}
+F77    = ${MF90} -g
+
+FMATH  = -fdefault-real-8 -fdefault-double-8
+FOPT   = -O3 -fallow-argument-mismatch
+FDEBUG = -Wall -fcheck=all -fbacktrace -fbounds-check -O0 -Wextra -finit-real=nan -Wunderflow -ffpe-trap=invalid,zero,overflow
+FBOUND = -Wall -fbounds-check
+FOMP   = -fopenmp
+
+# System math libraries
+
+LMATH = -L${OPENBLAS_PATH} -lopenblas -L${FFTW_PATH}/lib -lfftw3 -lfftw3f -lfftw3_threads -lfftw3f_threads
+
+# Optional netCDF libraries
+
+NETCDF     = -L${NETCDFF_PATH}/lib -lnetcdff -L${NETCDF_PATH}/lib -lnetcdf -L${HDF5_PATH}/lib -lhdf5 -lhdf5_hl
+NETCDF_INC = ${NETCDFF_PATH}/include
+
+# Archive
+
+ARCH = ar cr
+
