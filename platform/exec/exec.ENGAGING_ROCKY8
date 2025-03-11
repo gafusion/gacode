@@ -1,0 +1,19 @@
+#!/bin/sh
+# GACODE Parallel execution script (ENGAGING)
+#
+# NOTES:
+# Used openmpi-4.1.4
+
+simdir=${1}
+nmpi=${2}
+exec=${3}
+nomp=${4}
+numa=${5}
+mpinuma=${6}
+
+echo $simdir
+
+cd $simdir
+ 
+mpirun -x OMP_NUM_THREADS=$nomp -np $nmpi --oversubscribe $exec
+
