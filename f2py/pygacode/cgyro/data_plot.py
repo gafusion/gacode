@@ -640,7 +640,7 @@ class cgyrodata_plot(data.cgyrodata):
       return head
 
 
-  def plot_triad_v3(self,xin):
+   def plot_triad_v3(self,xin):
 
       w       = xin['w']
       theta   = xin['theta']
