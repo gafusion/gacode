@@ -247,7 +247,9 @@ subroutine cgyro_flux
         ! GyroBohm normalizations
         gflux_loc(:,:,:,:,itor) = gflux_loc(:,:,:,:,itor)/rho**2
         cflux_loc(:,:,:,itor) = cflux_loc(:,:,:,itor)/rho**2
-        triad_loc_old(:,:,itor,:)  = triad_loc_old(:,:,itor,:)/rho**2
+        if (triad_print_flag == 1) then
+          triad_loc_old(:,:,itor,:)  = triad_loc_old(:,:,itor,:)/rho**2
+        endif
      endif
   enddo
 
