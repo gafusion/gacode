@@ -37,7 +37,7 @@ FOMP   = -fopenmp
 
 # System math libraries
 
-LMATH = -L${OPENBLAS_PATH} -lopenblas -L${FFTW_PATH}/lib -lfftw3 -lfftw3f -lfftw3_threads -lfftw3f_threads
+LMATH = -L${OPENBLAS_PATH}/lib -lopenblas -L${FFTW_PATH}/lib -lfftw3 -lfftw3f -lfftw3_threads -lfftw3f_threads
 
 # Optional netCDF libraries
 
