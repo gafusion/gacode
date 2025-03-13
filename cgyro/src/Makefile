@@ -39,7 +39,6 @@ OBJECTS = cgyro_globals.o \
 	  cgyro_init_collision_simple.o \
 	  cgyro_init_collision_landau.o \
           cgyro_init_collision.o \
-          cgyro_init_manager.o \
 	  cgyro_init_kernel.o \
           cgyro_step_collision.o \
 	  cgyro_kernel.o \
@@ -51,6 +50,7 @@ OBJECTS = cgyro_globals.o \
 	  cgyro_nl_fftw.o \
           cgyro_read_input.o \
           cgyro_rhs.o \
+          cgyro_init_manager.o \
           cgyro_run.o \
           cgyro_shear_hammett.o \
           cgyro_source.o \

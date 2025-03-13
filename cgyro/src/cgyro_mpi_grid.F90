@@ -22,6 +22,7 @@ subroutine cgyro_mpi_grid
   integer :: splitkey
   integer :: nproc_3
   character(len=192) :: msg
+  integer :: nl_el_size
 
   integer, external :: omp_get_max_threads, omp_get_thread_num
 
@@ -43,6 +44,17 @@ subroutine cgyro_mpi_grid
   ! MPI diagnostics need to come early
   !
   if (silent_flag == 0 .and. i_proc == 0) then
+     if (nl_single_flag > 1) then
+       ! single precision
+       nl_el_size = 8
+     elseif (nl_single_flag == 1) then
+       ! double precision one way, single precision the other
+       ! get the average of the two
+       nl_el_size = 12
+     else
+       ! default, double precision
+       nl_el_size = 16
+     endif
      open(unit=io,file=trim(path)//runfile_mpi,status='replace')
      write(io,*) 'Parallelization and distribution diagnostics'
      write(io,*)
@@ -67,7 +79,7 @@ subroutine cgyro_mpi_grid
                 nproc_3 = n_proc_1
                 if ((n_proc_1 /= 1) .and. (velocity_order==2)) nproc_3 = n_proc_1/n_species
                 write(io,'(t2,4(i6,4x),f6.2,4x,i6,4x,i6,4x,i6)') &
-                     it,nc_loc,nv_loc,nsplit,16.0*n_radial*nt_loc*nsplit/1e6,&
+                     it,nc_loc,nv_loc,nsplit,(nl_el_size/1.e6)*n_radial*nt_loc*nsplit,&
                      n_toroidal_procs,n_proc_1,nproc_3
            endif
         endif

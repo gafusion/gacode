@@ -89,6 +89,7 @@ subroutine cgyro_read_input
   call cgyro_readbc_int(theta_plot,'THETA_PLOT')
   call cgyro_readbc_int(gpu_bigmem_flag,'GPU_BIGMEM_FLAG')
   call cgyro_readbc_int(upwind_single_flag,'UPWIND_SINGLE_FLAG')
+  call cgyro_readbc_int(nl_single_flag,'NL_SINGLE_FLAG')
   call cgyro_readbc_real(px0)
   call cgyro_readbc_int(stream_term,'STREAM_TERM')
   call cgyro_readbc_real(stream_factor)

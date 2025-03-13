@@ -345,7 +345,11 @@ if noplot:
 #---------------------------------------------------------------------------
 # PLOTTING
 
-mlabel = [r'$\mathrm{KBM}$',r'$\mathrm{TEM}$',r'$\mathrm{ITG}$']
+if 0==1:
+    mlabel = [r'$\mathrm{KBM}$',r'$\mathrm{TEM}$',r'$\mathrm{ITG}$']
+else:
+    mlabel = ['A','B','C','D','E']
+    
 yeps = 0.004
 ss   = 200
 

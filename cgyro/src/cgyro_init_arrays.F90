@@ -136,9 +136,9 @@ subroutine cgyro_init_arrays
 #elif defined(_OPENACC)
 !$acc parallel loop gang vector independent collapse(6) &
 !$acc&         private(itor,it,iltheta_min,mytor,ir,itf,jval) &
-!$acc&         present(jvec_c_nl,jvec_c,ic_c) &
+!$acc&         present(jvec_c_nl,jvec_c_nl32,jvec_c,ic_c) &
 !$acc&         present(n_toroidal_procs,nt_loc,nv_loc,n_jtheta,n_radial) &
-!$acc&         present(nt1,n_theta,n_field,nsplit) default(none)
+!$acc&         present(nt1,n_theta,n_field,nsplit) firstprivate(nl_single_flag) default(none)
 #else
 !$omp parallel do collapse(4) &
 !$omp&         private(it_loc,itor,mytor,it,ir,itf,iltheta_min,jval)
@@ -159,15 +159,24 @@ subroutine cgyro_init_arrays
             jval = jvec_c(itf,(ir-1)*n_theta+it,iv_loc,mytor)
           endif
           ! else just padding
-          jvec_c_nl(itf,ir,it_loc,iv_loc,itor) = jval
+          if (nl_single_flag > 1) then
+             jvec_c_nl32(itf,ir,it_loc,iv_loc,itor) = jval
+          else
+             jvec_c_nl(itf,ir,it_loc,iv_loc,itor) = jval
+          endif
         enddo
        enddo
       enddo
      enddo
     enddo
    enddo
-   call parallel_slib_distribute_real(n_field,n_radial,n_jtheta,nv_loc,nt_loc,jvec_c_nl)
-  endif
+   if (nl_single_flag > 1) then
+     call parallel_slib_distribute_real32(n_field,n_radial,n_jtheta,nv_loc,nt_loc,jvec_c_nl32)
+   else
+     call parallel_slib_distribute_real(n_field,n_radial,n_jtheta,nv_loc,nt_loc,jvec_c_nl)
+   endif
+
+  endif ! if nl
 
   !-------------------------------------------------------------------------
 

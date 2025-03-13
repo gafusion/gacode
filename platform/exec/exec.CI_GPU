@@ -10,5 +10,7 @@ mpinuma=${6}
 
 cd $simdir
 export OMP_NUM_THREADS=$nomp
-mpiexec -oversubscribe -n $nmpi $exec 
+export OMP_STACKSIZE=400M
+# relaxed mapping and binding, prefer compatibility vs performance
+mpiexec -n $nmpi -oversubscribe --bind-to none $exec 
 

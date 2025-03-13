@@ -288,9 +288,21 @@ subroutine cgyro_cleanup
      ccl_del_device(fB_nl)
      deallocate(fB_nl)
   endif
+  if(allocated(fA_nl32))   then
+     ccl_del_device(fA_nl32)
+     deallocate(fA_nl32)
+  endif
+  if(allocated(fB_nl32))   then
+     ccl_del_device(fB_nl32)
+     deallocate(fB_nl32)
+  endif
   if(allocated(g_nl))   then
      ccl_del_device(g_nl)
      deallocate(g_nl)
+  endif
+  if(allocated(g_nl32))   then
+     ccl_del_device(g_nl32)
+     deallocate(g_nl32)
   endif
   if(allocated(eA_nl))   then
      ccl_del_device(eA_nl)
@@ -308,9 +320,21 @@ subroutine cgyro_cleanup
      ccl_del_device(fpackB)
      deallocate(fpackB)
   endif
+  if(allocated(fpackA32))   then
+     ccl_del_device(fpackA32)
+     deallocate(fpackA32)
+  endif
+  if(allocated(fpackB32))   then
+     ccl_del_device(fpackB32)
+     deallocate(fpackB32)
+  endif
   if(allocated(gpack))   then
      ccl_del_device(gpack)
      deallocate(gpack)
+  endif
+  if(allocated(gpack32))   then
+     ccl_del_device(gpack32)
+     deallocate(gpack32)
   endif
   if(allocated(epackA))   then
      ccl_del_device(epackA)
@@ -338,6 +362,16 @@ subroutine cgyro_cleanup
   endif
 
 #ifndef CGYRO_GPU_FFT
+  if(allocated(fx32))                deallocate(fx32)
+  if(allocated(gx32))                deallocate(gx32)
+  if(allocated(fy32))                deallocate(fy32)
+  if(allocated(gy32))                deallocate(gy32)
+  if(allocated(vxmany32))            deallocate(vxmany32)
+  if(allocated(vymany32))            deallocate(vymany32)
+  if(allocated(uxmany32))            deallocate(uxmany32)
+  if(allocated(uymany32))            deallocate(uymany32)
+  if(allocated(uv32))                deallocate(uv32)
+
   if(allocated(fx))                deallocate(fx)
   if(allocated(gx))                deallocate(gx)
   if(allocated(fy))                deallocate(fy)
@@ -385,6 +419,42 @@ subroutine cgyro_cleanup
   if(allocated(uvmany))     then
      ccl_del_device(uvmany)     
      deallocate(uvmany)
+  endif
+  if(allocated(fxmany32))    then
+     ccl_del_device(fxmany32)     
+     deallocate(fxmany32)
+  endif
+  if(allocated(gxmany32))    then
+     ccl_del_device(gxmany32)     
+     deallocate(gxmany32)
+  endif
+  if(allocated(fymany32))    then
+     ccl_del_device(fymany32)     
+     deallocate(fymany32)
+  endif
+  if(allocated(gymany32))    then
+     ccl_del_device(gymany32)     
+     deallocate(gymany32)
+  endif
+  if(allocated(uxmany32))    then
+      ccl_del_device(uxmany32)    
+     deallocate(uxmany32)
+  endif
+  if(allocated(uymany32))    then
+     ccl_del_device(uymany32)     
+     deallocate(uymany32)
+  endif
+  if(allocated(vxmany32))     then
+     ccl_del_device(vxmany32)     
+     deallocate(vxmany32)
+  endif
+  if(allocated(vymany32))     then
+     ccl_del_device(vymany32)     
+     deallocate(vymany32)
+  endif
+  if(allocated(uvmany32))     then
+     ccl_del_device(uvmany32)     
+     deallocate(uvmany32)
   endif
 #endif    
 

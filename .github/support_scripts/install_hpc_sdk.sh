@@ -8,10 +8,9 @@
 # Install the NVIDIA HPC SDK
 
 # This link may need to be updated, as new compiler versions are released
-# Note: Verified that it works with v24.1
-if [ "x${NV_URL}" == "x" ]; then
-  NV_URL=https://developer.download.nvidia.com/hpc-sdk/24.1/nvhpc_2024_241_Linux_x86_64_cuda_multi.tar.gz
-fi
+# Note: Verified that it works with v25.1
+NV_URL=https://developer.download.nvidia.com/hpc-sdk/25.1/nvhpc_2025_251_Linux_x86_64_cuda_12.6.tar.gz
+NV_VER=25.1
 
 echo "Downloading the NVIDIA HPC SDK"
 curl -s "${NV_URL}" | tar xpzf -
@@ -26,7 +25,10 @@ export NVHPC_SILENT=true
 # create helper scripts
 mkdir setup_scripts
 cat > setup_scripts/setup_nv_hpc_bins.sh << EOF
-module add ./hpc_sdk/modulefiles/nvhpc-openmpi3/*
+#module add ./hpc_sdk/modulefiles/nvhpc/*
+export PATH=$NVHPC_INSTALL_DIR/Linux_x86_64/$NV_VER/compilers/bin:\$PATH
+export PATH=$NVHPC_INSTALL_DIR/Linux_x86_64/$NV_VER/comm_libs/mpi/bin:\$PATH
+export MANPATH=$NVHPC_INSTALL_DIR/Linux_x86_64/$NV_VER/compilers/man:\$MANPATH
 
 EOF
 

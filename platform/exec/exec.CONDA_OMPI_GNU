@@ -16,6 +16,6 @@ cd $simdir
 export OMP_NUM_THREADS=$nomp
 export OMP_STACKSIZE=400M
  
-echo ">mpirun -np $nmpi $exec"
-mpirun -np $nmpi $exec
+echo ">mpirun -np $nmpi --map-by=l2cache --use-hwthread-cpus $exec"
+mpirun -np $nmpi --map-by=l2cache --display-map $exec
 

@@ -17,7 +17,7 @@ FDEBUG = -Wall -W -fcheck=mem,bounds -g -fbacktrace -ffpe-trap=invalid,zero,over
 
 # System math libraries
 
-LMATH  = -L$(BLAS_DIR)/lib -lopenblas -L$(FFTW_DIR)/lib -lfftw3
+LMATH  = -L$(BLAS_DIR)/lib -lopenblas -L$(FFTW_DIR)/lib -lfftw3 -lfftw3f
 FFTW_INC = $(FFTW_DIR)/include
 
 #NETCDF = -L$(NETCDF_DIR)/lib -lnetcdff -lnetcdf -Wl,-rpath,$(NETCDF_DIR)/lib

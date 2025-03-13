@@ -27,7 +27,7 @@ FDEBUG	= -Wall -g -fcheck=all -fbacktrace -fbounds-check -O0 -Wextra -finit-real
 
 # System math libraries
 
-LMATH = -L/opt/local/lib -lfftw3
+LMATH = -L/opt/local/lib -lfftw3 -lfftw3f
 
 NETCDF = -L${NETCDF_PATH}/lib -lnetcdff -lnetcdf
 NETCDF_INC =${NETCDF_PATH}/include

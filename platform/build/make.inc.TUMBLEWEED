@@ -27,7 +27,7 @@ F2PY   = f2py
 
 # System math libraries
 #LMATH = /usr/lib64/libopenblas_serial.so.0 -lfftw3 -lfftw3_omp
-LMATH = -llapack -lblas -lfftw3 -lfftw3_omp
+LMATH = -llapack -lblas -lfftw3 -lfftw3f -lfftw3_omp
 
 ifdef FANN_ROOT
    # neural net libraries

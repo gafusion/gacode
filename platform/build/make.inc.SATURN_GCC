@@ -26,7 +26,7 @@ FDEBUG = -Wall -W -fcheck=mem,bounds -g -fbacktrace -ffpe-trap=invalid,zero,over
 
 # System math libraries
 
-LMATH  = -L/usr/lib64 -llapack -lblas -L$(FFTW_DIR)/lib -lfftw3
+LMATH  = -L/usr/lib64 -llapack -lblas -L$(FFTW_DIR)/lib -lfftw3 -lfftw3f
 FFTW_INC = $(FFTW_DIR)/include
 
 ifdef FANN_ROOT

@@ -33,7 +33,7 @@ F2PY    = f2py
 
 # System math libraries
 
-LMATH = /opt/local/lib/libfftw3.a
+LMATH = /opt/local/lib/libfftw3.a /opt/local/lib/libfftw3f.a 
 FFTW_INC = /opt/local/include 
 
 ifdef FANN_ROOT

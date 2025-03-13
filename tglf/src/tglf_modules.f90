@@ -12,7 +12,8 @@
       INTEGER, PARAMETER :: maxmodes=16
       INTEGER, PARAMETER :: max_ELITE=700
       INTEGER, PARAMETER :: max_fourier = 24
-      INTEGER, PARAMETER :: ms = 1024  ! ms needs to be divisible by 8
+      ! JC: changed this value back to ms=128 from ms=1024
+      INTEGER, PARAMETER :: ms = 128  ! ms needs to be divisible by 8
       INTEGER, PARAMETER :: max_plot =18*ms/8+1
 !
       END MODULE tglf_max_dimensions

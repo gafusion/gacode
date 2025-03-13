@@ -17,7 +17,7 @@ FDEBUG =-Wall -W -fcheck=all -g -fbacktrace -ffpe-trap=invalid,zero,overflow -fi
 F2PY   = f2py
 
 # System math libraries
-LMATH = -lopenblas -lfftw3
+LMATH = -lopenblas -lfftw3 -lfftw3f
 FFTW_INC=${CONDA_PREFIX}/include
 
 ifdef FANN_ROOT

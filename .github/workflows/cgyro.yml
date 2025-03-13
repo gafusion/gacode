@@ -100,7 +100,7 @@ jobs:
         (grep reg cgyro_reg.log || test -f cgyro_reg.log) |tee  cgyro_reg.tests.log
         (grep PASS cgyro_reg.tests.log || test -f cgyro_reg.tests.log) > cgyro_reg.tests.pass.log
         cnt=`wc -l cgyro_reg.tests.pass.log |awk '{print $1}'`
-        if [ "$cnt" -eq 20 ]; then
+        if [ "$cnt" -eq 22 ]; then
           echo "== ALL passed =="
         else 
           echo "== Some tests FAILED"

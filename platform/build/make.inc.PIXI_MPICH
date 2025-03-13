@@ -60,7 +60,7 @@ FOMP	= -fopenmp
 
 # System math libraries
 
-LMATH = -L${PREFIX}/lib -lfftw3 -llapack -lblas
+LMATH = -L${PREFIX}/lib -lfftw3 -lfftw3f -llapack -lblas
 
 # Optional netCDF libraries
 

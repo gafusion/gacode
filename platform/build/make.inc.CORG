@@ -19,7 +19,7 @@ FDEBUG =-Wall -W -fcheck=all -g -fbacktrace -ffpe-trap=invalid,zero,overflow -fi
 F2PY   = f2py
 
 # System math libraries
-LMATH = ${ROOT}/OpenBLAS/libopenblas.a $(FFTWDIR)/libfftw3.a $(FFTWDIR)/libfftw3_omp.a
+LMATH = ${ROOT}/OpenBLAS/libopenblas.a $(FFTWDIR)/libfftw3.a $(FFTWDIR)/libfftw3_omp.a $(FFTWDIR)/libfftw3f.a $(FFTWDIR)/libfftw3f_omp.a
 FFTW_INC=/usr/include
 
 # OPTIONAL NetCDF:

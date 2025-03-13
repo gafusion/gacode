@@ -99,6 +99,7 @@ module cgyro_globals
   integer :: theta_plot
   integer :: gpu_bigmem_flag
   integer :: upwind_single_flag
+  integer :: nl_single_flag
   real :: px0
   integer :: stream_term
   real :: stream_factor
@@ -351,11 +352,15 @@ module cgyro_globals
   complex, dimension(:,:,:), allocatable :: h0_x
   complex, dimension(:,:,:), allocatable :: h0_old
   complex, dimension(:,:,:,:), allocatable :: fA_nl,fB_nl
+  complex(KIND=REAL32), dimension(:,:,:,:), allocatable :: fA_nl32,fB_nl32
   complex, dimension(:,:,:,:), allocatable :: eA_nl,eB_nl
   complex, dimension(:,:,:,:), allocatable :: g_nl
+  complex(KIND=REAL32), dimension(:,:,:,:), allocatable :: g_nl32
   complex, dimension(:,:,:), allocatable :: fpackA,fpackB
+  complex(KIND=REAL32), dimension(:,:,:), allocatable :: fpackA32,fpackB32
   complex, dimension(:,:,:), allocatable :: epackA,epackB
   complex, dimension(:,:,:,:), allocatable :: gpack
+  complex(KIND=REAL32), dimension(:,:,:,:), allocatable :: gpack32
   complex, dimension(:,:,:), allocatable :: omega_cap_h
   complex, dimension(:,:,:), allocatable :: omega_h
   complex, dimension(:,:,:), allocatable :: diss_r
@@ -369,6 +374,7 @@ module cgyro_globals
   complex, dimension(:,:,:), allocatable :: cap_h_v
   real, dimension(:,:,:,:), allocatable :: jvec_c
   real, dimension(:,:,:,:,:), allocatable :: jvec_c_nl ! used by NL only
+  real(KIND=REAL32), dimension(:,:,:,:,:), allocatable :: jvec_c_nl32 ! used by NL only
   real, dimension(:,:,:,:), allocatable :: jvec_v
   real, dimension(:,:,:,:), allocatable :: dvjvec_c
   real, dimension(:,:,:,:), allocatable :: dvjvec_v
@@ -408,19 +414,23 @@ module cgyro_globals
   ! GPU-FFTW plans
 
 #if defined(HIPGPU)
-  type(C_PTR) :: hip_plan_r2c_manyA,hip_plan_r2c_manyB
-  type(C_PTR) :: hip_plan_c2r_manyA,hip_plan_c2r_manyB,hip_plan_c2r_manyG
+  type(C_PTR)    :: plan_r2c_manyA,plan_r2c_manyB
+  type(C_PTR)    :: plan_c2r_manyA,plan_c2r_manyB,plan_c2r_manyG
 #elif defined(MKLGPU)
-  INTEGER*8 :: dfftw_plan_r2c_manyA,dfftw_plan_r2c_manyB
-  INTEGER*8 :: dfftw_plan_c2r_manyA,dfftw_plan_c2r_manyB,dfftw_plan_c2r_manyG
+  INTEGER*8      :: plan_r2c_manyA,plan_r2c_manyB
+  INTEGER*8      :: plan_c2r_manyA,plan_c2r_manyB,plan_c2r_manyG
 #else
-  integer(c_int) :: cu_plan_r2c_manyA,cu_plan_r2c_manyB
-  integer(c_int) :: cu_plan_c2r_manyA,cu_plan_c2r_manyB,cu_plan_c2r_manyG
+  integer(c_int) :: plan_r2c_manyA,plan_r2c_manyB
+  integer(c_int) :: plan_c2r_manyA,plan_c2r_manyB,plan_c2r_manyG
 #endif
 
   complex, dimension(:,:,:),allocatable, target :: fxmany,fymany,gxmany,gymany
   real, dimension(:,:,:), allocatable, target :: uxmany,uymany
   real, dimension(:,:,:), allocatable, target :: vxmany,vymany,uvmany
+
+  complex(KIND=REAL32), dimension(:,:,:),allocatable, target :: fxmany32,fymany32,gxmany32,gymany32
+  real(KIND=REAL32), dimension(:,:,:), allocatable, target :: uxmany32,uymany32
+  real(KIND=REAL32), dimension(:,:,:), allocatable, target :: vxmany32,vymany32,uvmany32
 #endif
   ! 
   ! 2D FFT dimensions 
@@ -439,6 +449,16 @@ module cgyro_globals
   complex, dimension(:,:,:),allocatable :: fy
   complex, dimension(:,:,:),allocatable :: gx
   complex, dimension(:,:,:),allocatable :: gy
+
+  real(KIND=REAL32), dimension(:,:,:), allocatable :: vxmany32
+  real(KIND=REAL32), dimension(:,:,:), allocatable :: vymany32
+  real(KIND=REAL32), dimension(:,:,:), allocatable :: uxmany32
+  real(KIND=REAL32), dimension(:,:,:), allocatable :: uymany32
+  real(KIND=REAL32), dimension(:,:,:), allocatable :: uv32
+  complex(KIND=REAL32), dimension(:,:,:),allocatable :: fx32
+  complex(KIND=REAL32), dimension(:,:,:),allocatable :: fy32
+  complex(KIND=REAL32), dimension(:,:,:),allocatable :: gx32
+  complex(KIND=REAL32), dimension(:,:,:),allocatable :: gy32
 #endif
   !
   ! Work arrays

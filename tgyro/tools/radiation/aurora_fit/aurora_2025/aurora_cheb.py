@@ -1,9 +1,6 @@
-'''
-Cooling curves for multiple ions from Aurora
-No charge exchange included. 
-Simple ionization equilibrium.
-sciortino, 2021
-'''
+# 2025 version:
+# CHANGES: module load omfit, use 5e13 for density, add Li and B.
+# Thanks to Tomas
 
 import aurora
 import numpy as np
@@ -29,10 +26,13 @@ lte1 = np.log(te_max*1e3)
 lte0 = np.log(te_min*1e3)
 dt   = lte1-lte0
 
+# Chebyshev nodes
 x = pc.chebpts1(nc)
 
 te_ev = np.exp(0.5*dt*(x+1)+lte0)
-ne_cm3 = np.ones_like(te_ev)
+
+# Updated for 2025: 5e13/cm^3
+ne_cm3 = 5e13*np.ones(nc)
 
 for i in ion_vec:
     line,cont = aurora.get_cooling_factors(

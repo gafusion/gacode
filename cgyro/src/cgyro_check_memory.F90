@@ -52,6 +52,30 @@ subroutine cgyro_check_memory(datafile)
         write(io,*) 'Nonlinear'
         write(io,*)
         ! nsplit * n_toroidal = nv_loc * n_theta
+        if (nl_single_flag > 1) then
+          ! single precision nl
+#if !(defined(OMPGPU) || defined(_OPENACC))
+        call cgyro_alloc_add_s_3d(io,(ny/2+1),nx,n_omp,8,'fx')
+        call cgyro_alloc_add_s_3d(io,(ny/2+1),nx,n_omp,8,'gx')
+        call cgyro_alloc_add_s_3d(io,(ny/2+1),nx,n_omp,8,'fy')
+        call cgyro_alloc_add_s_3d(io,(ny/2+1),nx,n_omp,8,'gy')
+        call cgyro_alloc_add_s_3d(io,ny,nx,nsplitA,4,'ux')
+        call cgyro_alloc_add_s_3d(io,ny,nx,nsplit,4,'vx')
+        call cgyro_alloc_add_s_3d(io,ny,nx,nsplitA,4,'uy')
+        call cgyro_alloc_add_s_3d(io,ny,nx,nsplit,4,'vy')
+        call cgyro_alloc_add_s_3d(io,ny,nx,n_omp,4,'uv')
+#else
+        call cgyro_alloc_add_s_3d(io,(ny/2+1),nx,nsplitA,8,'fx')
+        call cgyro_alloc_add_s_3d(io,(ny/2+1),nx,nsplit,8,'gx')
+        call cgyro_alloc_add_s_3d(io,(ny/2+1),nx,nsplitA,8,'fy')
+        call cgyro_alloc_add_s_3d(io,(ny/2+1),nx,nsplit,8,'gy')
+        call cgyro_alloc_add_s_3d(io,ny,nx,nsplitA,4,'ux')
+        call cgyro_alloc_add_s_3d(io,ny,nx,nsplit,4,'vx')
+        call cgyro_alloc_add_s_3d(io,ny,nx,nsplitA,4,'uy')
+        call cgyro_alloc_add_s_3d(io,ny,nx,nsplit,4,'vy')
+        call cgyro_alloc_add_s_3d(io,ny,nx,nsplitA,4,'uv')
+#endif
+        else
 #if !(defined(OMPGPU) || defined(_OPENACC))
         call cgyro_alloc_add_3d(io,(ny/2+1),nx,n_omp,16,'fx')
         call cgyro_alloc_add_3d(io,(ny/2+1),nx,n_omp,16,'gx')
@@ -73,6 +97,7 @@ subroutine cgyro_check_memory(datafile)
         call cgyro_alloc_add_3d(io,ny,nx,nsplit,8,'vy')
         call cgyro_alloc_add_3d(io,ny,nx,nsplitA,8,'uv')
 #endif
+        endif
      endif
 
      write(io,*)
@@ -130,13 +155,32 @@ subroutine cgyro_check_memory(datafile)
         write(io,*) 'Nonlinear bracket'
         write(io,*)
         ! nsplit * n_toroidal = nv_loc * n_theta
+        if (nl_single_flag > 1) then
+          ! single precision nl
+        call cgyro_alloc_add_s_4d(io,n_radial,nt_loc,nsplitA,n_toroidal_procs,8,'fA_nl')
+        if (nsplitB > 0) call cgyro_alloc_add_s_4d(io,n_radial,nt_loc,nsplitB,n_toroidal_procs,8,'fB_nl')
+        call cgyro_alloc_add_s_4d(io,n_field,n_radial,n_jtheta,n_toroidal,8,'g_nl')
+        call cgyro_alloc_add_s_3d(io,n_radial,nt_loc,nsplitA*n_toroidal_procs,8,'fpackA')
+        if (nsplitB > 0) call cgyro_alloc_add_s_3d(io,n_radial,nt_loc,nsplitB*n_toroidal_procs,8,'fpackB')
+        call cgyro_alloc_add_s_4d(io,n_field,n_radial,n_jtheta,n_toroidal,8,'gpack')
+        else
+                ! double precision nl
         call cgyro_alloc_add_4d(io,n_radial,nt_loc,nsplitA,n_toroidal_procs,16,'fA_nl')
+        if (nl_single_flag > 0) call cgyro_alloc_add_s_4d(io,n_radial,nt_loc,nsplitA,n_toroidal_procs,8,'fA_nl32')
+        if (nsplitB > 0) then ! nsplitB can be zero at large MPI
         call cgyro_alloc_add_4d(io,n_radial,nt_loc,nsplitB,n_toroidal_procs,16,'fB_nl')
+        if (nl_single_flag > 0) call cgyro_alloc_add_s_4d(io,n_radial,nt_loc,nsplitB,n_toroidal_procs,16,'fB_nl32')
+        endif
         call cgyro_alloc_add_4d(io,n_field,n_radial,n_jtheta,n_toroidal,16,'g_nl')
         call cgyro_alloc_add_3d(io,n_radial,nt_loc,nsplitA*n_toroidal_procs,16,'fpackA')
+        if (nl_single_flag > 0) call cgyro_alloc_add_s_3d(io,n_radial,nt_loc,nsplitA*n_toroidal_procs,8,'fpackA32')
+        if (nsplitB > 0) then ! nsplitB can be zero at large MPI
         call cgyro_alloc_add_3d(io,n_radial,nt_loc,nsplitB*n_toroidal_procs,16,'fpackB')
+        if (nl_single_flag > 0) call cgyro_alloc_add_s_3d(io,n_radial,nt_loc,nsplitB*n_toroidal_procs,16,'fpackB32')
+        endif
         call cgyro_alloc_add_4d(io,n_field,n_radial,n_jtheta,n_toroidal,16,'gpack')
-        if (triad_print_flag == 1) then
+        endif
+        if (triad_print_flag == 1) then ! always double precision
           call cgyro_alloc_add_4d(io,n_radial,nt_loc,nsplitA,n_toroidal_procs,16,'eA_nl')
           call cgyro_alloc_add_4d(io,n_radial,nt_loc,nsplitB,n_toroidal_procs,16,'eB_nl')
           call cgyro_alloc_add_3d(io,n_radial,nt_loc,nsplitA*n_toroidal_procs,16,'epackA')
@@ -152,11 +196,11 @@ subroutine cgyro_check_memory(datafile)
         call cgyro_alloc_add(io,(8.0*n_xi)*n_xi*n_species*n_energy*n_theta*nt_loc,'cmat')
      else
         if (collision_precision_mode == 1) then
-           call cgyro_alloc_add_4d(io,nv,nv,nc_loc,nt_loc,4,'cmat_fp32')
+           call cgyro_alloc_add_s_4d(io,nv,nv,nc_loc,nt_loc,4,'cmat_fp32')
            call cgyro_alloc_add(io,4.0*n_xi*n_species*(n_energy-n_low_energy)*n_xi*nc_loc*nt_loc,'cmat_stripes')
            call cgyro_alloc_add(io,4.0*n_xi*n_species*nv*nc_loc*n_low_energy*nt_loc,'cmat_e1')
         else if (collision_precision_mode == 32) then
-           call cgyro_alloc_add_4d(io,nv,nv,nc_loc,nt_loc,4,'cmat_fp32')
+           call cgyro_alloc_add_s_4d(io,nv,nv,nc_loc,nt_loc,4,'cmat_fp32')
         else
            call cgyro_alloc_add_4d(io,nv,nv,nc_loc,nt_loc,8,'cmat')
         endif
@@ -233,8 +277,8 @@ subroutine cgyro_alloc_add_3d(my_io,d1,d2,d3,elsize,name)
   !
   real :: bytes
   character (15) :: name15
-  character (8) :: typestr
-  character(len=40) :: fstr
+  character (14) :: typestr
+  character(len=50) :: fstr
  
   if (i_proc == 0) then
 
@@ -245,15 +289,15 @@ subroutine cgyro_alloc_add_3d(my_io,d1,d2,d3,elsize,name)
 
      name15 = name
      if ( (d1<=9999) .and. (d2<=9999) .and.(d3<=9999) ) then
-       fstr = '(t2,f8.3,a,3x,a15,3x,a,i4,a,i4,a,i4,a,a)'
+       fstr = '(t2,f8.3,a,3x,a11,3x,a,i4,a,i4,a,i4,a,a)'
      else if ( (d1<=99999) .and. (d2<=99999) .and.(d3<=99999)) then
-       fstr = '(t2,f8.3,a,3x,a15,3x,a,i5,a,i5,a,i5,a,a)'
+       fstr = '(t2,f8.3,a,3x,a11,3x,a,i5,a,i5,a,i5,a,a)'
      else
-       fstr = '(t2,f8.3,a,3x,a15,3x,a,i7,a,i7,a,i7,a,a)'
+       fstr = '(t2,f8.3,a,3x,a11,3x,a,i7,a,i7,a,i7,a,a)'
      endif
 
      if (elsize<5) then
-        typestr = 'real(4)'
+        typestr = 'integer'
      else if (elsize<9) then
         typestr = 'real'
      else
@@ -282,8 +326,8 @@ subroutine cgyro_alloc_add_4d(my_io,d1,d2,d3,d4,elsize,name)
   !
   real :: bytes
   character (15) :: name15
-  character (8) :: typestr
-  character(len=45) :: fstr
+  character (14) :: typestr
+  character(len=50) :: fstr
  
   if (i_proc == 0) then
 
@@ -294,15 +338,15 @@ subroutine cgyro_alloc_add_4d(my_io,d1,d2,d3,d4,elsize,name)
 
      name15 = name
      if ( (d1<=9999) .and. (d2<=9999) .and.(d3<=9999) .and.(d4<=9999) ) then
-        fstr = '(t2,f8.3,a,3x,a15,3x,a,i4,a,i4,a,i4,a,i4,a,a)'
+        fstr = '(t2,f8.3,a,3x,a11,3x,a,i4,a,i4,a,i4,a,i4,a,a)'
      else if ( (d1<=99999) .and. (d2<=99999) .and.(d3<=99999) .and.(d4<=99999)) then
-        fstr = '(t2,f8.3,a,3x,a15,3x,a,i5,a,i5,a,i5,a,i5,a,a)'
+        fstr = '(t2,f8.3,a,3x,a11,3x,a,i5,a,i5,a,i5,a,i5,a,a)'
      else
-        fstr = '(t2,f8.3,a,3x,a15,3x,a,i7,a,i7,a,i7,a,i7,a,a)'
+        fstr = '(t2,f8.3,a,3x,a11,3x,a,i7,a,i7,a,i7,a,i7,a,a)'
      endif
 
      if (elsize<5) then
-        typestr = 'real(4)'
+        typestr = 'integer'
      else if (elsize<9) then
         typestr = 'real'
      else
@@ -318,3 +362,97 @@ subroutine cgyro_alloc_add_4d(my_io,d1,d2,d3,d4,elsize,name)
   endif
 
 end subroutine cgyro_alloc_add_4d
+
+subroutine cgyro_alloc_add_s_3d(my_io,d1,d2,d3,elsize,name)
+
+  use cgyro_globals
+
+  implicit none
+  !
+  integer, intent(in) :: my_io
+  integer, intent(in) :: d1,d2,d3,elsize
+  character (len=*), intent(in) :: name
+  !
+  real :: bytes
+  character (15) :: name15
+  character (14) :: typestr
+  character(len=50) :: fstr
+ 
+  if (i_proc == 0) then
+
+     bytes = elsize
+     bytes = ((bytes*d1)*d2)*d3
+     
+     total_memory = total_memory+bytes
+
+     name15 = name
+     if ( (d1<=9999) .and. (d2<=9999) .and.(d3<=9999) ) then
+       fstr = '(t2,f8.3,a,3x,a11,3x,a,i4,a,i4,a,i4,a,a)'
+     else if ( (d1<=99999) .and. (d2<=99999) .and.(d3<=99999)) then
+       fstr = '(t2,f8.3,a,3x,a11,3x,a,i5,a,i5,a,i5,a,a)'
+     else
+       fstr = '(t2,f8.3,a,3x,a11,3x,a,i7,a,i7,a,i7,a,a)'
+     endif
+
+     if (elsize<5) then
+        typestr = 'real(fp32)'
+     else
+        typestr = 'complex(fp32)'
+     endif
+
+     if (bytes < 1e8) then 
+        write(my_io,fstr) bytes/1e6,' MB',name15,' (',d1,',',d2,',',d3,') ',typestr
+     else
+        write(my_io,fstr) bytes/1e9,' GB',name15,' (',d1,',',d2,',',d3,') ',typestr
+     endif
+     
+  endif
+  
+end subroutine cgyro_alloc_add_s_3d
+
+subroutine cgyro_alloc_add_s_4d(my_io,d1,d2,d3,d4,elsize,name)
+
+  use cgyro_globals
+
+  implicit none
+  !
+  integer, intent(in) :: my_io
+  integer, intent(in) :: d1,d2,d3,d4,elsize
+  character (len=*), intent(in) :: name
+  !
+  real :: bytes
+  character (15) :: name15
+  character (14) :: typestr
+  character(len=50) :: fstr
+ 
+  if (i_proc == 0) then
+
+     bytes = elsize
+     bytes = (((bytes*d1)*d2)*d3)*d4
+     
+     total_memory = total_memory+bytes
+
+     name15 = name
+     if ( (d1<=9999) .and. (d2<=9999) .and.(d3<=9999) .and.(d4<=9999) ) then
+        fstr = '(t2,f8.3,a,3x,a11,3x,a,i4,a,i4,a,i4,a,i4,a,a)'
+     else if ( (d1<=99999) .and. (d2<=99999) .and.(d3<=99999) .and.(d4<=99999)) then
+        fstr = '(t2,f8.3,a,3x,a11,3x,a,i5,a,i5,a,i5,a,i5,a,a)'
+     else
+        fstr = '(t2,f8.3,a,3x,a11,3x,a,i7,a,i7,a,i7,a,i7,a,a)'
+     endif
+
+     if (elsize<5) then
+        typestr = 'real(fp32)'
+     else
+        typestr = 'complex(fp32)'
+     endif
+
+     if (bytes < 1e8) then 
+        write(my_io,fstr) bytes/1e6,' MB',name15,' (',d1,',',d2,',',d3,',',d4,') ',typestr
+     else
+        write(my_io,fstr) bytes/1e9,' GB',name15,' (',d1,',',d2,',',d3,',',d4,') ',typestr
+     endif
+     
+  endif
+
+end subroutine cgyro_alloc_add_s_4d
