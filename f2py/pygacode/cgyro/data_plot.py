@@ -580,24 +580,24 @@ class cgyrodata_plot(data.cgyrodata):
       diss_c0 = np.sum(diss_c[:,0,:],axis=0)
 
       if spec == 1: # electron
-         ft = r'{L_{T_e} T_{NZF->ZF,e}/Q_{GBD}}'
-         Sft= r'{L_{T_e} {dS_e \over dt} /Q_{GBD}}'
+         ft = r'{L_{T_e} T_{NZF \rightarrow ZF,e}/Q_{GBD}}'
+         Sft= r'{L_{T_e} \frac{dS_e}{dt} /Q_{GBD}}'
          Qft= r'{q_e/Q_{GBD}}'
          Wft= r'{L_{T_e} W_{k_{\perp}}/Q_{GBD}}'
          Q  = y[spec,:]
          G  = (self.dlnndr[1] - 1.5*self.dlntdr[1] )*yn[spec,:] / self.dlntdr[1]
 
       elif spec == 0: # main ion
-         ft = r'{L_{T_e} T_{NZF->ZF,D} /Q_{GBD}}'
-         Sft= r'{L_{T_e} {dS_D \over dt} /Q_{GBD}}'
+         ft = r'{L_{T_e} T_{NZF \rightarrow ZF,D} /Q_{GBD}}'
+         Sft= r'{L_{T_e} \frac{dS_D}{dt} /Q_{GBD}}'
          Qft= r'{L_{T_e} q_D/Q_{GBD}L_{T_D}}'
          Wft= r'{L_{T_e} W_{k_{\perp}}/Q_{GBD}}'
          Q  = y[spec,:] * (self.dlntdr[0] /self.dlntdr[1] )
          G  = (self.dlnndr[0] - 1.5*self.dlntdr[0] )*yn[spec,:] / self.dlntdr[1] *self.temp[0]
        
       elif spec == -1: # total
-         ft = r'{L_{T_e} \Sigma_s T_{NZF->ZF,s} /Q_{GBD}}'
-         Sft= r'{L_{T_e} \Sigma_s {dS_s \over dt} /Q_{GBD}}'
+         ft = r'{L_{T_e} \Sigma_s T_{NZF \rightarrow ZF,s} /Q_{GBD}}'
+         Sft= r'{L_{T_e} \Sigma_s \frac{dS_s}{dt} /Q_{GBD}}'
          Qft= r'{L_{T_e} \Sigma_s q_s/Q_{GBD}L_{T_s}}'
          Wft= r'{L_{T_e} W_{k_{\perp}}/Q_{GBD}}'
          Q  = (y[:,:] * self.dlntdr[:,np.newaxis]).sum(axis=0)  /self.dlntdr[1]
