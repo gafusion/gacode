@@ -795,7 +795,7 @@ subroutine cgyro_nl_fftw_mul_sub_mean(ny,nx,nt,uvm,uxm,vym,uym,vxm,inv_nxny)
       r_vy = vym(i) - y_mean_vy
 
       ! compute and save uv
-      uvm(i) = (uxm(i)*vym(i)-uym(i)*vxm(i))*inv_nxny
+      uvm(i) = (r_ux * r_vy - r_uy * r_vx)*inv_nxny
     enddo
    enddo
   enddo
