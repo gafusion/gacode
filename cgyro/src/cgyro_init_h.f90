@@ -134,7 +134,7 @@ subroutine cgyro_init_h
                     h_x(ic,iv_loc,nt1) = rho/(1.0+ang**4)
                  else
                     ! anti-symmetric
-                    h_x(ic,iv_loc,nt1) = rho*ang/(1.0+ang**4)
+                    h_x(ic,iv_loc,nt1) = 0.5*rho*(1+ang)/(1.0+ang**4)
                  endif
               enddo
            endif
