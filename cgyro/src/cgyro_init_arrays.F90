@@ -36,7 +36,7 @@ subroutine cgyro_init_arrays
   !-------------------------------------------------------------------------
   ! Distributed Bessel-function Gyroaverages
 
-  allocate(jloc_c(2,nc,nt1:nt2))
+  allocate(jloc_c(3,nc,nt1:nt2))
 
   do itor=nt1,nt2
    iv_loc = 0
@@ -63,6 +63,14 @@ subroutine cgyro_init_arrays
         ! Needed for B_parallel in GK and field equations
 
         jloc_c(2,ic,itor) = 0.5*(jloc_c(1,ic,itor) + bessel_jn(2,arg))/bmag(it)
+
+        ! Needed for Maxwell stress (A_parallel) term in momentum flux
+
+        if(itor == 0) then
+           jloc_c(3,ic,itor) = 0.0
+        else
+           jloc_c(3,ic,itor) = bessel_j0(arg)/(arg**2)
+        endif
         
      enddo
 
@@ -95,7 +103,7 @@ subroutine cgyro_init_arrays
         
         if (n_field > 1) then
            efac = -xi(ix)*vel2(ie)*vth(is)
-           jxvec_c(2,ic,iv_loc,itor) = efac * fac * (bmag(it) * jloc_c(2,ic,itor))
+           jxvec_c(2,ic,iv_loc,itor) = efac * fac * (bmag(it) * jloc_c(2,ic,itor) + jloc_c(3,ic,itor))
            
            if (n_field > 2) then
               if(itor == 0) then
@@ -103,7 +111,7 @@ subroutine cgyro_init_arrays
               else
                  jxvec_c(3,ic,iv_loc,itor) = fac * z(is)*bmag(it)/mass(is) &
                       /(k_perp(ic,itor)*rho)**2 &
-                      * (bmag(it) * jloc_c(2,ic,itor) - jloc_c(1,ic,itor))
+                      * (2 * bmag(it) * jloc_c(2,ic,itor) - jloc_c(1,ic,itor))
               endif
            endif
            
