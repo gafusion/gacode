@@ -625,7 +625,7 @@ subroutine cgyro_calc_collision_simple_gpu(nj_loc)
      ! Set-up the RHS: H = f + ze/T G phi
 
      ! Avoid singularity of n=0,p=0:
-     if ((ir == px_zero) .and. (itor == 0) then
+     if ((ir == px_zero) .and. (itor == 0)) then
 
         ! shortcut all the logic, just fill fsenf
 #if defined(OMPGPU)
