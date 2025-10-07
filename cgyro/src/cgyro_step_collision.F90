@@ -255,7 +255,7 @@ subroutine cgyro_calc_collision_simple_cpu(nj_loc)
      enddo
 
      ! Avoid singularity of n=0,p=0:
-     if (px(ir) == 0 .and. itor == 0) then
+     if ((ir == px_zero) .and. (itor == 0)) then
         bvec = cvec
      else
 
@@ -608,12 +608,12 @@ subroutine cgyro_calc_collision_simple_gpu(nj_loc)
 #if defined(OMPGPU)
 !$omp target teams distribute collapse(2) &
 !$omp&         private(ic_loc,ir,it,b_re,b_im,cval,ism) &
-!$omp&         private(is,ie,ix,jx,iv,k,j,jv) firstprivate(vcount,nj_loc)
+!$omp&         private(is,ie,ix,jx,iv,k,j,jv) firstprivate(vcount,nj_loc,px_zero)
 #else
 !$acc parallel loop collapse(2) gang &
-!$acc&         present(ix_v,ie_v,is_v,iv_v,ir_c,it_c,px,cap_h_v,cmat_simple,fsendf) &
+!$acc&         present(ix_v,ie_v,is_v,iv_v,ir_c,it_c,cap_h_v,cmat_simple,fsendf) &
 !$acc&         private(ic_loc,ir,it,b_re,b_im,cval,ism) &
-!$acc&         private(is,ie,ix,jx,iv,k,j,jv) firstprivate(vcount,nj_loc)
+!$acc&         private(is,ie,ix,jx,iv,k,j,jv) firstprivate(vcount,nj_loc,px_zero)
 #endif
   do itor=nt1,nt2
    do ic=nc_cl1,nc_cl2 ! == nc_loc_coll
@@ -625,7 +625,7 @@ subroutine cgyro_calc_collision_simple_gpu(nj_loc)
      ! Set-up the RHS: H = f + ze/T G phi
 
      ! Avoid singularity of n=0,p=0:
-     if (px(ir) == 0 .and. itor == 0) then
+     if ((ir == px_zero) .and. (itor == 0) then
 
         ! shortcut all the logic, just fill fsenf
 #if defined(OMPGPU)

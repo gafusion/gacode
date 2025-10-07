@@ -415,11 +415,6 @@ subroutine cgyro_cleanup
   ! From cgyro_make_profiles
   !!!!!!!!!!!!!!!!!!!!!!!!!!
   
-  if(allocated(px))  then
-     ccl_del_device(px)      
-     deallocate(px)
-  endif
-  
      ccl_del_device(z)
 
      ccl_del_device(temp) 

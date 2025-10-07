@@ -678,7 +678,7 @@ subroutine cgyro_field_ae(space)
 
   if (space == 'c') then
      do ir=1,n_radial
-        if ((px(ir) == 0 .or. ir == 1) .and. zf_test_mode == 0) then
+        if (((ir == px_zero) .or. (ir == 1)) .and. zf_test_mode == 0) then
            field(1,ic_c(ir,:),0) = 0.0
         else
            do i=1,n_theta
@@ -697,7 +697,7 @@ subroutine cgyro_field_ae(space)
      enddo
   else
      do ir=1,n_radial
-        if ((px(ir) == 0 .or. ir == 1) .and. zf_test_mode == 0) then
+        if (((ir == px_zero) .or. (ir == 1)) .and. zf_test_mode == 0) then
            field(1,ic_c(ir,:),0) = 0.0
         else
            do i=1,n_theta

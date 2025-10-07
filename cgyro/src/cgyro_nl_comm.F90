@@ -361,22 +361,22 @@ subroutine cgyro_nl_fftw_comm1_r64(ij)
 #if defined(OMPGPU)
 !$omp target teams distribute parallel do simd collapse(4) &
 !$omp&         private(iexch0,itor0,isplit0,iexch_base) &
-!$omp&         private(ic_loc_m,my_psi)
+!$omp&         private(ic_loc_m,my_psi) firstprivate(px_zero)
 #elif defined(_OPENACC)
 !$acc parallel loop collapse(4) gang vector independent private(ic_loc_m,my_psi) &
-!$acc&         private(iexch0,itor0,isplit0,iexch_base) &
-!$acc&         present(ic_c,px,rhs,fpackA,fpackB) copyin(psi_mul,nl_min) &
+!$acc&         private(iexch0,itor0,isplit0,iexch_base) firstprivate(px_zero) &
+!$acc&         present(ic_c,rhs,fpackA,fpackB) copyin(psi_mul,nl_min) &
 !$acc&         present(nt1,nt2,nv_loc,n_theta,n_radial,nsplit,nsplitA,nsplitB) copyin(ij) default(none)
 #else
 !$omp parallel do collapse(2) private(ic_loc_m,my_psi) &
-!$omp&         private(iexch0,itor0,isplit0,iexch_base)
+!$omp&         private(iexch0,itor0,isplit0,iexch_base) firstprivate(px_zero)
 #endif
   do itor=nt1,nt2
     do iv_loc_m=1,nv_loc
       do it=1,n_theta
         do ir=1,n_radial
            ic_loc_m = ic_c(ir,it)
-           if ( (itor == 0) .and.  (ir == 1 .or. px(ir) == 0) ) then
+           if ( (itor == 0) .and.  ((ir == 1) .or. (ir == px_zero)) ) then
               ! filter
               my_psi = (0.0,0.0)
            else
@@ -407,22 +407,22 @@ subroutine cgyro_nl_fftw_comm1_r64(ij)
 #if defined(OMPGPU)
 !$omp target teams distribute parallel do simd collapse(4) &
 !$omp&         private(iexch0,itor0,isplit0,iexch_base) &
-!$omp&         private(ic_loc_m,my_psi)
+!$omp&         private(ic_loc_m,my_psi) firstprivate(px_zero)
 #elif defined(_OPENACC)
 !$acc parallel loop collapse(4) gang vector independent private(ic_loc_m,my_psi) &
-!$acc&         private(iexch0,itor0,isplit0,iexch_base) &
-!$acc&         present(ic_c,px,rhs,fpackA) copyin(psi_mul,nl_min) &
+!$acc&         private(iexch0,itor0,isplit0,iexch_base) firstprivate(px_zero) &
+!$acc&         present(ic_c,rhs,fpackA) copyin(psi_mul,nl_min) &
 !$acc&         present(nt1,nt2,nv_loc,n_theta,n_radial,nsplit,nsplitA) copyin(ij) default(none)
 #else
 !$omp parallel do collapse(2) private(ic_loc_m,my_psi) &
-!$omp&         private(iexch0,itor0,isplit0,iexch_base)
+!$omp&         private(iexch0,itor0,isplit0,iexch_base) firstprivate(px_zero)
 #endif
   do itor=nt1,nt2
     do iv_loc_m=1,nv_loc
       do it=1,n_theta
         do ir=1,n_radial
            ic_loc_m = ic_c(ir,it)
-           if ( (itor == 0) .and.  (ir == 1 .or. px(ir) == 0) ) then
+           if ( (itor == 0) .and.  ((ir == 1) .or. (ir == px_zero)) ) then
               ! filter
               my_psi = (0.0,0.0)
            else
@@ -485,22 +485,22 @@ subroutine cgyro_nl_fftw_comm1_r32(ij)
 #if defined(OMPGPU)
 !$omp target teams distribute parallel do simd collapse(4) &
 !$omp&         private(iexch0,itor0,isplit0,iexch_base) &
-!$omp&         private(ic_loc_m,my_psi)
+!$omp&         private(ic_loc_m,my_psi) firstprivate(px_zero)
 #elif defined(_OPENACC)
 !$acc parallel loop collapse(4) gang vector independent private(ic_loc_m,my_psi) &
-!$acc&         private(iexch0,itor0,isplit0,iexch_base) &
-!$acc&         present(ic_c,px,rhs,fpackA32,fpackB32) copyin(psi_mul,nl_min) &
+!$acc&         private(iexch0,itor0,isplit0,iexch_base) firstprivate(px_zero) &
+!$acc&         present(ic_c,rhs,fpackA32,fpackB32) copyin(psi_mul,nl_min) &
 !$acc&         present(nt1,nt2,nv_loc,n_theta,n_radial,nsplit,nsplitA,nsplitB) copyin(ij) default(none)
 #else
 !$omp parallel do collapse(2) private(ic_loc_m,my_psi) &
-!$omp&         private(iexch0,itor0,isplit0,iexch_base)
+!$omp&         private(iexch0,itor0,isplit0,iexch_base) firstprivate(px_zero)
 #endif
   do itor=nt1,nt2
     do iv_loc_m=1,nv_loc
       do it=1,n_theta
         do ir=1,n_radial
            ic_loc_m = ic_c(ir,it)
-           if ( (itor == 0) .and.  (ir == 1 .or. px(ir) == 0) ) then
+           if ( (itor == 0) .and.  ((ir == 1) .or. (ir == px_zero)) ) then
               ! filter
               my_psi = (0.0,0.0)
            else
@@ -531,22 +531,22 @@ subroutine cgyro_nl_fftw_comm1_r32(ij)
 #if defined(OMPGPU)
 !$omp target teams distribute parallel do simd collapse(4) &
 !$omp&         private(iexch0,itor0,isplit0,iexch_base) &
-!$omp&         private(ic_loc_m,my_psi)
+!$omp&         private(ic_loc_m,my_psi) firstprivate(px_zero)
 #elif defined(_OPENACC)
 !$acc parallel loop collapse(4) gang vector independent private(ic_loc_m,my_psi) &
-!$acc&         private(iexch0,itor0,isplit0,iexch_base) &
-!$acc&         present(ic_c,px,rhs,fpackA32) copyin(psi_mul,nl_min) &
+!$acc&         private(iexch0,itor0,isplit0,iexch_base) firstprivate(px_zero) &
+!$acc&         present(ic_c,rhs,fpackA32) copyin(psi_mul,nl_min) &
 !$acc&         present(nt1,nt2,nv_loc,n_theta,n_radial,nsplit,nsplitA) copyin(ij) default(none)
 #else
 !$omp parallel do collapse(2) private(ic_loc_m,my_psi) &
-!$omp&         private(iexch0,itor0,isplit0,iexch_base)
+!$omp&         private(iexch0,itor0,isplit0,iexch_base) firstprivate(px_zero)
 #endif
   do itor=nt1,nt2
     do iv_loc_m=1,nv_loc
       do it=1,n_theta
         do ir=1,n_radial
            ic_loc_m = ic_c(ir,it)
-           if ( (itor == 0) .and.  (ir == 1 .or. px(ir) == 0) ) then
+           if ( (itor == 0) .and.  ((ir == 1) .or. (ir == px_zero)) ) then
               ! filter
               my_psi = (0.0,0.0)
            else

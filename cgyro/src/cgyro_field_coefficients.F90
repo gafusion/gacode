@@ -54,7 +54,7 @@ subroutine cgyro_field_coefficients
    do ic=1,nc
      ir = ir_c(ic) 
      it = it_c(ic)
-     if (itor == 0 .and. (px(ir) == 0 .or. ir == 1) .and. zf_test_mode == 0) then
+     if (itor == 0 .and. ((ir == px_zero) .or. (ir == 1)) .and. zf_test_mode == 0) then
         fcoef(:,ic,itor) = 0.0
      else
         fcoef(1,ic,itor) = 1.0/(k_perp(ic,itor)**2*lambda_debye**2*dens_ele/temp_ele &
@@ -217,7 +217,7 @@ subroutine cgyro_field_coefficients
    ! Set selected zeros
    do ic=1,nc
      ir = ir_c(ic) 
-     if (itor == 0 .and. (px(ir) == 0 .or. ir == 1) .and. zf_test_mode == 0) then
+     if (itor == 0 .and. ((ir == px_zero) .or. (ir == 1)) .and. zf_test_mode == 0) then
         gcoef(:,ic,itor) = 0.0
      endif
    enddo

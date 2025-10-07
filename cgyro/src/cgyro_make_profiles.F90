@@ -225,27 +225,22 @@ subroutine cgyro_make_profiles
   !-------------------------------------------------------------
   ! Fourier index mapping
   !
-  allocate(px(n_radial))
   if (collision_test_mode>0) then
-     do ir=1,n_radial
-        px(ir) = ir-1
-     enddo
+     px_zero = -(-1)
   else if (zf_test_mode > 0) then
      ! Need positive k_r Fourier coefficients only
-     do ir=1,n_radial
-        px(ir) = ir
-     enddo
+     px_zero = 0
   else
-     do ir=1,n_radial
-        px(ir) = -n_radial/2 + (ir-1)
-     enddo
+     px_zero = -(-n_radial/2 - 1)
   endif
+  ! Historical note
+  ! px(ir) := ir-px_zero
 
   !-------------------------------------------------------------
 #if defined(OMPGPU)
-  !$omp target enter data map(to:px,z,temp)
+  !$omp target enter data map(to:z,temp)
 #elif defined(_OPENACC)
-  !$acc enter data copyin(px,z,temp)
+  !$acc enter data copyin(z,temp)
 #endif
 
 end subroutine cgyro_make_profiles

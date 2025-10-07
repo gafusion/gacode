@@ -12,8 +12,9 @@ subroutine cgyro_write_initdata
 
   implicit none
 
-  integer :: p,in,is,it
+  integer :: p,in,is,it,ir
   real :: kymax,dn,dt,rhoa
+  integer, dimension(:), allocatable :: px
   real, external :: spectraldiss
   character(len=50) :: msg,lfmt
 
@@ -272,6 +273,10 @@ subroutine cgyro_write_initdata
   ! Write the initial grid data 
   !
   if (silent_flag == 0 .and. i_proc == 0) then
+     allocate(px(n_radial))
+     do ir=1,n_radial
+        px(ir) = ir-px_zero
+     enddo
 
      open(unit=io,file=trim(path)//runfile_grids,status='replace')
      write(io,'(i0)') n_toroidal
@@ -299,6 +304,7 @@ subroutine cgyro_write_initdata
      write(io,'(1pe13.6)') (spectraldiss((2*pi/n_radial)*p,nup_radial),p=-n_radial/2,n_radial/2-1)
      write(io,'(i0)') hiprec_flag
      close(io)
+     deallocate(px)
 
   endif
   !----------------------------------------------------------------------------

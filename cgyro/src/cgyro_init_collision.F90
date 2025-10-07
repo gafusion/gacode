@@ -474,11 +474,11 @@ subroutine cgyro_init_collision
 !$omp  parallel do collapse(2) default(none) &
 !$omp& shared(nc_cl1,nc_cl2,nt1,nt2,nv,delta_t,n_species,rho,is_ele,n_field,n_energy,n_xi) &
 !$omp& shared(collision_kperp,collision_field_model,explicit_trap_flag) &
-!$omp& firstprivate(collision_model,collision_mom_restore,collision_ene_restore) &
+!$omp& firstprivate(collision_model,collision_mom_restore,collision_ene_restore,px_zero) &
 !$omp& shared(ae_flag,lambda_debye,dens_ele,temp_ele,dens_rot,dens2_rot) &
 !$omp& shared(cmat_base1,cmat_base2,bessel) &
 !$omp& shared(betae_unit,sum_den_h) &
-!$omp& shared(it_c,ir_c,px,is_v,ix_v,ie_v,ctest,xi_deriv_mat) &
+!$omp& shared(it_c,ir_c,is_v,ix_v,ie_v,ctest,xi_deriv_mat) &
 !$omp& shared(temp,jvec_v,omega_trap,dens,energy,vel,vel2) &
 !$omp& shared(omega_rot_trap,omega_rot_u,e_deriv1_mat,e_deriv1_rot_mat,e_max) &
 !$omp& shared(xi_lor_mat) &
@@ -616,7 +616,7 @@ subroutine cgyro_init_collision
         end select
 
         ! Avoid singularity of n=0,p=0:
-        if (px(ir) == 0 .and. itor == 0) then
+        if ((ir == px_zero) .and. (itor == 0)) then
 
            do iv=1,nv
               cmat_loc(iv,iv) =  1.0

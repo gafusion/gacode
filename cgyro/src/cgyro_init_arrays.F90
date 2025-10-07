@@ -425,7 +425,7 @@ subroutine cgyro_init_arrays
                 + omega_rot_edrift(it))
         
            ! Note that we shift the dissipation with px0 (ballooning angle linear mode)
-           u = (2.0*pi/n_radial)*(px(ir)+px0)
+           u = (2.0*pi/n_radial)*(ir - px_zero + px0)
 
            ! (d/dr) components from drifts
         

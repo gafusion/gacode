@@ -302,7 +302,7 @@ module cgyro_globals
   ! Numerical/work arrays and dimensions
   !
   ! Velocity space 
-  integer, dimension(:), allocatable :: px
+  integer :: px_zero ! Hostorical: used to be px(ir) := ir - px_zero
   real, dimension(:), allocatable :: energy, vel, vel2, w_e
   real, dimension(:), allocatable :: xi, w_xi
   real, dimension(:,:), allocatable :: w_exi

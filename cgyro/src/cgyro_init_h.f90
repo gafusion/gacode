@@ -128,7 +128,7 @@ subroutine cgyro_init_h
               do ic=1,nc
                  ir = ir_c(ic) 
                  it = it_c(ic)
-                 ang = theta(it)+2*pi*px(ir)
+                 ang = theta(it)+2*pi*(ir-px_zero)
                  if (amp > 0.0) then
                     ! symmetric
                     h_x(ic,iv_loc,nt1) = rho/(1.0+ang**4)
@@ -157,9 +157,9 @@ subroutine cgyro_init_h
 
                     ! Zonal-flow initial condition
 
-                    arg = abs(px(ir))/real(n_radial)
+                    arg = abs(ir-px_zero)/real(n_radial)
                     h_x(ic,:,itor) = amp0*rho*exp(-arg)
-                    if (ir == 1 .or. px(ir) == 0) then
+                    if (ir == 1 .or. (ir == px_zero)) then
                        h_x(ic,:,itor) = 0.0
                     endif
 

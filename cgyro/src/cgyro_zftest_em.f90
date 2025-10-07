@@ -106,7 +106,7 @@ subroutine cgyro_zftest_em
         ix = ix_v(iv)       
         ie = ie_v(iv)
 
-        if (px(ir) /= 0) then
+        if (ir /= px_zero) then
            arg = k_perp(ic,itor)*rho*vth(is)*mass(is)/(z(is)*bmag(it)) &
                 *vel2(ie)*sqrt(1.0-xi(ix)**2)           
 

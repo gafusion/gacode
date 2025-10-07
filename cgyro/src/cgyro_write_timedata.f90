@@ -913,7 +913,7 @@ subroutine extended_ang(f2d)
   ! Assumption is that box_size=1
 
   do ir=1,n_radial
-     f1d(:,ir) = f2d(:,ir)*exp(-2*pi*i_c*(px(ir)+px0)*k_theta_base*nt1*rmin*sign_qs)
+     f1d(:,ir) = f2d(:,ir)*exp(-2*pi*i_c*(ir - px_zero + px0)*k_theta_base*nt1*rmin*sign_qs)
   enddo
 
   if (sign_qs < 0) then

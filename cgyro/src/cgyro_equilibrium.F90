@@ -146,10 +146,10 @@ subroutine cgyro_equilibrium
   !
   do ir=1,n_radial/box_size
      if (sign_qs > 0) then
-        thetab(:,ir) = theta(:)+2*pi*(px(ir)+px0)
+        thetab(:,ir) = theta(:)+2*pi*(ir - px_zero + px0)
      else
         ! Reverse output direction (see extended_ang)
-        thetab(:,n_radial/box_size-ir+1) = theta(:)-2*pi*(px(ir)+px0)
+        thetab(:,n_radial/box_size-ir+1) = theta(:)-2*pi*(ir - px_zero + px0)
      endif
   enddo
   !-----------------------------------------------------------------
@@ -251,7 +251,7 @@ subroutine cgyro_equilibrium
      do itor=nt1,nt2
        do ir=1,n_radial
         k_x(ic_c(ir,it),itor) = &
-               2.0*pi*(px(ir)+px0)*geo_grad_r(it)/length &
+               2.0*pi*(ir - px_zero + px0)*geo_grad_r(it)/length &
              + k_theta_base*itor*geo_gq(it)*geo_captheta(it)
         k_perp(ic_c(ir,it),itor) = &
                sqrt(k_x(ic_c(ir,it),itor)**2+(k_theta_base*itor*geo_gq(it))**2)
