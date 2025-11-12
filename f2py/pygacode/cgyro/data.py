@@ -105,27 +105,40 @@ class cgyrodata:
       #-----------------------------------------------------------------
 
       #-----------------------------------------------------------------
-      # Ballooning potentials
+      # Ballooning potentials (phib, aparb, bparb)
+      #
+      # Fix for interrupted runs: Calculate actual time steps from
+      # binary file size rather than ASCII metadata to handle cases where
+      # wallclock limits cause runs to terminate before completion
       #
       nd = 2*self.n_theta*self.n_radial*nt
       f='.cgyro.phib'
       t,fmt,data = self.extract(f,cmplx=True)
       if fmt != 'null':
-         self.phib = np.reshape(data,(self.n_theta*self.n_radial,nt),'F')
+         # Calculate actual time steps from data size (handles interrupted runs)
+         spatial_size = self.n_theta*self.n_radial
+         actual_nt = len(data) // spatial_size
+         self.phib = np.reshape(data,(spatial_size,actual_nt),'F')
          if not self.silent:
             print('INFO: (getdata) Read data in '+fmt+f+'  '+t)
 
       f='.cgyro.aparb'
       t,fmt,data = self.extract(f,cmplx=True)
       if fmt != 'null':
-         self.aparb = np.reshape(data,(self.n_theta*self.n_radial,nt),'F')
+         # Calculate actual time steps from data size (handles interrupted runs)
+         spatial_size = self.n_theta*self.n_radial
+         actual_nt = len(data) // spatial_size
+         self.aparb = np.reshape(data,(spatial_size,actual_nt),'F')
          if not self.silent:
             print('INFO: (getdata) Read data in '+fmt+f+' '+t)
 
       f='.cgyro.bparb'
       t,fmt,data = self.extract(f,cmplx=True)
       if fmt != 'null':
-         self.bparb = np.reshape(data,(self.n_theta*self.n_radial,nt),'F')
+         # Calculate actual time steps from data size (handles interrupted runs)
+         spatial_size = self.n_theta*self.n_radial
+         actual_nt = len(data) // spatial_size
+         self.bparb = np.reshape(data,(spatial_size,actual_nt),'F')
          if not self.silent:
             print('INFO: (getdata) Read data in '+fmt+f+' '+t)
       #-----------------------------------------------------------------
