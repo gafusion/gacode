@@ -760,9 +760,9 @@ subroutine cgyro_fft_z2d(plan, indata, outdata)
   use fftw3_omp_offload
 #else
   use cufft
+  use iso_c_binding, ONLY: c_int
 #endif
   use cgyro_nl_comm
-  use iso_c_binding
 
   implicit none
 #if defined(MKLGPU)
@@ -830,10 +830,10 @@ subroutine cgyro_fft_c2r(plan, indata, outdata)
   use fftw3_omp_offload
 #else
   use cufft
+  use iso_c_binding, ONLY: c_int
 #endif
   use cgyro_nl_comm
   use, intrinsic :: iso_fortran_env
-  use iso_c_binding
 
   implicit none
 #if defined(MKLGPU)
@@ -901,9 +901,9 @@ subroutine cgyro_fft_d2z(plan, indata, outdata)
   use fftw3_omp_offload
 #else
   use cufft
+  use iso_c_binding, ONLY: c_int
 #endif
   use cgyro_nl_comm
-  use iso_c_binding
 
   implicit none
 #if defined(MKLGPU)
@@ -971,10 +971,10 @@ subroutine cgyro_fft_r2c(plan, indata, outdata)
   use fftw3_omp_offload
 #else
   use cufft
+  use iso_c_binding, ONLY: c_int
 #endif
   use cgyro_nl_comm
   use, intrinsic :: iso_fortran_env
-  use iso_c_binding
 
   implicit none
 #if defined(MKLGPU)
