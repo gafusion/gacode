@@ -70,6 +70,20 @@ subroutine cgyro_write_timedata
      enddo
   endif
 
+  if (momentum_print_flag == 1) then
+     ! ky momentum flux for all species with field breakdown
+     call cgyro_write_distributed_breal(&
+          trim(path)//binfile_ky_flux_mom,&
+          size(gflux_mom(0,:,1:nflux_mom,:,:)),&
+          real(gflux_mom(0,:,1:nflux_mom,:,:)))
+
+     ! central ky momentum flux for all species with field breakdown
+     call cgyro_write_distributed_breal(&
+          trim(path)//binfile_ky_cflux_mom,&
+          size(cflux_mom(:,1:nflux_mom,:,:)),&
+          cflux_mom(:,1:nflux_mom,:,:))
+  end if
+
   if (field_print_flag == 1) then
      p_field = n_field
   else

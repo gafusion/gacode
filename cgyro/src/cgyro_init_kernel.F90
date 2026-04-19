@@ -43,6 +43,7 @@ subroutine cgyro_init_kernel
 
   ! Number of fluxes to output 
   nflux = 3+exch_flag
+  nflux_mom = 3
 
   ! 1. MPI setup
   call cgyro_mpi_grid
