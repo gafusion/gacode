@@ -737,7 +737,7 @@ subroutine cgyro_step_collision_gpu(use_simple)
   use cgyro_globals, only : cap_h_c, cap_h_ct, cap_h_v, &
        collision_field_model, gpu_bigmem_flag, h_x, is_v, jvec_c, nc, &
        nt1, nt2, nv1, nv2, temp, z
-  use cgyro_field_mod, only : cgyro_field_v_notae_gpu, field
+  use cgyro_field_mod, only : cgyro_field_v_notae, field
 
   ! --------------------------------------------------
   implicit none
@@ -801,7 +801,7 @@ subroutine cgyro_step_collision_gpu(use_simple)
     ! Compute the new phi
     if (collision_field_model == 1) then
         ! noop if (my_toroidal == 0 .and. ae_flag == 1))
-        call cgyro_field_v_notae_gpu
+        call cgyro_field_v_notae
     endif
 
   endif ! use_simple
