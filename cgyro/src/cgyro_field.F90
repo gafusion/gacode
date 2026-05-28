@@ -21,7 +21,7 @@ module cgyro_field_mod
   complex, private, dimension(:,:,:), allocatable :: field_loc
   !
   ! Field_v
-  complex, dimension(:,:,:,:), allocatable :: field_v
+  complex, private, dimension(:,:,:,:), allocatable :: field_v
   complex, private, dimension(:,:,:,:), allocatable :: field_loc_v
   !
   ! Field_e - used for error estimation and fluxes
