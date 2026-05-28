@@ -653,7 +653,6 @@ end subroutine cgyro_field_e_sync_cur
 ! compute filed error and save the old values for next round
 subroutine cgyro_field_e_compute(delta_t, norm_loc_s,error_loc_s)
 
-  use timer_lib, only : timer_lib_in, timer_lib_out
   use cgyro_globals, only : nt1, nt2, nc, n_field
 
   implicit none
@@ -662,8 +661,6 @@ subroutine cgyro_field_e_compute(delta_t, norm_loc_s,error_loc_s)
   real, intent(out) :: norm_loc_s,error_loc_s
 
   integer :: itor,ic,i_f
-
-  call timer_lib_in('field')
 
   norm_loc_s = 0.0
   error_loc_s = 0.0
@@ -695,8 +692,6 @@ subroutine cgyro_field_e_compute(delta_t, norm_loc_s,error_loc_s)
      enddo
    enddo
   enddo
-
-  call timer_lib_out('field')
 
 end subroutine cgyro_field_e_compute
 

@@ -54,9 +54,9 @@ subroutine cgyro_error_estimate
   enddo
 #endif
 
-  call cgyro_field_e_compute(delta_t, norm_loc_s,error_loc_s)
-
   call timer_lib_in('field')
+
+  call cgyro_field_e_compute(delta_t, norm_loc_s,error_loc_s)
 
   norm_loc(1)  = norm_loc_s
   error_loc(1) = error_loc_s
