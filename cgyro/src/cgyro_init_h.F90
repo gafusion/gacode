@@ -2,7 +2,7 @@ subroutine cgyro_init_h
 
   use mpi
   use cgyro_globals
-  use cgyro_field_mod, only : cgyro_field_c_cpu, cgyro_field_e_init
+  use cgyro_field_mod, only : cgyro_field_c, cgyro_field_e_init, field
   use cgyro_io
   use cgyro_restart
 
@@ -180,7 +180,21 @@ subroutine cgyro_init_h
      endif
   end select
 
-  call cgyro_field_c_cpu(.TRUE.)
+  ! h_x is finalized by now
+#if defined(OMPGPU)
+!$omp target update to(h_x)
+#elif defined(_OPENACC)
+!$acc update device(h_x)
+#endif
+
+  call cgyro_field_c(.TRUE.)
+
+  ! some of the initialization routines need field and cap_h_c in CPU memory
+#if defined(OMPGPU)
+!$omp target update from(field,cap_h_c)
+#elif defined(_OPENACC)
+!$acc update host(field,cap_h_c)
+#endif
 
   ! Initialize time-history of fields (-3,-2,-1) to initial field.
   call cgyro_field_e_init(n_field,nc,nt1,nt2)
