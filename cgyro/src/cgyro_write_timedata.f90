@@ -134,6 +134,7 @@ subroutine cgyro_write_timedata
              ftemp(:,:)/a_norm,size(ftemp))
      enddo
      if (has_balloon) then
+        call cgyro_error_estimate_epar
         do ir=1,n_radial
            do it=1,n_theta
               ftemp(it,ir) = epar(ic_c(ir,it),nt1)
