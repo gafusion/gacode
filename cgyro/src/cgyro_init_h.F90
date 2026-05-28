@@ -189,11 +189,11 @@ subroutine cgyro_init_h
 
   call cgyro_field_c(.TRUE.)
 
-  ! some of the initialization routines need field and cap_h_c in CPU memory
+  ! some of the initialization routines need cap_h_c in CPU memory
 #if defined(OMPGPU)
-!$omp target update from(field,cap_h_c)
+!$omp target update from(cap_h_c)
 #elif defined(_OPENACC)
-!$acc update host(field,cap_h_c)
+!$acc update host(cap_h_c)
 #endif
 
   ! Initialize time-history of fields (-3,-2,-1) to initial field.

@@ -15,17 +15,24 @@ module cgyro_field_mod
 
   !
   ! Field_c
+
+  ! Note: GPU only on GPU systems
+  complex, dimension(:,:,:), allocatable :: field
+  !
   real, private, dimension(:,:,:), allocatable :: fcoef
   real, private, dimension(:,:,:), allocatable :: gcoef
-  complex, dimension(:,:,:), allocatable :: field
   complex, private, dimension(:,:,:), allocatable :: field_loc
   !
   ! Field_v
   complex, private, dimension(:,:,:,:), allocatable :: field_v
   complex, private, dimension(:,:,:,:), allocatable :: field_loc_v
   !
-  ! Field_e - used for error estimation and fluxes
+  ! Field_e - used for error estimation, fluxes and timedata
+
+  ! Note: Cannot be used on GPU
   complex, dimension(:,:,:), allocatable :: field_dot
+  complex, dimension(:,:,:), allocatable :: field_cur
+  !
   complex, private, dimension(:,:,:), allocatable :: field_old
   complex, private, dimension(:,:,:), allocatable :: field_old2
   complex, private, dimension(:,:,:), allocatable :: field_old3
@@ -42,13 +49,14 @@ subroutine cgyro_field_c_init(n_field,nc,nt1,nt2)
 
   integer, intent(in) :: n_field,nc,nt1,nt2
 
+  allocate(field(n_field,nc,nt1:nt2))
+  ! private buffers
   allocate(fcoef(n_field,nc,nt1:nt2))
   if (n_field < 3) then
      allocate(gcoef(n_field,nc,nt1:nt2))
   else
      allocate(gcoef(5,nc,nt1:nt2))
   endif
-  allocate(field(n_field,nc,nt1:nt2))
   allocate(field_loc(n_field,nc,nt1:nt2))
 #if defined(OMPGPU)
 !$omp target enter data map(alloc:fcoef,gcoef,field,field_loc)
@@ -65,14 +73,24 @@ subroutine cgyro_field_e_init(n_field,nc,nt1,nt2)
 
   ! These are in CPU-memory only
   allocate(field_dot(n_field,nc,nt1:nt2))
+  allocate(field_cur(n_field,nc,nt1:nt2))
   allocate(field_old(n_field,nc,nt1:nt2))
   allocate(field_old2(n_field,nc,nt1:nt2))
   allocate(field_old3(n_field,nc,nt1:nt2))
 
+  ! initialize field_cur with values of field
+  ! But field only have values on GPU, so fetch it from there
+#if defined(OMPGPU)
+!$omp target update from(field)
+#elif defined(_OPENACC)
+!$acc update host(field)
+#endif
+  field_cur = field
+
   ! Initialize time-history of fields (-3,-2,-1) to initial field.
-  field_old  = field
-  field_old2 = field
-  field_old3 = field
+  field_old  = field_cur
+  field_old2 = field_cur
+  field_old3 = field_cur
 end subroutine cgyro_field_e_init
 
 subroutine cgyro_field_v_init(n_field,nc,nt1,nt2,n_sim,nc_cl1,nc_cl2)
@@ -118,6 +136,7 @@ subroutine cgyro_field_e_cleanup
     deallocate(field_old3)
     deallocate(field_old2)
     deallocate(field_old)
+    deallocate(field_cur)
     deallocate(field_dot)
   endif
 end subroutine cgyro_field_e_cleanup
@@ -617,6 +636,20 @@ subroutine cgyro_field_ae_c
 end subroutine cgyro_field_ae_c
 
 
+! make a copy from field to field_cur
+subroutine cgyro_field_e_sync_cur
+
+   implicit none
+
+#if defined(OMPGPU)
+!$omp target update from(field)
+#elif defined(_OPENACC)
+!$acc update host(field)
+#endif
+   field_cur = field
+
+end subroutine cgyro_field_e_sync_cur
+
 ! compute filed error and save the old values for next round
 subroutine cgyro_field_e_compute(delta_t, norm_loc_s,error_loc_s)
 
@@ -647,18 +680,18 @@ subroutine cgyro_field_e_compute(delta_t, norm_loc_s,error_loc_s)
         field_loc(i_f,ic,itor) = 3*field_old(i_f,ic,itor) - &
                 3*field_old2(i_f,ic,itor) + &
                 field_old3(i_f,ic,itor)
-        field_dot(i_f,ic,itor) = (3*field(i_f,ic,itor) - &
+        field_dot(i_f,ic,itor) = (3*field_cur(i_f,ic,itor) - &
                 4*field_old(i_f,ic,itor) + &
                 field_old2(i_f,ic,itor) )/(2*delta_t)
 
         ! Define norm and error for each mode number n
-        norm_loc_s  = norm_loc_s  + abs(field(i_f,ic,itor))
-        error_loc_s = error_loc_s + abs(field(i_f,ic,itor)-field_loc(i_f,ic,itor))
+        norm_loc_s  = norm_loc_s  + abs(field_cur(i_f,ic,itor))
+        error_loc_s = error_loc_s + abs(field_cur(i_f,ic,itor)-field_loc(i_f,ic,itor))
 
         ! save old values for next iteration
         field_old3(i_f,ic,itor) = field_old2(i_f,ic,itor)
         field_old2(i_f,ic,itor) = field_old(i_f,ic,itor)
-        field_old(i_f,ic,itor)  = field(i_f,ic,itor)
+        field_old(i_f,ic,itor)  = field_cur(i_f,ic,itor)
      enddo
    enddo
   enddo

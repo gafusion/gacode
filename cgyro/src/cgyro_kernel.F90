@@ -15,7 +15,7 @@ subroutine cgyro_kernel
   use timer_lib
   use mpi
   use cgyro_globals
-  use cgyro_field_mod, only : field
+  use cgyro_field_mod, only : cgyro_field_e_sync_cur
   use cgyro_flux_mod, only : cgyro_flux_tave_reset
   use cgyro_step
   use cgyro_step_collision_mod, only : cgyro_step_collision
@@ -78,14 +78,6 @@ subroutine cgyro_kernel
         call cgyro_shear_hammett
      endif
 
-     ! field will not be modified in GPU memory for the rest of the loop
-#if defined(OMPGPU)
-     ! no async for OMPGPU for now
-!$omp target update from(field)
-#elif defined(_OPENACC)
-!$acc update host(field) async(3)
-#endif
-
      if (mod(i_time,print_step) == 0) then
         ! cap_h_c will not be modified in GPU memory for the rest of the loop
 #if defined(OMPGPU)
@@ -104,12 +96,10 @@ subroutine cgyro_kernel
      !
      ! NOTE: Fluxes are calculated in cgyro_write_timedata
 
-#if (!defined(OMPGPU)) && defined(_OPENACC)
+     ! field will not be modified for the rest of the loop
      call timer_lib_in('coll_mem')
-     ! wait for fields to be synched into system memory, used by cgyro_error_estimate
-!$acc wait(3)
-  call timer_lib_out('coll_mem')
-#endif
+     call cgyro_field_e_sync_cur
+     call timer_lib_out('coll_mem')
 
      ! Error estimate
      call cgyro_error_estimate

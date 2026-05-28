@@ -9,7 +9,7 @@ subroutine cgyro_write_timedata
 
   use mpi
   use cgyro_globals
-  use cgyro_field_mod, only : field
+  use cgyro_field_mod, only : field_cur
   use cgyro_flux_mod
   use cgyro_step
 
@@ -84,7 +84,7 @@ subroutine cgyro_write_timedata
         ir = ir_c(ic)
         it = it_c(ic)
         if (itp(it) > 0) then
-           field_plot(ir,itp(it),nt1:nt2) = field(i_field,ic,nt1:nt2)
+           field_plot(ir,itp(it),nt1:nt2) = field_cur(i_field,ic,nt1:nt2)
         endif
      enddo
 
@@ -101,7 +101,7 @@ subroutine cgyro_write_timedata
      ! Do not include exchange in precision
      call write_precision(trim(path)//runfile_prec,sum(abs(real(gflux(0,:,1:3,:,:)))))
   else
-     call write_precision(trim(path)//runfile_prec,sum(abs(field)))
+     call write_precision(trim(path)//runfile_prec,sum(abs(field_cur)))
   endif
 
   !------------------------------------------------------------------
@@ -117,7 +117,7 @@ subroutine cgyro_write_timedata
 
         do ir=1,n_radial
            do it=1,n_theta
-              ftemp(it,ir) = field(i_field,ic_c(ir,it),nt1)
+              ftemp(it,ir) = field_cur(i_field,ic_c(ir,it),nt1)
            enddo
         enddo
 

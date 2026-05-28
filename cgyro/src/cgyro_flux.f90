@@ -104,7 +104,7 @@ subroutine cgyro_flux
 
   use mpi
   use cgyro_globals
-  use cgyro_field_mod, only : field, field_dot
+  use cgyro_field_mod, only : field_cur, field_dot
 
   implicit none
 
@@ -160,13 +160,13 @@ subroutine cgyro_flux
               ! Note addition division by rho below
               
               ! Density moment: (delta n_a)/(n_norm)
-              moment_loc(ir,itp(it),is,itor,1) = moment_loc(ir,itp(it),is,itor,1)-(cn*field(1,ic,itor)-cprod)
+              moment_loc(ir,itp(it),is,itor,1) = moment_loc(ir,itp(it),is,itor,1)-(cn*field_cur(1,ic,itor)-cprod)
 
               ! Energy moment : (delta E_a)/(n_norm T_norm)
-              moment_loc(ir,itp(it),is,itor,2) = moment_loc(ir,itp(it),is,itor,2)-(cn*field(1,ic,itor)-cprod)*erot
+              moment_loc(ir,itp(it),is,itor,2) = moment_loc(ir,itp(it),is,itor,2)-(cn*field_cur(1,ic,itor)-cprod)*erot
 
               ! Velocity moment : (delta v_a)/(n_norm v_norm)
-              moment_loc(ir,itp(it),is,itor,3) = moment_loc(ir,itp(it),is,itor,3)-(cn*field(1,ic,itor)-cprod)*vpar
+              moment_loc(ir,itp(it),is,itor,3) = moment_loc(ir,itp(it),is,itor,3)-(cn*field_cur(1,ic,itor)-cprod)*vpar
            endif
 
         enddo
@@ -215,21 +215,21 @@ subroutine cgyro_flux
               if (ir-l > 0) then
                  icl = ic_c(ir-l,it)
                  prod1(l,:) = prod1(l,:) &
-                      +i_c*cap_h_c(ic,iv_loc,itor)*conjg(jvec_c(:,icl,iv_loc,itor)*field(:,icl,itor))
+                      +i_c*cap_h_c(ic,iv_loc,itor)*conjg(jvec_c(:,icl,iv_loc,itor)*field_cur(:,icl,itor))
                  prod2(l,:) = prod2(l,:) &
-                      +i_c*cap_h_c(ic,iv_loc,itor)*conjg(i_c*jxvec_c(:,icl,iv_loc,itor)*field(:,icl,itor))
+                      +i_c*cap_h_c(ic,iv_loc,itor)*conjg(i_c*jxvec_c(:,icl,iv_loc,itor)*field_cur(:,icl,itor))
                  prod3(l,:) = prod3(l,:) &
-                      -cap_h_c_dot(ic,iv_loc,itor)*conjg(jvec_c(:,icl,iv_loc,itor)*field(:,icl,itor)) &
+                      -cap_h_c_dot(ic,iv_loc,itor)*conjg(jvec_c(:,icl,iv_loc,itor)*field_cur(:,icl,itor)) &
                       +cap_h_c(ic,iv_loc,itor)*conjg(jvec_c(:,icl,iv_loc,itor)*field_dot(:,icl,itor))
               endif
               if (ir+l <= n_radial) then
                  icl = ic_c(ir+l,it)
                  prod1(l,:) = prod1(l,:) &
-                      -i_c*conjg(cap_h_c(ic,iv_loc,itor))*jvec_c(:,icl,iv_loc,itor)*field(:,icl,itor)
+                      -i_c*conjg(cap_h_c(ic,iv_loc,itor))*jvec_c(:,icl,iv_loc,itor)*field_cur(:,icl,itor)
                  prod2(l,:) = prod2(l,:) &
-                      -i_c*conjg(cap_h_c(ic,iv_loc,itor))*i_c*jxvec_c(:,icl,iv_loc,itor)*field(:,icl,itor)
+                      -i_c*conjg(cap_h_c(ic,iv_loc,itor))*i_c*jxvec_c(:,icl,iv_loc,itor)*field_cur(:,icl,itor)
                  prod3(l,:) = prod3(l,:) &
-                      -conjg(cap_h_c_dot(ic,iv_loc,itor))*jvec_c(:,icl,iv_loc,itor)*field(:,icl,itor) &
+                      -conjg(cap_h_c_dot(ic,iv_loc,itor))*jvec_c(:,icl,iv_loc,itor)*field_cur(:,icl,itor) &
                       +conjg(cap_h_c(ic,iv_loc,itor))*jvec_c(:,icl,iv_loc,itor)*field_dot(:,icl,itor)
               endif
 
@@ -273,7 +273,7 @@ subroutine cgyro_flux
         ! Note: We assume we compute flux_norm once per itor
         flux_norm = 0.0
         do ir=1,n_radial
-           flux_norm = flux_norm+sum(abs(field(1,ic_c(ir,:),itor))**2*w_theta(:))
+           flux_norm = flux_norm+sum(abs(field_cur(1,ic_c(ir,:),itor))**2*w_theta(:))
         enddo
 
         ! Sign correction fixed 2025.11.19 (JC)

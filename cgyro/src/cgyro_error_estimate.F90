@@ -12,7 +12,7 @@ subroutine cgyro_error_estimate
   use mpi
   use cgyro_globals
   use cgyro_io
-  use cgyro_field_mod, only : cgyro_field_e_compute, field, field_dot
+  use cgyro_field_mod, only : cgyro_field_e_compute, field_cur, field_dot
   use timer_lib
 
   implicit none
@@ -90,7 +90,7 @@ subroutine cgyro_error_estimate
                     jc = jr0(itd_class)+itd
                     thfac = thfac_itor(itd_class,itor)
                  endif
-                 wderiv = wderiv + thfac*cderiv(id)*field(1,jc,itor)
+                 wderiv = wderiv + thfac*cderiv(id)*field_cur(1,jc,itor)
                  itd = itd + 1
                  jc = jc + 1
               enddo
