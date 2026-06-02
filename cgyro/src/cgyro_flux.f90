@@ -45,6 +45,11 @@ module cgyro_flux_mod
 
   ! internal work buffer
   complex, private, dimension(:,:,:), allocatable :: cap_h_c_dot
+  ! cap_h_c history
+  complex, private, dimension(:,:,:), allocatable :: cap_h_c_old
+  complex, private, dimension(:,:,:), allocatable :: cap_h_c_old2
+  complex, private, dimension(:,:,:), allocatable :: cap_h_c_old3
+  logical, private :: cap_h_c_old_valid
 
 contains
 
@@ -76,11 +81,15 @@ subroutine cgyro_flux_init(n_radial,theta_plot,n_species,n_field,&
                          n_global,nc,nv_loc,nt1,nt2
 
   allocate(cap_h_c_dot(nc,nv_loc,nt1:nt2))
+  allocate(cap_h_c_old(nc,nv_loc,nt1:nt2))
+  allocate(cap_h_c_old2(nc,nv_loc,nt1:nt2))
+  allocate(cap_h_c_old3(nc,nv_loc,nt1:nt2))
 #if defined(OMPGPU)
-!$omp target enter data map(alloc:cap_h_c_dot)
+!$omp target enter data map(alloc:cap_h_c_dot,cap_h_c_old,cap_h_c_old2,cap_h_c_old3)
 #elif defined(_OPENACC)
-!$acc enter data create(cap_h_c_dot)
+!$acc enter data create(cap_h_c_dot,cap_h_c_old,cap_h_c_old2,cap_h_c_old3)
 #endif
+  cap_h_c_old_valid = .FALSE.
 
   allocate(    moment(n_radial,theta_plot,n_species,nt1:nt2,3))
   allocate(moment_loc(n_radial,theta_plot,n_species,nt1:nt2,3))
@@ -108,16 +117,75 @@ subroutine cgyro_flux_cleanup
   if(allocated(cflux_tave))          deallocate(cflux_tave)
   if(allocated(gflux_tave))          deallocate(gflux_tave)
 
-  if(allocated(cap_h_c_dot)) then
+  if(allocated(cap_h_c_dot)) then ! one check enough
 #if defined(OMPGPU)
-!$omp target exit data map(release:cap_h_c_dot)
+!$omp target exit data map(release:cap_h_c_dot,cap_h_c_old,cap_h_c_old2,cap_h_c_old3)
 #elif defined(_OPENACC)
-!$acc exit data delete(cap_h_c_dot)
+!$acc exit data delete(cap_h_c_dot,cap_h_c_old,cap_h_c_old2,cap_h_c_old3)
 #endif
+     deallocate(cap_h_c_old3)
+     deallocate(cap_h_c_old2)
+     deallocate(cap_h_c_old)
      deallocate(cap_h_c_dot)
   endif
 
 end subroutine cgyro_flux_cleanup
+
+subroutine cgyro_flux_save_cap_h_c
+
+  use cgyro_globals, only: nt1,nt2,nv1,nv2,nc,cap_h_c
+
+  implicit none
+
+  integer :: itor,iv,ic,iv_loc
+
+  if (cap_h_c_old_valid) then
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd collapse(3) &
+!$omp&   private(iv_loc)
+#elif defined(_OPENACC)
+!$acc parallel loop collapse(3) gang vector private(iv_loc) &
+!$acc&         present(cap_h_c,cap_h_c_old,cap_h_c_old2,cap_h_c_old3) &
+!$acc&         present(nt1,nt2,nv1,nv2,nc) default(none)
+#else
+!$omp parallel do collapse(3) private(iv_loc)
+#endif
+    do itor=nt1,nt2
+      do iv=nv1,nv2
+        do ic=1,nc
+           iv_loc = iv-nv1+1
+           cap_h_c_old3(ic,iv_loc,itor) = cap_h_c_old2(ic,iv_loc,itor)
+           cap_h_c_old2(ic,iv_loc,itor) = cap_h_c_old(ic,iv_loc,itor)
+           cap_h_c_old(ic,iv_loc,itor) = cap_h_c(ic,iv_loc,itor)
+        enddo
+      enddo
+    enddo
+  else
+    ! first time around, just put cap_h_c in all
+    cap_h_c_old_valid = .TRUE.
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd collapse(3) &
+!$omp&   private(iv_loc)
+#elif defined(_OPENACC)
+!$acc parallel loop collapse(3) gang vector private(iv_loc) &
+!$acc&         present(cap_h_c,cap_h_c_old,cap_h_c_old2,cap_h_c_old3) &
+!$acc&         present(nt1,nt2,nv1,nv2,nc) default(none)
+#else
+!$omp parallel do collapse(3) private(iv_loc)
+#endif
+    do itor=nt1,nt2
+      do iv=nv1,nv2
+        do ic=1,nc
+           iv_loc = iv-nv1+1
+           cap_h_c_old3(ic,iv_loc,itor) = cap_h_c(ic,iv_loc,itor)
+           cap_h_c_old2(ic,iv_loc,itor) = cap_h_c(ic,iv_loc,itor)
+           cap_h_c_old(ic,iv_loc,itor) = cap_h_c(ic,iv_loc,itor)
+        enddo
+      enddo
+    enddo
+  endif
+
+end subroutine cgyro_flux_save_cap_h_c
 
 !-----------------------------------------------------------------
 

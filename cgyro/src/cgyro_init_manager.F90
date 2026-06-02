@@ -251,9 +251,6 @@ subroutine cgyro_init_manager
 #endif
 
      allocate(cap_h_c(nc,nv_loc,nt1:nt2))
-     allocate(cap_h_c_old(nc,nv_loc,nt1:nt2))
-     allocate(cap_h_c_old2(nc,nv_loc,nt1:nt2))
-     allocate(cap_h_c_old3(nc,nv_loc,nt1:nt2))
      allocate(cap_h_ct(nv_loc,nt1:nt2,nc))
      allocate(cap_h_v(nc_loc_coll,nt1:nt2,nv,n_sim))
      allocate(omega_cap_h(nc,nv_loc,nt1:nt2))
@@ -268,10 +265,10 @@ subroutine cgyro_init_manager
      allocate(upfac2(nc,nv_loc,nt1:nt2))
      
 #if defined(OMPGPU)
-!$omp target enter data map(alloc:cap_h_c,cap_h_ct,cap_h_c_old,cap_h_c_old2,cap_h_c_old3)
+!$omp target enter data map(alloc:cap_h_c,cap_h_ct)
 !$omp target enter data map(alloc:cap_h_v,dvjvec_c)
 #elif defined(_OPENACC)
-!$acc enter data create(cap_h_c,cap_h_ct,cap_h_c_old,cap_h_c_old2,cap_h_c_old3)
+!$acc enter data create(cap_h_c,cap_h_ct)
 !$acc enter data create(cap_h_v,dvjvec_c)
 #endif
 
