@@ -164,13 +164,8 @@ end subroutine cgyro_field_v_cleanup
 ! like cgyro_field_v_notae, but with parametrized start_t
 
 subroutine cgyro_field_v_notae_s(start_t)
-#if defined(OMPGPU) || defined(_OPENACC)
-  use parallel_lib, only : fsendf, parallel_lib_collect_field_gpu, &
-       parallel_lib_nj_loc
-#else
   use parallel_lib, only : fsendf, parallel_lib_collect_field, &
        parallel_lib_nj_loc
-#endif
   use timer_lib, only : timer_lib_in, timer_lib_out
   use cgyro_globals, only : dvjvec_v, i_sim, nc, nc_cl1, nc_cl2, &
        n_field, n_sim, nt2, nv, nv_loc
@@ -240,11 +235,7 @@ subroutine cgyro_field_v_notae_s(start_t)
   call timer_lib_in('field_com')
 
   ! Use aggregate comm, since it is used in step_collision
-#if defined(OMPGPU) || defined(_OPENACC)
-  call parallel_lib_collect_field_gpu(field_loc_v, field_v)
-#else
   call parallel_lib_collect_field(field_loc_v, field_v)
-#endif
 
   call timer_lib_out('field_com')
 
