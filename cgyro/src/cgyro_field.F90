@@ -580,7 +580,7 @@ end subroutine cgyro_field_c_ae
 !-----------------------------------------------------------------
 subroutine cgyro_field_ae_c
 
-  use cgyro_globals, only : ic_c, n_radial, n_theta, px, xzf, &
+  use cgyro_globals, only : n_radial, n_theta, px, xzf, &
        zf_test_mode
 
   implicit none
@@ -588,13 +588,17 @@ subroutine cgyro_field_ae_c
   integer :: ir,i,j
   complex, dimension(n_theta) :: pvec_in,pvec_out
 
+  ! ic_c(ir,it) = (ir-1)*n_theta + it
+!$omp parallel do private(pvec_in,pvec_out,i,j)
   do ir=1,n_radial
         if ((px(ir) == 0 .or. ir == 1) .and. zf_test_mode == 0) then
-           field(1,ic_c(ir,:),0) = 0.0
+           do i=1,n_theta
+             field(1,(ir-1)*n_theta + i,0) = 0.0
+           enddo
         else
            do i=1,n_theta
               pvec_out(i) = 0.0
-              pvec_in(i)  = field(1,ic_c(ir,i),0)
+              pvec_in(i)  = field(1,(ir-1)*n_theta + i,0)
            enddo
            do j=1,n_theta
               do i=1,n_theta
@@ -602,7 +606,7 @@ subroutine cgyro_field_ae_c
               enddo
            enddo
            do i=1,n_theta
-              field(1,ic_c(ir,i),0) = pvec_out(i)
+              field(1,(ir-1)*n_theta + i,0) = pvec_out(i)
            enddo
         endif
   enddo
