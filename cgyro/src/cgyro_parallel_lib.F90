@@ -511,33 +511,10 @@ contains
 
   !=========================================================
 
-  subroutine parallel_flib_sum_field(field_loc,field)
-
-    use mpi
-
-    implicit none
-
-    complex, intent(in), dimension(:,:,:) :: field_loc
-    complex, intent(inout), dimension(:,:,:) :: field
-    integer :: ierr
-
-
-    call MPI_ALLREDUCE(field_loc(:,:,:),&
-         field(:,:,:),&
-         size(field(:,:,:)),&
-         MPI_DOUBLE_COMPLEX,&
-         MPI_SUM,&
-         flib_comm,&
-         ierr)
-
-  end subroutine parallel_flib_sum_field
-
-  !=========================================================
-
   ! Note: Using intent(inout) for field_loc due to possible copy from GPU to CPU memory
   ! Same for many other argumnets in other subroutines
 
-  subroutine parallel_flib_sum_field_gpu(field_loc,field)
+  subroutine parallel_flib_sum_field(field_loc,field)
 
     use mpi
 
@@ -583,7 +560,7 @@ contains
 #endif
 #endif
 
-  end subroutine parallel_flib_sum_field_gpu
+  end subroutine parallel_flib_sum_field
 
   !=========================================================
   !  Species communicator

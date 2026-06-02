@@ -303,11 +303,7 @@ end subroutine cgyro_field_v_notae
 !-----------------------------------------------------------------
 
 subroutine cgyro_field_c(update_cap)
-#if defined(OMPGPU) || defined(_OPENACC)
-  use parallel_lib, only : parallel_flib_sum_field_gpu
-#else
   use parallel_lib, only : parallel_flib_sum_field
-#endif
   use timer_lib, only : timer_lib_in, timer_lib_out
   use cgyro_globals, only : ae_flag, cap_h_c, dvjvec_c, h_x, is_v, &
        jvec_c, nc, n_field, nt1, nt2, nv1, nv2, temp, z
@@ -358,11 +354,7 @@ subroutine cgyro_field_c(update_cap)
   call timer_lib_out('field')
   call timer_lib_in('field_com')
 
-#if defined(OMPGPU) || defined(_OPENACC)
-  call parallel_flib_sum_field_gpu(field_loc,field)
-#else
   call parallel_flib_sum_field(field_loc,field)
-#endif
 
   call timer_lib_out('field_com')
   call timer_lib_in('field')
@@ -481,11 +473,7 @@ end subroutine cgyro_field_c
 
 ! like cgyro_field_c, but assume (my_toroidal == 0 .and. ae_flag == 1)
 subroutine cgyro_field_c_ae
-#if defined(OMPGPU) || defined(_OPENACC)
-  use parallel_lib, only : parallel_flib_sum_field_gpu
-#else
   use parallel_lib, only : parallel_flib_sum_field
-#endif
   use timer_lib, only : timer_lib_in, timer_lib_out
   use cgyro_globals, only : cap_h_c, dvjvec_c, h_x, is_v, jvec_c, &
        nc, n_field, nv1, nv2, temp, z
@@ -532,13 +520,8 @@ subroutine cgyro_field_c_ae
   call timer_lib_out('field')
   call timer_lib_in('field_com')
 
-#if defined(OMPGPU) || defined(_OPENACC)
-  call parallel_flib_sum_field_gpu(field_loc(:,:,0:0), &
-                                  field(:,:,0:0))
-#else
   call parallel_flib_sum_field(field_loc(:,:,0:0), &
                               field(:,:,0:0))
-#endif
 
   call timer_lib_out('field_com')
   call timer_lib_in('field')
