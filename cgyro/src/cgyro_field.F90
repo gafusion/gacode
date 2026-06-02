@@ -371,18 +371,7 @@ subroutine cgyro_field_c(update_cap)
   itor2=nt2
 
   if (nt1 == 0 .and. ae_flag == 1) then
-    ! Note: Called rarely, use the CPu version
-#if defined(OMPGPU)
-!$omp target update from(field)
-#elif defined(_OPENACC)
-!$acc update host(field)
-#endif
     call cgyro_field_ae_c
-#if defined(OMPGPU)
-!$omp target update to(field)
-#elif defined(_OPENACC)
-!$acc update device(field)
-#endif
     ! mark we already processed ==0, nothing else to do there
     itor1=1
   endif
@@ -531,19 +520,9 @@ subroutine cgyro_field_c_ae
       enddo
      enddo
   endif
+
   ! Poisson LHS factors
-  ! Note: Called rarely, use the CPU version
-#if defined(OMPGPU)
-!$omp target update from(field(:,:,0:0))
-#elif defined(_OPENACC)
-!$acc update host(field(:,:,0:0))
-#endif
-    call cgyro_field_ae_c
-#if defined(OMPGPU)
-!$omp target update to(field(:,:,0:0))
-#elif defined(_OPENACC)
-!$acc update device(field(:,:,0:0))
-#endif
+  call cgyro_field_ae_c
 
 #if defined(OMPGPU)
 !$omp target teams distribute parallel do simd collapse(3) &
@@ -586,27 +565,47 @@ subroutine cgyro_field_ae_c
   implicit none
 
   integer :: ir,i,j
-  complex, dimension(n_theta) :: pvec_in,pvec_out
+  complex, dimension(n_theta) :: pvec_in
+  complex :: pvec_out
 
   ! ic_c(ir,it) = (ir-1)*n_theta + it
+#if defined(OMPGPU)
+!$omp target teams distribute private(pvec_in,pvec_out,i,j)
+#elif defined(_OPENACC)
+!$acc parallel loop gang private(pvec_in,pvec_out,i,j) present(field,xzf)
+#else
 !$omp parallel do private(pvec_in,pvec_out,i,j)
+#endif
   do ir=1,n_radial
         if ((px(ir) == 0 .or. ir == 1) .and. zf_test_mode == 0) then
+#if defined(OMPGPU)
+!$omp parallel do
+#elif defined(_OPENACC)
+!$acc loop vector
+#endif
            do i=1,n_theta
              field(1,(ir-1)*n_theta + i,0) = 0.0
            enddo
         else
+#if defined(OMPGPU)
+!$omp parallel do
+#elif defined(_OPENACC)
+!$acc loop vector
+#endif
            do i=1,n_theta
-              pvec_out(i) = 0.0
               pvec_in(i)  = field(1,(ir-1)*n_theta + i,0)
            enddo
-           do j=1,n_theta
-              do i=1,n_theta
-                 pvec_out(i) = pvec_out(i)+xzf(ir,i,j)*pvec_in(j)
-              enddo
-           enddo
+#if defined(OMPGPU)
+!$omp parallel do private(pvec_out,j)
+#elif defined(_OPENACC)
+!$acc loop vector private(pvec_out,j)
+#endif
            do i=1,n_theta
-              field(1,(ir-1)*n_theta + i,0) = pvec_out(i)
+              pvec_out = 0.0
+              do j=1,n_theta
+                 pvec_out = pvec_out+xzf(ir,i,j)*pvec_in(j)
+              enddo
+              field(1,(ir-1)*n_theta + i,0) = pvec_out
            enddo
         endif
   enddo

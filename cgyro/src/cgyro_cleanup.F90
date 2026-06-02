@@ -637,7 +637,14 @@ subroutine cgyro_cleanup
 #endif
      deallocate(c_wave)
   endif
-  if(allocated(xzf))              deallocate(xzf)
+  if(allocated(xzf)) then
+#if defined(OMPGPU)
+!$omp target exit data map(release:xzf)
+#elif defined(_OPENACC)
+!$acc exit data delete(xzf)
+#endif
+     deallocate(xzf)
+  endif
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!
   ! From cgyro_mpi_grid

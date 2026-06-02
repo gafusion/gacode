@@ -338,6 +338,11 @@ subroutine cgyro_init_arrays
      deallocate(i_piv)
      deallocate(work)
 
+#if defined(OMPGPU)
+!$omp target enter data map(to:xzf)
+#elif defined(_OPENACC)
+!$acc enter data copyin(xzf)
+#endif
   endif
 
   if (n_field > 1) deallocate(sum_cur_x)
