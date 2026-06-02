@@ -366,9 +366,9 @@ module cgyro_globals
   complex, dimension(:,:,:,:), allocatable :: omega_s,omega_ss
   complex, dimension(:,:,:), allocatable :: omega_sbeta
   complex, dimension(:,:,:), allocatable :: cap_h_c
-  complex, dimension(:,:,:), allocatable :: cap_h_c_dot
   complex, dimension(:,:,:), allocatable :: cap_h_c_old
   complex, dimension(:,:,:), allocatable :: cap_h_c_old2
+  complex, dimension(:,:,:), allocatable :: cap_h_c_old3
   complex, dimension(:,:,:), allocatable :: cap_h_ct
   complex, dimension(:,:,:,:), allocatable :: cap_h_v
   real, dimension(:,:,:,:), allocatable :: jvec_c

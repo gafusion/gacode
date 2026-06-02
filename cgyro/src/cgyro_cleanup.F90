@@ -172,14 +172,6 @@ subroutine cgyro_cleanup
 #endif
      deallocate(cap_h_ct)
   endif
-  if(allocated(cap_h_c_dot)) then
-#if defined(OMPGPU)
-!$omp target exit data map(release:cap_h_c_dot)
-#elif defined(_OPENACC)
-!$acc exit data delete(cap_h_c_dot)
-#endif
-     deallocate(cap_h_c_dot)
-  endif
   if(allocated(cap_h_c_old)) then
 #if defined(OMPGPU)
 !$omp target exit data map(release:cap_h_c_old)
@@ -195,6 +187,14 @@ subroutine cgyro_cleanup
 !$acc exit data delete(cap_h_c_old2)
 #endif
      deallocate(cap_h_c_old2)
+  endif
+  if(allocated(cap_h_c_old3)) then
+#if defined(OMPGPU)
+!$omp target exit data map(release:cap_h_c_old3)
+#elif defined(_OPENACC)
+!$acc exit data delete(cap_h_c_old3)
+#endif
+     deallocate(cap_h_c_old3)
   endif
   if(allocated(omega_cap_h)) then
 #if defined(OMPGPU)

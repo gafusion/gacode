@@ -43,6 +43,9 @@ module cgyro_flux_mod
   real, private :: tave_min, tave_max
   integer, private :: tave_step
 
+  ! internal work buffer
+  complex, private, dimension(:,:,:), allocatable :: cap_h_c_dot
+
 contains
 
 subroutine cgyro_flux_tave_reset(t_current)
@@ -64,11 +67,20 @@ end subroutine cgyro_flux_tave_reset
 ! Initialization and cleanup, to be called once
 !-----------------------------------------------------------------
 
-subroutine cgyro_flux_init(n_radial,theta_plot,n_species,n_field,n_global,nt1,nt2)
+subroutine cgyro_flux_init(n_radial,theta_plot,n_species,n_field,&
+                           n_global,nc,nv_loc,nt1,nt2)
 
   implicit none
 
-  integer, intent(in) :: n_radial,theta_plot,n_species,n_field,n_global,nt1,nt2
+  integer, intent(in) :: n_radial,theta_plot,n_species,n_field,&
+                         n_global,nc,nv_loc,nt1,nt2
+
+  allocate(cap_h_c_dot(nc,nv_loc,nt1:nt2))
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:cap_h_c_dot)
+#elif defined(_OPENACC)
+!$acc enter data create(cap_h_c_dot)
+#endif
 
   allocate(    moment(n_radial,theta_plot,n_species,nt1:nt2,3))
   allocate(moment_loc(n_radial,theta_plot,n_species,nt1:nt2,3))
@@ -96,6 +108,15 @@ subroutine cgyro_flux_cleanup
   if(allocated(cflux_tave))          deallocate(cflux_tave)
   if(allocated(gflux_tave))          deallocate(gflux_tave)
 
+  if(allocated(cap_h_c_dot)) then
+#if defined(OMPGPU)
+!$omp target exit data map(release:cap_h_c_dot)
+#elif defined(_OPENACC)
+!$acc exit data delete(cap_h_c_dot)
+#endif
+     deallocate(cap_h_c_dot)
+  endif
+
 end subroutine cgyro_flux_cleanup
 
 !-----------------------------------------------------------------
@@ -119,6 +140,35 @@ subroutine cgyro_flux
   complex :: cprod
   real, parameter :: x_fraction=0.2
   real :: u
+
+  ! cap_h_c_old* are in GPU memory only, so compute cap_h_c_dot there
+  ! note: We use explicitly a pre-allocated buffer in GPU memory + update from,
+  !       to avoid dynamic memory allocation
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd collapse(3) &
+!$omp&   private(iv_loc)
+#elif defined(_OPENACC)
+!$acc parallel loop collapse(3) gang vector private(iv_loc) &
+!$acc&         present(cap_h_c_dot,cap_h_c_old,cap_h_c_old2,cap_h_c_old3) &
+!$acc&         present(nt1,nt2,nv1,nv2,nc) copyin(delta_t) default(none)
+#else
+!$omp parallel do collapse(3) private(iv_loc)
+#endif
+  do itor=nt1,nt2
+     do iv=nv1,nv2
+        do ic=1,nc
+           iv_loc = iv-nv1+1
+           cap_h_c_dot(ic,iv_loc,itor) = (3*cap_h_c_old(ic,iv_loc,itor) - &
+                4*cap_h_c_old2(ic,iv_loc,itor) + &
+                cap_h_c_old3(ic,iv_loc,itor) )/(2*delta_t)
+        enddo
+     enddo
+  enddo
+#if defined(OMPGPU)
+!$omp target update from(cap_h_c_dot)
+#elif defined(_OPENACC)
+!$acc update host(cap_h_c_dot)
+#endif
 
 !$omp parallel do private(iv_loc,iv,is,ix,ie,dv,vpar,ic,ir,it,erot,cprod,cn) &
 !$omp&            private(prod1,prod2,prod3,l,icl,dvr,u,flux_norm) &

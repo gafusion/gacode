@@ -49,13 +49,14 @@ subroutine cgyro_error_estimate
   norm_loc(1)  = norm_loc_s
   error_loc(1) = error_loc_s
 
+  ! keep cap_h_c history, will be needed in flux
 #if defined(OMPGPU)
 !$omp target teams distribute parallel do simd collapse(3) &
 !$omp&   private(iv_loc)
 #elif defined(_OPENACC)
 !$acc parallel loop collapse(3) gang vector private(iv_loc) &
-!$acc&         present(cap_h_c_dot,cap_h_c,cap_h_c_old,cap_h_c_old2) &
-!$acc&         present(nt1,nt2,nv1,nv2,nc) copyin(delta_t) default(none)
+!$acc&         present(cap_h_c,cap_h_c_old,cap_h_c_old2,cap_h_c_old3) &
+!$acc&         present(nt1,nt2,nv1,nv2,nc) default(none)
 #else
 !$omp parallel do collapse(3) private(iv_loc)
 #endif
@@ -63,9 +64,7 @@ subroutine cgyro_error_estimate
    do iv=nv1,nv2
      do ic=1,nc
         iv_loc = iv-nv1+1
-        cap_h_c_dot(ic,iv_loc,itor) = (3*cap_h_c(ic,iv_loc,itor) - &
-                4*cap_h_c_old(ic,iv_loc,itor) + &
-                cap_h_c_old2(ic,iv_loc,itor) )/(2*delta_t)
+        cap_h_c_old3(ic,iv_loc,itor) = cap_h_c_old2(ic,iv_loc,itor)
         cap_h_c_old2(ic,iv_loc,itor) = cap_h_c_old(ic,iv_loc,itor)
         cap_h_c_old(ic,iv_loc,itor) = cap_h_c(ic,iv_loc,itor)
      enddo

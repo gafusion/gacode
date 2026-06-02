@@ -22,7 +22,7 @@ subroutine cgyro_init_manager
   use cgyro_io
   use cgyro_nl
   use cgyro_field_mod, only : cgyro_field_c_init, cgyro_field_v_init
-  use cgyro_flux_mod
+  use cgyro_flux_mod, only: cgyro_flux_init
 
 #if defined(_OPENACC) || defined(OMPGPU)
 #define CGYRO_GPU_FFT
@@ -174,7 +174,8 @@ subroutine cgyro_init_manager
      call cgyro_field_c_init(n_field,nc,nt1,nt2)
      ! Note: cgyro_field_e_init called in cgyro_init_h
 
-     call cgyro_flux_init(n_radial,theta_plot,n_species,n_field,n_global,nt1,nt2)
+     call cgyro_flux_init(n_radial,theta_plot,n_species,n_field,&
+                          n_global,nc,nv_loc,nt1,nt2)
      allocate(epar(nc,nt1:nt2))
 
      allocate(recv_status(MPI_STATUS_SIZE))
@@ -250,9 +251,9 @@ subroutine cgyro_init_manager
 #endif
 
      allocate(cap_h_c(nc,nv_loc,nt1:nt2))
-     allocate(cap_h_c_dot(nc,nv_loc,nt1:nt2))
      allocate(cap_h_c_old(nc,nv_loc,nt1:nt2))
      allocate(cap_h_c_old2(nc,nv_loc,nt1:nt2))
+     allocate(cap_h_c_old3(nc,nv_loc,nt1:nt2))
      allocate(cap_h_ct(nv_loc,nt1:nt2,nc))
      allocate(cap_h_v(nc_loc_coll,nt1:nt2,nv,n_sim))
      allocate(omega_cap_h(nc,nv_loc,nt1:nt2))
@@ -267,10 +268,10 @@ subroutine cgyro_init_manager
      allocate(upfac2(nc,nv_loc,nt1:nt2))
      
 #if defined(OMPGPU)
-!$omp target enter data map(alloc:cap_h_c,cap_h_ct,cap_h_c_dot,cap_h_c_old,cap_h_c_old2)
+!$omp target enter data map(alloc:cap_h_c,cap_h_ct,cap_h_c_old,cap_h_c_old2,cap_h_c_old3)
 !$omp target enter data map(alloc:cap_h_v,dvjvec_c)
 #elif defined(_OPENACC)
-!$acc enter data create(cap_h_c,cap_h_ct,cap_h_c_dot,cap_h_c_old,cap_h_c_old2)
+!$acc enter data create(cap_h_c,cap_h_ct,cap_h_c_old,cap_h_c_old2,cap_h_c_old3)
 !$acc enter data create(cap_h_v,dvjvec_c)
 #endif
 

@@ -81,10 +81,9 @@ subroutine cgyro_kernel
      if (mod(i_time,print_step) == 0) then
         ! cap_h_c will not be modified in GPU memory for the rest of the loop
 #if defined(OMPGPU)
-        ! no async for OMPGPU for now
 !$omp target update from(cap_h_c)
 #elif defined(_OPENACC)
-!$acc update host(cap_h_c) async(4)
+!$acc update host(cap_h_c)
 #endif
      endif
 
@@ -111,17 +110,6 @@ subroutine cgyro_kernel
      ! IO
      !
      if (mod(i_time,print_step) == 0) then
-        call timer_lib_in('coll_mem')
-#if defined(OMPGPU)
-        ! no async for OMPGPU for now
-!$omp target update from(cap_h_c_dot)
-#elif defined(_OPENACC)
-!$acc update host(cap_h_c_dot)
-        ! wait for cap_h_c to be synched into system memory, used by cgyro_write_timedata
-!$acc wait(4)
-#endif
-       call timer_lib_out('coll_mem')
-
        call timer_lib_in('io')
 
        ! Write simulation data
