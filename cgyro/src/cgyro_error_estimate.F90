@@ -155,15 +155,14 @@ end subroutine cgyro_error_estimate
 
 subroutine cgyro_error_estimate_epar
 
-  use cgyro_globals
+  use cgyro_globals, only : epar, nt1, nt2, n_field, n_radial, box_size, &
+       sign_qs, n_theta, nup_theta, thfac_itor, cderiv, q, rmaj, g_theta
   use cgyro_field_mod, only : field_cur, field_dot
 
   implicit none
 
-  integer :: ir,itor
-
   complex :: wderiv,thfac
-  integer :: ir,it
+  integer :: ir,itor,it,ic
   ! ir loop specific
   integer :: itorbox
   integer :: jr0(0:2)   ! n_theta*(pre-compute jr-1)
@@ -218,4 +217,3 @@ subroutine cgyro_error_estimate_epar
   !endif
 
 end subroutine cgyro_error_estimate_epar
-
