@@ -293,7 +293,9 @@ subroutine cgyro_flux
            erot  = (energy(ie)+lambda_rot(it,is))*temp(is)
 
            if (itp(it) > 0) then
-              cprod = cap_h_c_cur(ic,iv_loc,itor)*dvjvec_c(1,ic,iv_loc,itor)/z(is)
+              ! dvjvec_c(:,ic,iv_loc,itor) = dens2_rot(it,is)*w_exi(ie,ix)*z(is)*jvec_c(:,ic,iv_loc,itor)
+              ! dvjvec_c(1,ic,iv_loc,itor)/z(is) = dens2_rot(it,is)*w_exi(ie,ix)*jvec_c(1,ic,iv_loc,itor)
+              cprod = cap_h_c_cur(ic,iv_loc,itor)*dens2_rot(it,is)*w_exi(ie,ix)*jvec_c(1,ic,iv_loc,itor)
               cn    = dv*z(is)*dens2_rot(it,is)/temp(is)
 
               ! Note addition division by rho below
