@@ -10,7 +10,8 @@ subroutine cgyro_write_timedata
   use mpi
   use cgyro_globals
   use cgyro_field_mod, only : field_cur
-  use cgyro_flux_mod
+  use cgyro_flux_mod, only: cflux,gflux,moment, &
+          cgyro_flux_sync_cap_h_c_cur, cgyro_flux
   use cgyro_step
 
   implicit none
@@ -30,6 +31,8 @@ subroutine cgyro_write_timedata
 
   ! Increment the print counter on actual output steps
   if (io_control == 2) i_current = i_current+1
+
+  call cgyro_flux_sync_cap_h_c_cur
 
   !---------------------------------------------------------------------------
   if (n_toroidal == 1 .and. h_print_flag == 1) then
@@ -592,6 +595,7 @@ subroutine write_distribution(datafile)
 
   use mpi
   use cgyro_globals
+  use cgyro_flux_mod, only: cap_h_c_cur
 
   !------------------------------------------------------
   implicit none
@@ -626,8 +630,8 @@ subroutine write_distribution(datafile)
 
      allocate(h_x_glob(nc,nv))
      ! Collect distribution onto process 0
-     call MPI_GATHER(cap_h_c(:,:,nt1),&
-          size(cap_h_c(:,:,nt1)),&
+     call MPI_GATHER(cap_h_c_cur(:,:,nt1),&
+          size(cap_h_c_cur(:,:,nt1)),&
           MPI_DOUBLE_COMPLEX,&
           h_x_glob(:,:),&
           size(h_x_glob),&

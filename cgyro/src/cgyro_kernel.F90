@@ -78,15 +78,6 @@ subroutine cgyro_kernel
         call cgyro_shear_hammett
      endif
 
-     if (mod(i_time,print_step) == 0) then
-        ! cap_h_c will not be modified in GPU memory for the rest of the loop
-#if defined(OMPGPU)
-!$omp target update from(cap_h_c)
-#elif defined(_OPENACC)
-!$acc update host(cap_h_c)
-#endif
-     endif
-
      call cgyro_source
     !------------------------------------------------------------
 

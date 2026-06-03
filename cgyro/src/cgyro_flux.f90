@@ -43,6 +43,8 @@ module cgyro_flux_mod
   real, private :: tave_min, tave_max
   integer, private :: tave_step
 
+  ! Not accessible on GPU
+  complex, dimension(:,:,:), allocatable :: cap_h_c_cur
   ! internal work buffer
   complex, private, dimension(:,:,:), allocatable :: cap_h_c_dot
   ! cap_h_c history
@@ -91,6 +93,8 @@ subroutine cgyro_flux_init(n_radial,theta_plot,n_species,n_field,&
 #endif
   cap_h_c_old_valid = .FALSE.
 
+  allocate(cap_h_c_cur(nc,nv_loc,nt1:nt2))
+
   allocate(    moment(n_radial,theta_plot,n_species,nt1:nt2,3))
   allocate(moment_loc(n_radial,theta_plot,n_species,nt1:nt2,3))
   allocate(    cflux(n_species,4,n_field,nt1:nt2))
@@ -118,6 +122,7 @@ subroutine cgyro_flux_cleanup
   if(allocated(gflux_tave))          deallocate(gflux_tave)
 
   if(allocated(cap_h_c_dot)) then ! one check enough
+     deallocate(cap_h_c_cur)
 #if defined(OMPGPU)
 !$omp target exit data map(release:cap_h_c_dot,cap_h_c_old,cap_h_c_old2,cap_h_c_old3)
 #elif defined(_OPENACC)
@@ -186,6 +191,22 @@ subroutine cgyro_flux_save_cap_h_c
   endif
 
 end subroutine cgyro_flux_save_cap_h_c
+
+! make a copy from cap_h_c to cap_h_c_cur
+subroutine cgyro_flux_sync_cap_h_c_cur
+
+  use cgyro_globals, only : cap_h_c
+
+   implicit none
+
+#if defined(OMPGPU)
+!$omp target update from(cap_h_c)
+#elif defined(_OPENACC)
+!$acc update host(cap_h_c)
+#endif
+  cap_h_c_cur = cap_h_c
+
+end subroutine cgyro_flux_sync_cap_h_c_cur
 
 !-----------------------------------------------------------------
 
@@ -272,7 +293,7 @@ subroutine cgyro_flux
            erot  = (energy(ie)+lambda_rot(it,is))*temp(is)
 
            if (itp(it) > 0) then
-              cprod = cap_h_c(ic,iv_loc,itor)*dvjvec_c(1,ic,iv_loc,itor)/z(is)
+              cprod = cap_h_c_cur(ic,iv_loc,itor)*dvjvec_c(1,ic,iv_loc,itor)/z(is)
               cn    = dv*z(is)*dens2_rot(it,is)/temp(is)
 
               ! Note addition division by rho below
@@ -333,22 +354,22 @@ subroutine cgyro_flux
               if (ir-l > 0) then
                  icl = ic_c(ir-l,it)
                  prod1(l,:) = prod1(l,:) &
-                      +i_c*cap_h_c(ic,iv_loc,itor)*conjg(jvec_c(:,icl,iv_loc,itor)*field_cur(:,icl,itor))
+                      +i_c*cap_h_c_cur(ic,iv_loc,itor)*conjg(jvec_c(:,icl,iv_loc,itor)*field_cur(:,icl,itor))
                  prod2(l,:) = prod2(l,:) &
-                      +i_c*cap_h_c(ic,iv_loc,itor)*conjg(i_c*jxvec_c(:,icl,iv_loc,itor)*field_cur(:,icl,itor))
+                      +i_c*cap_h_c_cur(ic,iv_loc,itor)*conjg(i_c*jxvec_c(:,icl,iv_loc,itor)*field_cur(:,icl,itor))
                  prod3(l,:) = prod3(l,:) &
                       -cap_h_c_dot(ic,iv_loc,itor)*conjg(jvec_c(:,icl,iv_loc,itor)*field_cur(:,icl,itor)) &
-                      +cap_h_c(ic,iv_loc,itor)*conjg(jvec_c(:,icl,iv_loc,itor)*field_dot(:,icl,itor))
+                      +cap_h_c_cur(ic,iv_loc,itor)*conjg(jvec_c(:,icl,iv_loc,itor)*field_dot(:,icl,itor))
               endif
               if (ir+l <= n_radial) then
                  icl = ic_c(ir+l,it)
                  prod1(l,:) = prod1(l,:) &
-                      -i_c*conjg(cap_h_c(ic,iv_loc,itor))*jvec_c(:,icl,iv_loc,itor)*field_cur(:,icl,itor)
+                      -i_c*conjg(cap_h_c_cur(ic,iv_loc,itor))*jvec_c(:,icl,iv_loc,itor)*field_cur(:,icl,itor)
                  prod2(l,:) = prod2(l,:) &
-                      -i_c*conjg(cap_h_c(ic,iv_loc,itor))*i_c*jxvec_c(:,icl,iv_loc,itor)*field_cur(:,icl,itor)
+                      -i_c*conjg(cap_h_c_cur(ic,iv_loc,itor))*i_c*jxvec_c(:,icl,iv_loc,itor)*field_cur(:,icl,itor)
                  prod3(l,:) = prod3(l,:) &
                       -conjg(cap_h_c_dot(ic,iv_loc,itor))*jvec_c(:,icl,iv_loc,itor)*field_cur(:,icl,itor) &
-                      +conjg(cap_h_c(ic,iv_loc,itor))*jvec_c(:,icl,iv_loc,itor)*field_dot(:,icl,itor)
+                      +conjg(cap_h_c_cur(ic,iv_loc,itor))*jvec_c(:,icl,iv_loc,itor)*field_dot(:,icl,itor)
               endif
 
            enddo
