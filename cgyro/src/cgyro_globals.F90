@@ -450,8 +450,6 @@ module cgyro_globals
   integer, dimension(:), allocatable :: i_piv
   integer :: info
   !
-  ! Field solve variables
-  real, dimension(:), allocatable :: sum_den_h
   !
    !
   ! Equilibrium/geometry arrays

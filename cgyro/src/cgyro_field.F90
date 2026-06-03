@@ -18,6 +18,8 @@ module cgyro_field_mod
 
   ! Note: GPU only on GPU systems
   complex, dimension(:,:,:), allocatable :: field
+  ! CPU-only
+  real, dimension(:), allocatable :: sum_den_h
   !
   real, private, dimension(:,:,:), allocatable :: fcoef
   real, private, dimension(:,:,:), allocatable :: gcoef
@@ -73,6 +75,9 @@ subroutine cgyro_field_c_init(n_field,n_radial,n_theta,nv_loc,nt1,nt2,ae_flag)
 #elif defined(_OPENACC)
 !$acc enter data create(fcoef,gcoef,field,field_loc,dvjvec_c)
 #endif
+  ! CPU only
+  allocate(sum_den_h(n_theta))
+
   if (nt1 == 0 .and. ae_flag == 1) then
      ! since this applies only to itor == 0, we do not need to extend the matrix
      allocate(xzf(n_radial,n_theta,n_theta))
@@ -141,6 +146,7 @@ subroutine cgyro_field_c_cleanup
   implicit none
 
   if(allocated(fcoef))  then ! one test enough
+    deallocate(sum_den_h)
 #if defined(OMPGPU)
 !$omp target exit data map(release:fcoef,gcoef,field,field_loc,dvjvec_c)
 #elif defined(_OPENACC)
@@ -722,11 +728,12 @@ subroutine cgyro_field_c_init_coefficients
 
   use mpi
   use cgyro_globals, only : ae_flag, betae_unit, nv_loc, &
+       n_species,n_energy,n_xi, &
        dens2_rot, dens_ele, dens_ele_rot, dens_rot, &
        i_err, ie_v, ir_c, is_v, it_c, ix_v, ic_c, &
        jvec_c, k_perp, lambda_debye, nc, nc_cl1, nc_cl2, &
        NEW_COMM_1, n_field, nt1, nt2, nv, nv1, nv2, px, rho, &
-       sum_den_h, temp, temp_ele, w_exi, &
+       temp, temp_ele, w_exi, &
        z, zf_test_mode, n_radial, n_theta, dens, w_theta
 
   implicit none
@@ -754,6 +761,22 @@ subroutine cgyro_field_c_init_coefficients
      vfac(iv_loc) = w_exi(ie,ix)*z(is)**2/temp(is)*dens(is)
 
   enddo
+
+  sum_den_h(:) = 0.0
+  do is=1,n_species
+     do ie=1,n_energy
+        do ix=1,n_xi
+           do it=1,n_theta
+              sum_den_h(it) = sum_den_h(it) + w_exi(ie,ix) &
+                   *z(is)**2/temp(is)*dens2_rot(it,is)
+           enddo
+        enddo
+     enddo
+  enddo
+
+  if (ae_flag == 1) then
+     sum_den_h(:) = sum_den_h(:) + dens_ele*dens_ele_rot(:)/temp_ele
+  endif
 
   allocate(sum_den_x(nc,nt1:nt2))
   if (n_field > 1) allocate(sum_cur_x(nc,nt1:nt2))

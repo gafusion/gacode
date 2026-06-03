@@ -585,7 +585,6 @@ subroutine cgyro_cleanup
   ! From cgyro_init_arrays
   !!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  if(allocated(sum_den_h))        deallocate(sum_den_h)
   if(allocated(cderiv))           deallocate(cderiv)
   if(allocated(uderiv))           deallocate(uderiv)
   if(allocated(c_wave)) then

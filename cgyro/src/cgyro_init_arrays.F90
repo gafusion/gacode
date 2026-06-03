@@ -276,23 +276,6 @@ subroutine cgyro_init_arrays
   ! Coefficient setup
   !
 
-  allocate(sum_den_h(n_theta))
-  sum_den_h(:) = 0.0
-  do is=1,n_species
-     do ie=1,n_energy
-        do ix=1,n_xi
-           do it=1,n_theta
-              sum_den_h(it) = sum_den_h(it) + w_exi(ie,ix) &
-                   *z(is)**2/temp(is)*dens2_rot(it,is)
-           enddo
-        enddo
-     enddo
-  enddo
-
-  if (ae_flag == 1) then
-     sum_den_h(:) = sum_den_h(:) + dens_ele*dens_ele_rot(:)/temp_ele
-  endif
-
   call cgyro_field_c_init_coefficients
   if ((collision_model /= 5) .AND. (collision_field_model == 1)) then
     call cgyro_field_v_init_coefficients
