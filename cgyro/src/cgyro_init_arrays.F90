@@ -2,7 +2,8 @@ subroutine cgyro_init_arrays
 
   use mpi
   use cgyro_globals
-  use cgyro_field_mod, only : cgyro_field_coefficients
+  use cgyro_field_mod, only : cgyro_field_c_init_coefficients, &
+                              cgyro_field_v_init_coefficients
   use cgyro_io
   use parallel_lib
 
@@ -306,7 +307,10 @@ subroutine cgyro_init_arrays
   allocate(sum_den_x(nc,nt1:nt2))
   if (n_field > 1) allocate(sum_cur_x(nc,nt1:nt2))
 
-  call cgyro_field_coefficients
+  call cgyro_field_c_init_coefficients
+  if ((collision_model /= 5) .AND. (collision_field_model == 1)) then
+    call cgyro_field_v_init_coefficients
+  endif
   !------------------------------------------------------------------------------
 
   !-------------------------------------------------------------------------

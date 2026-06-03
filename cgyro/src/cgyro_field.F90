@@ -694,13 +694,13 @@ subroutine cgyro_field_e_get_diff1(ic,itor, fo1,fo2)
   fo2 = field_old2(1,ic,itor)
 end subroutine cgyro_field_e_get_diff1
 
-subroutine cgyro_field_coefficients
+subroutine cgyro_field_c_init_coefficients
 
   use mpi
-  use cgyro_globals, only : ae_flag, betae_unit, collision_field_model, &
-       collision_model, dens2_rot, dens_ele, dens_ele_rot, dens_rot, &
+  use cgyro_globals, only : ae_flag, betae_unit, &
+       dens2_rot, dens_ele, dens_ele_rot, dens_rot, &
        i_err, ie_v, ir_c, is_v, it_c, ix_v, &
-       jvec_c, jvec_v, k_perp, lambda_debye, nc, nc_cl1, nc_cl2, &
+       jvec_c, k_perp, lambda_debye, nc, nc_cl1, nc_cl2, &
        NEW_COMM_1, n_field, nt1, nt2, nv, nv1, nv2, px, rho, &
        sum_cur_x, sum_den_h, sum_den_x, temp, temp_ele, vfac, w_exi, &
        z, zf_test_mode
@@ -914,7 +914,7 @@ subroutine cgyro_field_coefficients
 
   deallocate(sum_loc)
 
-!$omp parallel do private(iv,iv_loc,is,ie,ix,ic,it,ic_loc,ir) shared(gcoef,dvjvec_c,dvjvec_v)
+!$omp parallel do private(iv,iv_loc,is,ie,ix,ic,it,ic_loc,ir) shared(gcoef,dvjvec_c)
   do itor=nt1,nt2
    ! Set selected zeros
    do ic=1,nc
@@ -936,8 +936,31 @@ subroutine cgyro_field_coefficients
              jvec_c(:,ic,iv_loc,itor)
      enddo
    enddo
-   if ((collision_model /= 5) .AND. (collision_field_model == 1)) then
-    do ic=nc_cl1,nc_cl2
+  enddo
+  !-------------------------------------------------------------------------
+
+#if defined(OMPGPU)
+!$omp target update to(fcoef,gcoef,dvjvec_c)
+#elif defined(_OPENACC)
+!$acc update device(fcoef,gcoef,dvjvec_c)
+#endif
+
+end subroutine cgyro_field_c_init_coefficients
+
+subroutine cgyro_field_v_init_coefficients
+
+  use cgyro_globals, only : nc_cl1,nc_cl2,nt1,nt2,nv, &
+                            it_c,is_v,ix_v,ie_v,dens2_rot,w_exi,z,&
+                            jvec_v
+
+  implicit none
+
+  integer :: ic,ic_loc,it,is,ie,ix,iv,itor
+ 
+!$omp parallel do collapse(2) shared(dvjvec_v) &
+!$omp&         private(iv,is,ie,ix,it,ic_loc)
+  do ic=nc_cl1,nc_cl2
+    do itor=nt1,nt2
      ic_loc = ic-nc_cl1+1
      it = it_c(ic)
      do iv=1,nv
@@ -948,23 +971,15 @@ subroutine cgyro_field_coefficients
              jvec_v(:,ic_loc,itor,iv,1) ! all nsm are the same, use the 1st one
      enddo
     enddo
-   endif
   enddo
   !-------------------------------------------------------------------------
 
-#if defined(OMPGPU)
-!$omp target update to(fcoef,gcoef,dvjvec_c)
-#elif defined(_OPENACC)
-!$acc update device(fcoef,gcoef,dvjvec_c)
-#endif
-  if ((collision_model /= 5) .AND. (collision_field_model == 1)) then
 #if defined(OMPGPU)
 !$omp target update to(dvjvec_v)
 #elif defined(_OPENACC)
 !$acc update device(dvjvec_v)
 #endif
-  endif
 
-end subroutine cgyro_field_coefficients
+end subroutine cgyro_field_v_init_coefficients
 
 end module cgyro_field_mod
