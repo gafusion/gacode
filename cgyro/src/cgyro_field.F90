@@ -22,10 +22,12 @@ module cgyro_field_mod
   real, private, dimension(:,:,:), allocatable :: fcoef
   real, private, dimension(:,:,:), allocatable :: gcoef
   complex, private, dimension(:,:,:), allocatable :: field_loc
+  real, private, dimension(:,:,:,:), allocatable :: dvjvec_c
   !
   ! Field_v
   complex, private, dimension(:,:,:,:), allocatable :: field_v
   complex, private, dimension(:,:,:,:), allocatable :: field_loc_v
+  real, private, dimension(:,:,:,:), allocatable :: dvjvec_v
   !
   ! Field_e - used for error estimation, fluxes and timedata
 
@@ -43,11 +45,11 @@ contains
 ! Initialization and cleanup, to be called once
 !-----------------------------------------------------------------
 
-subroutine cgyro_field_c_init(n_field,nc,nt1,nt2)
+subroutine cgyro_field_c_init(n_field,nc,nv_loc,nt1,nt2)
 
   implicit none
 
-  integer, intent(in) :: n_field,nc,nt1,nt2
+  integer, intent(in) :: n_field,nc,nv_loc,nt1,nt2
 
   allocate(field(n_field,nc,nt1:nt2))
   ! private buffers
@@ -58,10 +60,11 @@ subroutine cgyro_field_c_init(n_field,nc,nt1,nt2)
      allocate(gcoef(5,nc,nt1:nt2))
   endif
   allocate(field_loc(n_field,nc,nt1:nt2))
+  allocate(dvjvec_c(n_field,nc,nv_loc,nt1:nt2))
 #if defined(OMPGPU)
-!$omp target enter data map(alloc:fcoef,gcoef,field,field_loc)
+!$omp target enter data map(alloc:fcoef,gcoef,field,field_loc,dvjvec_c)
 #elif defined(_OPENACC)
-!$acc enter data create(fcoef,gcoef,field,field_loc)
+!$acc enter data create(fcoef,gcoef,field,field_loc,dvjvec_c)
 #endif
 end subroutine cgyro_field_c_init
 
@@ -93,19 +96,25 @@ subroutine cgyro_field_e_init(n_field,nc,nt1,nt2)
   field_old3 = field_cur
 end subroutine cgyro_field_e_init
 
-subroutine cgyro_field_v_init(n_field,nc,nt1,nt2,n_sim,nc_cl1,nc_cl2)
+subroutine cgyro_field_v_init(n_field,nc,nv,nt1,nt2,n_sim,nc_cl1,nc_cl2)
 
   implicit none
 
-  integer, intent(in) :: n_field,nc,nt1,nt2,n_sim,nc_cl1,nc_cl2
+  integer, intent(in) :: n_field,nc,nv,nt1,nt2,n_sim,nc_cl1,nc_cl2
+
+  integer :: nc_loc_coll
+
+  nc_loc_coll = nc_cl2-nc_cl1+1
 
   ! nc and nc_loc_coll must be last, since it will be collated     
   allocate(field_v(n_field,nt1:nt2,n_sim,nc))
   allocate(field_loc_v(n_field,nt1:nt2,n_sim,nc_cl1:nc_cl2))
+  ! assuming all collision constants are the same between the simulations
+  allocate(dvjvec_v(n_field,nv,nt1:nt2,nc_loc_coll))
 #if defined(OMPGPU)
-!$omp target enter data map(alloc:field_v,field_loc_v)
+!$omp target enter data map(alloc:field_v,field_loc_v,dvjvec_v)
 #elif defined(_OPENACC)
-!$acc enter data create(field_v,field_loc_v)
+!$acc enter data create(field_v,field_loc_v,dvjvec_v)
 #endif
 
 end subroutine cgyro_field_v_init
@@ -117,10 +126,11 @@ subroutine cgyro_field_c_cleanup
 
   if(allocated(fcoef))  then ! one test enough
 #if defined(OMPGPU)
-!$omp target exit data map(release:fcoef,gcoef,field,field_loc)
+!$omp target exit data map(release:fcoef,gcoef,field,field_loc,dvjvec_c)
 #elif defined(_OPENACC)
-!$acc exit data delete(fcoef,gcoef,field,field_loc)
+!$acc exit data delete(fcoef,gcoef,field,field_loc,dvjvec_c)
 #endif
+    deallocate(dvjvec_c)
     deallocate(field_loc)
     deallocate(field)
     deallocate(gcoef)
@@ -147,10 +157,11 @@ subroutine cgyro_field_v_cleanup
 
   if(allocated(field_v))  then ! one test enough
 #if defined(OMPGPU)
-!$omp target exit data map(release:field_v,field_loc_v)
+!$omp target exit data map(release:field_v,field_loc_v,dvjvec_v)
 #elif defined(_OPENACC)
-!$acc exit data delete(field_v,field_loc_v)
+!$acc exit data delete(field_v,field_loc_v,dvjvec_v)
 #endif
+    deallocate(dvjvec_v)
     deallocate(field_loc_v)
     deallocate(field_v)
   endif
@@ -167,7 +178,7 @@ subroutine cgyro_field_v_notae_s(start_t)
   use parallel_lib, only : fsendf, parallel_lib_collect_field, &
        parallel_lib_nj_loc
   use timer_lib, only : timer_lib_in, timer_lib_out
-  use cgyro_globals, only : dvjvec_v, i_sim, nc, nc_cl1, nc_cl2, &
+  use cgyro_globals, only : i_sim, nc, nc_cl1, nc_cl2, &
        n_field, n_sim, nt2, nv, nv_loc
 
   implicit none
@@ -296,7 +307,7 @@ end subroutine cgyro_field_v_notae
 subroutine cgyro_field_c(update_cap)
   use parallel_lib, only : parallel_flib_sum_field
   use timer_lib, only : timer_lib_in, timer_lib_out
-  use cgyro_globals, only : ae_flag, cap_h_c, dvjvec_c, h_x, is_v, &
+  use cgyro_globals, only : ae_flag, cap_h_c, h_x, is_v, &
        jvec_c, nc, n_field, nt1, nt2, nv1, nv2, temp, z
   implicit none
 
@@ -455,7 +466,7 @@ end subroutine cgyro_field_c
 subroutine cgyro_field_c_ae
   use parallel_lib, only : parallel_flib_sum_field
   use timer_lib, only : timer_lib_in, timer_lib_out
-  use cgyro_globals, only : cap_h_c, dvjvec_c, h_x, is_v, jvec_c, &
+  use cgyro_globals, only : cap_h_c, h_x, is_v, jvec_c, &
        nc, n_field, nv1, nv2, temp, z
   implicit none
   integer :: ic,is,iv,iv_loc,i_f,itor
@@ -688,7 +699,7 @@ subroutine cgyro_field_coefficients
   use mpi
   use cgyro_globals, only : ae_flag, betae_unit, collision_field_model, &
        collision_model, dens2_rot, dens_ele, dens_ele_rot, dens_rot, &
-       dvjvec_c, dvjvec_v, i_err, ie_v, ir_c, is_v, it_c, ix_v, &
+       i_err, ie_v, ir_c, is_v, it_c, ix_v, &
        jvec_c, jvec_v, k_perp, lambda_debye, nc, nc_cl1, nc_cl2, &
        NEW_COMM_1, n_field, nt1, nt2, nv, nv1, nv2, px, rho, &
        sum_cur_x, sum_den_h, sum_den_x, temp, temp_ele, vfac, w_exi, &

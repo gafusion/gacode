@@ -229,22 +229,6 @@ subroutine cgyro_cleanup
      deallocate(jvec_c_nl)
   endif
   if(allocated(jvec_v))              deallocate(jvec_v)
-  if(allocated(dvjvec_c)) then
-#if defined(OMPGPU)
-!$omp target exit data map(release:dvjvec_c)
-#elif defined(_OPENACC)
-!$acc exit data delete(dvjvec_c)
-#endif
-     deallocate(dvjvec_c)
-  endif
-  if(allocated(dvjvec_v)) then
-#if defined(OMPGPU)
-!$omp target exit data map(release:dvjvec_v)
-#elif defined(_OPENACC)
-!$acc exit data delete(dvjvec_v)
-#endif
-     deallocate(dvjvec_v)
-  endif
   if(allocated(jxvec_c))  then
      deallocate(jxvec_c)
   endif

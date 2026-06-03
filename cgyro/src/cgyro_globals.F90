@@ -372,8 +372,6 @@ module cgyro_globals
   real, dimension(:,:,:,:,:), allocatable :: jvec_c_nl ! used by NL only
   real(KIND=REAL32), dimension(:,:,:,:,:), allocatable :: jvec_c_nl32 ! used by NL only
   real, dimension(:,:,:,:,:), allocatable :: jvec_v
-  real, dimension(:,:,:,:), allocatable :: dvjvec_c
-  real, dimension(:,:,:,:), allocatable :: dvjvec_v
   real, dimension(:,:,:,:), allocatable :: jxvec_c
   real, dimension(:,:,:), allocatable :: upfac1,upfac2
 

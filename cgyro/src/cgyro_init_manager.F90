@@ -171,7 +171,7 @@ subroutine cgyro_init_manager
      !----------------------------------------------------
 
      ! Global (undistributed) arrays
-     call cgyro_field_c_init(n_field,nc,nt1,nt2)
+     call cgyro_field_c_init(n_field,nc,nv_loc,nt1,nt2)
      ! Note: cgyro_field_e_init called in cgyro_init_h
 
      call cgyro_flux_init(n_radial,theta_plot,n_species,n_field,&
@@ -189,19 +189,12 @@ subroutine cgyro_init_manager
 #endif
 
      if ((collision_model /= 5) .AND. (collision_field_model == 1)) then
-       ! assuming all collision constants are the same between the simulations
-       allocate(dvjvec_v(n_field,nv,nt1:nt2,nc_loc_coll))
        ! we do not really need all n_sim
        ! but since n_sim is assumed to be small, the added cost is small
        ! and this drastically similifies the code
        ! But could be improved in the future
        allocate(jvec_v(n_field,nc_loc_coll,nt1:nt2,nv,n_sim))
-#if defined(OMPGPU)
-!$omp target enter data map(alloc:dvjvec_v)
-#elif defined(_OPENACC)
-!$acc enter data create(dvjvec_v)
-#endif
-       call cgyro_field_v_init(n_field,nc,nt1,nt2,n_sim,nc_cl1,nc_cl2)
+       call cgyro_field_v_init(n_field,nc,nv,nt1,nt2,n_sim,nc_cl1,nc_cl2)
      endif
 
      ! Velocity-distributed arrays
@@ -259,17 +252,16 @@ subroutine cgyro_init_manager
      allocate(omega_ss(n_field,nc,nv_loc,nt1:nt2))
      allocate(omega_sbeta(nc,nv_loc,nt1:nt2))
      allocate(jvec_c(n_field,nc,nv_loc,nt1:nt2))
-     allocate(dvjvec_c(n_field,nc,nv_loc,nt1:nt2))
      allocate(jxvec_c(n_field,nc,nv_loc,nt1:nt2))
      allocate(upfac1(nc,nv_loc,nt1:nt2))
      allocate(upfac2(nc,nv_loc,nt1:nt2))
      
 #if defined(OMPGPU)
 !$omp target enter data map(alloc:cap_h_c,cap_h_ct)
-!$omp target enter data map(alloc:cap_h_v,dvjvec_c)
+!$omp target enter data map(alloc:cap_h_v)
 #elif defined(_OPENACC)
 !$acc enter data create(cap_h_c,cap_h_ct)
-!$acc enter data create(cap_h_v,dvjvec_c)
+!$acc enter data create(cap_h_v)
 #endif
 
      if (upwind_single_flag == 0) then
