@@ -585,7 +585,6 @@ subroutine cgyro_cleanup
   ! From cgyro_init_arrays
   !!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  if(allocated(vfac))             deallocate(vfac)
   if(allocated(sum_den_h))        deallocate(sum_den_h)
   if(allocated(cderiv))           deallocate(cderiv)
   if(allocated(uderiv))           deallocate(uderiv)
@@ -596,14 +595,6 @@ subroutine cgyro_cleanup
 !$acc exit data delete(c_wave)
 #endif
      deallocate(c_wave)
-  endif
-  if(allocated(xzf)) then
-#if defined(OMPGPU)
-!$omp target exit data map(release:xzf)
-#elif defined(_OPENACC)
-!$acc exit data delete(xzf)
-#endif
-     deallocate(xzf)
   endif
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!

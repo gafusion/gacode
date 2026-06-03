@@ -275,17 +275,6 @@ subroutine cgyro_init_arrays
   !------------------------------------------------------------------------------
   ! Coefficient setup
   !
-  allocate(vfac(nv_loc))
-  do iv=nv1,nv2
-
-     iv_loc = iv-nv1+1
-     is = is_v(iv)
-     ix = ix_v(iv)
-     ie = ie_v(iv)
-
-     vfac(iv_loc) = w_exi(ie,ix)*z(is)**2/temp(is)*dens(is)
-
-  enddo
 
   allocate(sum_den_h(n_theta))
   sum_den_h(:) = 0.0
@@ -304,53 +293,12 @@ subroutine cgyro_init_arrays
      sum_den_h(:) = sum_den_h(:) + dens_ele*dens_ele_rot(:)/temp_ele
   endif
 
-  allocate(sum_den_x(nc,nt1:nt2))
-  if (n_field > 1) allocate(sum_cur_x(nc,nt1:nt2))
-
   call cgyro_field_c_init_coefficients
   if ((collision_model /= 5) .AND. (collision_field_model == 1)) then
     call cgyro_field_v_init_coefficients
   endif
   !------------------------------------------------------------------------------
 
-  !-------------------------------------------------------------------------
-  ! Zonal flow with adiabatic electrons:
-  !
-  if (nt1 == 0 .and. ae_flag == 1) then
-     ! since this applies only to itor == 0, we do not need to extend the matrix
-
-     allocate(xzf(n_radial,n_theta,n_theta))
-     xzf(:,:,:) = 0.0     
-     do ir=1,n_radial
-        do it=1,n_theta
-           ! my_toroidal==0
-           xzf(ir,it,it) = k_perp(ic_c(ir,it),0)**2*lambda_debye**2 &
-                * dens_ele/temp_ele+sum_den_x(ic_c(ir,it),0)
-           do jt=1,n_theta
-              xzf(ir,it,jt) = xzf(ir,it,jt) &
-                   - dens_ele*dens_ele_rot(it)/temp_ele*w_theta(jt)
-           enddo
-        enddo
-     enddo
-
-     allocate(work(n_theta))
-     allocate(i_piv(n_theta))
-     do ir=1,n_radial
-        call DGETRF(n_theta,n_theta,xzf(ir,:,:),n_theta,i_piv,info)
-        call DGETRI(n_theta,xzf(ir,:,:),n_theta,i_piv,work,n_theta,info)
-     enddo
-     deallocate(i_piv)
-     deallocate(work)
-
-#if defined(OMPGPU)
-!$omp target enter data map(to:xzf)
-#elif defined(_OPENACC)
-!$acc enter data copyin(xzf)
-#endif
-  endif
-
-  if (n_field > 1) deallocate(sum_cur_x)
-  deallocate(sum_den_x)
 
   !-------------------------------------------------------------------------
 

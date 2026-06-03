@@ -171,7 +171,7 @@ subroutine cgyro_init_manager
      !----------------------------------------------------
 
      ! Global (undistributed) arrays
-     call cgyro_field_c_init(n_field,nc,nv_loc,nt1,nt2)
+     call cgyro_field_c_init(n_field,n_radial,n_theta,nv_loc,nt1,nt2,ae_flag)
      ! Note: cgyro_field_e_init called in cgyro_init_h
 
      call cgyro_flux_init(n_radial,theta_plot,n_species,n_field,&

@@ -23,6 +23,8 @@ module cgyro_field_mod
   real, private, dimension(:,:,:), allocatable :: gcoef
   complex, private, dimension(:,:,:), allocatable :: field_loc
   real, private, dimension(:,:,:,:), allocatable :: dvjvec_c
+  ! n=0 test variables
+  real, private, dimension(:,:,:), allocatable :: xzf
   !
   ! Field_v
   complex, private, dimension(:,:,:,:), allocatable :: field_v
@@ -45,11 +47,16 @@ contains
 ! Initialization and cleanup, to be called once
 !-----------------------------------------------------------------
 
-subroutine cgyro_field_c_init(n_field,nc,nv_loc,nt1,nt2)
+subroutine cgyro_field_c_init(n_field,n_radial,n_theta,nv_loc,nt1,nt2,ae_flag)
 
   implicit none
 
-  integer, intent(in) :: n_field,nc,nv_loc,nt1,nt2
+  integer, intent(in) :: n_field,n_radial,n_theta,nv_loc,nt1,nt2,ae_flag
+
+
+  integer :: nc
+
+  nc = n_radial*n_theta
 
   allocate(field(n_field,nc,nt1:nt2))
   ! private buffers
@@ -66,6 +73,15 @@ subroutine cgyro_field_c_init(n_field,nc,nv_loc,nt1,nt2)
 #elif defined(_OPENACC)
 !$acc enter data create(fcoef,gcoef,field,field_loc,dvjvec_c)
 #endif
+  if (nt1 == 0 .and. ae_flag == 1) then
+     ! since this applies only to itor == 0, we do not need to extend the matrix
+     allocate(xzf(n_radial,n_theta,n_theta))
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:xzf)
+#elif defined(_OPENACC)
+!$acc enter data create(xzf)
+#endif
+  endif
 end subroutine cgyro_field_c_init
 
 subroutine cgyro_field_e_init(n_field,nc,nt1,nt2)
@@ -135,6 +151,14 @@ subroutine cgyro_field_c_cleanup
     deallocate(field)
     deallocate(gcoef)
     deallocate(fcoef)
+  endif
+  if(allocated(xzf))  then ! separate allocation logic
+#if defined(OMPGPU)
+!$omp target exit data map(release:xzf)
+#elif defined(_OPENACC)
+!$acc exit data delete(xzf)
+#endif
+    deallocate(xzf)
   endif
 end subroutine cgyro_field_c_cleanup
 
@@ -570,7 +594,7 @@ end subroutine cgyro_field_c_ae
 !-----------------------------------------------------------------
 subroutine cgyro_field_ae_c
 
-  use cgyro_globals, only : n_radial, n_theta, px, xzf, &
+  use cgyro_globals, only : n_radial, n_theta, px, &
        zf_test_mode
 
   implicit none
@@ -697,21 +721,43 @@ end subroutine cgyro_field_e_get_diff1
 subroutine cgyro_field_c_init_coefficients
 
   use mpi
-  use cgyro_globals, only : ae_flag, betae_unit, &
+  use cgyro_globals, only : ae_flag, betae_unit, nv_loc, &
        dens2_rot, dens_ele, dens_ele_rot, dens_rot, &
-       i_err, ie_v, ir_c, is_v, it_c, ix_v, &
+       i_err, ie_v, ir_c, is_v, it_c, ix_v, ic_c, &
        jvec_c, k_perp, lambda_debye, nc, nc_cl1, nc_cl2, &
        NEW_COMM_1, n_field, nt1, nt2, nv, nv1, nv2, px, rho, &
-       sum_cur_x, sum_den_h, sum_den_x, temp, temp_ele, vfac, w_exi, &
-       z, zf_test_mode
+       sum_den_h, temp, temp_ele, w_exi, &
+       z, zf_test_mode, n_radial, n_theta, dens, w_theta
 
   implicit none
 
   integer :: ic,ic_loc,ir,it,is,ie,ix,iv,iv_loc,itor
+  integer :: jt
   real :: sum_one
+  real, dimension(:), allocatable :: vfac
+  real, dimension(:,:), allocatable :: sum_den_x,sum_cur_x
   real, dimension(:,:), allocatable :: sum_loc
   real, dimension(:,:), allocatable :: pb11,pb12,pb21,pb22
+  ! LAPACK work arrays 
+  real, dimension(:), allocatable :: work  
+  integer, dimension(:), allocatable :: i_piv
+  integer :: info
  
+  allocate(vfac(nv_loc))
+  do iv=nv1,nv2
+
+     iv_loc = iv-nv1+1
+     is = is_v(iv)
+     ix = ix_v(iv)
+     ie = ie_v(iv)
+
+     vfac(iv_loc) = w_exi(ie,ix)*z(is)**2/temp(is)*dens(is)
+
+  enddo
+
+  allocate(sum_den_x(nc,nt1:nt2))
+  if (n_field > 1) allocate(sum_cur_x(nc,nt1:nt2))
+
   !-------------------------------------------------------------------------
   ! Field equation prefactors, sums.
   !
@@ -937,7 +983,44 @@ subroutine cgyro_field_c_init_coefficients
      enddo
    enddo
   enddo
+
   !-------------------------------------------------------------------------
+  ! Zonal flow with adiabatic electrons:
+  !
+  if (nt1 == 0 .and. ae_flag == 1) then
+     ! since this applies only to itor == 0, we do not need to extend the matrix
+     xzf(:,:,:) = 0.0     
+     do ir=1,n_radial
+        do it=1,n_theta
+           ! my_toroidal==0
+           xzf(ir,it,it) = k_perp(ic_c(ir,it),0)**2*lambda_debye**2 &
+                * dens_ele/temp_ele+sum_den_x(ic_c(ir,it),0)
+           do jt=1,n_theta
+              xzf(ir,it,jt) = xzf(ir,it,jt) &
+                   - dens_ele*dens_ele_rot(it)/temp_ele*w_theta(jt)
+           enddo
+        enddo
+     enddo
+
+     allocate(work(n_theta))
+     allocate(i_piv(n_theta))
+     do ir=1,n_radial
+        call DGETRF(n_theta,n_theta,xzf(ir,:,:),n_theta,i_piv,info)
+        call DGETRI(n_theta,xzf(ir,:,:),n_theta,i_piv,work,n_theta,info)
+     enddo
+     deallocate(i_piv)
+     deallocate(work)
+
+#if defined(OMPGPU)
+!$omp target update to(xzf)
+#elif defined(_OPENACC)
+!$acc update device(xzf)
+#endif
+  endif
+
+  if (n_field > 1) deallocate(sum_cur_x)
+  deallocate(sum_den_x)
+  deallocate(vfac)
 
 #if defined(OMPGPU)
 !$omp target update to(fcoef,gcoef,dvjvec_c)

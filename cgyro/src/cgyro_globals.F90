@@ -452,11 +452,7 @@ module cgyro_globals
   !
   ! Field solve variables
   real, dimension(:), allocatable :: sum_den_h
-  real, dimension(:,:), allocatable :: sum_den_x,sum_cur_x
-  real, dimension(:), allocatable :: vfac
   !
-  ! n=0 test variables
-  real, dimension(:,:,:), allocatable :: xzf
    !
   ! Equilibrium/geometry arrays
   integer :: it0
