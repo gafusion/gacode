@@ -213,12 +213,17 @@ end subroutine cgyro_flux_sync_cap_h_c_cur
 subroutine cgyro_flux
 
   use mpi
-  use cgyro_globals
+  use cgyro_globals, only : bmag, bigr, btor, delta_t, dens2_rot, &
+       energy, i_c, i_err, ic_c, ie_v, ir_c, is_v, it_c, itp, &
+       ix_v, jvec_c, jxvec_c, k_theta_base, lambda_rot, mach, &
+       mass, nc, NEW_COMM_1, n_field, n_global, nonlinear_flag, &
+       n_radial, nt1, nt2, nv1, nv2, pi, rho, rmaj, t_current, &
+       temp, vel2, vth, w_exi, w_theta, xi, z
   use cgyro_field_mod, only : field_cur, field_dot
 
   implicit none
 
-  integer :: ie,ix,is,it,ir,i_field,itor
+  integer :: ic,ie,ix,is,it,ir,i_field,itor,iv,iv_loc
   integer :: l,icl
   real :: dv,cn
   real :: vpar
