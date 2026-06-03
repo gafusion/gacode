@@ -3,11 +3,12 @@ subroutine cgyro_init_collision
   use timer_lib
 
   use cgyro_globals
+  use cgyro_field_mod, only: sum_den_h
   use cgyro_coll_data, only : cmat, cmat_e1, cmat_fp32, cmat_stripes, &
        copy_from_cmat, copy_into_cmat, copy_into_cmat_fp32, n_low_energy
   use mpi
   use cgyro_io
-  use cgyro_init_collision_landau
+  use cgyro_init_collision_landau, only: cgyro_init_landau
 
   implicit none
 

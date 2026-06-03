@@ -12,7 +12,8 @@ subroutine cgyro_error_estimate
   use mpi
   use cgyro_globals
   use cgyro_io
-  use cgyro_field_mod, only : cgyro_field_e_compute, field, field_dot
+  use cgyro_field_mod, only : cgyro_field_e_compute
+  use cgyro_flux_mod, only : cgyro_flux_save_cap_h_c
   use timer_lib
 
   implicit none
@@ -23,18 +24,6 @@ subroutine cgyro_error_estimate
   real, dimension(2) :: error_loc
 
   real :: norm_loc_s,error_loc_s,h_s,r_s
-
-  ! epar
-  complex :: wderiv,thfac
-  integer :: ir,it
-  ! ir loop specific
-  integer :: itorbox
-  integer :: jr0(0:2)   ! n_theta*(pre-compute jr-1)
-  ! it loop specific
-  integer :: id
-  integer :: itd   ! precompute modulo(it+id-1,n_theta)+1, use for iteration
-  integer :: itd_class
-  integer :: jc
 
 #if (!defined(OMPGPU)) && defined(_OPENACC)
   ! launch Estimate of collisionless error via 3rd-order linear estimate async ahead of time on GPU/ACC
@@ -54,78 +43,15 @@ subroutine cgyro_error_estimate
   enddo
 #endif
 
-  call cgyro_field_e_compute(delta_t, norm_loc_s,error_loc_s)
-
   call timer_lib_in('field')
+
+  call cgyro_field_e_compute(delta_t, norm_loc_s,error_loc_s)
 
   norm_loc(1)  = norm_loc_s
   error_loc(1) = error_loc_s
 
-  if (nonlinear_flag == 0) then
-
-     epar(:,nt1:nt2) = 0.0
-     if (n_field >= 2) epar(:,nt1:nt2) = -field_dot(2,:,nt1:nt2)
-!$omp parallel do collapse(2) private(itorbox,jr0,wderiv,ic,itd,itd_class,jc,thfac,id)
-     do itor=nt1,nt2
-        do ir=1,n_radial
-           itorbox = itor*box_size*sign_qs
-
-           jr0(0) = n_theta*modulo(ir-itorbox-1,n_radial)
-           jr0(1) = n_theta*(ir-1)
-           jr0(2) = n_theta*modulo(ir+itorbox-1,n_radial)
-
-           do it=1,n_theta
-
-              wderiv = 0.0
-              ic = (ir-1)*n_theta + it
-
-              itd = n_theta+it-nup_theta
-              itd_class = 0
-              jc = jr0(itd_class)+itd
-              thfac = thfac_itor(itd_class,itor)
-              do id=-nup_theta,nup_theta
-                 if (itd > n_theta) then
-                    itd = itd - n_theta
-                    itd_class = itd_class + 1
-                    jc = jr0(itd_class)+itd
-                    thfac = thfac_itor(itd_class,itor)
-                 endif
-                 wderiv = wderiv + thfac*cderiv(id)*field(1,jc,itor)
-                 itd = itd + 1
-                 jc = jc + 1
-              enddo
-
-              ! E_par = - (1/c) (d/dt) A_par - b dot grad phi
-              epar(ic,itor) = epar(ic,itor) - wderiv/(q*rmaj*g_theta(it))
-
-           enddo
-        enddo
-     enddo
-
-  endif
-
-#if defined(OMPGPU)
-!$omp target teams distribute parallel do simd collapse(3) &
-!$omp&   private(iv_loc)
-#elif defined(_OPENACC)
-!$acc parallel loop collapse(3) gang vector private(iv_loc) &
-!$acc&         present(cap_h_c_dot,cap_h_c,cap_h_c_old,cap_h_c_old2) &
-!$acc&         present(nt1,nt2,nv1,nv2,nc) copyin(delta_t) default(none)
-#else
-!$omp parallel do collapse(3) private(iv_loc)
-#endif
-  do itor=nt1,nt2
-   do iv=nv1,nv2
-     do ic=1,nc
-        iv_loc = iv-nv1+1
-        cap_h_c_dot(ic,iv_loc,itor) = (3*cap_h_c(ic,iv_loc,itor) - &
-                4*cap_h_c_old(ic,iv_loc,itor) + &
-                cap_h_c_old2(ic,iv_loc,itor) )/(2*delta_t)
-        cap_h_c_old2(ic,iv_loc,itor) = cap_h_c_old(ic,iv_loc,itor)
-        cap_h_c_old(ic,iv_loc,itor) = cap_h_c(ic,iv_loc,itor)
-     enddo
-   enddo
-  enddo
+  ! keep cap_h_c history, will be needed in flux
+  call cgyro_flux_save_cap_h_c
 
   call timer_lib_out('field')
 
@@ -207,3 +133,68 @@ subroutine cgyro_error_estimate
   endif
 
 end subroutine cgyro_error_estimate
+
+subroutine cgyro_error_estimate_epar
+
+  use cgyro_globals, only : epar, nt1, nt2, n_field, n_radial, box_size, &
+       sign_qs, n_theta, nup_theta, thfac_itor, cderiv, q, rmaj, g_theta
+  use cgyro_field_mod, only : field_cur, field_dot
+
+  implicit none
+
+  complex :: wderiv,thfac
+  integer :: ir,itor,it,ic
+  ! ir loop specific
+  integer :: itorbox
+  integer :: jr0(0:2)   ! n_theta*(pre-compute jr-1)
+  ! it loop specific
+  integer :: id
+  integer :: itd   ! precompute modulo(it+id-1,n_theta)+1, use for iteration
+  integer :: itd_class
+  integer :: jc
+
+  !A reminder:
+  !if (nonlinear_flag == 0) then
+
+     epar(:,nt1:nt2) = 0.0
+     if (n_field >= 2) epar(:,nt1:nt2) = -field_dot(2,:,nt1:nt2)
+!$omp parallel do collapse(2) private(itorbox,jr0,wderiv,ic,itd,itd_class,jc,thfac,id)
+     do itor=nt1,nt2
+        do ir=1,n_radial
+           itorbox = itor*box_size*sign_qs
+
+           jr0(0) = n_theta*modulo(ir-itorbox-1,n_radial)
+           jr0(1) = n_theta*(ir-1)
+           jr0(2) = n_theta*modulo(ir+itorbox-1,n_radial)
+
+           do it=1,n_theta
+
+              wderiv = 0.0
+              ic = (ir-1)*n_theta + it
+
+              itd = n_theta+it-nup_theta
+              itd_class = 0
+              jc = jr0(itd_class)+itd
+              thfac = thfac_itor(itd_class,itor)
+              do id=-nup_theta,nup_theta
+                 if (itd > n_theta) then
+                    itd = itd - n_theta
+                    itd_class = itd_class + 1
+                    jc = jr0(itd_class)+itd
+                    thfac = thfac_itor(itd_class,itor)
+                 endif
+                 wderiv = wderiv + thfac*cderiv(id)*field_cur(1,jc,itor)
+                 itd = itd + 1
+                 jc = jc + 1
+              enddo
+
+              ! E_par = - (1/c) (d/dt) A_par - b dot grad phi
+              epar(ic,itor) = epar(ic,itor) - wderiv/(q*rmaj*g_theta(it))
+
+           enddo
+        enddo
+     enddo
+
+  !endif
+
+end subroutine cgyro_error_estimate_epar

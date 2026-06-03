@@ -9,8 +9,9 @@ subroutine cgyro_write_timedata
 
   use mpi
   use cgyro_globals
-  use cgyro_field_mod, only : field
-  use cgyro_flux_mod
+  use cgyro_field_mod, only : field_cur
+  use cgyro_flux_mod, only: cflux,gflux,moment, &
+          cgyro_flux_sync_cap_h_c_cur, cgyro_flux
   use cgyro_step
 
   implicit none
@@ -30,6 +31,8 @@ subroutine cgyro_write_timedata
 
   ! Increment the print counter on actual output steps
   if (io_control == 2) i_current = i_current+1
+
+  call cgyro_flux_sync_cap_h_c_cur
 
   !---------------------------------------------------------------------------
   if (n_toroidal == 1 .and. h_print_flag == 1) then
@@ -84,7 +87,7 @@ subroutine cgyro_write_timedata
         ir = ir_c(ic)
         it = it_c(ic)
         if (itp(it) > 0) then
-           field_plot(ir,itp(it),nt1:nt2) = field(i_field,ic,nt1:nt2)
+           field_plot(ir,itp(it),nt1:nt2) = field_cur(i_field,ic,nt1:nt2)
         endif
      enddo
 
@@ -101,7 +104,7 @@ subroutine cgyro_write_timedata
      ! Do not include exchange in precision
      call write_precision(trim(path)//runfile_prec,sum(abs(real(gflux(0,:,1:3,:,:)))))
   else
-     call write_precision(trim(path)//runfile_prec,sum(abs(field)))
+     call write_precision(trim(path)//runfile_prec,sum(abs(field_cur)))
   endif
 
   !------------------------------------------------------------------
@@ -117,7 +120,7 @@ subroutine cgyro_write_timedata
 
         do ir=1,n_radial
            do it=1,n_theta
-              ftemp(it,ir) = field(i_field,ic_c(ir,it),nt1)
+              ftemp(it,ir) = field_cur(i_field,ic_c(ir,it),nt1)
            enddo
         enddo
 
@@ -134,6 +137,7 @@ subroutine cgyro_write_timedata
              ftemp(:,:)/a_norm,size(ftemp))
      enddo
      if (has_balloon) then
+        call cgyro_error_estimate_epar
         do ir=1,n_radial
            do it=1,n_theta
               ftemp(it,ir) = epar(ic_c(ir,it),nt1)
@@ -591,6 +595,7 @@ subroutine write_distribution(datafile)
 
   use mpi
   use cgyro_globals
+  use cgyro_flux_mod, only: cap_h_c_cur
 
   !------------------------------------------------------
   implicit none
@@ -625,8 +630,8 @@ subroutine write_distribution(datafile)
 
      allocate(h_x_glob(nc,nv))
      ! Collect distribution onto process 0
-     call MPI_GATHER(cap_h_c(:,:,nt1),&
-          size(cap_h_c(:,:,nt1)),&
+     call MPI_GATHER(cap_h_c_cur(:,:,nt1),&
+          size(cap_h_c_cur(:,:,nt1)),&
           MPI_DOUBLE_COMPLEX,&
           h_x_glob(:,:),&
           size(h_x_glob),&

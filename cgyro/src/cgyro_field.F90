@@ -15,17 +15,30 @@ module cgyro_field_mod
 
   !
   ! Field_c
+
+  ! Note: GPU only on GPU systems
+  complex, dimension(:,:,:), allocatable :: field
+  ! CPU-only
+  real, dimension(:), allocatable :: sum_den_h
+  !
   real, private, dimension(:,:,:), allocatable :: fcoef
   real, private, dimension(:,:,:), allocatable :: gcoef
-  complex, dimension(:,:,:), allocatable :: field
   complex, private, dimension(:,:,:), allocatable :: field_loc
+  real, private, dimension(:,:,:,:), allocatable :: dvjvec_c
+  ! n=0 test variables
+  real, private, dimension(:,:,:), allocatable :: xzf
   !
   ! Field_v
-  complex, dimension(:,:,:,:), allocatable :: field_v
+  complex, private, dimension(:,:,:,:), allocatable :: field_v
   complex, private, dimension(:,:,:,:), allocatable :: field_loc_v
+  real, private, dimension(:,:,:,:), allocatable :: dvjvec_v
   !
-  ! Field_e - used for error estimation and fluxes
+  ! Field_e - used for error estimation, fluxes and timedata
+
+  ! Note: Cannot be used on GPU
   complex, dimension(:,:,:), allocatable :: field_dot
+  complex, dimension(:,:,:), allocatable :: field_cur
+  !
   complex, private, dimension(:,:,:), allocatable :: field_old
   complex, private, dimension(:,:,:), allocatable :: field_old2
   complex, private, dimension(:,:,:), allocatable :: field_old3
@@ -36,25 +49,44 @@ contains
 ! Initialization and cleanup, to be called once
 !-----------------------------------------------------------------
 
-subroutine cgyro_field_c_init(n_field,nc,nt1,nt2)
+subroutine cgyro_field_c_init(n_field,n_radial,n_theta,nv_loc,nt1,nt2,ae_flag)
 
   implicit none
 
-  integer, intent(in) :: n_field,nc,nt1,nt2
+  integer, intent(in) :: n_field,n_radial,n_theta,nv_loc,nt1,nt2,ae_flag
 
+
+  integer :: nc
+
+  nc = n_radial*n_theta
+
+  allocate(field(n_field,nc,nt1:nt2))
+  ! private buffers
   allocate(fcoef(n_field,nc,nt1:nt2))
   if (n_field < 3) then
      allocate(gcoef(n_field,nc,nt1:nt2))
   else
      allocate(gcoef(5,nc,nt1:nt2))
   endif
-  allocate(field(n_field,nc,nt1:nt2))
   allocate(field_loc(n_field,nc,nt1:nt2))
+  allocate(dvjvec_c(n_field,nc,nv_loc,nt1:nt2))
 #if defined(OMPGPU)
-!$omp target enter data map(alloc:fcoef,gcoef,field,field_loc)
+!$omp target enter data map(alloc:fcoef,gcoef,field,field_loc,dvjvec_c)
 #elif defined(_OPENACC)
-!$acc enter data create(fcoef,gcoef,field,field_loc)
+!$acc enter data create(fcoef,gcoef,field,field_loc,dvjvec_c)
 #endif
+  ! CPU only
+  allocate(sum_den_h(n_theta))
+
+  if (nt1 == 0 .and. ae_flag == 1) then
+     ! since this applies only to itor == 0, we do not need to extend the matrix
+     allocate(xzf(n_radial,n_theta,n_theta))
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:xzf)
+#elif defined(_OPENACC)
+!$acc enter data create(xzf)
+#endif
+  endif
 end subroutine cgyro_field_c_init
 
 subroutine cgyro_field_e_init(n_field,nc,nt1,nt2)
@@ -65,29 +97,45 @@ subroutine cgyro_field_e_init(n_field,nc,nt1,nt2)
 
   ! These are in CPU-memory only
   allocate(field_dot(n_field,nc,nt1:nt2))
+  allocate(field_cur(n_field,nc,nt1:nt2))
   allocate(field_old(n_field,nc,nt1:nt2))
   allocate(field_old2(n_field,nc,nt1:nt2))
   allocate(field_old3(n_field,nc,nt1:nt2))
 
+  ! initialize field_cur with values of field
+  ! But field only have values on GPU, so fetch it from there
+#if defined(OMPGPU)
+!$omp target update from(field)
+#elif defined(_OPENACC)
+!$acc update host(field)
+#endif
+  field_cur = field
+
   ! Initialize time-history of fields (-3,-2,-1) to initial field.
-  field_old  = field
-  field_old2 = field
-  field_old3 = field
+  field_old  = field_cur
+  field_old2 = field_cur
+  field_old3 = field_cur
 end subroutine cgyro_field_e_init
 
-subroutine cgyro_field_v_init(n_field,nc,nt1,nt2,n_sim,nc_cl1,nc_cl2)
+subroutine cgyro_field_v_init(n_field,nc,nv,nt1,nt2,n_sim,nc_cl1,nc_cl2)
 
   implicit none
 
-  integer, intent(in) :: n_field,nc,nt1,nt2,n_sim,nc_cl1,nc_cl2
+  integer, intent(in) :: n_field,nc,nv,nt1,nt2,n_sim,nc_cl1,nc_cl2
+
+  integer :: nc_loc_coll
+
+  nc_loc_coll = nc_cl2-nc_cl1+1
 
   ! nc and nc_loc_coll must be last, since it will be collated     
   allocate(field_v(n_field,nt1:nt2,n_sim,nc))
   allocate(field_loc_v(n_field,nt1:nt2,n_sim,nc_cl1:nc_cl2))
+  ! assuming all collision constants are the same between the simulations
+  allocate(dvjvec_v(n_field,nv,nt1:nt2,nc_loc_coll))
 #if defined(OMPGPU)
-!$omp target enter data map(alloc:field_v,field_loc_v)
+!$omp target enter data map(alloc:field_v,field_loc_v,dvjvec_v)
 #elif defined(_OPENACC)
-!$acc enter data create(field_v,field_loc_v)
+!$acc enter data create(field_v,field_loc_v,dvjvec_v)
 #endif
 
 end subroutine cgyro_field_v_init
@@ -98,15 +146,25 @@ subroutine cgyro_field_c_cleanup
   implicit none
 
   if(allocated(fcoef))  then ! one test enough
+    deallocate(sum_den_h)
 #if defined(OMPGPU)
-!$omp target exit data map(release:fcoef,gcoef,field,field_loc)
+!$omp target exit data map(release:fcoef,gcoef,field,field_loc,dvjvec_c)
 #elif defined(_OPENACC)
-!$acc exit data delete(fcoef,gcoef,field,field_loc)
+!$acc exit data delete(fcoef,gcoef,field,field_loc,dvjvec_c)
 #endif
+    deallocate(dvjvec_c)
     deallocate(field_loc)
     deallocate(field)
     deallocate(gcoef)
     deallocate(fcoef)
+  endif
+  if(allocated(xzf))  then ! separate allocation logic
+#if defined(OMPGPU)
+!$omp target exit data map(release:xzf)
+#elif defined(_OPENACC)
+!$acc exit data delete(xzf)
+#endif
+    deallocate(xzf)
   endif
 end subroutine cgyro_field_c_cleanup
 
@@ -118,6 +176,7 @@ subroutine cgyro_field_e_cleanup
     deallocate(field_old3)
     deallocate(field_old2)
     deallocate(field_old)
+    deallocate(field_cur)
     deallocate(field_dot)
   endif
 end subroutine cgyro_field_e_cleanup
@@ -128,10 +187,11 @@ subroutine cgyro_field_v_cleanup
 
   if(allocated(field_v))  then ! one test enough
 #if defined(OMPGPU)
-!$omp target exit data map(release:field_v,field_loc_v)
+!$omp target exit data map(release:field_v,field_loc_v,dvjvec_v)
 #elif defined(_OPENACC)
-!$acc exit data delete(field_v,field_loc_v)
+!$acc exit data delete(field_v,field_loc_v,dvjvec_v)
 #endif
+    deallocate(dvjvec_v)
     deallocate(field_loc_v)
     deallocate(field_v)
   endif
@@ -145,15 +205,10 @@ end subroutine cgyro_field_v_cleanup
 ! like cgyro_field_v_notae, but with parametrized start_t
 
 subroutine cgyro_field_v_notae_s(start_t)
-#if defined(OMPGPU) || defined(_OPENACC)
-  use parallel_lib, only : fsendf, parallel_lib_collect_field_gpu, &
-       parallel_lib_nj_loc
-#else
   use parallel_lib, only : fsendf, parallel_lib_collect_field, &
        parallel_lib_nj_loc
-#endif
   use timer_lib, only : timer_lib_in, timer_lib_out
-  use cgyro_globals, only : dvjvec_v, i_sim, nc, nc_cl1, nc_cl2, &
+  use cgyro_globals, only : i_sim, nc, nc_cl1, nc_cl2, &
        n_field, n_sim, nt2, nv, nv_loc
 
   implicit none
@@ -221,11 +276,7 @@ subroutine cgyro_field_v_notae_s(start_t)
   call timer_lib_in('field_com')
 
   ! Use aggregate comm, since it is used in step_collision
-#if defined(OMPGPU) || defined(_OPENACC)
-  call parallel_lib_collect_field_gpu(field_loc_v, field_v)
-#else
   call parallel_lib_collect_field(field_loc_v, field_v)
-#endif
 
   call timer_lib_out('field_com')
 
@@ -284,13 +335,9 @@ end subroutine cgyro_field_v_notae
 !-----------------------------------------------------------------
 
 subroutine cgyro_field_c(update_cap)
-#if defined(OMPGPU) || defined(_OPENACC)
-  use parallel_lib, only : parallel_flib_sum_field_gpu
-#else
   use parallel_lib, only : parallel_flib_sum_field
-#endif
   use timer_lib, only : timer_lib_in, timer_lib_out
-  use cgyro_globals, only : ae_flag, cap_h_c, dvjvec_c, h_x, is_v, &
+  use cgyro_globals, only : ae_flag, cap_h_c, h_x, is_v, &
        jvec_c, nc, n_field, nt1, nt2, nv1, nv2, temp, z
   implicit none
 
@@ -339,11 +386,7 @@ subroutine cgyro_field_c(update_cap)
   call timer_lib_out('field')
   call timer_lib_in('field_com')
 
-#if defined(OMPGPU) || defined(_OPENACC)
-  call parallel_flib_sum_field_gpu(field_loc,field)
-#else
   call parallel_flib_sum_field(field_loc,field)
-#endif
 
   call timer_lib_out('field_com')
   call timer_lib_in('field')
@@ -369,18 +412,7 @@ subroutine cgyro_field_c(update_cap)
   itor2=nt2
 
   if (nt1 == 0 .and. ae_flag == 1) then
-    ! Note: Called rarely, use the CPu version
-#if defined(OMPGPU)
-!$omp target update from(field)
-#elif defined(_OPENACC)
-!$acc update host(field)
-#endif
     call cgyro_field_ae_c
-#if defined(OMPGPU)
-!$omp target update to(field)
-#elif defined(_OPENACC)
-!$acc update device(field)
-#endif
     ! mark we already processed ==0, nothing else to do there
     itor1=1
   endif
@@ -462,13 +494,9 @@ end subroutine cgyro_field_c
 
 ! like cgyro_field_c, but assume (my_toroidal == 0 .and. ae_flag == 1)
 subroutine cgyro_field_c_ae
-#if defined(OMPGPU) || defined(_OPENACC)
-  use parallel_lib, only : parallel_flib_sum_field_gpu
-#else
   use parallel_lib, only : parallel_flib_sum_field
-#endif
   use timer_lib, only : timer_lib_in, timer_lib_out
-  use cgyro_globals, only : cap_h_c, dvjvec_c, h_x, is_v, jvec_c, &
+  use cgyro_globals, only : cap_h_c, h_x, is_v, jvec_c, &
        nc, n_field, nv1, nv2, temp, z
   implicit none
   integer :: ic,is,iv,iv_loc,i_f,itor
@@ -513,13 +541,8 @@ subroutine cgyro_field_c_ae
   call timer_lib_out('field')
   call timer_lib_in('field_com')
 
-#if defined(OMPGPU) || defined(_OPENACC)
-  call parallel_flib_sum_field_gpu(field_loc(:,:,0:0), &
-                                  field(:,:,0:0))
-#else
   call parallel_flib_sum_field(field_loc(:,:,0:0), &
                               field(:,:,0:0))
-#endif
 
   call timer_lib_out('field_com')
   call timer_lib_in('field')
@@ -538,19 +561,9 @@ subroutine cgyro_field_c_ae
       enddo
      enddo
   endif
+
   ! Poisson LHS factors
-  ! Note: Called rarely, use the CPU version
-#if defined(OMPGPU)
-!$omp target update from(field(:,:,0:0))
-#elif defined(_OPENACC)
-!$acc update host(field(:,:,0:0))
-#endif
-    call cgyro_field_ae_c
-#if defined(OMPGPU)
-!$omp target update to(field(:,:,0:0))
-#elif defined(_OPENACC)
-!$acc update device(field(:,:,0:0))
-#endif
+  call cgyro_field_ae_c
 
 #if defined(OMPGPU)
 !$omp target teams distribute parallel do simd collapse(3) &
@@ -587,29 +600,53 @@ end subroutine cgyro_field_c_ae
 !-----------------------------------------------------------------
 subroutine cgyro_field_ae_c
 
-  use cgyro_globals, only : ic_c, n_radial, n_theta, px, xzf, &
+  use cgyro_globals, only : n_radial, n_theta, px, &
        zf_test_mode
 
   implicit none
 
   integer :: ir,i,j
-  complex, dimension(n_theta) :: pvec_in,pvec_out
+  complex, dimension(n_theta) :: pvec_in
+  complex :: pvec_out
 
+  ! ic_c(ir,it) = (ir-1)*n_theta + it
+#if defined(OMPGPU)
+!$omp target teams distribute private(pvec_in,pvec_out,i,j)
+#elif defined(_OPENACC)
+!$acc parallel loop gang private(pvec_in,pvec_out,i,j) present(field,xzf)
+#else
+!$omp parallel do private(pvec_in,pvec_out,i,j)
+#endif
   do ir=1,n_radial
         if ((px(ir) == 0 .or. ir == 1) .and. zf_test_mode == 0) then
-           field(1,ic_c(ir,:),0) = 0.0
+#if defined(OMPGPU)
+!$omp parallel do
+#elif defined(_OPENACC)
+!$acc loop vector
+#endif
+           do i=1,n_theta
+             field(1,(ir-1)*n_theta + i,0) = 0.0
+           enddo
         else
+#if defined(OMPGPU)
+!$omp parallel do
+#elif defined(_OPENACC)
+!$acc loop vector
+#endif
            do i=1,n_theta
-              pvec_out(i) = 0.0
-              pvec_in(i)  = field(1,ic_c(ir,i),0)
+              pvec_in(i)  = field(1,(ir-1)*n_theta + i,0)
            enddo
-           do j=1,n_theta
-              do i=1,n_theta
-                 pvec_out(i) = pvec_out(i)+xzf(ir,i,j)*pvec_in(j)
+#if defined(OMPGPU)
+!$omp parallel do private(pvec_out,j)
+#elif defined(_OPENACC)
+!$acc loop vector private(pvec_out,j)
+#endif
+           do i=1,n_theta
+              pvec_out = 0.0
+              do j=1,n_theta
+                 pvec_out = pvec_out+xzf(ir,i,j)*pvec_in(j)
               enddo
-           enddo
-           do i=1,n_theta
-              field(1,ic_c(ir,i),0) = pvec_out(i)
+              field(1,(ir-1)*n_theta + i,0) = pvec_out
            enddo
         endif
   enddo
@@ -617,10 +654,23 @@ subroutine cgyro_field_ae_c
 end subroutine cgyro_field_ae_c
 
 
+! make a copy from field to field_cur
+subroutine cgyro_field_e_sync_cur
+
+   implicit none
+
+#if defined(OMPGPU)
+!$omp target update from(field)
+#elif defined(_OPENACC)
+!$acc update host(field)
+#endif
+   field_cur = field
+
+end subroutine cgyro_field_e_sync_cur
+
 ! compute filed error and save the old values for next round
 subroutine cgyro_field_e_compute(delta_t, norm_loc_s,error_loc_s)
 
-  use timer_lib, only : timer_lib_in, timer_lib_out
   use cgyro_globals, only : nt1, nt2, nc, n_field
 
   implicit none
@@ -629,8 +679,6 @@ subroutine cgyro_field_e_compute(delta_t, norm_loc_s,error_loc_s)
   real, intent(out) :: norm_loc_s,error_loc_s
 
   integer :: itor,ic,i_f
-
-  call timer_lib_in('field')
 
   norm_loc_s = 0.0
   error_loc_s = 0.0
@@ -647,23 +695,21 @@ subroutine cgyro_field_e_compute(delta_t, norm_loc_s,error_loc_s)
         field_loc(i_f,ic,itor) = 3*field_old(i_f,ic,itor) - &
                 3*field_old2(i_f,ic,itor) + &
                 field_old3(i_f,ic,itor)
-        field_dot(i_f,ic,itor) = (3*field(i_f,ic,itor) - &
+        field_dot(i_f,ic,itor) = (3*field_cur(i_f,ic,itor) - &
                 4*field_old(i_f,ic,itor) + &
                 field_old2(i_f,ic,itor) )/(2*delta_t)
 
         ! Define norm and error for each mode number n
-        norm_loc_s  = norm_loc_s  + abs(field(i_f,ic,itor))
-        error_loc_s = error_loc_s + abs(field(i_f,ic,itor)-field_loc(i_f,ic,itor))
+        norm_loc_s  = norm_loc_s  + abs(field_cur(i_f,ic,itor))
+        error_loc_s = error_loc_s + abs(field_cur(i_f,ic,itor)-field_loc(i_f,ic,itor))
 
         ! save old values for next iteration
         field_old3(i_f,ic,itor) = field_old2(i_f,ic,itor)
         field_old2(i_f,ic,itor) = field_old(i_f,ic,itor)
-        field_old(i_f,ic,itor)  = field(i_f,ic,itor)
+        field_old(i_f,ic,itor)  = field_cur(i_f,ic,itor)
      enddo
    enddo
   enddo
-
-  call timer_lib_out('field')
 
 end subroutine cgyro_field_e_compute
 
@@ -678,24 +724,63 @@ subroutine cgyro_field_e_get_diff1(ic,itor, fo1,fo2)
   fo2 = field_old2(1,ic,itor)
 end subroutine cgyro_field_e_get_diff1
 
-subroutine cgyro_field_coefficients
+subroutine cgyro_field_c_init_coefficients
 
   use mpi
-  use cgyro_globals, only : ae_flag, betae_unit, collision_field_model, &
-       collision_model, dens2_rot, dens_ele, dens_ele_rot, dens_rot, &
-       dvjvec_c, dvjvec_v, i_err, ie_v, ir_c, is_v, it_c, ix_v, &
-       jvec_c, jvec_v, k_perp, lambda_debye, nc, nc_cl1, nc_cl2, &
+  use cgyro_globals, only : ae_flag, betae_unit, nv_loc, &
+       n_species,n_energy,n_xi, &
+       dens2_rot, dens_ele, dens_ele_rot, dens_rot, &
+       i_err, ie_v, ir_c, is_v, it_c, ix_v, ic_c, &
+       jvec_c, k_perp, lambda_debye, nc, nc_cl1, nc_cl2, &
        NEW_COMM_1, n_field, nt1, nt2, nv, nv1, nv2, px, rho, &
-       sum_cur_x, sum_den_h, sum_den_x, temp, temp_ele, vfac, w_exi, &
-       z, zf_test_mode
+       temp, temp_ele, w_exi, &
+       z, zf_test_mode, n_radial, n_theta, dens, w_theta
 
   implicit none
 
   integer :: ic,ic_loc,ir,it,is,ie,ix,iv,iv_loc,itor
+  integer :: jt
   real :: sum_one
+  real, dimension(:), allocatable :: vfac
+  real, dimension(:,:), allocatable :: sum_den_x,sum_cur_x
   real, dimension(:,:), allocatable :: sum_loc
   real, dimension(:,:), allocatable :: pb11,pb12,pb21,pb22
+  ! LAPACK work arrays 
+  real, dimension(:), allocatable :: work  
+  integer, dimension(:), allocatable :: i_piv
+  integer :: info
  
+  allocate(vfac(nv_loc))
+  do iv=nv1,nv2
+
+     iv_loc = iv-nv1+1
+     is = is_v(iv)
+     ix = ix_v(iv)
+     ie = ie_v(iv)
+
+     vfac(iv_loc) = w_exi(ie,ix)*z(is)**2/temp(is)*dens(is)
+
+  enddo
+
+  sum_den_h(:) = 0.0
+  do is=1,n_species
+     do ie=1,n_energy
+        do ix=1,n_xi
+           do it=1,n_theta
+              sum_den_h(it) = sum_den_h(it) + w_exi(ie,ix) &
+                   *z(is)**2/temp(is)*dens2_rot(it,is)
+           enddo
+        enddo
+     enddo
+  enddo
+
+  if (ae_flag == 1) then
+     sum_den_h(:) = sum_den_h(:) + dens_ele*dens_ele_rot(:)/temp_ele
+  endif
+
+  allocate(sum_den_x(nc,nt1:nt2))
+  if (n_field > 1) allocate(sum_cur_x(nc,nt1:nt2))
+
   !-------------------------------------------------------------------------
   ! Field equation prefactors, sums.
   !
@@ -898,7 +983,7 @@ subroutine cgyro_field_coefficients
 
   deallocate(sum_loc)
 
-!$omp parallel do private(iv,iv_loc,is,ie,ix,ic,it,ic_loc,ir) shared(gcoef,dvjvec_c,dvjvec_v)
+!$omp parallel do private(iv,iv_loc,is,ie,ix,ic,it,ic_loc,ir) shared(gcoef,dvjvec_c)
   do itor=nt1,nt2
    ! Set selected zeros
    do ic=1,nc
@@ -920,8 +1005,68 @@ subroutine cgyro_field_coefficients
              jvec_c(:,ic,iv_loc,itor)
      enddo
    enddo
-   if ((collision_model /= 5) .AND. (collision_field_model == 1)) then
-    do ic=nc_cl1,nc_cl2
+  enddo
+
+  !-------------------------------------------------------------------------
+  ! Zonal flow with adiabatic electrons:
+  !
+  if (nt1 == 0 .and. ae_flag == 1) then
+     ! since this applies only to itor == 0, we do not need to extend the matrix
+     xzf(:,:,:) = 0.0     
+     do ir=1,n_radial
+        do it=1,n_theta
+           ! my_toroidal==0
+           xzf(ir,it,it) = k_perp(ic_c(ir,it),0)**2*lambda_debye**2 &
+                * dens_ele/temp_ele+sum_den_x(ic_c(ir,it),0)
+           do jt=1,n_theta
+              xzf(ir,it,jt) = xzf(ir,it,jt) &
+                   - dens_ele*dens_ele_rot(it)/temp_ele*w_theta(jt)
+           enddo
+        enddo
+     enddo
+
+     allocate(work(n_theta))
+     allocate(i_piv(n_theta))
+     do ir=1,n_radial
+        call DGETRF(n_theta,n_theta,xzf(ir,:,:),n_theta,i_piv,info)
+        call DGETRI(n_theta,xzf(ir,:,:),n_theta,i_piv,work,n_theta,info)
+     enddo
+     deallocate(i_piv)
+     deallocate(work)
+
+#if defined(OMPGPU)
+!$omp target update to(xzf)
+#elif defined(_OPENACC)
+!$acc update device(xzf)
+#endif
+  endif
+
+  if (n_field > 1) deallocate(sum_cur_x)
+  deallocate(sum_den_x)
+  deallocate(vfac)
+
+#if defined(OMPGPU)
+!$omp target update to(fcoef,gcoef,dvjvec_c)
+#elif defined(_OPENACC)
+!$acc update device(fcoef,gcoef,dvjvec_c)
+#endif
+
+end subroutine cgyro_field_c_init_coefficients
+
+subroutine cgyro_field_v_init_coefficients
+
+  use cgyro_globals, only : nc_cl1,nc_cl2,nt1,nt2,nv, &
+                            it_c,is_v,ix_v,ie_v,dens2_rot,w_exi,z,&
+                            jvec_v
+
+  implicit none
+
+  integer :: ic,ic_loc,it,is,ie,ix,iv,itor
+ 
+!$omp parallel do collapse(2) shared(dvjvec_v) &
+!$omp&         private(iv,is,ie,ix,it,ic_loc)
+  do ic=nc_cl1,nc_cl2
+    do itor=nt1,nt2
      ic_loc = ic-nc_cl1+1
      it = it_c(ic)
      do iv=1,nv
@@ -932,23 +1077,15 @@ subroutine cgyro_field_coefficients
              jvec_v(:,ic_loc,itor,iv,1) ! all nsm are the same, use the 1st one
      enddo
     enddo
-   endif
   enddo
   !-------------------------------------------------------------------------
 
-#if defined(OMPGPU)
-!$omp target update to(fcoef,gcoef,dvjvec_c)
-#elif defined(_OPENACC)
-!$acc update device(fcoef,gcoef,dvjvec_c)
-#endif
-  if ((collision_model /= 5) .AND. (collision_field_model == 1)) then
 #if defined(OMPGPU)
 !$omp target update to(dvjvec_v)
 #elif defined(_OPENACC)
 !$acc update device(dvjvec_v)
 #endif
-  endif
 
-end subroutine cgyro_field_coefficients
+end subroutine cgyro_field_v_init_coefficients
 
 end module cgyro_field_mod

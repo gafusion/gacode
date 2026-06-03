@@ -40,8 +40,18 @@ module cgyro_flux_mod
   complex, dimension(:,:,:,:,:), allocatable :: gflux
   real, dimension(:,:), allocatable :: cflux_tave, gflux_tave
 
-  real :: tave_min, tave_max
-  integer :: tave_step
+  real, private :: tave_min, tave_max
+  integer, private :: tave_step
+
+  ! Not accessible on GPU
+  complex, dimension(:,:,:), allocatable :: cap_h_c_cur
+  ! internal work buffer
+  complex, private, dimension(:,:,:), allocatable :: cap_h_c_dot
+  ! cap_h_c history
+  complex, private, dimension(:,:,:), allocatable :: cap_h_c_old
+  complex, private, dimension(:,:,:), allocatable :: cap_h_c_old2
+  complex, private, dimension(:,:,:), allocatable :: cap_h_c_old3
+  logical, private :: cap_h_c_old_valid
 
 contains
 
@@ -64,11 +74,26 @@ end subroutine cgyro_flux_tave_reset
 ! Initialization and cleanup, to be called once
 !-----------------------------------------------------------------
 
-subroutine cgyro_flux_init(n_radial,theta_plot,n_species,n_field,n_global,nt1,nt2)
+subroutine cgyro_flux_init(n_radial,theta_plot,n_species,n_field,&
+                           n_global,nc,nv_loc,nt1,nt2)
 
   implicit none
 
-  integer, intent(in) :: n_radial,theta_plot,n_species,n_field,n_global,nt1,nt2
+  integer, intent(in) :: n_radial,theta_plot,n_species,n_field,&
+                         n_global,nc,nv_loc,nt1,nt2
+
+  allocate(cap_h_c_dot(nc,nv_loc,nt1:nt2))
+  allocate(cap_h_c_old(nc,nv_loc,nt1:nt2))
+  allocate(cap_h_c_old2(nc,nv_loc,nt1:nt2))
+  allocate(cap_h_c_old3(nc,nv_loc,nt1:nt2))
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:cap_h_c_dot,cap_h_c_old,cap_h_c_old2,cap_h_c_old3)
+#elif defined(_OPENACC)
+!$acc enter data create(cap_h_c_dot,cap_h_c_old,cap_h_c_old2,cap_h_c_old3)
+#endif
+  cap_h_c_old_valid = .FALSE.
+
+  allocate(cap_h_c_cur(nc,nv_loc,nt1:nt2))
 
   allocate(    moment(n_radial,theta_plot,n_species,nt1:nt2,3))
   allocate(moment_loc(n_radial,theta_plot,n_species,nt1:nt2,3))
@@ -96,19 +121,109 @@ subroutine cgyro_flux_cleanup
   if(allocated(cflux_tave))          deallocate(cflux_tave)
   if(allocated(gflux_tave))          deallocate(gflux_tave)
 
+  if(allocated(cap_h_c_dot)) then ! one check enough
+     deallocate(cap_h_c_cur)
+#if defined(OMPGPU)
+!$omp target exit data map(release:cap_h_c_dot,cap_h_c_old,cap_h_c_old2,cap_h_c_old3)
+#elif defined(_OPENACC)
+!$acc exit data delete(cap_h_c_dot,cap_h_c_old,cap_h_c_old2,cap_h_c_old3)
+#endif
+     deallocate(cap_h_c_old3)
+     deallocate(cap_h_c_old2)
+     deallocate(cap_h_c_old)
+     deallocate(cap_h_c_dot)
+  endif
+
 end subroutine cgyro_flux_cleanup
+
+subroutine cgyro_flux_save_cap_h_c
+
+  use cgyro_globals, only: nt1,nt2,nv1,nv2,nc,cap_h_c
+
+  implicit none
+
+  integer :: itor,iv,ic,iv_loc
+
+  if (cap_h_c_old_valid) then
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd collapse(3) &
+!$omp&   private(iv_loc)
+#elif defined(_OPENACC)
+!$acc parallel loop collapse(3) gang vector private(iv_loc) &
+!$acc&         present(cap_h_c,cap_h_c_old,cap_h_c_old2,cap_h_c_old3) &
+!$acc&         present(nt1,nt2,nv1,nv2,nc) default(none)
+#else
+!$omp parallel do collapse(3) private(iv_loc)
+#endif
+    do itor=nt1,nt2
+      do iv=nv1,nv2
+        do ic=1,nc
+           iv_loc = iv-nv1+1
+           cap_h_c_old3(ic,iv_loc,itor) = cap_h_c_old2(ic,iv_loc,itor)
+           cap_h_c_old2(ic,iv_loc,itor) = cap_h_c_old(ic,iv_loc,itor)
+           cap_h_c_old(ic,iv_loc,itor) = cap_h_c(ic,iv_loc,itor)
+        enddo
+      enddo
+    enddo
+  else
+    ! first time around, just put cap_h_c in all
+    cap_h_c_old_valid = .TRUE.
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd collapse(3) &
+!$omp&   private(iv_loc)
+#elif defined(_OPENACC)
+!$acc parallel loop collapse(3) gang vector private(iv_loc) &
+!$acc&         present(cap_h_c,cap_h_c_old,cap_h_c_old2,cap_h_c_old3) &
+!$acc&         present(nt1,nt2,nv1,nv2,nc) default(none)
+#else
+!$omp parallel do collapse(3) private(iv_loc)
+#endif
+    do itor=nt1,nt2
+      do iv=nv1,nv2
+        do ic=1,nc
+           iv_loc = iv-nv1+1
+           cap_h_c_old3(ic,iv_loc,itor) = cap_h_c(ic,iv_loc,itor)
+           cap_h_c_old2(ic,iv_loc,itor) = cap_h_c(ic,iv_loc,itor)
+           cap_h_c_old(ic,iv_loc,itor) = cap_h_c(ic,iv_loc,itor)
+        enddo
+      enddo
+    enddo
+  endif
+
+end subroutine cgyro_flux_save_cap_h_c
+
+! make a copy from cap_h_c to cap_h_c_cur
+subroutine cgyro_flux_sync_cap_h_c_cur
+
+  use cgyro_globals, only : cap_h_c
+
+   implicit none
+
+#if defined(OMPGPU)
+!$omp target update from(cap_h_c)
+#elif defined(_OPENACC)
+!$acc update host(cap_h_c)
+#endif
+  cap_h_c_cur = cap_h_c
+
+end subroutine cgyro_flux_sync_cap_h_c_cur
 
 !-----------------------------------------------------------------
 
 subroutine cgyro_flux
 
   use mpi
-  use cgyro_globals
-  use cgyro_field_mod, only : field, field_dot
+  use cgyro_globals, only : bmag, bigr, btor, delta_t, dens2_rot, &
+       energy, i_c, i_err, ic_c, ie_v, ir_c, is_v, it_c, itp, &
+       ix_v, jvec_c, jxvec_c, k_theta_base, lambda_rot, mach, &
+       mass, nc, NEW_COMM_1, n_field, n_global, nonlinear_flag, &
+       n_radial, nt1, nt2, nv1, nv2, pi, rho, rmaj, t_current, &
+       temp, vel2, vth, w_exi, w_theta, xi, z
+  use cgyro_field_mod, only : field_cur, field_dot
 
   implicit none
 
-  integer :: ie,ix,is,it,ir,i_field,itor
+  integer :: ic,ie,ix,is,it,ir,i_field,itor,iv,iv_loc
   integer :: l,icl
   real :: dv,cn
   real :: vpar
@@ -119,6 +234,35 @@ subroutine cgyro_flux
   complex :: cprod
   real, parameter :: x_fraction=0.2
   real :: u
+
+  ! cap_h_c_old* are in GPU memory only, so compute cap_h_c_dot there
+  ! note: We use explicitly a pre-allocated buffer in GPU memory + update from,
+  !       to avoid dynamic memory allocation
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd collapse(3) &
+!$omp&   private(iv_loc)
+#elif defined(_OPENACC)
+!$acc parallel loop collapse(3) gang vector private(iv_loc) &
+!$acc&         present(cap_h_c_dot,cap_h_c_old,cap_h_c_old2,cap_h_c_old3) &
+!$acc&         present(nt1,nt2,nv1,nv2,nc) copyin(delta_t) default(none)
+#else
+!$omp parallel do collapse(3) private(iv_loc)
+#endif
+  do itor=nt1,nt2
+     do iv=nv1,nv2
+        do ic=1,nc
+           iv_loc = iv-nv1+1
+           cap_h_c_dot(ic,iv_loc,itor) = (3*cap_h_c_old(ic,iv_loc,itor) - &
+                4*cap_h_c_old2(ic,iv_loc,itor) + &
+                cap_h_c_old3(ic,iv_loc,itor) )/(2*delta_t)
+        enddo
+     enddo
+  enddo
+#if defined(OMPGPU)
+!$omp target update from(cap_h_c_dot)
+#elif defined(_OPENACC)
+!$acc update host(cap_h_c_dot)
+#endif
 
 !$omp parallel do private(iv_loc,iv,is,ix,ie,dv,vpar,ic,ir,it,erot,cprod,cn) &
 !$omp&            private(prod1,prod2,prod3,l,icl,dvr,u,flux_norm) &
@@ -154,19 +298,21 @@ subroutine cgyro_flux
            erot  = (energy(ie)+lambda_rot(it,is))*temp(is)
 
            if (itp(it) > 0) then
-              cprod = cap_h_c(ic,iv_loc,itor)*dvjvec_c(1,ic,iv_loc,itor)/z(is)
+              ! dvjvec_c(:,ic,iv_loc,itor) = dens2_rot(it,is)*w_exi(ie,ix)*z(is)*jvec_c(:,ic,iv_loc,itor)
+              ! dvjvec_c(1,ic,iv_loc,itor)/z(is) = dens2_rot(it,is)*w_exi(ie,ix)*jvec_c(1,ic,iv_loc,itor)
+              cprod = cap_h_c_cur(ic,iv_loc,itor)*dens2_rot(it,is)*w_exi(ie,ix)*jvec_c(1,ic,iv_loc,itor)
               cn    = dv*z(is)*dens2_rot(it,is)/temp(is)
 
               ! Note addition division by rho below
               
               ! Density moment: (delta n_a)/(n_norm)
-              moment_loc(ir,itp(it),is,itor,1) = moment_loc(ir,itp(it),is,itor,1)-(cn*field(1,ic,itor)-cprod)
+              moment_loc(ir,itp(it),is,itor,1) = moment_loc(ir,itp(it),is,itor,1)-(cn*field_cur(1,ic,itor)-cprod)
 
               ! Energy moment : (delta E_a)/(n_norm T_norm)
-              moment_loc(ir,itp(it),is,itor,2) = moment_loc(ir,itp(it),is,itor,2)-(cn*field(1,ic,itor)-cprod)*erot
+              moment_loc(ir,itp(it),is,itor,2) = moment_loc(ir,itp(it),is,itor,2)-(cn*field_cur(1,ic,itor)-cprod)*erot
 
               ! Velocity moment : (delta v_a)/(n_norm v_norm)
-              moment_loc(ir,itp(it),is,itor,3) = moment_loc(ir,itp(it),is,itor,3)-(cn*field(1,ic,itor)-cprod)*vpar
+              moment_loc(ir,itp(it),is,itor,3) = moment_loc(ir,itp(it),is,itor,3)-(cn*field_cur(1,ic,itor)-cprod)*vpar
            endif
 
         enddo
@@ -215,22 +361,22 @@ subroutine cgyro_flux
               if (ir-l > 0) then
                  icl = ic_c(ir-l,it)
                  prod1(l,:) = prod1(l,:) &
-                      +i_c*cap_h_c(ic,iv_loc,itor)*conjg(jvec_c(:,icl,iv_loc,itor)*field(:,icl,itor))
+                      +i_c*cap_h_c_cur(ic,iv_loc,itor)*conjg(jvec_c(:,icl,iv_loc,itor)*field_cur(:,icl,itor))
                  prod2(l,:) = prod2(l,:) &
-                      +i_c*cap_h_c(ic,iv_loc,itor)*conjg(i_c*jxvec_c(:,icl,iv_loc,itor)*field(:,icl,itor))
+                      +i_c*cap_h_c_cur(ic,iv_loc,itor)*conjg(i_c*jxvec_c(:,icl,iv_loc,itor)*field_cur(:,icl,itor))
                  prod3(l,:) = prod3(l,:) &
-                      -cap_h_c_dot(ic,iv_loc,itor)*conjg(jvec_c(:,icl,iv_loc,itor)*field(:,icl,itor)) &
-                      +cap_h_c(ic,iv_loc,itor)*conjg(jvec_c(:,icl,iv_loc,itor)*field_dot(:,icl,itor))
+                      -cap_h_c_dot(ic,iv_loc,itor)*conjg(jvec_c(:,icl,iv_loc,itor)*field_cur(:,icl,itor)) &
+                      +cap_h_c_cur(ic,iv_loc,itor)*conjg(jvec_c(:,icl,iv_loc,itor)*field_dot(:,icl,itor))
               endif
               if (ir+l <= n_radial) then
                  icl = ic_c(ir+l,it)
                  prod1(l,:) = prod1(l,:) &
-                      -i_c*conjg(cap_h_c(ic,iv_loc,itor))*jvec_c(:,icl,iv_loc,itor)*field(:,icl,itor)
+                      -i_c*conjg(cap_h_c_cur(ic,iv_loc,itor))*jvec_c(:,icl,iv_loc,itor)*field_cur(:,icl,itor)
                  prod2(l,:) = prod2(l,:) &
-                      -i_c*conjg(cap_h_c(ic,iv_loc,itor))*i_c*jxvec_c(:,icl,iv_loc,itor)*field(:,icl,itor)
+                      -i_c*conjg(cap_h_c_cur(ic,iv_loc,itor))*i_c*jxvec_c(:,icl,iv_loc,itor)*field_cur(:,icl,itor)
                  prod3(l,:) = prod3(l,:) &
-                      -conjg(cap_h_c_dot(ic,iv_loc,itor))*jvec_c(:,icl,iv_loc,itor)*field(:,icl,itor) &
-                      +conjg(cap_h_c(ic,iv_loc,itor))*jvec_c(:,icl,iv_loc,itor)*field_dot(:,icl,itor)
+                      -conjg(cap_h_c_dot(ic,iv_loc,itor))*jvec_c(:,icl,iv_loc,itor)*field_cur(:,icl,itor) &
+                      +conjg(cap_h_c_cur(ic,iv_loc,itor))*jvec_c(:,icl,iv_loc,itor)*field_dot(:,icl,itor)
               endif
 
            enddo
@@ -273,7 +419,7 @@ subroutine cgyro_flux
         ! Note: We assume we compute flux_norm once per itor
         flux_norm = 0.0
         do ir=1,n_radial
-           flux_norm = flux_norm+sum(abs(field(1,ic_c(ir,:),itor))**2*w_theta(:))
+           flux_norm = flux_norm+sum(abs(field_cur(1,ic_c(ir,:),itor))**2*w_theta(:))
         enddo
 
         ! Sign correction fixed 2025.11.19 (JC)
@@ -337,5 +483,43 @@ subroutine cgyro_flux
   enddo
      
 end subroutine cgyro_flux
+
+subroutine cgyro_flux_sum(tave_min_out, tave_max_out, flux_tave_out)
+  use mpi
+  use cgyro_globals, only: n_species,gamma_e,NEW_COMM_2
+
+  implicit none
+
+  real, intent(out)     :: tave_min_out, tave_max_out
+  real, intent(out)     :: flux_tave_out(11,3)
+
+  integer :: i_err
+  real, dimension(n_species,3) :: sum_out
+
+  ! Return time-averaged flux data (need to reduce across n first)
+  flux_tave_out(:,:) = 0.0
+  if (abs(gamma_e) > 1e-10) then
+     call MPI_ALLREDUCE(cflux_tave(:,:), &
+       sum_out(:,:), &
+       size(sum_out), &
+       MPI_DOUBLE_PRECISION, &
+       MPI_SUM, &
+       NEW_COMM_2, &
+       i_err)
+  else
+     call MPI_ALLREDUCE(gflux_tave(:,:), &
+       sum_out(:,:), &
+       size(sum_out), &
+       MPI_DOUBLE_PRECISION, &
+       MPI_SUM, &
+       NEW_COMM_2, &
+       i_err)
+  endif
+  
+  tave_min_out = tave_min
+  tave_max_out = tave_max
+  flux_tave_out(1:n_species,:) = sum_out(1:n_species,:)/tave_step
+
+end subroutine cgyro_flux_sum
 
 end module cgyro_flux_mod

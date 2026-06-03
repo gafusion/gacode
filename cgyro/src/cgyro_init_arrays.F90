@@ -2,7 +2,8 @@ subroutine cgyro_init_arrays
 
   use mpi
   use cgyro_globals
-  use cgyro_field_mod, only : cgyro_field_coefficients
+  use cgyro_field_mod, only : cgyro_field_c_init_coefficients, &
+                              cgyro_field_v_init_coefficients
   use cgyro_io
   use parallel_lib
 
@@ -274,74 +275,13 @@ subroutine cgyro_init_arrays
   !------------------------------------------------------------------------------
   ! Coefficient setup
   !
-  allocate(vfac(nv_loc))
-  do iv=nv1,nv2
 
-     iv_loc = iv-nv1+1
-     is = is_v(iv)
-     ix = ix_v(iv)
-     ie = ie_v(iv)
-
-     vfac(iv_loc) = w_exi(ie,ix)*z(is)**2/temp(is)*dens(is)
-
-  enddo
-
-  allocate(sum_den_h(n_theta))
-  sum_den_h(:) = 0.0
-  do is=1,n_species
-     do ie=1,n_energy
-        do ix=1,n_xi
-           do it=1,n_theta
-              sum_den_h(it) = sum_den_h(it) + w_exi(ie,ix) &
-                   *z(is)**2/temp(is)*dens2_rot(it,is)
-           enddo
-        enddo
-     enddo
-  enddo
-
-  if (ae_flag == 1) then
-     sum_den_h(:) = sum_den_h(:) + dens_ele*dens_ele_rot(:)/temp_ele
+  call cgyro_field_c_init_coefficients
+  if ((collision_model /= 5) .AND. (collision_field_model == 1)) then
+    call cgyro_field_v_init_coefficients
   endif
-
-  allocate(sum_den_x(nc,nt1:nt2))
-  if (n_field > 1) allocate(sum_cur_x(nc,nt1:nt2))
-
-  call cgyro_field_coefficients
   !------------------------------------------------------------------------------
 
-  !-------------------------------------------------------------------------
-  ! Zonal flow with adiabatic electrons:
-  !
-  if (nt1 == 0 .and. ae_flag == 1) then
-     ! since this applies only to itor == 0, we do not need to extend the matrix
-
-     allocate(xzf(n_radial,n_theta,n_theta))
-     xzf(:,:,:) = 0.0     
-     do ir=1,n_radial
-        do it=1,n_theta
-           ! my_toroidal==0
-           xzf(ir,it,it) = k_perp(ic_c(ir,it),0)**2*lambda_debye**2 &
-                * dens_ele/temp_ele+sum_den_x(ic_c(ir,it),0)
-           do jt=1,n_theta
-              xzf(ir,it,jt) = xzf(ir,it,jt) &
-                   - dens_ele*dens_ele_rot(it)/temp_ele*w_theta(jt)
-           enddo
-        enddo
-     enddo
-
-     allocate(work(n_theta))
-     allocate(i_piv(n_theta))
-     do ir=1,n_radial
-        call DGETRF(n_theta,n_theta,xzf(ir,:,:),n_theta,i_piv,info)
-        call DGETRI(n_theta,xzf(ir,:,:),n_theta,i_piv,work,n_theta,info)
-     enddo
-     deallocate(i_piv)
-     deallocate(work)
-
-  endif
-
-  if (n_field > 1) deallocate(sum_cur_x)
-  deallocate(sum_den_x)
 
   !-------------------------------------------------------------------------
 

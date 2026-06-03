@@ -172,30 +172,6 @@ subroutine cgyro_cleanup
 #endif
      deallocate(cap_h_ct)
   endif
-  if(allocated(cap_h_c_dot)) then
-#if defined(OMPGPU)
-!$omp target exit data map(release:cap_h_c_dot)
-#elif defined(_OPENACC)
-!$acc exit data delete(cap_h_c_dot)
-#endif
-     deallocate(cap_h_c_dot)
-  endif
-  if(allocated(cap_h_c_old)) then
-#if defined(OMPGPU)
-!$omp target exit data map(release:cap_h_c_old)
-#elif defined(_OPENACC)
-!$acc exit data delete(cap_h_c_old)
-#endif
-     deallocate(cap_h_c_old)
-  endif
-  if(allocated(cap_h_c_old2)) then
-#if defined(OMPGPU)
-!$omp target exit data map(release:cap_h_c_old2)
-#elif defined(_OPENACC)
-!$acc exit data delete(cap_h_c_old2)
-#endif
-     deallocate(cap_h_c_old2)
-  endif
   if(allocated(omega_cap_h)) then
 #if defined(OMPGPU)
 !$omp target exit data map(release:omega_cap_h)
@@ -253,22 +229,6 @@ subroutine cgyro_cleanup
      deallocate(jvec_c_nl)
   endif
   if(allocated(jvec_v))              deallocate(jvec_v)
-  if(allocated(dvjvec_c)) then
-#if defined(OMPGPU)
-!$omp target exit data map(release:dvjvec_c)
-#elif defined(_OPENACC)
-!$acc exit data delete(dvjvec_c)
-#endif
-     deallocate(dvjvec_c)
-  endif
-  if(allocated(dvjvec_v)) then
-#if defined(OMPGPU)
-!$omp target exit data map(release:dvjvec_v)
-#elif defined(_OPENACC)
-!$acc exit data delete(dvjvec_v)
-#endif
-     deallocate(dvjvec_v)
-  endif
   if(allocated(jxvec_c))  then
      deallocate(jxvec_c)
   endif
@@ -625,8 +585,6 @@ subroutine cgyro_cleanup
   ! From cgyro_init_arrays
   !!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  if(allocated(vfac))             deallocate(vfac)
-  if(allocated(sum_den_h))        deallocate(sum_den_h)
   if(allocated(cderiv))           deallocate(cderiv)
   if(allocated(uderiv))           deallocate(uderiv)
   if(allocated(c_wave)) then
@@ -637,7 +595,6 @@ subroutine cgyro_cleanup
 #endif
      deallocate(c_wave)
   endif
-  if(allocated(xzf))              deallocate(xzf)
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!
   ! From cgyro_mpi_grid
