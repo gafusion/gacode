@@ -1,0 +1,33 @@
+#---------------------------------------------------
+# MIT cluster for SPARC Physics RPPs
+#---------------------------------------------------
+
+# FIXED Hardware parameters
+IDENTITY="PSFCR8 GPU"
+CORES_PER_NODE=128
+NUMAS_PER_NODE=4
+
+# Compilers and flags
+
+# Fortran 90/95 compiler
+FC = mpif90 -module ${GACODE_ROOT}/modules -I ${GACODE_ROOT}/modules -Mpreprocess -DUSE_INLINE -Mdefaultunit
+
+# Fortran 77 compiler
+F77 = ${FC}
+
+# Compiler options/flags
+FACC   =-acc -gpu=cc80 -Minfo=accel -cudalib=cufft
+FOMP   =-mp -Mstack_arrays
+FMATH  =-r8
+FOPT   =-fast
+FDEBUG =-g -Kieee -Ktrap=fp,divz -Mbounds -Mchkptr -Mchkstk -traceback -Minform=inform
+
+# System math libraries
+LMATH=-llapack -lblas
+
+# NetCDF
+NETCDF =-L${NETCDF_DIR}/lib -lnetcdff -lnetcdf -lz -lm
+NETCDF_INC =${NETCDF_DIR}/include
+
+# Archive
+ARCH = ar cr

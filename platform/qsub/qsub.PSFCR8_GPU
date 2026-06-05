@@ -1,0 +1,27 @@
+#!/bin/bash
+
+#echo "-queue: regular, preempt, debug, premium"
+
+# Default queue
+if [ "$QUEUE" == "null_queue" ] ; then
+   QUEUE=regular
+fi
+
+bfile=$SIMDIR/batch.src
+
+echo "#!/bin/bash -l" > $bfile
+echo "#SBATCH -J $LOCDIR" >> $bfile
+echo "#SBATCH -o $SIMDIR/batch.out" >> $bfile
+echo "#SBATCH -e $SIMDIR/batch.err" >> $bfile
+echo "#SBATCH -p $QUEUE" >> $bfile
+echo "#SBATCH -t $WALLTIME" >> $bfile
+echo "#SBATCH -N $nodes" >> $bfile
+echo "#SBATCH -n $nmpi" >> $bfile
+echo "#SBATCH -c $nomp" >> $bfile
+echo "#SBATCH --mem=$MEMPERNODE" >> $bfile
+echo "#SBATCH --exclusive" >> $bfile
+echo "#SBATCH --ntasks-per-node=4" >> $bfile
+echo "#SBATCH --gpus-per-node=4" >> $bfile
+#echo 'export SLURM_CPU_BIND="cores"' >> $bfile
+echo "#SBATCH --exclude=node2101,node2119" >> $bfile
+echo "$CODE -e $LOCDIR -n $nmpi -nomp $nomp -numa $numa -mpinuma $mpinuma -p $SIMROOT" >> $bfile

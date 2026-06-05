@@ -1,0 +1,34 @@
+#!/usr/bin/bash
+# GACODE Parallel execution script (PSFC R8 GPU)
+simdir=${1}
+nmpi=${2}
+exec=${3}
+nomp=${4}
+numa=${5}
+mpinuma=${6}
+
+. $GACODE_ROOT/shared/bin/gacode_mpi_tool
+
+cd $simdir
+
+export OMP_STACKSIZE=512M
+export OMP_NUM_THREADS=$nomp
+
+echo "mpirun -n $nmpi --report-bindings --map-by ppr:4:node:pe=$nomp --bind-to core --mca pml ucx --mca osc ucx --mca btl ^vader,tcp,openib --mca coll_ucc_enable 0 --mca coll_hcoll_enable 0 -x UCX_TLS=rc_mlx5,ud_mlx5,cuda_copy,cuda_ipc,sm,self -x UCX_RNDV_SCHEME=put_zcopy -x UCX_IB_GPU_DIRECT_RDMA=yes -x UCX_MEMTYPE_CACHE=y $GACODE_ROOT/platform/exec/wrap.${GACODE_PLATFORM} $exec"
+mpirun -n $nmpi \
+    --mca pml ucx \
+    --mca osc ucx \
+    --mca btl ^vader,tcp,openib \
+    --mca coll_ucc_enable 0 \
+    --mca coll_hcoll_enable 0 \
+    --report-bindings \
+    --map-by ppr:4:node:pe=$nomp \
+    --bind-to core \
+    -x OMP_NUM_THREADS \
+    -x OMP_STACKSIZE \
+    -x LD_LIBRARY_PATH \
+    -x UCX_TLS=rc,ud,cuda_copy,cuda_ipc,sm,self \
+    -x UCX_RNDV_SCHEME=put_zcopy \
+    -x UCX_IB_GPU_DIRECT_RDMA=yes \
+    -x UCX_MEMTYPE_CACHE=y \
+    $GACODE_ROOT/platform/exec/wrap.${GACODE_PLATFORM} $exec

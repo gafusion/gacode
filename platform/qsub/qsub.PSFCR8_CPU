@@ -17,5 +17,6 @@ echo "#SBATCH -p $QUEUE" >> $bfile
 echo "#SBATCH -t $WALLTIME" >> $bfile
 echo "#SBATCH -N $nodes" >> $bfile
 echo "#SBATCH -n $cores_used" >> $bfile
+echo "#SBATCH -c $nomp" >> $bfile
 
-echo "$CODE -e $LOCDIR -n $nmpi -p $SIMROOT" >> $bfile 
+echo "$CODE -e $LOCDIR -n $nmpi -nomp $nomp -p $SIMROOT" >> $bfile 
