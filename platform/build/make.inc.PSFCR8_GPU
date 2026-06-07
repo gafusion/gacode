@@ -16,7 +16,8 @@ FC = mpif90 -module ${GACODE_ROOT}/modules -I ${GACODE_ROOT}/modules -Mpreproces
 F77 = ${FC}
 
 # Compiler options/flags
-FACC   =-acc -gpu=cc80 -Minfo=accel -cudalib=cufft
+FACC   =-acc -gpu=cc80 -Minfo=accel -cudalib=cufft      # cc80 = PSFCR8 H100
+# FACC   =-acc -gpu=cc90 -Minfo=accel -cudalib=cufft    # cc90 = ORCD H200, or cc90a for async exec features  
 FOMP   =-mp -Mstack_arrays
 FMATH  =-r8
 FOPT   =-fast
