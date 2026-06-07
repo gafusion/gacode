@@ -1,0 +1,10 @@
+#!/bin/bash
+echo "Rank $OMPI_COMM_WORLD_RANK starting on node $(hostname)"
+
+# Clean and reliable GPU binding: local rank within node
+local_rank=$(( OMPI_COMM_WORLD_LOCAL_RANK % 4 ))
+export ACC_DEVICE_NUM=$local_rank
+export CUDA_VISIBLE_DEVICES=$local_rank
+
+echo "Rank $OMPI_COMM_WORLD_RANK → GPU $ACC_DEVICE_NUM (CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES) on $(hostname)"
+exec "$@"

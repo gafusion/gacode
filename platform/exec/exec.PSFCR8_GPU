@@ -29,6 +29,7 @@ mpirun -n $nmpi \
     -x LD_LIBRARY_PATH \
     -x UCX_TLS=rc,ud,cuda_copy,cuda_ipc,sm,self \
     -x UCX_RNDV_SCHEME=put_zcopy \
+    -x UCX_RNDV_THRESH=4096\
     -x UCX_IB_GPU_DIRECT_RDMA=yes \
     -x UCX_MEMTYPE_CACHE=y \
     $GACODE_ROOT/platform/exec/wrap.${GACODE_PLATFORM} $exec
