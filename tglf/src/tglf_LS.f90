@@ -288,7 +288,7 @@ if(new_matrix)then
             nb_of_unstable_modes = nb_of_unstable_modes + 1
           endif
         enddo
-        CALL sort_eigenvalues(nb_of_unstable_modes,jmax)
+        CALL sort_eigenvalues(MIN(nb_of_unstable_modes,maxmodes),jmax)
 
         do imax = 1, MIN(nb_of_unstable_modes,maxmodes)
           is_even = .false.
