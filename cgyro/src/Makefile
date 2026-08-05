@@ -32,7 +32,6 @@ OBJECTS = cgyro_globals.o \
           cgyro_error_estimate.o \
           cgyro_freq.o \
           cgyro_globalshear.o \
-          cgyro_upwind.o \
           cgyro_init.o \
           cgyro_init_h.o \
           cgyro_init_arrays.o \

@@ -32,6 +32,7 @@ subroutine cgyro_init_manager
 
   character(len=128) :: msg
   integer :: ie,ix
+  integer :: n_upwind_arr
 
   if (hiprec_flag == 1) then
      BYTE   = 8
@@ -121,6 +122,12 @@ subroutine cgyro_init_manager
         w_exi(ie,ix) = w_e(ie)*w_xi(ix)
      enddo
   enddo
+  ! needed on device for the post-stencil conservation moment reduction
+#if defined(OMPGPU)
+!$omp target enter data map(to:w_exi)
+#elif defined(_OPENACC)
+!$acc enter data copyin(w_exi)
+#endif
 
   allocate(theta(n_theta))
   allocate(thetab(n_theta,n_radial/box_size))
@@ -234,13 +241,17 @@ subroutine cgyro_init_manager
 #endif
      end select 
      
+     n_upwind_arr = 2
+     if (n_field<2) n_upwind_arr = 1 ! do not need current if I have a single field
+
      allocate(h_x(nc,nv_loc,nt1:nt2))
-     allocate(g_x(nc,nv_loc,nt1:nt2))
      allocate(h0_x(nc,nv_loc,nt1:nt2))
+     ! conservative-upwind scratch: raw dissipation flux before projection
+     allocate(upwind_flux(nc,nv_loc,nt1:nt2))
 #if defined(OMPGPU)
-!$omp target enter data map(alloc:h_x,g_x,h0_x)
+!$omp target enter data map(alloc:h_x,h0_x,upwind_flux)
 #elif defined(_OPENACC)
-!$acc enter data create(h_x,g_x,h0_x)
+!$acc enter data create(h_x,h0_x,upwind_flux)
 #endif
 
      allocate(cap_h_c(nc,nv_loc,nt1:nt2))
@@ -253,9 +264,10 @@ subroutine cgyro_init_manager
      allocate(omega_sbeta(nc,nv_loc,nt1:nt2))
      allocate(jvec_c(n_field,nc,nv_loc,nt1:nt2))
      allocate(jxvec_c(n_field,nc,nv_loc,nt1:nt2))
-     allocate(upfac1(nc,nv_loc,nt1:nt2))
-     allocate(upfac2(nc,nv_loc,nt1:nt2))
-     
+     ! post-stencil conservation projection factors (filled + device-copied
+     ! in cgyro_init_arrays).
+     allocate(upfac_num(nc,n_upwind_arr,nv_loc,nt1:nt2))
+
 #if defined(OMPGPU)
 !$omp target enter data map(alloc:cap_h_c,cap_h_ct)
 !$omp target enter data map(alloc:cap_h_v)
@@ -265,22 +277,32 @@ subroutine cgyro_init_manager
 #endif
 
      if (upwind_single_flag == 0) then
-       allocate(upwind_res_loc(nc,ns1:ns2,nt1:nt2))
-       allocate(upwind_res(nc,ns1:ns2,nt1:nt2))
+       allocate(upwind_res_loc(nc,n_upwind_arr,ns1:ns2,nt1:nt2))
+       allocate(upwind_res(nc,n_upwind_arr,ns1:ns2,nt1:nt2))
 #if defined(OMPGPU)
 !$omp target enter data map(alloc:upwind_res,upwind_res_loc)
 #elif defined(_OPENACC)
 !$acc enter data create(upwind_res,upwind_res_loc)
 #endif
      else
-       allocate(upwind32_res_loc(nc,ns1:ns2,nt1:nt2))
-       allocate(upwind32_res(nc,ns1:ns2,nt1:nt2))
+       allocate(upwind32_res_loc(nc,n_upwind_arr,ns1:ns2,nt1:nt2))
+       allocate(upwind32_res(nc,n_upwind_arr,ns1:ns2,nt1:nt2))
 #if defined(OMPGPU)
 !$omp target enter data map(alloc:upwind32_res,upwind32_res_loc)
 #elif defined(_OPENACC)
 !$acc enter data create(upwind32_res,upwind32_res_loc)
 #endif
+       ! the post-stencil conservation reduction uses the r64 arrays on all
+       ! backends, regardless of upwind_single_flag, so allocate them too
+       allocate(upwind_res_loc(nc,n_upwind_arr,ns1:ns2,nt1:nt2))
+       allocate(upwind_res(nc,n_upwind_arr,ns1:ns2,nt1:nt2))
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:upwind_res,upwind_res_loc)
+#elif defined(_OPENACC)
+!$acc enter data create(upwind_res,upwind_res_loc)
+#endif
      endif
+
 
      ! Nonlinear arrays
      if (nonlinear_flag == 1) then

@@ -45,7 +45,14 @@ subroutine cgyro_cleanup
      deallocate(xi)
   endif
   if(allocated(w_xi))          deallocate(w_xi)
-  if(allocated(w_exi))         deallocate(w_exi)
+  if(allocated(w_exi)) then
+#if defined(OMPGPU)
+!$omp target exit data map(release:w_exi)
+#elif defined(_OPENACC)
+!$acc exit data delete(w_exi)
+#endif
+     deallocate(w_exi)
+  endif
   if(allocated(xi_lor_mat))    deallocate(xi_lor_mat)
   if(allocated(xi_deriv_mat))  deallocate(xi_deriv_mat)
   
@@ -140,13 +147,21 @@ subroutine cgyro_cleanup
 #endif
      deallocate(h_x)
   endif
-  if(allocated(g_x)) then
+  if(allocated(upwind_flux)) then
 #if defined(OMPGPU)
-!$omp target exit data map(release:g_x)
+!$omp target exit data map(release:upwind_flux)
 #elif defined(_OPENACC)
-!$acc exit data delete(g_x)
+!$acc exit data delete(upwind_flux)
 #endif
-     deallocate(g_x)
+     deallocate(upwind_flux)
+  endif
+  if(allocated(upfac_num)) then
+#if defined(OMPGPU)
+!$omp target exit data map(release:upfac_num)
+#elif defined(_OPENACC)
+!$acc exit data delete(upfac_num)
+#endif
+     deallocate(upfac_num)
   endif
   if(allocated(h0_x)) then
 #if defined(OMPGPU)
@@ -231,22 +246,6 @@ subroutine cgyro_cleanup
   if(allocated(jvec_v))              deallocate(jvec_v)
   if(allocated(jxvec_c))  then
      deallocate(jxvec_c)
-  endif
-  if(allocated(upfac1))   then
-#if defined(OMPGPU)
-!$omp target exit data map(release:upfac1)
-#elif defined(_OPENACC)
-!$acc exit data delete(upfac1)
-#endif
-     deallocate(upfac1)
-  endif
-  if(allocated(upfac2))   then
-#if defined(OMPGPU)
-!$omp target exit data map(release:upfac2)
-#elif defined(_OPENACC)
-!$acc exit data delete(upfac2)
-#endif
-     deallocate(upfac2)
   endif
   if(allocated(cap_h_v))  then
 #if defined(OMPGPU)

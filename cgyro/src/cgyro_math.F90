@@ -40,6 +40,58 @@ subroutine cgyro_cmpl_copy(sz, left, r1)
     enddo
 end subroutine cgyro_cmpl_copy
 
+subroutine cgyro_cmpl_copy_to_fp32(sz, left, r1)
+    !-------------------------------------------------------
+    use, intrinsic :: iso_fortran_env
+    implicit none
+    !
+    integer, intent(in) :: sz
+    complex(KIND=REAL32), intent(out), dimension(*) :: left
+    complex, intent(in), dimension(*) :: r1
+    !
+    integer :: i
+    !-------------------------------------------------------
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd &
+!$omp&         map(from:left(1:sz)) &
+!$omp&         map(to:r1(1:sz))
+#elif defined(_OPENACC)
+!$acc parallel loop independent gang vector &
+!$acc&         present(left,r1)
+#else
+!$omp parallel do 
+#endif
+    do i=1,sz
+       left(i) = r1(i)
+    enddo
+end subroutine cgyro_cmpl_copy_to_fp32
+
+subroutine cgyro_cmpl_copy_from_fp32(sz, left, r1)
+    !-------------------------------------------------------
+    use, intrinsic :: iso_fortran_env
+    implicit none
+    !
+    integer, intent(in) :: sz
+    complex, intent(out), dimension(*) :: left
+    complex(KIND=REAL32), intent(in), dimension(*) :: r1
+    !
+    integer :: i
+    !-------------------------------------------------------
+#if defined(OMPGPU)
+!$omp target teams distribute parallel do simd &
+!$omp&         map(from:left(1:sz)) &
+!$omp&         map(to:r1(1:sz))
+#elif defined(_OPENACC)
+!$acc parallel loop independent gang vector &
+!$acc&         present(left,r1)
+#else
+!$omp parallel do 
+#endif
+    do i=1,sz
+       left(i) = r1(i)
+    enddo
+end subroutine cgyro_cmpl_copy_from_fp32
+
 subroutine cgyro_cmpl_copy2(sz, left1, left2, r1)
     !-------------------------------------------------------
     implicit none
