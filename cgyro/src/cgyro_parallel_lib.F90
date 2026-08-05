@@ -573,8 +573,8 @@ contains
 
     implicit none
 
-    complex, intent(inout), dimension(:,:,:) :: upwind_loc
-    complex, intent(inout), dimension(:,:,:) :: upwind
+    complex, intent(inout), dimension(:,:,:,:) :: upwind_loc
+    complex, intent(inout), dimension(:,:,:,:) :: upwind
     integer :: ierr
 
 #ifdef DISABLE_GPUDIRECT_MPI
@@ -591,9 +591,9 @@ contains
 #endif
 #endif
 
-    call MPI_ALLREDUCE(upwind_loc(:,:,:),&
-          upwind(:,:,:),&
-          size(upwind(:,:,:)),&
+    call MPI_ALLREDUCE(upwind_loc(:,:,:,:),&
+          upwind(:,:,:,:),&
+          size(upwind(:,:,:,:)),&
           MPI_DOUBLE_COMPLEX,&
           MPI_SUM,&
           clib_comm,&
@@ -623,8 +623,8 @@ contains
 
     implicit none
 
-    complex(KIND=REAL32), intent(inout), dimension(:,:,:) :: upwind_loc
-    complex(KIND=REAL32), intent(inout), dimension(:,:,:) :: upwind
+    complex(KIND=REAL32), intent(inout), dimension(:,:,:,:) :: upwind_loc
+    complex(KIND=REAL32), intent(inout), dimension(:,:,:,:) :: upwind
     integer :: ierr
 
 #ifdef DISABLE_GPUDIRECT_MPI
@@ -641,9 +641,9 @@ contains
 #endif
 #endif
 
-    call MPI_ALLREDUCE(upwind_loc(:,:,:),&
-          upwind(:,:,:),&
-          size(upwind(:,:,:)),&
+    call MPI_ALLREDUCE(upwind_loc(:,:,:,:),&
+          upwind(:,:,:,:),&
+          size(upwind(:,:,:,:)),&
           MPI_COMPLEX,&
           MPI_SUM,&
           clib_comm,&

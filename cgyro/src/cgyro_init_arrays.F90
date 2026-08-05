@@ -24,7 +24,6 @@ subroutine cgyro_init_arrays
   real, dimension(:,:,:), allocatable :: res_loc
   real, dimension(:,:,:), allocatable :: jloc_c
   real, dimension(:,:,:), allocatable :: res_norm
-  real, dimension(:,:), allocatable :: res_weight
   real, external :: spectraldiss
 
   real, dimension(:), allocatable :: gdlnndr,gdlntdr
@@ -201,26 +200,33 @@ subroutine cgyro_init_arrays
   !-------------------------------------------------------------------------
 
   !-------------------------------------------------------------------------
-  ! Conservative upwind factor
+  ! Conservative upwind projection factors
   !
   allocate(res_loc(nc,n_species,nt1:nt2))
   allocate(res_norm(nc,n_species,nt1:nt2))
-  allocate(res_weight(n_xi,n_energy))
 
-  if (res_weight_power < 1e-2) then
-     res_weight(:,:) = 1.0
-  else
-     do ix=1,n_xi
-        do ie=1,n_energy
-           res_weight(ix,ie) = (abs(xi(ix))*vel(ie))**res_weight_power
-        enddo
-     enddo
-  endif
- 
+  ! Note: Original code was using res_weight_power here
+  !       Ingoring it in the updated code
+
+  ! --------------------------------------------------------------------
+  ! Post-stencil conservation projection factors (all backends; computed
+  ! on the host, copied to device below).
+  !
+  ! The dissipation flux F is corrected by removing its ORTHOGONAL
+  ! projection (in the free-energy metric <a,b>=int f0 a b) onto the
+  ! conserved directions J0 (number) and J0*v_par (current):
+  !   upfac_num(:,1) = jvec_c(1) / (sum_v w_exi*jvec_c(1)^2)
+  !   upfac_num(:,2) = jvec_c(2) / (sum_v w_exi*jvec_c(2)^2)
+  ! Note: NO |v_par| weight here -- unlike the legacy pre-stencil
+  ! (|v_par|-weighted) factor, these subtract exactly the J0 / J0*v_par
+  ! component of F and nothing
+  ! more.  By parity (jvec_c(1) even, jvec_c(2) odd in v_par) the two are
+  ! orthogonal, so each conserves its moment without disturbing the other.
+  ! --------------------------------------------------------------------
   res_loc(:,:,:) = 0.0
-
-!$omp parallel private(ic,iv_loc,is,ix,ie)
-!$omp do collapse(2) reduction(+:res_loc)
+  ! NOTE: reduction is REQUIRED -- consecutive iv map to different species
+  ! (velocity_order=1 has is fastest), so threads collide on res_loc(:,is,:)
+!$omp parallel do collapse(2) private(iv_loc,is,ix,ie,ic) reduction(+:res_loc)
   do itor=nt1,nt2
    do iv=nv1,nv2
      iv_loc = iv-nv1+1
@@ -229,45 +235,61 @@ subroutine cgyro_init_arrays
      ie = ie_v(iv)
      do ic=1,nc
         res_loc(ic,is,itor) = res_loc(ic,is,itor) + &
-                w_exi(ie,ix)*jvec_c(1,ic,iv_loc,itor)**2*res_weight(ix,ie)
+                w_exi(ie,ix)*jvec_c(1,ic,iv_loc,itor)**2
      enddo
    enddo
   enddo
-!$omp end do
-!$omp end parallel
-
-  call MPI_ALLREDUCE(res_loc,&
-       res_norm,&
-       size(res_norm),&
-       MPI_DOUBLE_PRECISION,&
-       MPI_SUM,&
-       NEW_COMM_1,&
-       i_err)
-
+  call MPI_ALLREDUCE(res_loc,res_norm,size(res_norm),&
+       MPI_DOUBLE_PRECISION,MPI_SUM,NEW_COMM_1,i_err)
 !$omp parallel do collapse(2) private(iv_loc,is,ix,ie,ic)
   do itor=nt1,nt2
    do iv=nv1,nv2
      iv_loc = iv-nv1+1
      is = is_v(iv)
-     ix = ix_v(iv)
-     ie = ie_v(iv)
      do ic=1,nc
-        upfac1(ic,iv_loc,itor) = w_exi(ie,ix)*abs(xi(ix))*vel(ie) * &
-                jvec_c(1,ic,iv_loc,itor)
-        upfac2(ic,iv_loc,itor) = jvec_c(1,ic,iv_loc,itor)*res_weight(ix,ie)/ &
-                res_norm(ic,is,itor)
+        upfac_num(ic,1,iv_loc,itor) = jvec_c(1,ic,iv_loc,itor)/res_norm(ic,is,itor)
      enddo
    enddo
   enddo
 
-  deallocate(res_weight)
+  ! upfac_num(:,2) is meaningful only for n_field>1; 
+  if (n_field > 1) then
+     res_loc(:,:,:) = 0.0
+     ! reduction REQUIRED here too (see the number-moment loop above)
+!$omp parallel do collapse(2) private(iv_loc,is,ix,ie,ic) reduction(+:res_loc)
+     do itor=nt1,nt2
+      do iv=nv1,nv2
+        iv_loc = iv-nv1+1
+        is = is_v(iv)
+        ix = ix_v(iv)
+        ie = ie_v(iv)
+        do ic=1,nc
+           res_loc(ic,is,itor) = res_loc(ic,is,itor) + &
+                   w_exi(ie,ix)*jvec_c(2,ic,iv_loc,itor)**2
+        enddo
+      enddo
+     enddo
+     call MPI_ALLREDUCE(res_loc,res_norm,size(res_norm),&
+          MPI_DOUBLE_PRECISION,MPI_SUM,NEW_COMM_1,i_err)
+!$omp parallel do collapse(2) private(iv_loc,is,ix,ie,ic)
+     do itor=nt1,nt2
+      do iv=nv1,nv2
+        iv_loc = iv-nv1+1
+        is = is_v(iv)
+        do ic=1,nc
+           upfac_num(ic,2,iv_loc,itor) = jvec_c(2,ic,iv_loc,itor)/res_norm(ic,is,itor)
+        enddo
+      enddo
+     enddo
+  endif
+
   deallocate(res_norm)
   deallocate(res_loc)
-  
+
 #if defined(OMPGPU)
-!$omp target enter data map(to:upfac1,upfac2)
+!$omp target enter data map(to:upfac_num)
 #elif defined(_OPENACC)
-!$acc enter data copyin(upfac1,upfac2)
+!$acc enter data copyin(upfac_num)
 #endif
 
   !------------------------------------------------------------------------------

@@ -350,7 +350,6 @@ module cgyro_globals
   ! Distributions
   complex, dimension(:,:,:,:), allocatable :: rhs
   complex, dimension(:,:,:), allocatable :: h_x
-  complex, dimension(:,:,:), allocatable :: g_x
   complex, dimension(:,:,:), allocatable :: h0_x
   complex, dimension(:,:,:), allocatable :: h0_old
   complex, dimension(:,:,:,:), allocatable :: fA_nl,fB_nl
@@ -373,8 +372,10 @@ module cgyro_globals
   real(KIND=REAL32), dimension(:,:,:,:,:), allocatable :: jvec_c_nl32 ! used by NL only
   real, dimension(:,:,:,:,:), allocatable :: jvec_v
   real, dimension(:,:,:,:), allocatable :: jxvec_c
-  real, dimension(:,:,:), allocatable :: upfac1,upfac2
-
+  ! post-stencil conservation projection factors (free-energy-orthogonal,
+  ! no |v_par| weight): upfac_num(:,1) = J0/<J0,J0>, upfac_num(:,2) = J0*vpar/<..> .
+  ! upfac_num(:,2) needs Apar (n_field>1).
+  real, dimension(:,:,:,:), allocatable :: upfac_num
   !
   complex, dimension(:,:), allocatable :: epar
   integer :: nflux
@@ -440,10 +441,17 @@ module cgyro_globals
   ! Work arrays
   real, dimension(2) :: integration_error
   ! Upwind work arrays
-  complex, dimension(:,:,:),allocatable :: upwind_res_loc
-  complex, dimension(:,:,:),allocatable :: upwind_res
-  complex(KIND=REAL32), dimension(:,:,:),allocatable :: upwind32_res_loc
-  complex(KIND=REAL32), dimension(:,:,:),allocatable :: upwind32_res
+  ! 2nd dimension has a special meaning
+  !   1 - Base upwind data
+  !   2 - current (parallel-current) moment of the dissipation flux
+  complex, dimension(:,:,:,:),allocatable :: upwind_res_loc
+  complex, dimension(:,:,:,:),allocatable :: upwind_res
+  ! fp32 variant
+  complex(KIND=REAL32), dimension(:,:,:,:),allocatable :: upwind32_res_loc
+  complex(KIND=REAL32), dimension(:,:,:,:),allocatable :: upwind32_res
+  ! Raw (unprojected) upwind dissipation flux, used by the CPU/MPI
+  ! conservative-upwind path (density projection applied post-stencil)
+  complex, dimension(:,:,:),allocatable :: upwind_flux
   !
   ! LAPACK work arrays 
   real, dimension(:), allocatable :: work  

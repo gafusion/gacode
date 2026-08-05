@@ -135,7 +135,6 @@ subroutine cgyro_check_memory(datafile)
      call cgyro_alloc_add_3d(io,nc,nv_loc,nt_loc,16,'omega_h')
      call cgyro_alloc_add_3d(io,nc,nv_loc,nt_loc,16,'h_x')
      call cgyro_alloc_add_3d(io,nc,nv_loc,nt_loc,16,'h0_x')
-     call cgyro_alloc_add_3d(io,nc,nv_loc,nt_loc,16,'g_x')
      call cgyro_alloc_add_3d(io,nc,nv_loc,nt_loc,16,'cap_h_c')
      call cgyro_alloc_add_3d(io,nc,nv_loc,nt_loc,16,'cap_h_c_cur')
      call cgyro_alloc_add_3d(io,nc,nv_loc,nt_loc,16,'cap_h_ct')
@@ -148,8 +147,12 @@ subroutine cgyro_check_memory(datafile)
      if (nonlinear_flag == 1) call cgyro_alloc_add(io,n_field*n_radial*n_jtheta*nv_loc*n_toroidal*8.0,'jvec_c_nl')
      call cgyro_alloc_add_4d(io,n_field,nc_loc_coll,nv,nt_loc,8,'jvec_v')
      call cgyro_alloc_add_4d(io,n_field,nc,nv_loc,nt_loc,8,'jxvec_c')
-     call cgyro_alloc_add_3d(io,nc,nv_loc,nt_loc,8,'upfac1')
-     call cgyro_alloc_add_3d(io,nc,nv_loc,nt_loc,8,'upfac2')
+     if (n_field<2) then
+       call cgyro_alloc_add_4d(io,nc,1,nv_loc,nt_loc,8,'upfac_num')
+     else
+       call cgyro_alloc_add_4d(io,nc,2,nv_loc,nt_loc,8,'upfac_num')
+     endif
+     call cgyro_alloc_add_3d(io,nc,nv_loc,nt_loc,16,'upwind_flux')
 
      if (nonlinear_flag == 1) then
         write(io,*)
