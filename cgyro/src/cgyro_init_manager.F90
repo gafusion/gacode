@@ -246,7 +246,7 @@ subroutine cgyro_init_manager
 
      allocate(h_x(nc,nv_loc,nt1:nt2))
      allocate(h0_x(nc,nv_loc,nt1:nt2))
-     ! conservative-upwind scratch: raw dissipation flux before projection
+     ! conservative-upwind scratch: raw dissipation before projection
      allocate(upwind_flux(nc,nv_loc,nt1:nt2))
 #if defined(OMPGPU)
 !$omp target enter data map(alloc:h_x,h0_x,upwind_flux)

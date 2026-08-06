@@ -212,16 +212,7 @@ subroutine cgyro_init_arrays
   ! Post-stencil conservation projection factors (all backends; computed
   ! on the host, copied to device below).
   !
-  ! The dissipation flux F is corrected by removing its ORTHOGONAL
-  ! projection (in the free-energy metric <a,b>=int f0 a b) onto the
-  ! conserved directions J0 (number) and J0*v_par (current):
-  !   upfac_num(:,1) = jvec_c(1) / (sum_v w_exi*jvec_c(1)^2)
-  !   upfac_num(:,2) = jvec_c(2) / (sum_v w_exi*jvec_c(2)^2)
-  ! Note: NO |v_par| weight here -- unlike the legacy pre-stencil
-  ! (|v_par|-weighted) factor, these subtract exactly the J0 / J0*v_par
-  ! component of F and nothing
-  ! more.  By parity (jvec_c(1) even, jvec_c(2) odd in v_par) the two are
-  ! orthogonal, so each conserves its moment without disturbing the other.
+  ! The dissipation is corrected by removing its projection
   ! --------------------------------------------------------------------
   res_loc(:,:,:) = 0.0
   ! NOTE: reduction is REQUIRED -- consecutive iv map to different species

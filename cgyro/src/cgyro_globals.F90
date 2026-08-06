@@ -372,7 +372,7 @@ module cgyro_globals
   real(KIND=REAL32), dimension(:,:,:,:,:), allocatable :: jvec_c_nl32 ! used by NL only
   real, dimension(:,:,:,:,:), allocatable :: jvec_v
   real, dimension(:,:,:,:), allocatable :: jxvec_c
-  ! post-stencil conservation projection factors (free-energy-orthogonal,
+  ! post-stencil conservation projection factors
   ! no |v_par| weight): upfac_num(:,1) = J0/<J0,J0>, upfac_num(:,2) = J0*vpar/<..> .
   ! upfac_num(:,2) needs Apar (n_field>1).
   real, dimension(:,:,:,:), allocatable :: upfac_num

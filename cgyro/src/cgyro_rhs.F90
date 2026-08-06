@@ -183,29 +183,6 @@ subroutine cgyro_rhs_comp2(ij)
 
   ! =====================================================================
   ! Conservative-upwind path -- post-stencil projection
-  !
-  !     D g = -c Q S |v_par| g ,      Q = I - P
-  !
-  ! P is the ORTHOGONAL projection (in the free-energy metric <a,b>=int f0 a b)
-  ! at each theta point onto J0(gamma_a) and, for n_field>1, J0*v_par -- i.e.
-  ! it subtracts exactly the J0 / J0*v_par component of the flux, no |v_par|
-  ! weight (see upfac_num/upfac_cur).  It is applied to the OUTPUT of the
-  ! theta-nonlocal stencil S, using the LOCAL J0.  Because P Q = 0 at each point,
-  !
-  !     (moment functional) . D g = P Q S g = 0   exactly,
-  !
-  ! for any g, any grid, any d(J0)/d(theta) -- i.e. number and current are
-  ! conserved exactly even where J0(gamma_a) varies rapidly with the
-  ! ballooning angle.  (Projecting the INPUT instead, D = S Q, leaves a
-  ! residual P S Q ~ [S,P] ~ d(J0)/d(theta): the spurious grid-scale source
-  ! behind the slow finite-beta instability.  See Desktop/upwind_projection.)
-  !
-  ! For n_field>1 Q removes BOTH the number moment (jvec_c(1)=J0, couples to
-  ! phi/Poisson) and the parallel-current moment (jvec_c(2)~J0*v_par, couples
-  ! to A_par/Ampere).  The two are parity-orthogonal, so they are independent
-  ! subtractions.  Restoring current conservation removes the spurious A_par
-  ! drive that the 2023 (number-only) scheme had dropped.
-  !
   ! g_x logically holds |v_par|*g (unprojected; set in cgyro_upwind).  Here:
   ! Pass A : central streaming (advection) -> rhs, and S[g_x] -> upwind_flux
   ! Reduce : number & current moments of upwind_flux over velocity  (MPI)
