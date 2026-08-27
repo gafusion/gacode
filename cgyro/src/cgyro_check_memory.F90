@@ -147,6 +147,13 @@ subroutine cgyro_check_memory(datafile)
      if (nonlinear_flag == 1) call cgyro_alloc_add(io,n_field*n_radial*n_jtheta*nv_loc*n_toroidal*8.0,'jvec_c_nl')
      call cgyro_alloc_add_4d(io,n_field,nc_loc_coll,nv,nt_loc,8,'jvec_v')
      call cgyro_alloc_add_4d(io,n_field,nc,nv_loc,nt_loc,8,'jxvec_c')
+     if (momentum_print_flag == 1) then
+       call cgyro_alloc_add_4d(io,n_field,nc,nv_loc,nt_loc,8,'jmvec_c')
+       call cgyro_alloc_add(io,2.0*(n_global+1)*n_species*3*n_field*nt_loc*16,&
+            'gflux_mom + gflux_mom_loc')
+       call cgyro_alloc_add(io,2.0*n_species*3*n_field*nt_loc*8,&
+            'cflux_mom + cflux_mom_loc')
+     endif
      if (n_field<2) then
        call cgyro_alloc_add_4d(io,nc,1,nv_loc,nt_loc,8,'upfac_num')
      else

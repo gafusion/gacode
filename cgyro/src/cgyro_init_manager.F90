@@ -182,7 +182,7 @@ subroutine cgyro_init_manager
      ! Note: cgyro_field_e_init called in cgyro_init_h
 
      call cgyro_flux_init(n_radial,theta_plot,n_species,n_field,&
-                          n_global,nc,nv_loc,nt1,nt2)
+                          n_global,nc,nv_loc,nt1,nt2,momentum_print_flag)
      allocate(epar(nc,nt1:nt2))
 
      allocate(recv_status(MPI_STATUS_SIZE))

@@ -80,6 +80,7 @@ module cgyro_globals
   integer :: moment_print_flag
   integer :: gflux_print_flag
   integer :: field_print_flag
+  integer :: momentum_print_flag
   real :: amp0
   real :: amp
   real :: gamma_e
@@ -248,6 +249,8 @@ module cgyro_globals
   character(len=12) :: binfile_hb      = 'bin.cgyro.hb'
   character(len=17) :: binfile_ky_flux = 'bin.cgyro.ky_flux'
   character(len=18) :: binfile_ky_cflux = 'bin.cgyro.ky_cflux'
+  character(len=21) :: binfile_ky_flux_mom = 'bin.cgyro.ky_flux_mom'
+  character(len=22) :: binfile_ky_cflux_mom = 'bin.cgyro.ky_cflux_mom'
   character(len=15), dimension(4) :: binfile_fieldb = &
        (/'bin.cgyro.phib ','bin.cgyro.aparb','bin.cgyro.bparb','bin.cgyro.eparb'/)
   character(len=16), dimension(3) :: binfile_kxky = &

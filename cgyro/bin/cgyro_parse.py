@@ -67,6 +67,7 @@ x.add('H_PRINT_FLAG','0')
 x.add('MOMENT_PRINT_FLAG','0')
 x.add('GFLUX_PRINT_FLAG','0')
 x.add('FIELD_PRINT_FLAG','0')
+x.add('MOMENTUM_PRINT_FLAG','0')
 x.add('AMP0','0.0')
 x.add('AMP','0.1')
 x.add('GAMMA_E','0.0')
@@ -166,5 +167,4 @@ x.read_input('input.cgyro')
 x.printmsg()
 
 sys.exit(x.error)
-
 

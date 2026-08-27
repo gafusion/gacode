@@ -4,6 +4,7 @@ subroutine cgyro_init_arrays
   use cgyro_globals
   use cgyro_field_mod, only : cgyro_field_c_init_coefficients, &
                               cgyro_field_v_init_coefficients
+  use cgyro_flux_mod, only : jmvec_c
   use cgyro_io
   use parallel_lib
 
@@ -116,6 +117,21 @@ subroutine cgyro_init_arrays
               endif
            endif
            
+        endif
+
+        if (momentum_print_flag == 1) then
+           jmvec_c(:,ic,iv_loc,itor) = 0.0
+
+           if (n_field > 1) then
+              efac = -xi(ix)*vel2(ie)*vth(is)
+              jmvec_c(2,ic,iv_loc,itor) = efac*fac*jloc_c(3,ic,itor)
+
+              if (n_field > 2 .and. itor /= 0) then
+                 jmvec_c(3,ic,iv_loc,itor) = fac*z(is)*bmag(it)/mass(is) &
+                      /(k_perp(ic,itor)*rho)**2 &
+                      *bmag(it)*jloc_c(2,ic,itor)
+              endif
+           endif
         endif
      enddo
    enddo

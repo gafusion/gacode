@@ -10,8 +10,8 @@ subroutine cgyro_write_timedata
   use mpi
   use cgyro_globals
   use cgyro_field_mod, only : field_cur
-  use cgyro_flux_mod, only: cflux,gflux,moment, &
-          cgyro_flux_sync_cap_h_c_cur, cgyro_flux
+  use cgyro_flux_mod, only: cflux,gflux,moment,cflux_mom,gflux_mom, &
+          nflux_mom,cgyro_flux_sync_cap_h_c_cur,cgyro_flux
   use cgyro_step
 
   implicit none
@@ -53,6 +53,20 @@ subroutine cgyro_write_timedata
        trim(path)//binfile_ky_cflux,&
        size(cflux(:,1:nflux,:,:)),&
        cflux(:,1:nflux,:,:))
+
+  if (momentum_print_flag == 1) then
+     ! Three-way momentum-flux decomposition with field breakdown
+     call cgyro_write_distributed_breal(&
+          trim(path)//binfile_ky_flux_mom,&
+          size(gflux_mom(0,:,1:nflux_mom,:,:)),&
+          real(gflux_mom(0,:,1:nflux_mom,:,:)))
+
+     ! Central three-way momentum-flux decomposition
+     call cgyro_write_distributed_breal(&
+          trim(path)//binfile_ky_cflux_mom,&
+          size(cflux_mom(:,1:nflux_mom,:,:)),&
+          cflux_mom(:,1:nflux_mom,:,:))
+  endif
 
   if (gflux_print_flag == 1) then
      ! Global (n,e,v) fluxes for all species
