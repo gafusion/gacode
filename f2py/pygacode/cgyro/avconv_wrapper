@@ -10,12 +10,7 @@ QUALITY=$3
 PRE=$4
 
 # Main movie definitions
-if [ "$PRE" = "3" ]; then
-    BASENAME=%03d.png
-else
-    #BASENAME=$PRE%d.jpg
-    BASENAME=$PRE%d.png
-fi
+BASENAME=$PRE%d.jpg
 OUT=${PRE}movie.mp4
 
 if hash avconv 2>/dev/null ; then

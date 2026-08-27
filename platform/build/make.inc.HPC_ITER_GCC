@@ -1,0 +1,54 @@
+#---------------------------------------------------
+# HPC_ITER (Intel fortran, MPICH2)
+#---------------------------------------------------
+
+IDENTITY="ITER compute cluster"
+CORES_PER_NODE=1
+NUMAS_PER_NODE=1
+
+# Compilers
+FC  = mpif90 -std=f2008 -fall-intrinsics -I$(GACODE_ROOT)/modules -J $(GACODE_ROOT)/modules -fPIC
+F77 = mpif77 -I$(GACODE_ROOT)/modules
+CC  = gcc
+
+FOMP   = -fopenmp
+FMATH  = -fdefault-real-8 -fdefault-double-8 
+FOPT   = -Ofast
+FDEBUG = -Wall -W fcheck=mem,bounds -g -fbacktrace -ffpe-trap=invalid,zero,overflow
+#F2PY = f2py2.7
+
+# System math libraries
+
+FFTW_DIR=/work/imas/opt/EasyBuild/software/FFTW/3.3.7-gompi-2018a
+LMATH  = $(LLIBS) -llapack -lblas -L$(FFTW_DIR)/lib -lfftw3_threads -lfftw3f_threads -lfftw3f -lfftw3
+FFTW_INC = $(FFTW_DIR)/include
+
+ifdef FANN_ROOT
+   # neural net libraries
+   NN_LIB=-L$(GACODE_ROOT)/../neural/ -I$(GACODE_ROOT)/../neural/ -lbrainfuse -L$(FANN_ROOT)/lib -lfann
+endif
+
+NETCDF_DIR=/work/imas/opt/EasyBuild/software/netCDF-Fortran/4.4.4-foss-2018a
+NETCDF = -L$(NETCDF_DIR)/lib -lnetcdff -lnetcdf -Wl,-rpath,$(NETCDF_DIR)/lib
+NETCDF_INC = $(NETCDF_DIR)/include
+
+
+# Archive
+
+ARCH = ar cr
+
+# NEO platform defs
+ifdef SUPERLU_DIR
+  SUPERLU_LIB += -Wl,-rpath,${SUPERLU_DIR}/lib -L${SUPERLU_DIR}/lib -lsuperlu
+  SUPERLU_INC += -I${SUPERLU_DIR}/include
+endif
+
+ifdef PETSC_DIR
+  PETSC_LIB += -Wl,-rpath,$(PETSC_DIR)/lib -L$(PETSC_DIR)/lib -lpetsc -lsuperlu
+  PETSC_INC += -I$(PETSC_DIR)/include
+endif
+
+ifdef CUDA_DIR
+  CUDA_LIB += -L$(CUDA_DIR)/lib64 -lcusolver -lcudart -lcusparse
+  CUDA_INC += -I$(CUDA_DIR)/include
+endif

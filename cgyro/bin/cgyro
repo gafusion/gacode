@@ -16,14 +16,14 @@ then
   echo
   echo "Usage:   cgyro [options]"
   echo
-  echo "         -h"
-  echo "         Version and platform information."
-  echo
   echo "         -p <path>"
   echo "         Set optional path to simulation directory."
   echo "         The default path is \$CGYRO_DIR/sim."
   echo
   echo "TEST MODE"
+  echo
+  echo "         -i <simdir>"
+  echo "         Print acceptable MPI tasks."
   echo
   echo "         -t <simdir>"
   echo "         Sanity test for INPUT data in <simdir>."
@@ -38,6 +38,12 @@ then
   echo
   echo "         -nomp <threads>"
   echo "         Number of OpenMP threads per MPI task."
+  echo
+  echo "         -numa <n>"
+  echo "         NUMAs active per node."
+  echo
+  echo "         -mpinuma <n>"
+  echo "         MPI tasks per active NUMA."
   echo
   echo "REGRESSION TESTING"
   echo
@@ -69,46 +75,22 @@ then
   echo "         -g <template>"
   echo "         Copy <template> into simulation path."
   echo
-  echo "UTILITIES (call without further args for help)"
+  echo "UTILITIES"
   echo
-  echo "         --i"
-  echo "         Print acceptable MPI tasks"
+  echo "         -h"
+  echo "         Version and platform information."
   echo
-  echo "         --res"
-  echo "         Analyze radial resolution"
-  echo 
-  echo "         --converge"
-  echo "         Check convergence"
+  echo "         -clean"
+  echo "         Clean simulation directory (all out.* and bin.* files)."
   echo
-  echo "         --db"
-  echo "         Database manager"
+  echo "         -optclean"
+  echo "         Clean simulation directory except for timing files."
   echo
-  echo "         --ml"
-  echo "         Machine learning tool"
+  echo "         -compress"
+  echo "         Replicate directory, but without restart or nonstandard files."
   echo
-  echo "         --dbplot"
-  echo "         Interactive database plotter"
-  echo
-  echo "         --json"
-  echo "         Export simulation data (JSON, TGLF, IMAS)"
-  echo
-  echo "         --dmd"
-  echo "         DMD analysis"
-  echo
-  echo "         --c"
-  echo "         Clean/copy utility (clean, copy)"
-  echo
-  echo "         --pre"
-  echo "         Input manager (create/modify input.cgyro)"
-  echo 
-  echo "         --pert"
-  echo "         Helper to create input.xgyro via perturbations"
-  echo
-  echo "         --skew"
-  echo "         Plot extended ballooning mode structure"
-  echo
-  echo "         --loc"
-  echo "         Local parameter extraction (locpargen wrapper)"
+  echo "         -refresh"
+  echo "         Run cgyro (test mode) on cwd and all subdirectories."
 
   exit 1
 fi
@@ -119,17 +101,22 @@ fi
 #
 SIMROOT=$PWD
 CGYRO_DIR=$GACODE_ROOT/cgyro
-UTIL_DIR=$CGYRO_DIR/bin/util
 # Default number of cores
 NPROC=1
 NOMP=1
+NUMA=0
+MPINUMA=0
 # Execute/test mode flags
 TEST_FLAG=0
 GENERATE_FLAG=0
 REGRESS_FLAG=0
 REGRESS_RESTART=0
 MTEST_FLAG=0
+CLEAN=0
+COMPRESS_FLAG=0
+REFRESH_FLAG=0
 RESET=0
+INIT_FLAG=0
 HELP_TAG=null
 SCASE=
 MCASE=
@@ -138,45 +125,8 @@ MCASE=
 #=============================================================
 # Parse command line options
 #
-if [ $# -le 1 ]; then
-    # No extra args means get help
-    uarg="-h"
-else
-    uarg="${@:2}"
-fi
-
 while [ $# -gt 0 ] ; do
   case "$1" in
-
-  --i) python $CGYRO_DIR/bin/cgyro_parse.py ;
-       python $UTIL_DIR/cgyro_mpi_grid.py ;
-       exit 0 ;;
-
-  --res) python $CGYRO_DIR/bin/cgyro_parse.py ;
-       python $UTIL_DIR/cgyro_res_check.py ;
-       exit 0 ;;
-
-  --converge) $UTIL_DIR/cgyro_converge $uarg ; exit 0 ;;
-
-  --db) $UTIL_DIR/cgyro_db $uarg ; exit 0 ;;
-
-  --ml) $UTIL_DIR/cgyro_ml $uarg ; exit 0 ;;
-
-  --dbplot) $UTIL_DIR/cgyro_dbplot $uarg ; exit 0 ;;
-
-  --dmd) $UTIL_DIR/cgyro_dmd $uarg ; exit 0 ;;
-
-  --json) $UTIL_DIR/cgyro_json $uarg ; exit 0 ;;
-
-  --c) $UTIL_DIR/cgyro_clean $uarg ; exit 0 ;;
-
-  --pre) $UTIL_DIR/cgyro_pre $uarg ; exit 0 ;;
-
-  --pert) $UTIL_DIR/cgyro_pert $uarg ; exit 0 ;;
-
-  --skew) $UTIL_DIR/cgyro_skew $uarg ; exit 0 ;;
-
-  --loc) $UTIL_DIR/cgyro_loc $uarg ; exit 0 ;;
 
   -p) shift ; SIMROOT=$1 ;;
 
@@ -212,9 +162,15 @@ while [ $# -gt 0 ] ; do
 
   -help) shift ; HELP_TAG=$1 ;;
 
+  -clean) CLEAN=1 ;;
+  -optclean) CLEAN=2 ;;
+
+  -compress) COMPRESS_FLAG=1 ;;
+
+  -refresh) REFRESH_FLAG=1 ;;
+
   *) echo "ERROR (cgyro script): unknown option $1." ; exit 1 ;;
 
-  
   esac
   shift
 done
@@ -231,11 +187,38 @@ fi
 #============================================================
 # Check for inconsistent flags:
 FLAG_SUM=$[ $EXEC_FLAG + $TEST_FLAG + $GENERATE_FLAG
-                       + $REGRESS_FLAG + $MTEST_FLAG ]
+                       + $REGRESS_FLAG + $MTEST_FLAG + $INIT_FLAG ]
 if [ $FLAG_SUM -gt 1 ]
 then
    echo "ERROR: Can only specify one of -e, -t, -i, -g, -r, -m"
    exit 1
+fi
+#============================================================
+
+#============================================================
+# compress option
+if [ $COMPRESS_FLAG -eq 1 ]
+then
+    cgyro_compress $SIMDIR $LOCDIR
+    exit 1
+fi
+#============================================================
+
+#============================================================
+# refresh option: run cgyro test mode on cwd and all subdirs
+if [ $REFRESH_FLAG -eq 1 ]
+then
+   if [ ! -f $CGYRO_DIR/src/cgyro ]
+   then
+      echo "ERROR: CGYRO executable not found."
+      exit 1
+   fi
+   while IFS= read -r f; do
+      dir=$(dirname "$f")
+      echo "INFO: (cgyro) Refreshing $dir"
+      ( cd "$dir" && python $CGYRO_DIR/bin/cgyro_parse.py && $CGYRO_DIR/src/cgyro 1 )
+   done < <(find "$PWD" -name "input.cgyro" | sort)
+   exit 0
 fi
 #============================================================
 
@@ -311,6 +294,25 @@ cd $SIMDIR
 #============================================================
 
 #============================================================
+# Clean/new options
+
+CFILES="bin.* batch.out batch.err *~"
+C1FILES="out.* *gen"
+C2FILES="*egrid *equilibrium *grids *hosts *memory *rotation"
+
+if [ $CLEAN -eq 1 ] ; then
+    rm -f $CFILES $C1FILES
+    echo "INFO: (cgyro) Cleaned directory."
+    exit 1
+fi
+if [ $CLEAN -eq 2 ] ; then
+    rm -f $CFILES $C2FILES
+    echo "INFO: (cgyro) Thinned out directory."
+    exit 1
+fi
+#============================================================
+
+#============================================================
 # datafile check
 if [ -s 'out.cgyro.time' ] ; then
    ncol=`awk '{print NF}' out.cgyro.time | sort -nu | tail -n 1`
@@ -331,20 +333,20 @@ then
 fi
 #==========================================================
 
+#============================================================
+# Init mode
+if [ $INIT_FLAG -eq 1 ]
+then
+   python $GACODE_ROOT/cgyro/bin/cgyro_mpi_grid.py
+   exit 0
+fi
+#============================================================
+
 #===========================================================
 # RUN CGYRO
 #
 # Version stamp
 # NOTE: log all starts and restarts, but NOT test mode
-
-# Check for executable
-if [ -f $CGYRO_DIR/src/cgyro ] ; then
-   gacode_printversion CGYRO
-else
-   echo "ERROR: CGYRO executable not found."
-   exit 1
-fi
-
 if [ $TEST_FLAG -eq 0 ]
 then
    # If there are no restart files, its safe to overwrite the log file
@@ -364,12 +366,26 @@ then
       simtime=0.0
    fi
    echo "$date_tag [$version_tag][$GACODE_PLATFORM][$simtime]" >> out.cgyro.version
-
-   $GACODE_ROOT/platform/exec/exec.$GACODE_PLATFORM \
-      $SIMDIR $NPROC "$CGYRO_DIR/src/cgyro $TEST_FLAG" $NOMP
 else
-    $GACODE_ROOT/cgyro/src/cgyro
-    # Print runfile for test case
-    cat out.cgyro.info
+   NUMA=1
+   MPINUMA=1
+fi
+
+gacode_printversion CGYRO
+
+if [ -f $CGYRO_DIR/src/cgyro ] ; then
+   $GACODE_ROOT/platform/exec/exec.$GACODE_PLATFORM \
+      $SIMDIR $NPROC "$CGYRO_DIR/src/cgyro $TEST_FLAG" $NOMP $NUMA $MPINUMA
+else
+   echo "ERROR: CGYRO executable not found."
+   exit 1
 fi
 #===========================================================
+
+#============================================================
+# Print runfile if test case
+if [ $TEST_FLAG -eq 1 ]
+then
+    python $GACODE_ROOT/shared/bin/osxlist.py out.cgyro.info
+fi
+#============================================================

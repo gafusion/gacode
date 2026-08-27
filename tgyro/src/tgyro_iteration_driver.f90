@@ -81,6 +81,11 @@ subroutine tgyro_iteration_driver
      ! Multi-Mode model gradient
      flux_method = 6
 
+  else if (lcode == 'qlgyro') then
+
+     ! QLGYRO
+     flux_method = 8
+
   endif
 
   !---------------------------------------------

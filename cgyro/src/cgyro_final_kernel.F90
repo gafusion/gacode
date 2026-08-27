@@ -14,6 +14,7 @@ subroutine cgyro_final_kernel
   use timer_lib
   use mpi
   use cgyro_globals
+  use cgyro_field_mod, only : field
   use cgyro_io
 
   implicit none

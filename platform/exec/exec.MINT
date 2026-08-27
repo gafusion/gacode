@@ -5,11 +5,9 @@ simdir=${1}
 nmpi=${2}
 exec=${3}
 nomp=${4}
+numa=${5}
+mpinuma=${6}
 
 cd $simdir
+mpiexec -env OMP_NUM_THREADS $nomp -n $nmpi $exec 
 
-mpiexec -n $nmpi \
-  -env OMP_NUM_THREADS $nomp \
-  -env OMP_PROC_BIND false \
-  -env OMP_PLACES threads \
-  $exec

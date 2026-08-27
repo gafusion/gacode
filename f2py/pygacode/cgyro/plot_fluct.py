@@ -31,7 +31,6 @@ colormap = sys.argv[11]
 font = int(sys.argv[12])
 land = int(sys.argv[13])
 theta = int(sys.argv[14])
-xshift = bool(int(sys.argv[15]))
 
 # Use first 3 args to define plot and font size
 rc('text',usetex=False)
@@ -215,47 +214,32 @@ def frame():
       xp = x/(2*np.pi)*xmax
       yp = y/(2*np.pi)*ymax
 
-      # Map from x=[0,xmax] to x=[-xmax/2,xmax/2]
-      if xshift:
-         j = nr//2
-         xp = xp-xmax/nr*j
-         f  = np.roll(f,j,axis=0)
-      
       # Periodic extensions
-      if xshift:
-         xp = np.append(xp,xmax/2)
-      else:
-         xp = np.append(xp,xmax)        
+      xp = np.append(xp,xmax)
       yp = np.append(yp,ymax)
       fp = np.zeros([nx+1,ny+1])
       fp[0:nx,0:ny] = f[:,:]
       fp[-1,:] = fp[0,:]
       fp[:,-1] = fp[:,0]
-      
+
       levels = np.arange(f0,f1,(f1-f0)/256)
       if land == 0:
          fig = plt.figure(figsize=(px/100.0,py/100.0))
          ax = fig.add_subplot(111)
          ax.set_xlabel(r'$x/\rho_s$')
          ax.set_ylabel(r'$y/\rho_s$')
-         #ax.set_xlim([0,xmax])
-         #ax.set_ylim([0,ymax])
+         ax.set_xlim([0,xmax])
+         ax.set_ylim([0,ymax])
          ax.contourf(xp,yp,np.transpose(fp),levels,cmap=plt.get_cmap(colormap))
       else:
          fig = plt.figure(figsize=(px/100.0,py/100.0))
          ax = fig.add_subplot(111)
          ax.set_xlabel(r'$y/\rho_s$')
          ax.set_ylabel(r'$x/\rho_s$')
-         #ax.set_xlim([0,ymax])
-         #ax.set_ylim([0,xmax])
+         ax.set_xlim([0,ymax])
+         ax.set_ylim([0,xmax])
          ax.contourf(yp,xp,fp,levels,cmap=plt.get_cmap(colormap))
 
-      if xshift:
-         c = '#aaaaaa'
-         ax.axvline(-xmax/4,color=c,linewidth=2)
-         ax.axvline(+xmax/4,color=c,linewidth=2)
-
-         
       print('INFO: (plot_fluct '+mode+') min=%e , max=%e  (t=%e)' % (f0,f1,t))
       print('INFO: (plot_fluct) Shape = '+str(f.shape))
 

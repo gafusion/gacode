@@ -149,7 +149,7 @@ do n=1, n_proc
   m1 = MPI_Wtime()
 
 #ifdef OMPGPU
-!$omp target data use_device_addr(t1,t2)
+!$omp target data use_device_ptr(t1,t2)
 #else
 !$acc host_data use_device(t1,t2)
 #endif
@@ -210,7 +210,7 @@ do n=1, n_proc
   endif
 
 #ifdef OMPGPU
-!$omp target data use_device_addr(t2,t3)
+!$omp target data use_device_ptr(t2,t3)
 #else
 !$acc host_data use_device(t2,t3)
 #endif
@@ -306,7 +306,7 @@ do n=1, n_proc
     enddo
 
 #ifdef OMPGPU
-!$omp target data use_device_addr(t1,t2)
+!$omp target data use_device_ptr(t1,t2)
 #else
 !$acc host_data use_device(t1,t2)
 #endif
@@ -360,7 +360,7 @@ do n=1, n_proc
     enddo
 
 #ifdef OMPGPU
-!$omp target data use_device_addr(t1,t2)
+!$omp target data use_device_ptr(t1,t2)
 #else
 !$acc host_data use_device(t1,t2)
 #endif

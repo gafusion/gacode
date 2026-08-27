@@ -15,6 +15,9 @@ module cgyro_globals
 
   use, intrinsic :: iso_fortran_env
 
+  integer :: sbeta_const_flag
+  real :: sbeta_h
+  
   !---------------------------------------------------------------
   ! Input parameters:
   !
@@ -41,9 +44,6 @@ module cgyro_globals
   integer :: nup_radial
   integer :: nup_theta
   integer :: nup_alpha
-  integer :: hyper_flag
-  integer :: hyper_order
-  real    :: hyper_coeff
   integer :: n_wave
   integer :: constant_stream_flag
   integer :: explicit_trap_flag
@@ -52,6 +52,7 @@ module cgyro_globals
   real    :: ipccw
   real    :: btccw
   integer :: silent_flag
+  integer :: profile_model
   integer :: equilibrium_model
   integer :: collision_model
   integer :: collision_mom_restore
@@ -64,8 +65,8 @@ module cgyro_globals
   integer :: collision_test_mode
   integer :: collision_field_max_l
   integer :: collision_test_max_l
-  integer :: z_eff_method
   real    :: z_eff
+  integer :: z_eff_method
   integer :: zf_test_mode 
   integer :: nonlinear_flag 
   real :: temp_ae
@@ -86,7 +87,6 @@ module cgyro_globals
   real :: gamma_p
   real :: mach
   integer :: rotation_model
-  integer :: nt_loc
   integer :: mpi_rank_order
   integer :: velocity_order
   integer :: hiprec_flag
@@ -101,9 +101,7 @@ module cgyro_globals
   integer :: nl_single_flag
   real :: px0
   integer :: exch_flag
-  integer :: nl_min
-  real :: dealias
-  integer :: dealias_order
+  real :: res_weight_power
   integer :: scale_index
   real :: scale_stream
   real :: scale_trap
@@ -130,7 +128,6 @@ module cgyro_globals
   real, dimension(0:n_shape) :: shape_cos
   real, dimension(0:n_shape) :: shape_s_cos
   real :: betae_unit
-  real :: beta_star_scale
   !
   ! Species parameters
   !
@@ -147,31 +144,28 @@ module cgyro_globals
   real :: sbeta
 
   integer :: subroutine_flag  ! only used for cgyro_read_input
-  !---------------------------------------------------------------
 
-  !---------------------------------------------------------------
-  ! Physics variables
-  !
-  integer :: ae_flag
-  integer :: is_ele
-  real :: dens_ele
-  real :: temp_ele
-  real :: mass_ele
-  real :: dlnndr_ele
-  real :: dlntdr_ele
-  !
-  real, dimension(11) :: vth  
-  real, dimension(11) :: nu
-  real :: rho
-  real :: length
-  integer :: sign_qs
-  ! k_theta = k_theta_base * my_toroidal
-  real :: k_theta_base
-  ! omega_eb = omega_eb_base * my_toroidal
-  real :: omega_eb_base
+  ! Re-scaling parameters for experimental profiles
+  integer :: quasineutral_flag
+  real :: lambda_star_scale
+  real :: gamma_e_scale
+  real :: gamma_p_scale
+  real :: mach_scale
+  real :: beta_star_scale, betae_unit_scale
+  real :: nu_ee_scale
+  real :: zf_scale
+  real, dimension(11) :: dlnndr_scale
+  real, dimension(11) :: dlntdr_scale
 
   real :: lambda_debye
-  real :: b_gs2
+  real :: rhos
+
+  ! Global conversion variables
+  real :: b_unit, b_gs2
+  real :: a_meters
+  real :: dens_norm, temp_norm, vth_norm, mass_norm, rho_star_norm
+  real :: gamma_gb_norm, q_gb_norm, pi_gb_norm
+  
   !---------------------------------------------------------------
 
   !---------------------------------------------------------------
@@ -221,7 +215,7 @@ module cgyro_globals
   integer, dimension(:,:,:), allocatable :: iv_v
   integer, dimension(:), allocatable :: ica_c,icb_c
   !
-  integer :: nt1,nt2
+  integer :: nt1,nt2,nt_loc
   integer :: n_toroidal_procs
   ! For multi-simulation handling
   integer :: n_sim          ! how many simulations is coll processing at once
@@ -308,15 +302,34 @@ module cgyro_globals
   complex :: freq_err
   integer(KIND=8) :: kernel_start_time, kernel_exit_time, kernel_count_rate, kernel_count_max
   !---------------------------------------------------------------
-  integer :: i_at_restart
-  real    :: t_at_restart
+
+  !---------------------------------------------------------------
+  ! Physics variables
+  !
+  integer :: ae_flag
+  integer :: is_ele
+  real :: dens_ele
+  real :: temp_ele
+  real :: mass_ele
+  real :: dlnndr_ele
+  real :: dlntdr_ele
+  !
+  real, dimension(11) :: vth  
+  real, dimension(11) :: nu
+  real :: rho
+  real :: length
+  integer :: sign_qs
+  ! k_theta = k_theta_base * my_toroidal
+  real :: k_theta_base
+  ! omega_eb = omega_eb_base * my_toroidal
+  real :: omega_eb_base
   !---------------------------------------------------------------
 
   !---------------------------------------------------------------
   ! Numerical/work arrays and dimensions
   !
   ! Velocity space 
-  integer :: px_zero ! Hostorical: used to be px(ir) := ir - px_zero
+  integer, dimension(:), allocatable :: px
   real, dimension(:), allocatable :: energy, vel, vel2, w_e
   real, dimension(:), allocatable :: xi, w_xi
   real, dimension(:,:), allocatable :: w_exi
@@ -335,12 +348,11 @@ module cgyro_globals
   real, parameter :: tau_ave=50.0
   real, dimension(:), allocatable :: c_wave
   complex, dimension(:,:,:), allocatable :: source
-  real :: dsrc
+  real :: sa
   !
   ! Distributions
   complex, dimension(:,:,:,:), allocatable :: rhs
   complex, dimension(:,:,:), allocatable :: h_x
-  complex, dimension(:,:,:), allocatable :: g_x
   complex, dimension(:,:,:), allocatable :: h0_x
   complex, dimension(:,:,:), allocatable :: h0_old
   complex, dimension(:,:,:,:), allocatable :: fA_nl,fB_nl
@@ -356,58 +368,21 @@ module cgyro_globals
   complex, dimension(:,:,:,:), allocatable :: omega_s,omega_ss
   complex, dimension(:,:,:), allocatable :: omega_sbeta
   complex, dimension(:,:,:), allocatable :: cap_h_c
-  complex, dimension(:,:,:), allocatable :: cap_h_c_dot
-  complex, dimension(:,:,:), allocatable :: cap_h_c_old
-  complex, dimension(:,:,:), allocatable :: cap_h_c_old2
   complex, dimension(:,:,:), allocatable :: cap_h_ct
   complex, dimension(:,:,:,:), allocatable :: cap_h_v
   real, dimension(:,:,:,:), allocatable :: jvec_c
   real, dimension(:,:,:,:,:), allocatable :: jvec_c_nl ! used by NL only
   real(KIND=REAL32), dimension(:,:,:,:,:), allocatable :: jvec_c_nl32 ! used by NL only
   real, dimension(:,:,:,:,:), allocatable :: jvec_v
-  real, dimension(:,:,:,:), allocatable :: dvjvec_c
-  real, dimension(:,:,:,:), allocatable :: dvjvec_v
   real, dimension(:,:,:,:), allocatable :: jxvec_c
-  real, dimension(:,:,:), allocatable :: upfac1,upfac2
-  real, dimension(:,:,:,:), allocatable :: jmvec_c
+  ! post-stencil conservation projection factors
+  ! no |v_par| weight): upfac_num(:,1) = J0/<J0,J0>, upfac_num(:,2) = J0*vpar/<..> .
+  ! upfac_num(:,2) needs Apar (n_field>1).
+  real, dimension(:,:,:,:), allocatable :: upfac_num
   !
-  ! Fields
-  real, dimension(:,:,:), allocatable :: fcoef
-  real, dimension(:,:,:), allocatable :: gcoef
-  complex, dimension(:,:,:), allocatable :: field
-  complex, dimension(:,:,:), allocatable :: field_dot
-  complex, dimension(:,:,:), allocatable :: field_loc
-  complex, dimension(:,:,:), allocatable :: field_old
-  complex, dimension(:,:,:), allocatable :: field_old2
-  complex, dimension(:,:,:), allocatable :: field_old3
   complex, dimension(:,:), allocatable :: epar
-  complex, dimension(:,:,:,:,:), allocatable :: moment_loc
-  complex, dimension(:,:,:,:,:), allocatable :: moment
-  complex, dimension(:,:,:,:), allocatable :: field_v
-  complex, dimension(:,:,:,:), allocatable :: field_loc_v
-  !
-  ! Nonlinear fluxes (f=standard,c=central,g=global)
-  real, dimension(:,:,:,:), allocatable :: cflux_loc
-  real, dimension(:,:,:,:), allocatable :: cflux
-  complex, dimension(:,:,:,:,:), allocatable :: gflux_loc
-  complex, dimension(:,:,:,:,:), allocatable :: gflux
-  real, dimension(:,:), allocatable :: cflux_tave, gflux_tave
-  real, dimension(:,:,:,:), allocatable :: cflux_mom_loc
-  real, dimension(:,:,:,:), allocatable :: cflux_mom
-  complex, dimension(:,:,:,:,:), allocatable :: gflux_mom_loc
-  complex, dimension(:,:,:,:,:), allocatable :: gflux_mom
-  real :: tave_min, tave_max
-  integer :: tave_step
   integer :: nflux
-  integer :: nflux_mom
-  ! NL dealias variables
-  !integer, dimension(:,:), allocatable :: dealias_pvec_count
-  !integer, dimension(:,:,:), allocatable :: dealias_pvec
-  integer, dimension(:,:,:,:), allocatable :: dealias_raw_ir
-  integer, dimension(:,:,:,:), allocatable :: dealias_raw_it
-  complex, dimension(:,:,:,:), allocatable :: dealias_raw_ph
-  complex, dimension(:,:,:,:), allocatable :: inraw_dealias
-  complex, dimension(:,:,:,:), allocatable :: outraw_dealias
+
   !
   ! Nonlinear plans
 #ifndef CGYRO_GPU_FFT
@@ -469,36 +444,25 @@ module cgyro_globals
   ! Work arrays
   real, dimension(2) :: integration_error
   ! Upwind work arrays
-  complex, dimension(:,:,:),allocatable :: upwind_res_loc
-  complex, dimension(:,:,:),allocatable :: upwind_res
-  complex(KIND=REAL32), dimension(:,:,:),allocatable :: upwind32_res_loc
-  complex(KIND=REAL32), dimension(:,:,:),allocatable :: upwind32_res
+  ! 2nd dimension has a special meaning
+  !   1 - Base upwind data
+  !   2 - current (parallel-current) moment of the dissipation flux
+  complex, dimension(:,:,:,:),allocatable :: upwind_res_loc
+  complex, dimension(:,:,:,:),allocatable :: upwind_res
+  ! fp32 variant
+  complex(KIND=REAL32), dimension(:,:,:,:),allocatable :: upwind32_res_loc
+  complex(KIND=REAL32), dimension(:,:,:,:),allocatable :: upwind32_res
+  ! Raw (unprojected) upwind dissipation flux, used by the CPU/MPI
+  ! conservative-upwind path (density projection applied post-stencil)
+  complex, dimension(:,:,:),allocatable :: upwind_flux
   !
   ! LAPACK work arrays 
   real, dimension(:), allocatable :: work  
   integer, dimension(:), allocatable :: i_piv
   integer :: info
   !
-  ! Field solve variables
-  real, dimension(:), allocatable :: sum_den_h
-  real, dimension(:,:), allocatable :: sum_den_x,sum_cur_x
-  real, dimension(:), allocatable :: vfac
   !
-  ! n=0 test variables
-  real, dimension(:,:,:), allocatable :: hzf,xzf 
-  !
-  ! Collision operator
-  integer :: n_low_energy
-
-  ! Unlike most other arrays, last dimension is simply nt_loc
-  ! due to limis of pointer handling
-  real, dimension(:,:,:,:), pointer :: cmat ! only used if collision_precision_mode=0 & 64
-  real(KIND=REAL32), dimension(:,:,:,:), pointer :: cmat_fp32 ! only used if collision_precision_mode=1 & 32
-  !
-  real(KIND=REAL32), dimension(:,:,:,:,:,:), allocatable :: cmat_stripes ! only used if collision_precision_mode=1
-  real(KIND=REAL32), dimension(:,:,:,:,:,:), allocatable :: cmat_e1 ! only used if collision_precision_mode=1
-  real, dimension(:,:,:,:,:,:), allocatable :: cmat_simple ! only used in collision_model=5
-  ! 
+   !
   ! Equilibrium/geometry arrays
   integer :: it0
   integer, dimension(:), allocatable :: itp
@@ -549,448 +513,5 @@ module cgyro_globals
 
   real :: total_memory
   real :: small
-
-contains
-
-!
-! Avoid having two copies of cmat, one in CPU and one in GPU memory
-! On GPU systems under OMPGPU, keep it only in GPU memory (omp_target_alloc)
-! ON CPU-only systems and OpenACC, keep the old logic
-!
-
-#ifdef OMPGPU
-subroutine allocate_cmat_gpu_fp32(nv,nc_loc_coll,nt1,nt2)
-    use iso_c_binding
-    use omp_lib
-    implicit none
-
-    ! ----------------------
-    integer, intent(in)          :: nv,nc_loc_coll,nt1,nt2
-
-    ! Pointer to array, only need raw pointer locally, can recover
-    type(c_ptr) :: c_ptr_buffer
-    integer :: dev_id
-    ! Use c_sizeof to avoid integer wraparound
-    integer(c_size_t) :: total_bytes
-    integer(c_size_t) :: nv2
-    integer :: nt_loc
-
-    nv2 = nv*nv
-    nt_loc = nt2-nt1+1
-
-    total_bytes = (nv2*nc_loc_coll)*nt_loc*4 ! fp32 =  4 bytes
-
-    ! OMP supports multi-GPU setups, we only support 1-GPU ones
-    dev_id = omp_get_default_device()
-    c_ptr_buffer = omp_target_alloc(total_bytes, dev_id)
-
-    if (.not. c_associated(c_ptr_buffer)) then
-         ! Catastrophic error, do not even try to process it cleanly
-         write(*,*) "Error: allocate_cmat_fp32 failed to allocate memory."
-        stop
-    end if
-
-    call c_f_pointer(c_ptr_buffer, cmat_fp32, [nv, nv, nc_loc_coll, nt_loc])
-
-end subroutine allocate_cmat_gpu_fp32
-
-subroutine allocate_cmat_gpu(nv,nc_loc_coll,nt1,nt2)
-    use iso_c_binding
-    use omp_lib
-    implicit none
-
-    ! ----------------------
-    integer, intent(in)          :: nv,nc_loc_coll,nt1,nt2
-
-    ! Pointer to array, only need raw pointer locally, can recover
-    type(c_ptr) :: c_ptr_buffer
-    integer :: dev_id
-    ! Use c_sizeof to avoid integer wraparound
-    integer(c_size_t) :: total_bytes
-    integer(c_size_t) :: nv2
-    integer :: nt_loc
-
-    nv2 = nv*nv
-    nt_loc = nt2-nt1+1
-
-    total_bytes = (nv2*nc_loc_coll)*nt_loc*8 ! fp64 =  8 bytes
-
-    ! OMP supports multi-GPU setups, we only support 1-GPU ones
-    dev_id = omp_get_default_device()
-    c_ptr_buffer = omp_target_alloc(total_bytes, dev_id)
-
-    if (.not. c_associated(c_ptr_buffer)) then
-         ! Catastrophic error, do not even try to process it cleanly
-         write(*,*) "Error: allocate_cmat failed to allocate memory."
-        stop
-    end if
-
-    call c_f_pointer(c_ptr_buffer, cmat, [nv, nv, nc_loc_coll, nt_loc])
-
-end subroutine allocate_cmat_gpu
-
-subroutine deallocate_cmat_gpu_fp32
-    use iso_c_binding
-    use omp_lib
-    implicit none
-    type(c_ptr) :: c_ptr_buffer
-    integer :: dev_id
-
-    if (associated(cmat_fp32)) then
-      c_ptr_buffer = c_loc(cmat_fp32(1,1,1,1))
-
-      ! OMP supports multi-GPU setups, we only support 1-GPU ones
-      ! Note: Must be the same as the one used in alloc
-      dev_id = omp_get_default_device()
-      call omp_target_free(c_ptr_buffer, dev_id)
-    endif
-
-end subroutine
-        
-subroutine deallocate_cmat_gpu
-    use iso_c_binding
-    use omp_lib
-    implicit none
-    type(c_ptr) :: c_ptr_buffer
-    integer :: dev_id
-
-    if (associated(cmat)) then
-      c_ptr_buffer = c_loc(cmat(1,1,1,1))
-
-      ! OMP supports multi-GPU setups, we only support 1-GPU ones
-      ! Note: Must be the same as the one used in alloc
-      dev_id = omp_get_default_device()
-      call omp_target_free(c_ptr_buffer, dev_id)
-    endif
-
-end subroutine
-
-subroutine copy_into_cmat_gpu_fp32(amat, ic_loc, itor)
-    use iso_c_binding
-    use omp_lib
-    implicit none
-    
-    real(KIND=REAL32), target, intent(in)    :: amat(nv, nv)
-    integer, intent(in) :: ic_loc, itor
-    
-    integer(c_size_t)   :: bytes_to_copy, dst_offset
-    integer             :: host_id, device_id
-    integer             :: ierr
-    
-    ! Size of the (nv, nv) block in bytes
-    bytes_to_copy = int(nv, c_size_t) * int(nv, c_size_t) * c_sizeof(amat(1,1))
-    
-    host_id   = omp_get_initial_device()
-    device_id = omp_get_default_device()
-    
-    ! 3. Calculate destination offset (0-based bytes)
-    ! We are targeting: cmat_fp32(1, 1, ic_loc, itor-nt1+1)
-    ! Offset = [(dim4_idx - 1) * (size_dim3 * size_dim2 * size_dim1) + (dim3_idx - 1) * (size_dim2 * size_dim1)] * element_size
-    dst_offset = ( int(itor - nt1, c_size_t) * int(nc_loc_coll, c_size_t) * int(nv * nv, c_size_t) + &
-                   int(ic_loc - 1, c_size_t) * int(nv * nv, c_size_t) ) * c_sizeof(amat(1,1))
-
-    ierr = omp_target_memcpy( &
-        c_loc(cmat_fp32),    & ! Destination (device pointer)
-        c_loc(amat),        & ! Source (host pointer)
-        bytes_to_copy,      & ! Length in bytes
-        dst_offset,         & ! Offset in destination
-        0_c_size_t,         & ! Offset in source
-        device_id,          & ! Destination device
-        host_id             & ! Source device
-    )
-
-    if (ierr /= 0) then
-        ! Catastrophic error, do not even try to process it cleanly
-        write(*,*) "Error in omp_target_memcpy: ", ierr
-        stop
-    end if
-
-end subroutine
-
-subroutine copy_into_cmat_gpu(amat, ic_loc, itor)
-    use iso_c_binding
-    use omp_lib
-    implicit none
-    
-    real, target, intent(in)    :: amat(nv, nv)
-    integer, intent(in) :: ic_loc, itor
-    
-    integer(c_size_t)   :: bytes_to_copy, dst_offset
-    integer             :: host_id, device_id
-    integer             :: ierr
-    
-    ! Size of the (nv, nv) block in bytes
-    bytes_to_copy = int(nv, c_size_t) * int(nv, c_size_t) * c_sizeof(amat(1,1))
-    
-    host_id   = omp_get_initial_device()
-    device_id = omp_get_default_device()
-    
-    ! 3. Calculate destination offset (0-based bytes)
-    ! We are targeting: cmat(1, 1, ic_loc, itor-nt1+1)
-    ! Offset = [(dim4_idx - 1) * (size_dim3 * size_dim2 * size_dim1) + (dim3_idx - 1) * (size_dim2 * size_dim1)] * element_size
-    dst_offset = ( int(itor - nt1, c_size_t) * int(nc_loc_coll, c_size_t) * int(nv * nv, c_size_t) + &
-                   int(ic_loc - 1, c_size_t) * int(nv * nv, c_size_t) ) * c_sizeof(amat(1,1))
-
-    ierr = omp_target_memcpy( &
-        c_loc(cmat),        & ! Destination (device pointer)
-        c_loc(amat),        & ! Source (host pointer)
-        bytes_to_copy,      & ! Length in bytes
-        dst_offset,         & ! Offset in destination
-        0_c_size_t,         & ! Offset in source
-        device_id,          & ! Destination device
-        host_id             & ! Source device
-    )
-
-    if (ierr /= 0) then
-        ! Catastrophic error, do not even try to process it cleanly
-        write(*,*) "Error in omp_target_memcpy: ", ierr
-        stop
-    end if
-
-end subroutine
-
-subroutine copy_from_cmat_gpu(amat, ic_loc, itor)
-    use iso_c_binding
-    use omp_lib
-    implicit none
-    
-    real, target, intent(inout) :: amat(nv, nv)
-    integer, intent(in) :: ic_loc, itor
-    
-    integer(c_size_t)   :: bytes_to_copy, src_offset
-    integer             :: host_id, device_id
-    integer             :: ierr
-    
-    ! Size of the (nv, nv) block in bytes
-    bytes_to_copy = int(nv, c_size_t) * int(nv, c_size_t) * c_sizeof(amat(1,1))
-    
-    host_id   = omp_get_initial_device()
-    device_id = omp_get_default_device()
-    
-    ! 3. Calculate cmat offset (0-based bytes)
-    ! We are targeting: cmat(1, 1, ic_loc, itor-nt1+1)
-    ! Offset = [(dim4_idx - 1) * (size_dim3 * size_dim2 * size_dim1) + (dim3_idx - 1) * (size_dim2 * size_dim1)] * element_size
-    src_offset = ( int(itor - nt1, c_size_t) * int(nc_loc_coll, c_size_t) * int(nv * nv, c_size_t) + &
-                   int(ic_loc - 1, c_size_t) * int(nv * nv, c_size_t) ) * c_sizeof(amat(1,1))
-
-    ierr = omp_target_memcpy( &
-        c_loc(amat),        & ! Destination (host pointer)
-        c_loc(cmat),        & ! Source (device pointer)
-        bytes_to_copy,      & ! Length in bytes
-        0_c_size_t,         & ! Offset in destination
-        src_offset,         & ! Offset in source
-        host_id,            & ! Destination device
-        device_id           & ! Source device
-    )
-
-    if (ierr /= 0) then
-        ! Catastrophic error, do not even try to process it cleanly
-        write(*,*) "Error in omp_target_memcpy: ", ierr
-        stop
-    end if
-
-end subroutine
-
-subroutine copy_from_cmat_gpu_all(cmat_cpu)
-    use iso_c_binding
-    use omp_lib
-    implicit none
-    
-    real, target, intent(inout) :: cmat_cpu(nv, nv, nc_loc_coll, nt_loc)
-    
-    integer(c_size_t)   :: bytes_to_copy
-    integer             :: host_id, device_id
-    integer             :: ierr
-    
-    ! Size of the cmat block in bytes
-    bytes_to_copy = int(nv, c_size_t) * int(nv, c_size_t) * &
-                    int(nc_loc_coll, c_size_t) * int(nt_loc, c_size_t) * &
-                    c_sizeof(cmat_cpu(1,1,1,1))
-    
-    host_id   = omp_get_initial_device()
-    device_id = omp_get_default_device()
-    
-    ierr = omp_target_memcpy( &
-        c_loc(cmat_cpu),    & ! Destination (host pointer)
-        c_loc(cmat),        & ! Source (device pointer)
-        bytes_to_copy,      & ! Length in bytes
-        0_c_size_t,         & ! Offset in destination
-        0_c_size_t,         & ! Offset in source
-        host_id,            & ! Destination device
-        device_id           & ! Source device
-    )
-
-    if (ierr /= 0) then
-        ! Catastrophic error, do not even try to process it cleanly
-        write(*,*) "Error in omp_target_memcpy: ", ierr
-        stop
-    end if
-
-end subroutine
-
-#endif
-! =============  end OMPGPU =============
-
-subroutine allocate_cmat_fp32(nv,nc_loc_coll,nt1,nt2)
-    implicit none
-
-    ! ----------------------
-    integer, intent(in)          :: nv,nc_loc_coll,nt1,nt2
-
-    integer :: nt_loc
-    nt_loc = nt2-nt1+1
-
-#ifdef OMPGPU
-    if (gpu_bigmem_flag > 0) then
-      ! we keep only the GPU buffer with BIGMEM
-      call allocate_cmat_gpu_fp32(nv,nc_loc_coll,nt1,nt2)
-    else
-#else
-    if (.TRUE.) then
-#endif
-      allocate(cmat_fp32(nv,nv,nc_loc_coll,nt_loc))
-#if defined(_OPENACC)
-!$acc enter data create(cmat_fp32) if (gpu_bigmem_flag > 0)
-#endif
-    endif
-
-end subroutine allocate_cmat_fp32
-
-subroutine allocate_cmat(nv,nc_loc_coll,nt1,nt2)
-    implicit none
-
-    ! ----------------------
-    integer, intent(in)          :: nv,nc_loc_coll,nt1,nt2
-
-    integer :: nt_loc
-    nt_loc = nt2-nt1+1
-
-#ifdef OMPGPU
-    if (gpu_bigmem_flag > 0) then
-      ! we keep only the GPU buffer with BIGMEM
-      call allocate_cmat_gpu(nv,nc_loc_coll,nt1,nt2)
-    else
-#else
-    if (.TRUE.) then
-#endif
-      allocate(cmat(nv,nv,nc_loc_coll,nt_loc))
-#if defined(_OPENACC)
-!$acc enter data create(cmat) if (gpu_bigmem_flag > 0)
-#endif
-    endif
-end subroutine allocate_cmat
-
-subroutine deallocate_cmat_fp32
-    implicit none
-
-    if (associated(cmat_fp32)) then
-#ifdef OMPGPU
-      if (gpu_bigmem_flag > 0) then
-        call deallocate_cmat_gpu_fp32
-      else
-#else
-      if (.TRUE.) then
-#endif
-        deallocate(cmat_fp32)
-      endif
-    endif
-
-end subroutine
-        
-subroutine deallocate_cmat
-    implicit none
-
-    if (associated(cmat)) then
-#ifdef OMPGPU
-      if (gpu_bigmem_flag > 0) then
-        call deallocate_cmat_gpu
-      else
-#else
-      if (.TRUE.) then
-#endif
-        deallocate(cmat)
-      endif
-    endif
-
-end subroutine
-
-subroutine copy_into_cmat_fp32(amat,ic_loc,itor)
-    implicit none
-
-    ! ----------------------
-    real(KIND=REAL32), target, intent(in)    :: amat(nv,nv)
-    integer, intent(in) :: ic_loc,itor
-
-#ifdef OMPGPU
-    if (gpu_bigmem_flag > 0) then
-      ! cmat_fp32 in GPU memory only
-      call copy_into_cmat_gpu_fp32(amat,ic_loc,itor)
-    else
-#else
-    if (.TRUE.) then
-#endif
-      cmat_fp32(:,:,ic_loc,itor-nt1+1) = amat(:,:)
-    endif
-
-end subroutine
-
-subroutine copy_into_cmat(amat,ic_loc,itor)
-    implicit none
-
-    ! ----------------------
-    real, target, intent(in)    :: amat(nv,nv)
-    integer, intent(in) :: ic_loc,itor
-
-#ifdef OMPGPU
-    if (gpu_bigmem_flag > 0) then
-      ! cmat in GPU memory only
-      call copy_into_cmat_gpu(amat,ic_loc,itor)
-    else
-#else
-    if (.TRUE.) then
-#endif
-      cmat(:,:,ic_loc,itor-nt1+1) = amat(:,:)
-    endif
-
-end subroutine
-
-subroutine copy_from_cmat(amat,ic_loc,itor)
-    implicit none
-
-    ! ----------------------
-    real, target, intent(inout)    :: amat(nv,nv)
-    integer, intent(in) :: ic_loc,itor
-
-#ifdef OMPGPU
-    if (gpu_bigmem_flag > 0) then
-      ! cmat in GPU memory only
-      call copy_from_cmat_gpu(amat,ic_loc,itor)
-    else
-#else
-    if (.TRUE.) then
-#endif
-       amat(:,:) = cmat(:,:,ic_loc,itor-nt1+1)
-    endif
-
-end subroutine
-
-subroutine copy_from_cmat_all(cmat_dest)
-    implicit none
-
-    ! ----------------------
-    real, target, intent(inout) :: cmat_dest(nv,nv,nc_loc_coll,nt_loc)
-
-#ifdef OMPGPU
-    if (gpu_bigmem_flag > 0) then
-      ! cmat in GPU memory only
-      call copy_from_cmat_gpu_all(cmat_dest)
-    else
-#else
-    if (.TRUE.) then
-#endif
-      cmat_dest(:,:,:,:) = cmat(:,:,:,:)
-    endif
-
-end subroutine
 
 end module cgyro_globals

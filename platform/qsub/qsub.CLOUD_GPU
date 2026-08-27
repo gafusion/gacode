@@ -1,0 +1,21 @@
+#!/bin/bash
+
+echo "-queue: debug [default], regular, premium"
+
+# Default queue
+if [ "$QUEUE" == "null_queue" ] ; then
+   QUEUE=small-utility
+fi
+
+bfile=$SIMDIR/batch.src
+
+echo "#!/bin/bash -l" > $bfile
+echo "#SBATCH -J $LOCDIR" >> $bfile
+echo "#SBATCH -o $SIMDIR/batch.out" >> $bfile
+echo "#SBATCH -e $SIMDIR/batch.err" >> $bfile
+echo "#SBATCH --partition=$QUEUE" >> $bfile
+echo "#SBATCH -t $WALLTIME" >> $bfile
+echo "#SBATCH --ntasks=$nmpi" >> $bfile
+echo "#SBATCH --ntasks-per-node=$nmpi" >> $bfile
+echo "#SBATCH --exclusive" >> $bfile
+echo "$CODE -e $LOCDIR -n $nmpi -nomp $nomp -p $SIMROOT" >> $bfile 

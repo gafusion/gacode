@@ -7,9 +7,9 @@ fi
 
 bfile=$SIMDIR/batch.src
 
-if [ "x$nomp" != "x8" ]; then
-  echo "WARNING: nomp was $nomp, forcing to 8"
-  export nomp=8
+if [ "x$nomp" != "x17" ]; then
+  echo "WARNING: nomp was $nomp, forcing to 17"
+  export nomp=17
 fi
 
 echo "#!/bin/bash -l" > $bfile

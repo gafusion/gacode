@@ -62,14 +62,7 @@ program locpargen
      r0 = y(1)
 
   endif
-
-  ! Compute all three radial coordinates from r0
-  x(1) = r0
-  call cub_spline(expro_rmin/a,expro_rho,expro_n_exp,x,y,1)
-  rho0 = y(1)
-  call cub_spline(expro_rmin/a,abs(expro_polflux)/abs(expro_polflux(expro_n_exp)),expro_n_exp,x,y,1)
-  psi0 = y(1)
-
+  
   call expro_locsim_profiles(&
        qnflag,&
        nion+1,&
@@ -85,8 +78,6 @@ program locpargen
      
   print '(a,i2,a,i2,a)','INFO: (locpargen) Keeping',nion,' of',expro_n_ion,' ions'
   print 10,'INFO: (locpargen) rmin/a   =',rmin_loc
-  print 10,'INFO: (locpargen) rho      =',rho0
-  print 10,'INFO: (locpargen) psi_N    =',psi0
   print 10,'INFO: (locpargen) rhos/a   =',rhos_loc/a
   !print 10,'rhoi/a   =',rhos_loc/a*sqrt(temp_loc(ise)/temp_loc(1))
   print 10,'INFO: (locpargen) Te [keV] =',temp_loc(ise)
@@ -112,24 +103,6 @@ program locpargen
 
   lambda_star = 7.43 * sqrt((1e3*temp_loc(ise))/(1e13*dens_loc(ise)))/rhos_loc
 
-  ! Normalizing quantities for gyroBohm flux
-  dens_norm = dens_loc(ise)
-  temp_norm = temp_loc(ise)
-  mass_norm = mass_deuterium
-  vth_norm  = sqrt(temp_norm * temp_norm_fac / mass_norm) * 1.0e4
-  rho_star_norm = sqrt(temp_norm * temp_norm_fac * mass_deuterium) &
-       / (charge_norm_fac * b_unit_loc) * 1.0e-4 / a
-  gamma_gb_norm = dens_norm * vth_norm * rho_star_norm**2
-  q_gb_norm     = gamma_gb_norm * temp_norm * temp_norm_fac / 1.0e6
-  pi_gb_norm    = dens_norm * temp_norm * temp_norm_fac * a &
-       * rho_star_norm**2
-
-  print 11,'INFO: (locpargen) ne [e19/m^3]          =',dens_norm
-  print 11,'INFO: (locpargen) cs [m/s]              =',vth_norm
-  print 11,'INFO: (locpargen) GAMMA_GB [e19/m^2/s] =',gamma_gb_norm
-  print 11,'INFO: (locpargen) Q_GB [MW/m^2]        =',q_gb_norm
-  print 11,'INFO: (locpargen) PI_GB [N/m]           =',pi_gb_norm
-
   tag(:) = (/'1','2','3','4','5','6','7','8','9'/)
 
   ! Write data for banana width calculation
@@ -143,6 +116,9 @@ program locpargen
   close(1)
 
   call fileopen('input.cgyro.locpargen') ; call locpargen_cgyro
+  call fileopen('input.gyro.locpargen') ; call locpargen_gyro
+  call fileopen('input.tglf.locpargen')  ; call locpargen_tglf
+  call fileopen('input.tglf.locpargen_stack') ; call locpargen_tglf_stack
   call fileopen('input.neo.locpargen')   ; call locpargen_neo
   if (qnflag == 0) then 
      print 10,'INFO: (locpargen) Quasineutrality NOT enforced.'
@@ -220,7 +196,6 @@ program locpargen
   endif
 
 10 format(a,1x,f7.5)
-11 format(a,1x,es12.5)
 
 100 continue
   

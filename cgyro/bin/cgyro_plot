@@ -50,7 +50,6 @@ then
   echo "                = kx_shift (kx-phi intensities in both domains)"
   echo "                = poly_phi (average Legendre intensities)"
   echo "                = kxky_phi (kx-ky spectra of ave(|phi|))"
-  echo "                = ftheta   (ballooning-angle dependence; use -n to specify mode)"
   echo "                = rcorr_phi (time-average radial correlation function)"
   echo "                = xflux    (radial profile of fluxes for all species)"
   echo "                = low      (long-wavelength moments versus time)"
@@ -201,9 +200,6 @@ then
   echo "         -onlyzonal"
   echo "         Remove nonzonal (n>0) component of the fluctuations (-vis torcut only)"  
   echo
-  echo "         -xshift"
-  echo "         Shift x-axis range for global runs"  
-  echo
   echo "OPTIONS FOR -plot vid"
   echo
   echo "         -pre <prefix>"
@@ -307,7 +303,6 @@ MAG=1.0
 IE=0
 NOZONAL=0
 ONLYZONAL=0
-XSHIFT=0
 
 PRE=
 FRAMERATE=20
@@ -390,7 +385,6 @@ while [ $# -gt 0 ] ; do
   -mag) shift ; MAG=$1 ;;
   -nozonal) NOZONAL=1 ;;
   -onlyzonal) ONLYZONAL=1 ;;
-  -xshift) XSHIFT=1 ;;
 
   -pre) shift ; PRE=$1 ;;
   -q)  shift ; QUALITY=$1 ;;
@@ -451,13 +445,13 @@ case "$PLOT_TYPE" in
    template)
        cp $PYROOT/plot_template.py . ;;
 
-   freq | ky_freq | error | geo | ball | ky_phi | phi | flux | rcorr_phi | low | zf | ky_flux | shift | corrug | kx_phi | kxky_phi | ftheta | kx_shift | poly_phi | xflux | hb | hbcut | hball )
+   freq | ky_freq | error | geo | ball | ky_phi | phi | flux | rcorr_phi | low | zf | ky_flux | shift | corrug | kx_phi | kxky_phi | kx_shift | poly_phi | xflux | hb | hbcut | hball )
        python $PLT $PFLAGS ;;
   
    fluct)
        export OMP_NUM_THREADS=$NOMP ; \
        python -m pygacode.cgyro.plot_fluct \
-	      $EXT $MOMENT $SPECIES $PX $PY $NX $NY $TIME $FMIN $FMAX $CMAP $FONTSIZE $LAND_FLAG $THETA $XSHIFT ;;
+	      $EXT $MOMENT $SPECIES $PX $PY $NX $NY $TIME $FMIN $FMAX $CMAP $FONTSIZE $LAND_FLAG $THETA ;;
 
    rt)
        export OMP_NUM_THREADS=$NOMP ; \

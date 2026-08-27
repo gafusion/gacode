@@ -1,0 +1,12 @@
+#! /usr/bin/env bash
+# GACODE Parallel execution script (Azure_GPU)
+
+#echo $OMPI_COMM_WORLD_RANK
+let r4=$OMPI_COMM_WORLD_RANK/8
+let ACC_DEVICE_NUM="$OMPI_COMM_WORLD_RANK-($r4*8)"
+export ACC_DEVICE_NUM
+
+echo $ACC_DEVICE_NUM
+
+echo "LL $LD_LIBRARY_PATH"
+exec  "$@"

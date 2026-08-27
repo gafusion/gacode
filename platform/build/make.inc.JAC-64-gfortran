@@ -1,0 +1,34 @@
+#---------------------------------------------------
+# Freia / Heimdall:  JAC 64 bit, gfortran 4.8.5
+# requries modules gfortran openmpi hdf5 netcdf netcdf-devel 
+# compiles NEO and TGLF which pass regression tests
+#---------------------------------------------------
+
+# Compilers and flags
+
+FC      = mpif90 -fall-intrinsics -std=f2008 -I$(GACODE_ROOT)/modules -J$(GACODE_ROOT)/modules
+F77     = mpif90 -I$(GACODE_ROOT)/modules
+
+#FC      = gfortran -fall-intrinsics -std=f2008 -I$(GACODE_ROOT)/modules -J$(GACODE_ROOT)/modules
+#F77     = gfortran -I$(GACODE_ROOT)/modules -I/usr/local/depot/openmpi-1.8.2-gfortran/lib
+
+FOMP    = -fopenmp
+FMATH   = -fdefault-real-8 -fdefault-double-8
+FOPT    = -O2
+#FDEBUG = -O -Wall -Wunderflow -W -Wuninitialized -fbounds-check
+#FDEBUG  = -Wall -fcheck=all -fbacktrace -O -Wall -Wunderflow -W -finit-real=nan -fbounds-check -ffpe-trap=invalid,zero,overflow
+FDEBUG  = -Wall -fcheck=all -fbacktrace -O -Wall -W -finit-real=nan -fbounds-check -ffpe-trap=invalid,zero
+
+
+# System math libraries
+LMATH = -llapack -lblas -lm
+
+# netCDF (not optional any more)
+# NETCDF_HOME=/usr/local/depot/netcdf-4.2.1.1/
+# NETCDF_DIR is set by the module
+NETCDF=-L${NETCDF_DIR}/lib -lnetcdff
+NETCDF_INC=${NETCDF_DIR}/include
+
+# Archive 
+
+ARCH = ar cr

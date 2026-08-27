@@ -1,0 +1,13 @@
+#!/bin/bash
+
+bfile=$SIMDIR/batch.src
+echo "#!/bin/bash -l" > $bfile
+echo "#BSUB -J $LOCDIR" >> $bfile
+echo "#BSUB -P $REPO" >> $bfile
+echo "#BSUB -o $SIMDIR/batch.out" >> $bfile
+echo "#BSUB -e $SIMDIR/batch.err" >> $bfile
+echo "#BSUB -W $WALLTIME" >> $bfile
+echo "#BSUB -nnodes $nodes" >> $bfile
+echo "#BSUB -alloc_flags gpumps" >> $bfile
+
+echo "$CODE -e $LOCDIR -n $nmpi -nomp $nomp -numa $numa -mpinuma $mpinuma -p $SIMROOT" >> $bfile

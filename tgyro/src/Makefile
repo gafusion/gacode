@@ -30,6 +30,7 @@ OBJECTS += tgyro_globals.o \
 	   tgyro_ped.o \
            tgyro_auxiliary_routines.o \
            tgyro_catch_error.o \
+	   tgyro_cgyro_map.o \
            tgyro_comm_setup.o \
            tgyro_comm_sync.o \
            tgyro_etgcrit.o \

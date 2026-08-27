@@ -15,24 +15,23 @@ FC += ${FOMP} ${FACC}
 EXEC = cgyro
 
 OBJECTS = cgyro_globals.o \
+          cgyro_io.o \
+	  cgyro_coll_data.o \
 	  cgyro_math.o \
 	  cgyro_globals_math.o \
 	  cgyro_timer_lib.o \
           cgyro_parallel_lib.o \
           cgyro_step.o \
-          cgyro_io.o \
           cgyro_restart.o \
 	  cgyro_init_rotation.o \
           cgyro_equilibrium.o \
           cgyro_check.o \
 	  cgyro_check_memory.o \
-          cgyro_error_estimate.o \
           cgyro_field.o \
-          cgyro_field_coefficients.o \
           cgyro_flux.o \
+          cgyro_error_estimate.o \
           cgyro_freq.o \
           cgyro_globalshear.o \
-          cgyro_upwind.o \
           cgyro_init.o \
           cgyro_init_h.o \
           cgyro_init_arrays.o \

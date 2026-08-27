@@ -21,8 +21,6 @@ module cgyro_step
   real :: delta_t_tot
   real, dimension(itrk_max) :: deltah2_vec
 
-  real :: delta_t_at_restart
-
   ! errors
   real :: tol
   real :: local_max_error

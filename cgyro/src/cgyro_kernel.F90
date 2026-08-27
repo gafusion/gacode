@@ -15,7 +15,10 @@ subroutine cgyro_kernel
   use timer_lib
   use mpi
   use cgyro_globals
+  use cgyro_field_mod, only : cgyro_field_e_sync_cur
+  use cgyro_flux_mod, only : cgyro_flux_tave_reset
   use cgyro_step
+  use cgyro_step_collision_mod, only : cgyro_step_collision
   use cgyro_io
   use cgyro_restart
 
@@ -31,11 +34,7 @@ subroutine cgyro_kernel
   n_time = nint(max_time/delta_t)
 
   ! Time-averaged fluxes for this time-stepping segment
-  tave_step  = 0
-  tave_min   = t_current
-  tave_max   = t_current
-  cflux_tave = 0.0
-  gflux_tave = (0.0,0.0)
+  call cgyro_flux_tave_reset(t_current)
   
   do i_time=1,n_time
 
@@ -72,33 +71,11 @@ subroutine cgyro_kernel
      endif
 
      ! Collision step: returns new h_x, cap_h_x, fields
-     if (collision_model == 5) then
-        call cgyro_step_collision_simple
-     else
-        call cgyro_step_collision
-     endif
+     call cgyro_step_collision
 
      if (shear_method == 1) then
         ! Discrete shift (Hammett) 
         call cgyro_shear_hammett
-     endif
-
-     ! field will not be modified in GPU memory for the rest of the loop
-#if defined(OMPGPU)
-     ! no async for OMPGPU for now
-!$omp target update from(field)
-#elif defined(_OPENACC)
-!$acc update host(field) async(3)
-#endif
-
-     if (mod(i_time,print_step) == 0) then
-        ! cap_h_c will not be modified in GPU memory for the rest of the loop
-#if defined(OMPGPU)
-        ! no async for OMPGPU for now
-!$omp target update from(cap_h_c)
-#elif defined(_OPENACC)
-!$acc update host(cap_h_c) async(4)
-#endif
      endif
 
      call cgyro_source
@@ -109,12 +86,10 @@ subroutine cgyro_kernel
      !
      ! NOTE: Fluxes are calculated in cgyro_write_timedata
 
-#if (!defined(OMPGPU)) && defined(_OPENACC)
+     ! field will not be modified for the rest of the loop
      call timer_lib_in('coll_mem')
-     ! wait for fields to be synched into system memory, used by cgyro_error_estimate
-!$acc wait(3)
-  call timer_lib_out('coll_mem')
-#endif
+     call cgyro_field_e_sync_cur
+     call timer_lib_out('coll_mem')
 
      ! Error estimate
      call cgyro_error_estimate
@@ -126,17 +101,6 @@ subroutine cgyro_kernel
      ! IO
      !
      if (mod(i_time,print_step) == 0) then
-        call timer_lib_in('coll_mem')
-#if defined(OMPGPU)
-        ! no async for OMPGPU for now
-!$omp target update from(cap_h_c_dot)
-#elif defined(_OPENACC)
-!$acc update host(cap_h_c_dot)
-        ! wait for cap_h_c to be synched into system memory, used by cgyro_write_timedata
-!$acc wait(4)
-#endif
-       call timer_lib_out('coll_mem')
-
        call timer_lib_in('io')
 
        ! Write simulation data

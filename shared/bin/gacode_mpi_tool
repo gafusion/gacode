@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 # Calculator for task/thread layout for hybrid MPI - OpemMP jobs.
 #
 # nmpi = MPI tasks
@@ -15,9 +15,15 @@ numa=$NUMAS_PER_NODE
 mpinuma=$((CORES_PER_NODE / NUMAS_PER_NODE))
 mpinuma=$((mpinuma / nomp))
 
+# See if we are asking for too many NUMAs
+if [[ $numa -gt $NUMAS_PER_NODE ]]; then
+  echo 'ERROR: (gacode_mpi_tool) Too many NUMAs per node requested'
+  exit 1
+fi
+
 # See if we are asking for too many OpenMP tasks
 i1=$((nomp * mpinuma))
-i2=$((CORES_PER_NODE / NUMAS_PER_NODE))
+i2=$((CORES_PER_NODE / NUMAS_PER_NODE)) 
 if [[ $i1 -gt $i2 ]]; then
    echo 'ERROR: (gacode_mpi_tool) Too many OpenMP tasks per MPI process'
 fi
@@ -28,8 +34,13 @@ mpinode=$((mpinuma * numa))
 if [[ $nmpi -lt $mpinode ]]; then
    mpinode=$nmpi
 fi
+# Not enought MPI tasks to fill numa?
+if [[ $nmpi -lt $mpinuma ]]; then
+   mpinuma=$nmpi
+   numa=1
+fi
 
-# Nodes requested
+# Nodes requested 
 nodes=$((nmpi / mpinode))
 
 # If we need part of a node, then add a node

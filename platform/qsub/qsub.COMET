@@ -1,0 +1,16 @@
+#!/bin/bash
+
+bfile=$SIMDIR/batch.src
+
+echo "#!/bin/bash" > $bfile
+echo "#SBATCH --job-name=cgyro_$LOCDIR" >> $bfile
+echo "#SBATCH --output=cgyro.%j.%N.out" >> $bfile
+echo "#SBATCH --partition=compute" >> $bfile
+echo "#SBATCH -A $REPO" >> $bfile
+echo "#SBATCH --nodes=$nodes" >> $bfile
+echo "#SBATCH --ntasks-per-node=$mpinode" >> $bfile
+echo "#SBATCH --export=ALL" >> $bfile
+echo "#SBATCH -t $WALLTIME" >> $bfile
+
+echo ". $GACODE_ROOT/platform/env/env.$GACODE_PLATFORM" >> $bfile
+echo "$CODE -e $LOCDIR -n $nmpi -nomp $nomp -numa $numa -mpinuma $mpinuma -p $SIMROOT" >> $bfile 

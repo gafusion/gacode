@@ -19,7 +19,5 @@ module locpargen_globals
   real :: pi
   real :: cc,loglam,nu_ee
   real :: betae_unit,lambda_star
-  real :: dens_norm,temp_norm,mass_norm,vth_norm,rho_star_norm
-  real :: gamma_gb_norm,q_gb_norm,pi_gb_norm
 
 end module locpargen_globals

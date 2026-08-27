@@ -6,12 +6,10 @@ from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 from matplotlib import rc
-from matplotlib import rcParams
 from ..gacodefuncs import *
 from . import data
 
 MYDIR=os.path.basename(os.getcwd())
-colors = rcParams['axes.prop_cycle'].by_key()['color']     
 
 class cgyrodata_plot(data.cgyrodata):
 
@@ -76,10 +74,9 @@ class cgyrodata_plot(data.cgyrodata):
       # Alfven diagnostic
       rho   = sum(self.mass*self.dens)
       betae = self.betae_unit/self.b_gs2**2
-      if betae > 0.0:
-         v_A   = np.sqrt(2/(betae*rho))
-         w_TAE = v_A/(2*self.q*self.rmaj)         
-         ax.plot([0,t[-1]],[w_TAE,w_TAE],linestyle='--')
+      v_A   = np.sqrt(2/(betae*rho))
+      w_TAE = v_A/(2*self.q*self.rmaj) 
+      ax.plot([0,t[-1]],[w_TAE,w_TAE],linestyle='--')
 
       #======================================
       # Gamma
@@ -234,7 +231,7 @@ class cgyrodata_plot(data.cgyrodata):
       y = zmaj+k*r*np.sin(t)
 
       ax.plot(x,y,'k')
- 
+
       fig.tight_layout(pad=0.3)
 
       return
@@ -259,7 +256,7 @@ class cgyrodata_plot(data.cgyrodata):
          ytag = r'$\delta\phi$'
       elif field == 1:
          f = self.aparb[:,itime]
-         ytag = r'$\delta A_\parallel$'
+         ytag = r'$A_\parallel$'
       elif field == 2:
          f = self.bparb[:,itime]
          ytag = r'$\delta B_\parallel$'
@@ -284,10 +281,20 @@ class cgyrodata_plot(data.cgyrodata):
             ax.set_xlim([1-self.n_radial,-1+self.n_radial])
          else:
             ax.set_xlim([-tmax,tmax])
+
             
       # normalization is phi(complex) where |phi| is max
       n0 = np.argmax(abs(self.phib[:,itime]))
       f_norm = self.phib[n0,itime]
+
+      #n0 = self.n_radial//2*self.n_theta+self.n_theta//2
+      # Normalized real and imag parts
+      #if fnorm == 0:
+      #   f_norm = self.phib[n0,itime]
+      #elif fnorm == 1:
+      #   f_norm = self.aparb[n0,itime]
+      #else:
+      #   f_norm = self.bparb[n0,itime]
          
       y1 = np.real(f/f_norm)
       y2 = np.imag(f/f_norm)
@@ -323,6 +330,8 @@ class cgyrodata_plot(data.cgyrodata):
 
       f,ft = self.kxky_select(theta,field,moment,spec,gbnorm=True)
 
+      p = np.sum(abs(f[:,:,:]),axis=0)
+
       ax = fig.add_subplot(111)
       ax.grid(which="both",ls=":")
       ax.grid(which="major",ls=":")
@@ -337,12 +346,11 @@ class cgyrodata_plot(data.cgyrodata):
          nvec = str2list(nstr)
 
       for n in nvec:
-         p = np.sum(abs(f[:,n,:]),axis=0)
          num = '$n='+str(n)+'$'
          if n==0:
-            ax.plot(t,p,linewidth=2,label=num)
+            ax.plot(t,p[n,:],linewidth=2,label=num)
          else:
-            ax.plot(t,p,label=num)
+            ax.plot(t,p[n,:],label=num)
 
       ax.set_xlim([0,max(t)])
 
@@ -557,7 +565,7 @@ class cgyrodata_plot(data.cgyrodata):
       for i in range(self.n_flux):
          bstr=''
          for ispec in range(ns):
-            ave = time_average(ys[ispec,i,:]*norm_vec[ispec],t,imin,imax) ; var=0
+            ave = time_average(ys[ispec,i,:],t,imin,imax) ; var=0
             bstr = bstr+"{:7.3f}".format(ave)+' '
          print(tag[i]+' '+bstr)
 
@@ -877,7 +885,7 @@ class cgyrodata_plot(data.cgyrodata):
       nxp = 8*nx
       x = np.linspace(-np.pi,np.pi,nxp)
 
-      # complex n=0 amplitude: <y[x]>
+      # complex n=0 amplitude
       y = time_average(f[:,0,:],t,imin,imax)
 
       # vectorized calculation of average function and derivative (f_ave,df_ave)
@@ -944,6 +952,10 @@ class cgyrodata_plot(data.cgyrodata):
       ax.plot(ky,k0*y1,color='k')
       ax.plot(ky,-k0*y2,linestyle='--',color='k')
 
+      # EAB print
+      #for i in range(len(ky)):
+      #   print(ky[i],k0*y1[i],-k0*y2[i])
+
       if ymax != 'auto':
          ax.set_ylim(top=float(ymax))
       if ymin != 'auto':
@@ -951,7 +963,7 @@ class cgyrodata_plot(data.cgyrodata):
 
       fig.tight_layout(pad=0.3)
 
-      return '  ky*rho          kx*rho          kx*rho',ky,k0*y1,-k0*y2
+      return '   ky*rho       kx*rho',ky,y1,None
 
    def plot_zf(self,xin):
 
@@ -974,20 +986,20 @@ class cgyrodata_plot(data.cgyrodata):
       t = self.getnorm(xin['norm'])
       self.getbigfield()
 
+      print('INFO: (plot_zf) Using theta index n_theta/3+1')
       nselect=0 
-      print('INFO: (plot_zf) Using theta index {}'.format(nselect))
       if field == 0:
-         f = self.kxky_phi[:,nselect,0,:]
+         f = self.kxky_phi[0,:,nselect,0,:]
       elif field == 1:
-         f = self.kxky_apar[:,nselect,0,:]
+         f = self.kxky_apar[0,:,nselect,0,:]
       else:
-         f = self.kxky_bpar[:,nselect,0,:]
+         f = self.kxky_bpar[0,:,nselect,0,:]
 
       for i,k0 in enumerate(self.kx):
          # Initialization in CGYRO is with 1e-6*besselj0 # phic[0]
          gfactor = 1e6*(1-np.i0(k0**2)*np.exp(-k0**2))/(np.i0(k0**2)*np.exp(-k0**2))
 
-         y = np.real(f[i,:])*gfactor
+         y = f[i,:]*gfactor
          ax.plot(t,y,label=self.kxstr+r'$={:.4f}$'.format(k0))
 
          #----------------------------------------------------
@@ -1199,161 +1211,8 @@ class cgyrodata_plot(data.cgyrodata):
       fig.tight_layout(pad=0.3)
 
       return
-
-   def plot_ftheta(self,xin):
-
-      itime = xin['itime']
-      field = xin['field']
-      theta = xin['theta']
-      spec  = xin['spec']
-      norm  = xin['norm']
-      nstr  = xin['nstr']
-      ymin  = xin['ymin']
-      ymax  = xin['ymax']
-      tmax  = xin['tmax']
-      absn  = xin['abs']
-      ie    = xin['ie']
+   
       
-      if ie == 0:
-         ie = 16
- 
-      if xin['fig'] is None:
-         fig = plt.figure(MYDIR,figsize=(xin['lx'],xin['ly']))
-
-      if itime > self.n_time-1:
-         itime = self.n_time-1
-
-      self.getbigfield()
-      t = self.getnorm(norm)
-
-      if nstr == 'null':
-         n = [0]
-      else:
-         n = str2list(nstr)[0]
-
-      if self.n_n == 1:
-         # only 1 mode
-         n0 = 0
-      else:
-         # many modes with first mode n=0
-         n0 = n
-
-      # f(p,theta,n)
-      if field == 0:
-         f  = self.kxky_phi[:,:,n0,itime]
-         ft = TEXPHI
-      elif field == 1:
-         f  = self.kxky_apar[:,:,n0,itime]
-         ft = TEXAPAR
-      else:
-         f  = self.kxky_bpar[:,:,n0,itime]
-         ft = TEXBPAR
-
-      f[:,:] = f[:,:]/self.rhonorm
-
-      #======================================
-      # Set figure size and axes
-      ax = fig.add_subplot(111)
-      ax.grid(which="both",ls=":")
-      ax.grid(which="major",ls=":")
-      ax.set_xlabel(r'$\theta_*/\pi$')
-      #ax.set_ylabel(r'${}$'.format(ft))
-      ax.set_ylabel(self.ylabeler(str(n),ft,abs=False))
-      #======================================
-
-      # Wavenumber M from CGYRO paper
-      m = self.n_radial//2
-
-      # Special case for n=0 (zonal flow)
-      if n == 0:
-         for p in range(-m,m):
-            x = self.thetap+2*np.pi*p
-            ax.plot(x,np.real(f[p+m,:]))
-         return
-
-      # Total number of ballooning angles for finite-n ballooning modes 
-      l0 = self.m_box*n
-      # Phase factor
-      sign_qs = np.sign(self.q*self.shear)
-      phi = 2*np.pi*(self.q*sign_qs)/self.m_box
-      
-      print('INFO: (plot_ftheta) n = {} [{} modes available]'.format(n,l0))
-      print('INFO: (plot_ftheta) (c_s/a) t = {:.2f}'.format(t[itime]))
-
-      # Dictionary with a key for every l0
-      pvec = {i: [] for i in range(l0)}
-
-      # Loop through p indices and sort into ballooning angle (theta_0)
-      # with index l
-      for p in range(-m,m):
-         l = np.mod(p,l0)
-         pvec[l].append(p)
-
-      # Construct and plot the ballooning modes
-      #
-      # Key formula (let z=theta, l=nB, B=box size)
-      #
-      #                         i*phi*p
-      # f(p,z) = F(z+2*pi*p/l) e
-      #
-      # where F is a continuous function and phi = 2*pi*q/B
-
-      # This loop could be optimized
-      tdict = {}
-      fdict = {}
-      for x in pvec.keys():
-         tstar = []
-         fstar = []
-         # String modes together using key formula
-         # NOTE: see thetab in cgyro_equilibrium.F90
-         for p in pvec[x]:
-            if sign_qs > 0:
-               ir = p+m
-               tstar.append(self.thetap+2*np.pi/l0*p)
-               fstar.append(f[ir,:]*np.exp(-1j*p*phi))
-            else:
-               ir = self.n_radial-(p+m)-1
-               tstar.append(self.thetap+2*np.pi/l0*(p+1))
-               fstar.append(f[ir,:]*np.exp(-1j*p*phi))
-
-
-         tvec = np.concatenate(tstar)/np.pi
-         fvec = np.concatenate(fstar)
-         
-         tdict[x] = tvec
-         fdict[x] = fvec
-         
-      xsrt = sorted(fdict.keys(), 
-                    key=lambda k: np.linalg.norm(fdict[k]), 
-                    reverse=True)
-        
-      # This loop could be optimized
-      for x in xsrt[:ie]:
-         if x > l0//2:
-            ix = x-l0
-         else:
-            ix = x
-         color = colors[int(x) % len(colors)]
-         if absn == 0:
-            ax.plot(tdict[x],np.real(fdict[x]),'-o',color=color,markersize=1.5,label=ix)
-            ax.plot(tdict[x],np.imag(fdict[x]),color=color,linestyle='--')
-         else:
-            ax.plot(tdict[x],np.abs(fdict[x]),'-o',color=color,markersize=1.5,label=ix)
-            
-      ax.legend(title=r'$\theta_0~\mathrm{index}$',loc=1,ncol=2,prop={'size':11})
-
-      if tmax > 0.0:
-         ax.set_xlim([-tmax,tmax])
-
-      if ymax != 'auto':
-         ax.set_ylim(top=float(ymax))
-      if ymin != 'auto':
-         ax.set_ylim(bottom=float(ymin))
-
-      fig.tight_layout(pad=0.3)
-
-      return
-
    def plot_kx_phi(self,xin):
 
       w      = xin['w']
@@ -1366,6 +1225,7 @@ class cgyrodata_plot(data.cgyrodata):
       bar    = xin['bar']
       spec   = xin['spec']
       
+
       t = self.getnorm(xin['norm'])
       
       if xin['fig'] is None:

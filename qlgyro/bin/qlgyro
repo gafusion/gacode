@@ -1,0 +1,392 @@
+#!/bin/bash
+#=============================================================
+# qlgyro
+#
+# PURPOSE:
+#  Top-level script controlling execution of QLGYRO.
+#=============================================================
+
+#=============================================================
+# Syntax validity check and help message
+#
+n=$#
+
+if [ $n -eq 0 ]
+then
+  echo
+  echo "Usage:   qlgyro [options]"
+  echo
+  echo "         -p <path>"
+  echo "         Set optional path to simulation directory."
+  echo "         [The default path is the current directory]"
+  echo
+  echo "EXECUTE MODE"
+  echo
+  echo "         -e <simdir>" 
+  echo "         Run QLGYRO using input data in <simdir>."
+  echo
+  echo "         -n <MPI tasks>" 
+  echo "         Number of MPI tasks."
+  echo
+  echo "         -nomp <threads>" 
+  echo "         Number of OpenMP threads per MPI task."
+  echo
+  echo "         -numa <n>" 
+  echo "         NUMAs active per node."
+  echo
+  echo "         -mpinuma <n>" 
+  echo "         MPI tasks per active NUMA."
+  echo
+  echo "STARTUP CONTROL"
+  echo
+  echo "         -start <mode>"  
+  echo "         Mode for start/restart control"
+  echo "         <mode>=nosave (start new, don't save restart data),"
+  echo "                new    (start new, save restart data) [DEFAULT],"
+  echo "                cont   (continue simulation with restart data, save restart data),"
+  echo "                retry  (continue simulation with restart data, don't save restart data),"
+  echo "                init   (continue simulation with restart data, reset time to t=0)."
+  echo
+  echo "TEST MODE"
+  echo
+  echo "         -t <simdir>"  
+  echo "         Sanity test for INPUT data in <simdir>."
+  echo
+  echo "INITIALIZE ONLY"
+  echo
+  echo "         -i <simdir>" 
+  echo "         Process input.qlgyro only."
+  echo
+  echo "HALT"
+  echo
+  echo "         -K <simdir>" 
+  echo "         Set non-persistent halt signal in <simdir>."
+  echo 
+  echo "         -k <simdir>" 
+  echo "         Set persistent halt signal in <simdir>."
+  echo 
+  echo "         -c <simdir>" 
+  echo "         Clear persistent halt signal from <simdir>."
+  echo 
+  echo "REGRESSION TESTING"
+  echo
+  echo "         -rc <simdir>"
+  echo "         Check <simdir> for regression pass/fail."
+  echo 
+  echo "         -r"
+  echo "         Auto-run the full regression suite."
+  echo 
+  echo "         -reset"
+  echo "         Reset regression data."
+  echo 
+  echo "TEMPLATE GENERATION"
+  echo
+  echo "         -g"
+  echo "         List available simulation templates."
+  echo
+  echo "         -g <template>"
+  echo "         Copy <template> into simulation path."
+  echo
+  echo "UTILITIES"
+  echo 
+  echo "         -s <simdir>" 
+  echo "         Create small portable copy of <simdir>."
+  echo 
+  echo "         -h" 
+  echo "         Version and platform information."
+
+  exit 1
+fi
+#=============================================================
+
+#=============================================================
+# Define variables for flag capture
+#
+RUNBASE='out.qlgyro.run'
+VERBASE='out.qlgyro.version'
+#
+# Default simulation root and qlgyro directory
+SIMROOT=$PWD
+QLGYRO_DIR=$GACODE_ROOT/qlgyro
+GYRO_DIR=$GACODE_ROOT/gyro
+CGYRO_DIR=$GACODE_ROOT/cgyro
+CGYRO=0
+GYRO=0
+# Parallelization parameters
+NPROC=1
+NOMP=1
+NUMA=0
+MPINUMA=0
+# Execute/test mode flags
+EXEC_FLAG=0
+TEST_FLAG=0
+INIT_FLAG=0
+GENERATE_FLAG=0
+REGRESS=0
+REGRESS_RESET=0
+SCOPY_FLAG=0
+KILL_STATUS=2
+START=new
+#=============================================================
+
+#=============================================================
+# Parse command line options
+#
+while [ $# -gt 0 ] ; do
+  case "$1" in
+
+  -p) shift ; SIMROOT=$1 ;;
+
+  -e) shift ; LOCDIR=$1 ; EXEC_FLAG=1 ;;
+
+  -t) shift ; LOCDIR=$1 ; TEST_FLAG=1 ;;
+
+  -i) shift ; LOCDIR=$1 ; INIT_FLAG=1 ;;
+
+  -g) shift ; LOCDIR=$1 ; GENERATE_FLAG=1 ;;
+
+  -r) REGRESS=1 ;;
+
+  -rc) shift ; LOCDIR=$1 ; REGRESS=2 ;;
+
+  -reset) REGRESS_RESET=1 ;;
+
+  -s) shift ; LOCDIR=$1 ; SCOPY_FLAG=1 ;;
+
+  -n) shift ; NPROC=$1 ;;
+
+  -nomp) shift ; NOMP=$1 ;;
+
+  -numa) shift ; NUMA=$1 ;;
+
+  -mpinuma) shift ; MPINUMA=$1 ;;
+
+  -h) gacode_printversion QLGYRO ; exit 0 ;;
+
+  -K) shift ; KILL_STATUS=1 ; LOCDIR=$1 ;;
+
+  -k) shift ; KILL_STATUS=-1 ; LOCDIR=$1 ;;
+
+  -c) shift ; KILL_STATUS=0 ; LOCDIR=$1 ;;
+
+  -start) shift ; START=$1 ;;
+
+  *) echo "ERROR: incorrect qlgyro syntax." ; exit 1 ;;
+ 
+  esac
+  shift
+done
+#=============================================================
+
+if [ "$LOCDIR" == "." ]
+then
+   LOCDIR=`basename $PWD`
+   cd .. ; SIMROOT=$PWD
+fi
+SIMDIR=$SIMROOT/$LOCDIR
+
+#=============================================================
+case "$KILL_STATUS" in
+  -1) qlgyro_sim_kill $SIMDIR -1 ; exit 0 ;;
+   0) qlgyro_sim_kill $SIMDIR 0  ; exit 0 ;;
+   1) qlgyro_sim_kill $SIMDIR 1  ; exit 0 ;;  
+esac
+#=============================================================
+ 
+#============================================================
+# Check for inconsistent flags:
+if [ $REGRESS -eq 0 ] ; then
+   REGRESS_FLAG=0
+else
+   REGRESS_FLAG=1
+fi
+FLAG_SUM=$[$EXEC_FLAG+$TEST_FLAG+$GENERATE_FLAG 
+                     +$REGRESS_FLAG+$INIT_FLAG]
+if [ $FLAG_SUM -gt 1 ]
+then
+   echo "ERROR: Can only specify one of -e, -t, -g, -r, -i"
+   exit 1
+fi
+#============================================================
+
+#============================================================
+# Generate simdir if -g set, then exit.
+#
+if [ $GENERATE_FLAG -eq 1 ]
+then
+   if [ ! -f "${QLGYRO_DIR}/tools/input/$LOCDIR/input.gyro" ]
+   then
+      cat ${QLGYRO_DIR}/tools/input/simdir_list
+   else
+      cp -ai ${QLGYRO_DIR}/tools/input/$LOCDIR $SIMDIR
+   fi
+   exit 0
+fi
+#============================================================
+
+#============================================================
+# Do the regression test if -r set, then exit.
+#
+if [ $REGRESS -eq 1 ] 
+then 
+   N2=$[ NPROC / 2 ]
+   if [ $[ NPROC - 2 * N2 ] -eq 1 ]
+   then
+      echo "ERROR: QLGYRO regression tool"
+      echo "       Number of processors must be multiple of 2." 
+      exit 1
+   fi   
+   gacode_reg_do $NPROC $NOMP $REGRESS_RESET gyro 1e-5
+   exit 0
+fi
+if [ $REGRESS -eq 2 ] 
+then 
+   gacode_reg $LOCDIR $GACODE_ROOT/gyro/tools/input out.gyro.prec 1e-5 
+   exit 0
+fi
+#============================================================
+
+#============================================================
+# Everything else must be done in $SIMDIR; so ensure existence 
+# of $SIMDIR (needed at this point) and go there: 
+#
+if ! gacode_sim_warn $SIMDIR
+then
+   exit 1 
+fi 
+
+cd $SIMDIR
+#============================================================
+
+#=============================================================
+# Do a small-copy (copy small files into new directory)
+if [ $SCOPY_FLAG -eq 1 ]
+then
+   list="
+    input.qlgyro
+    input.qlgyro.gen
+    input.profiles
+    input.profiles.gen
+    input.profiles.geo
+    out.qlgyro.run
+    out.gyro.t
+    out.gyro.freq
+    out.gyro.error
+    out.gyro.gbflux
+    out.gyro.gbflux_i
+    out.gyro.gbflux_n
+    out.gyro.gbflux_exc
+    out.gyro.geometry_arrays
+    out.gyro.kxkyspec
+    out.gyro.phase_space
+    out.gyro.profile
+    out.gyro.timing
+    out.gyro.units
+    out.gyro.zerobar"
+
+   # Funny syntax below removes trailing /
+   target=${SIMDIR%/}"-s"
+   mkdir $target
+   for i in $list
+   do
+      cp -av $i $target
+   done
+   exit 0
+fi
+#=============================================================
+
+#==========================================================
+# Check for "hard halt", otherwise initialize halt file:
+#
+if [ -f halt ] 
+then
+   if [ `cat halt` = "-1" ] 
+   then
+      exit 1
+   fi   
+fi
+echo 0 > halt
+#==========================================================
+
+#==========================================================
+# echo number of tasks, then parse INPUT
+#
+echo "[Parsing data in input.qlgyro]" > $RUNBASE
+
+python $QLGYRO_DIR/bin/qlgyro_parse.py >> $RUNBASE
+CODE=$(eval tail -n 1 $RUNBASE)
+
+if [ $CODE = "GYRO" ]
+then
+    python $GYRO_DIR/bin/gyro_parse.py >> $RUNBASE
+fi
+
+if [ $CODE = "CGYRO" ]
+then
+    python $CGYRO_DIR/bin/cgyro_parse.py >> $RUNBASE
+fi
+
+if [ $? -eq 1 ] 
+then
+   cat $RUNBASE
+   exit 1
+fi
+#==========================================================
+
+#===========================================================
+# Set flags for execute or test:
+
+# Execute:
+if [ $EXEC_FLAG -eq 1 ]
+then
+
+   #==========================================================
+   # Version stamp:  
+   echo `gacode_getversion` > $VERBASE
+   echo $GACODE_PLATFORM >> $VERBASE
+   date >> $VERBASE
+
+   gacode_printversion QLGYRO 
+   #==========================================================
+
+   echo "0" > "$SIMDIR/gyrotest_flag"
+fi
+
+# Test:
+if [ $TEST_FLAG -eq 1 ]
+then
+   NUMA=1
+   MPINUMA=1
+   echo "1" > "$SIMDIR/gyrotest_flag"
+fi
+#===========================================================
+
+#===========================================================
+# Manage start control
+# 
+case "$START" in
+  nosave) echo "-1 [nosave]" > restart.dat ;;
+  new)    echo  "0 [new]" > restart.dat ;;
+  cont)   echo  "1 [continue]" > restart.dat ;;
+  retry)  echo  "2 [retry]" > restart.dat ;;
+  init)   echo  "3 [init]" > restart.dat ;;
+  *) echo "ERROR: bad argument to -start." ; exit 1 ;;
+esac
+#===========================================================
+
+#===========================================================
+# RUN QLGYRO
+#
+if [ $INIT_FLAG -ne 1 ]
+then
+  $GACODE_ROOT/platform/exec/exec.$GACODE_PLATFORM \
+    $SIMDIR $NPROC $QLGYRO_DIR/src/qlgyro $NOMP $NUMA $MPINUMA
+fi
+
+if [ $TEST_FLAG -eq 1 ] ; then
+   python $GACODE_ROOT/shared/bin/osxlist.py $RUNBASE
+   cat out.expro.run
+fi
+#===========================================================
+
+exit 0

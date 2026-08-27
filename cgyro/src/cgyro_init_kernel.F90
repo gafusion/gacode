@@ -15,6 +15,7 @@ subroutine cgyro_init_kernel
   use timer_lib
   use mpi
   use cgyro_globals
+  use cgyro_field_mod, only : field
   use cgyro_step
   use cgyro_io
 
@@ -43,7 +44,6 @@ subroutine cgyro_init_kernel
 
   ! Number of fluxes to output 
   nflux = 3+exch_flag
-  nflux_mom = 3
 
   ! 1. MPI setup
   call cgyro_mpi_grid
@@ -114,9 +114,9 @@ subroutine cgyro_init_kernel
   ! GPU versions of step_gk and coll work on the following in the GPU memory
   call timer_lib_in('str_mem')
 #if defined(OMPGPU)
-!$omp target update to(field,cap_h_c,h_x,source)
+!$omp target update to(source)
 #elif defined(_OPENACC)
-!$acc update device(field,cap_h_c,h_x,source)
+!$acc update device(source)
 #endif
   call timer_lib_out('str_mem')
 

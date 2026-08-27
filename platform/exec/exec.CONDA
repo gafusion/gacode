@@ -8,10 +8,12 @@ simdir=${1}
 nmpi=${2}
 exec=${3}
 nomp=${4}
+numa=${5}
+mpinuma=${6}
 
 echo $simdir
 
 cd $simdir
-
+ 
 mpirun -env OMP_NUM_THREADS $nomp -np $nmpi $exec
 

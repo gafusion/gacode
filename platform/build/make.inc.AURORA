@@ -4,8 +4,7 @@
 
 IDENTITY="ALCF AURORA GPU PVC (ifx)"
 # there are really 208 logical cores, but we need something that is divisible by NUMAS
-# https://docs.alcf.anl.gov/aurora/running-jobs-aurora/#example-4-1-node-12-ranksnode
-CORES_PER_NODE=96
+CORES_PER_NODE=204
 NUMAS_PER_NODE=12
 
 # Compilers and flags

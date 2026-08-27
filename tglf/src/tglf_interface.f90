@@ -395,17 +395,17 @@ contains
     write(1,30) 'SHAPE_COS0',tglf_shape_cos0_loc_in
     write(1,30) 'SHAPE_S_COS0',tglf_shape_s_cos0_loc_in
     write(1,30) 'SHAPE_COS1',tglf_shape_cos1_loc_in
-    write(1,30) 'SHAPE_S_COS1',tglf_shape_cos1_loc_in
+    write(1,30) 'SHAPE_S_COS1',tglf_shape_s_cos1_loc_in
     write(1,30) 'SHAPE_COS2',tglf_shape_cos2_loc_in
-    write(1,30) 'SHAPE_S_COS2',tglf_shape_cos2_loc_in
+    write(1,30) 'SHAPE_S_COS2',tglf_shape_s_cos2_loc_in
     write(1,30) 'SHAPE_COS3',tglf_shape_cos3_loc_in
-    write(1,30) 'SHAPE_S_COS3',tglf_shape_cos3_loc_in
+    write(1,30) 'SHAPE_S_COS3',tglf_shape_s_cos3_loc_in
     write(1,30) 'SHAPE_COS4',tglf_shape_cos4_loc_in
     write(1,30) 'SHAPE_S_COS4',tglf_shape_s_cos4_loc_in
     write(1,30) 'SHAPE_COS5',tglf_shape_cos5_loc_in
-    write(1,30) 'SHAPE_S_COS5',tglf_shape_cos5_loc_in
+    write(1,30) 'SHAPE_S_COS5',tglf_shape_s_cos5_loc_in
     write(1,30) 'SHAPE_COS6',tglf_shape_cos6_loc_in
-    write(1,30) 'SHAPE_S_COS6',tglf_shape_cos6_loc_in
+    write(1,30) 'SHAPE_S_COS6',tglf_shape_s_cos6_loc_in
     write(1,30) 'P_PRIME_LOC',tglf_p_prime_loc_in
     write(1,30) 'Q_PRIME_LOC',tglf_q_prime_loc_in
     write(1,30) 'BETA_LOC',tglf_beta_loc_in
@@ -590,17 +590,17 @@ contains
     write(1,30) 'SHAPE_COS0',shape_cos0_loc
     write(1,30) 'SHAPE_S_COS0',shape_s_cos0_loc
     write(1,30) 'SHAPE_COS1',shape_cos1_loc
-    write(1,30) 'SHAPE_S_COS1',shape_cos1_loc
+    write(1,30) 'SHAPE_S_COS1',shape_s_cos1_loc
     write(1,30) 'SHAPE_COS2',shape_cos2_loc
-    write(1,30) 'SHAPE_S_COS2',shape_cos2_loc
+    write(1,30) 'SHAPE_S_COS2',shape_s_cos2_loc
     write(1,30) 'SHAPE_COS3',shape_cos3_loc
-    write(1,30) 'SHAPE_S_COS3',shape_cos3_loc
+    write(1,30) 'SHAPE_S_COS3',shape_s_cos3_loc
     write(1,30) 'SHAPE_COS4',shape_cos4_loc
     write(1,30) 'SHAPE_S_COS4',shape_s_cos4_loc
     write(1,30) 'SHAPE_COS5',shape_cos5_loc
-    write(1,30) 'SHAPE_S_COS5',shape_cos5_loc
+    write(1,30) 'SHAPE_S_COS5',shape_s_cos5_loc
     write(1,30) 'SHAPE_COS6',shape_cos6_loc
-    write(1,30) 'SHAPE_S_COS6',shape_cos6_loc
+    write(1,30) 'SHAPE_S_COS6',shape_s_cos6_loc
     write(1,30) 'P_PRIME_LOC',p_prime_loc
     write(1,30) 'Q_PRIME_LOC',q_prime_loc
     write(1,30) 'BETA_LOC',tglf_beta_loc_in

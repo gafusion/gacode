@@ -16,11 +16,13 @@ subroutine cgyro_init_manager
   use mpi
   use timer_lib
   use cgyro_globals
+  use cgyro_coll_data, only : cgyro_coll_data_init
   use half_hermite
 
   use cgyro_io
   use cgyro_nl
-  use cgyro_nl_comm
+  use cgyro_field_mod, only : cgyro_field_c_init, cgyro_field_v_init
+  use cgyro_flux_mod, only: cgyro_flux_init
 
 #if defined(_OPENACC) || defined(OMPGPU)
 #define CGYRO_GPU_FFT
@@ -30,6 +32,7 @@ subroutine cgyro_init_manager
 
   character(len=128) :: msg
   integer :: ie,ix
+  integer :: n_upwind_arr
 
   if (hiprec_flag == 1) then
      BYTE   = 8
@@ -87,9 +90,6 @@ subroutine cgyro_init_manager
           alpha_poly) ! only write results on i_proc zero.
   endif
   
-  ! Default value for collision data compression
-  n_low_energy = 0
-
   vel(:) = sqrt(energy(:))
   vel2(:) = sqrt(2.0*energy(:))
 
@@ -122,6 +122,12 @@ subroutine cgyro_init_manager
         w_exi(ie,ix) = w_e(ie)*w_xi(ix)
      enddo
   enddo
+  ! needed on device for the post-stencil conservation moment reduction
+#if defined(OMPGPU)
+!$omp target enter data map(to:w_exi)
+#elif defined(_OPENACC)
+!$acc enter data copyin(w_exi)
+#endif
 
   allocate(theta(n_theta))
   allocate(thetab(n_theta,n_radial/box_size))
@@ -172,60 +178,30 @@ subroutine cgyro_init_manager
      !----------------------------------------------------
 
      ! Global (undistributed) arrays
-     allocate(fcoef(n_field,nc,nt1:nt2))
-     if (n_field < 3) then
-        allocate(gcoef(n_field,nc,nt1:nt2))
-     else
-        allocate(gcoef(5,nc,nt1:nt2))
-     endif
-     allocate(field(n_field,nc,nt1:nt2))
-     allocate(field_dot(n_field,nc,nt1:nt2))
-     allocate(field_loc(n_field,nc,nt1:nt2))
-     allocate(field_old(n_field,nc,nt1:nt2))
-     allocate(field_old2(n_field,nc,nt1:nt2))
-     allocate(field_old3(n_field,nc,nt1:nt2))
+     call cgyro_field_c_init(n_field,n_radial,n_theta,nv_loc,nt1,nt2,ae_flag)
+     ! Note: cgyro_field_e_init called in cgyro_init_h
+
+     call cgyro_flux_init(n_radial,theta_plot,n_species,n_field,&
+                          n_global,nc,nv_loc,nt1,nt2,momentum_print_flag)
      allocate(epar(nc,nt1:nt2))
-     allocate(    moment(n_radial,theta_plot,n_species,nt1:nt2,3))
-     allocate(moment_loc(n_radial,theta_plot,n_species,nt1:nt2,3))
-     allocate(    cflux(n_species,4,n_field,nt1:nt2))
-     allocate(cflux_loc(n_species,4,n_field,nt1:nt2))
-     allocate(    gflux(0:n_global,n_species,4,n_field,nt1:nt2))
-     allocate(gflux_loc(0:n_global,n_species,4,n_field,nt1:nt2))
-     allocate(cflux_tave(n_species,4))
-     allocate(gflux_tave(n_species,4))
-     if (momentum_print_flag == 1) then
-        allocate(cflux_mom_loc(n_species,3,n_field,nt1:nt2))
-        allocate(cflux_mom(n_species,3,n_field,nt1:nt2))
-        allocate(gflux_mom_loc(0:n_global,n_species,3,n_field,nt1:nt2))
-        allocate(gflux_mom(0:n_global,n_species,3,n_field,nt1:nt2))
-     endif
- 
+
      allocate(recv_status(MPI_STATUS_SIZE))
 
      allocate(source(n_theta,nv_loc,nt1:nt2))
 
 #if defined(OMPGPU)
-!$omp target enter data map(alloc:fcoef,gcoef,field,field_loc,source)
+!$omp target enter data map(alloc:source)
 #elif defined(_OPENACC)
-!$acc enter data create(fcoef,gcoef,field,field_loc,source)
+!$acc enter data create(source)
 #endif
 
      if ((collision_model /= 5) .AND. (collision_field_model == 1)) then
-       ! assuming all collision constants are the same between the simulations
-       allocate(dvjvec_v(n_field,nv,nt1:nt2,nc_loc_coll))
        ! we do not really need all n_sim
        ! but since n_sim is assumed to be small, the added cost is small
        ! and this drastically similifies the code
        ! But could be improved in the future
        allocate(jvec_v(n_field,nc_loc_coll,nt1:nt2,nv,n_sim))
-       ! nc and nc_loc_coll must be last, since it will be collated     
-       allocate(field_v(n_field,nt1:nt2,n_sim,nc))
-       allocate(field_loc_v(n_field,nt1:nt2,n_sim,nc_cl1:nc_cl2))
-#if defined(OMPGPU)
-!$omp target enter data map(alloc:field_v,field_loc_v,dvjvec_v)
-#elif defined(_OPENACC)
-!$acc enter data create(field_v,field_loc_v,dvjvec_v)
-#endif
+       call cgyro_field_v_init(n_field,nc,nv,nt1,nt2,n_sim,nc_cl1,nc_cl2)
      endif
 
      ! Velocity-distributed arrays
@@ -265,19 +241,20 @@ subroutine cgyro_init_manager
 #endif
      end select 
      
+     n_upwind_arr = 2
+     if (n_field<2) n_upwind_arr = 1 ! do not need current if I have a single field
+
      allocate(h_x(nc,nv_loc,nt1:nt2))
-     allocate(g_x(nc,nv_loc,nt1:nt2))
      allocate(h0_x(nc,nv_loc,nt1:nt2))
+     ! conservative-upwind scratch: raw dissipation before projection
+     allocate(upwind_flux(nc,nv_loc,nt1:nt2))
 #if defined(OMPGPU)
-!$omp target enter data map(alloc:h_x,g_x,h0_x)
+!$omp target enter data map(alloc:h_x,h0_x,upwind_flux)
 #elif defined(_OPENACC)
-!$acc enter data create(h_x,g_x,h0_x)
+!$acc enter data create(h_x,h0_x,upwind_flux)
 #endif
 
      allocate(cap_h_c(nc,nv_loc,nt1:nt2))
-     allocate(cap_h_c_dot(nc,nv_loc,nt1:nt2))
-     allocate(cap_h_c_old(nc,nv_loc,nt1:nt2))
-     allocate(cap_h_c_old2(nc,nv_loc,nt1:nt2))
      allocate(cap_h_ct(nv_loc,nt1:nt2,nc))
      allocate(cap_h_v(nc_loc_coll,nt1:nt2,nv,n_sim))
      allocate(omega_cap_h(nc,nv_loc,nt1:nt2))
@@ -286,44 +263,49 @@ subroutine cgyro_init_manager
      allocate(omega_ss(n_field,nc,nv_loc,nt1:nt2))
      allocate(omega_sbeta(nc,nv_loc,nt1:nt2))
      allocate(jvec_c(n_field,nc,nv_loc,nt1:nt2))
-     allocate(dvjvec_c(n_field,nc,nv_loc,nt1:nt2))
      allocate(jxvec_c(n_field,nc,nv_loc,nt1:nt2))
-     allocate(upfac1(nc,nv_loc,nt1:nt2))
-     allocate(upfac2(nc,nv_loc,nt1:nt2))
-     if (momentum_print_flag == 1) then
-        allocate(jmvec_c(n_field,nc,nv_loc,nt1:nt2))
-     endif
-     
+     ! post-stencil conservation projection factors (filled + device-copied
+     ! in cgyro_init_arrays).
+     allocate(upfac_num(nc,n_upwind_arr,nv_loc,nt1:nt2))
+
 #if defined(OMPGPU)
-!$omp target enter data map(alloc:cap_h_c,cap_h_ct,cap_h_c_dot,cap_h_c_old,cap_h_c_old2)
-!$omp target enter data map(alloc:cap_h_v,dvjvec_c)
+!$omp target enter data map(alloc:cap_h_c,cap_h_ct)
+!$omp target enter data map(alloc:cap_h_v)
 #elif defined(_OPENACC)
-!$acc enter data create(cap_h_c,cap_h_ct,cap_h_c_dot,cap_h_c_old,cap_h_c_old2)
-!$acc enter data create(cap_h_v,dvjvec_c)
+!$acc enter data create(cap_h_c,cap_h_ct)
+!$acc enter data create(cap_h_v)
 #endif
 
      if (upwind_single_flag == 0) then
-       allocate(upwind_res_loc(nc,ns1:ns2,nt1:nt2))
-       allocate(upwind_res(nc,ns1:ns2,nt1:nt2))
+       allocate(upwind_res_loc(nc,n_upwind_arr,ns1:ns2,nt1:nt2))
+       allocate(upwind_res(nc,n_upwind_arr,ns1:ns2,nt1:nt2))
 #if defined(OMPGPU)
 !$omp target enter data map(alloc:upwind_res,upwind_res_loc)
 #elif defined(_OPENACC)
 !$acc enter data create(upwind_res,upwind_res_loc)
 #endif
      else
-       allocate(upwind32_res_loc(nc,ns1:ns2,nt1:nt2))
-       allocate(upwind32_res(nc,ns1:ns2,nt1:nt2))
+       allocate(upwind32_res_loc(nc,n_upwind_arr,ns1:ns2,nt1:nt2))
+       allocate(upwind32_res(nc,n_upwind_arr,ns1:ns2,nt1:nt2))
 #if defined(OMPGPU)
 !$omp target enter data map(alloc:upwind32_res,upwind32_res_loc)
 #elif defined(_OPENACC)
 !$acc enter data create(upwind32_res,upwind32_res_loc)
 #endif
+       ! the post-stencil conservation reduction uses the r64 arrays on all
+       ! backends, regardless of upwind_single_flag, so allocate them too
+       allocate(upwind_res_loc(nc,n_upwind_arr,ns1:ns2,nt1:nt2))
+       allocate(upwind_res(nc,n_upwind_arr,ns1:ns2,nt1:nt2))
+#if defined(OMPGPU)
+!$omp target enter data map(alloc:upwind_res,upwind_res_loc)
+#elif defined(_OPENACC)
+!$acc enter data create(upwind_res,upwind_res_loc)
+#endif
      endif
+
 
      ! Nonlinear arrays
      if (nonlinear_flag == 1) then
-        call cgyro_nl_dealias_init
-
         if (nl_single_flag < 2) then
           allocate(fA_nl(n_radial,nt_loc,nsplitA,n_toroidal_procs))
           allocate(g_nl(n_field,n_radial,n_jtheta,n_toroidal))
@@ -375,41 +357,8 @@ subroutine cgyro_init_manager
         endif
      endif
 
-     if (collision_model == 5) then
-        if (nc_loc_coll/=nc_loc) then
-           call cgyro_error("CMAT sharing not supported for COLLISION_MODEL 5")
-           return
-        endif
-        allocate(cmat_simple(n_xi,n_xi,n_energy,n_species,n_theta,nt1:nt2))
-     else
-        if (collision_precision_mode == 1) then
-           if (collision_model>=6) then
-             call cgyro_error("COLLISION_PRECISION_MODE 1 not supported for COLLISION_MODEL >=6")
-             return
-           endif
-           ! the lowest energy(s) has the most spread, so treat differently
-           n_low_energy = 1
-           do ie=2,n_energy
-             if (energy(ie)<1.0e-2) then
-               n_low_energy = ie
-             endif
-           enddo
-           call allocate_cmat_fp32(nv,nc_loc_coll,nt1,nt2)
-           allocate(cmat_stripes(n_xi,n_species,(n_low_energy+1):n_energy,n_xi,nc_loc_coll,nt1:nt2))
-           allocate(cmat_e1(n_xi,n_species,n_low_energy,nv,nc_loc_coll,nt1:nt2))
-
-           write (msg, "(A,I1,A)") "Using fp32 collision precision except e<=",n_low_energy," or same e&s."
-           call cgyro_info(msg)
-        else if (collision_precision_mode == 32) then
-           if (collision_model>=6) then
-             call cgyro_error("COLLISION_PRECISION_MODE 32 not supported for COLLISION_MODEL >=6")
-             return
-           endif
-           call allocate_cmat_fp32(nv,nc_loc_coll,nt1,nt2)
-        else
-           call allocate_cmat(nv,nc_loc_coll,nt1,nt2)
-        endif
-     endif
+     call cgyro_coll_data_init
+     if (error_status > 0) return
 
   endif
 
@@ -576,4 +525,3 @@ subroutine cgyro_init_manager
   call timer_lib_out('nl_init')
 
 end subroutine cgyro_init_manager
-

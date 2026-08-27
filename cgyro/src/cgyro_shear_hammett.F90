@@ -15,6 +15,7 @@
 subroutine cgyro_shear_hammett
 
   use cgyro_globals
+  use cgyro_field_mod, only : cgyro_field_c
   use timer_lib
 
   implicit none

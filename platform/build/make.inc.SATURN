@@ -1,0 +1,32 @@
+#---------------------------------------------------
+# SATURN at General Atomics
+# module load pgi/13.2
+# setenv PATH ${PATH}:/fusion/usc/opt/mpich/mpich-3.0.4/pgf90-13.2/bin # ${PGI}/linux86-64/13.2/mpi/mpich/bin/
+#---------------------------------------------------
+
+IDENTITY="GA saturn cluster"
+CORES_PER_NODE=12
+NUMAS_PER_NODE=1
+
+FC	= mpif90 -module $(GACODE_ROOT)/modules
+F77	= mpif90
+
+FOMP    = -mp
+FMATH	= -r8 
+FOPT	= -fastsse
+FDEBUG	= -g -Ktrap=fp -Mbounds -Minform,inform
+
+# System math libraries
+
+LMATH=/fusion/usc/opt/pgi/linux86-64/13.2/lib/liblapack.a \
+      /fusion/usc/opt/pgi/linux86-64/13.2/lib/libblas.a
+
+# NetCDF
+NETCDF_DIR = /fusion/usc/opt/netcdf/netcdf-4.3.3.1-netcdff-4.4.2-gxx-4.4.7-pgf-13.2
+NETCDF =  -L$(NETCDF_DIR)/lib -lnetcdff -lnetcdf -Wl,-rpath,$(NETCDF_DIR)/lib
+NETCDF_INC = $(NETCDF_DIR)/include
+
+# Archive 
+
+ARCH = ar cr
+

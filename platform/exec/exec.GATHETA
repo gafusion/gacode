@@ -9,6 +9,8 @@ simdir=${1}
 nmpi=${2}
 exec=${3}
 nomp=${4}
+numa=${5}
+mpinuma=${6}
 
 cd $simdir
 
@@ -20,6 +22,6 @@ else
   # mpirun does not support affinitly with openMP
   export MV2_ENABLE_AFFINITY=0
 fi
-export OMP_NUM_THREADS=$nomp
+export OMP_NUM_THREADS=$nomp 
 
 mpirun_rsh -hostfile "${MPIHOSTS}" -export-all -np $nmpi $exec

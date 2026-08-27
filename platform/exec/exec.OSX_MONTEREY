@@ -8,9 +8,11 @@ simdir=${1}
 nmpi=${2}
 exec=${3}
 nomp=${4}
+numa=${5}
+mpinuma=${6}
 
 echo $simdir
-cd $simdir
 
-export OMP_NUM_THREADS=$nomp
+cd $simdir
+export OMP_NUM_THREADS=$nomp 
 mpirun-openmpi-mp -np $nmpi $exec

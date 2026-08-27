@@ -5,10 +5,12 @@ simdir=${1}
 nmpi=${2}
 exec=${3}
 nomp=${4}
+numa=${5}
+mpinuma=${6}
 
 cd $simdir
 export OMP_NUM_THREADS=$nomp
 export OMP_STACKSIZE=400M
 # relaxed mapping and binding, prefer compatibility vs performance
-mpiexec -env OMP_NUM_THREADS $nomp -n $nmpi --bind-to none $exec
+mpiexec -env OMP_NUM_THREADS $nomp -n $nmpi --bind-to none $exec 
 

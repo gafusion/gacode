@@ -7,7 +7,7 @@ subroutine cgyro_equilibrium
   implicit none
 
   integer :: m
-  integer :: it,ir,is,itor,p
+  integer :: it,ir,is,itor
   real :: gtheta_ave,gtheta0,err
   real, dimension(n_theta+1) :: x,y
   real, dimension(n_theta) :: ttmp
@@ -144,18 +144,12 @@ subroutine cgyro_equilibrium
   ! Construct balloon-mode extended angle
   ! (see also extended_ang in cgyro_write_timedata)
   !
-  ! px_zero = n_radial/2+1 = m+1
-  ! p = ir-(m+1) = ir-px_zero
-  !
   do ir=1,n_radial/box_size
-     p = ir-px_zero
      if (sign_qs > 0) then
-        thetab(:,ir) = theta(:)+2*pi*(p+px0)
+        thetab(:,ir) = theta(:)+2*pi*(px(ir)+px0)
      else
-        ! Reverse output direction 
-        ! thetab(:,n_radial/box_size-ir+1) = theta(:)-2*pi*(p+px0)
-        ! n_radial-ir+1-px_zero = -(p+1)
-        thetab(:,ir) = theta(:)+2*pi*(p+1+px0)
+        ! Reverse output direction (see extended_ang)
+        thetab(:,n_radial/box_size-ir+1) = theta(:)-2*pi*(px(ir)+px0)
      endif
   enddo
   !-----------------------------------------------------------------
@@ -257,7 +251,7 @@ subroutine cgyro_equilibrium
      do itor=nt1,nt2
        do ir=1,n_radial
         k_x(ic_c(ir,it),itor) = &
-               2.0*pi*(ir - px_zero + px0)*geo_grad_r(it)/length &
+               2.0*pi*(px(ir)+px0)*geo_grad_r(it)/length &
              + k_theta_base*itor*geo_gq(it)*geo_captheta(it)
         k_perp(ic_c(ir,it),itor) = &
                sqrt(k_x(ic_c(ir,it),itor)**2+(k_theta_base*itor*geo_gq(it))**2)
@@ -273,7 +267,6 @@ subroutine cgyro_equilibrium
         omega_stream(:,is,itor) = scale_stream*omega_stream(:,is,itor)
         omega_trap(:,is,itor)   = scale_trap*omega_trap(:,is,itor)
      enddo
-     ! All drifts are modified
      omega_rdrift(:,is)   = scale_drift*omega_rdrift(:,is)
      omega_adrift(:,is)   = scale_drift*omega_adrift(:,is)
      omega_aprdrift(:,is) = scale_drift*omega_aprdrift(:,is)

@@ -1,0 +1,21 @@
+#!/bin/sh
+# GACODE Parallel execution script (PPPL_atom)
+#
+# NOTES:
+#  The following was for the PPPL platform
+#  For PPPL kite and kruskal Linux clusters with Infiniband connection
+#  Or for PPPL kestrel with gigabit
+
+simdir=${1}
+nmpi=${2}
+exec=${3}
+nomp=${4}
+numa=${5}
+mpinuma=${6}
+
+cd $simdir
+
+echo "export LD_LIBRARY_PATH=/p/atom/conda/lib:${LD_LIBRARY_PATH}; export OMP_NUM_THREADS=$nomp ; mpirun -np $nmpi $exec 2> /dev/null"
+export LD_LIBRARY_PATH=/p/atom/conda/lib:${LD_LIBRARY_PATH}; export OMP_NUM_THREADS=$nomp ; mpirun -np $nmpi $exec 2> /dev/null
+
+exit

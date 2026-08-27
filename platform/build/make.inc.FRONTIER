@@ -18,7 +18,7 @@ F77 = ${FC}
 ifneq ($(GACODE_OMPGPU),1)
 FACC   =-hacc -DHIPGPU -DGACODE_GPU_AMD -I${HIPFORT_DIR}/include/hipfort/amdgcn -hacc_model=auto_async_none:no_fast_addr:no_deep_copy
 else
-FACC = -DOMPGPU -DHIPGPU -DGACODE_GPU_AMD -I${HIPFORT_DIR}/include/hipfort/amdgcn -hacc_model=auto_async_none:no_fast_addr:no_deep_copy
+FACC = -DOMPGPU -DOMPGPU_DEVICE_ADDR -DHIPGPU -DGACODE_GPU_AMD -I${HIPFORT_DIR}/include/hipfort/amdgcn -hacc_model=auto_async_none:no_fast_addr:no_deep_copy
 endif
 FOMP   =-homp
 FMATH  =-s real64

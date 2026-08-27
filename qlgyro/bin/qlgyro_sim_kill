@@ -1,0 +1,35 @@
+#!/bin/sh
+#
+# SCRIPT:
+#  qlgyro_sim_kill
+#
+# FUNCTION:
+#  Clean simulation kill
+
+# Check for valid directory
+if ! qlgyro_sim_warn $1
+then
+   exit 1 
+fi
+
+# Send appropriate kill signal
+
+cd $1 ; echo $2 > halt
+
+# Echo action
+
+case "${2}" in
+
+   -1 )
+
+    echo "[Sent persistant kill signal to $1]" ;;
+
+   0 )
+
+    echo "[Cleared kill signal in $1]" ;;
+
+   1 )
+
+    echo "[Sent non-persistent kill signal to $1]" ;;
+
+esac

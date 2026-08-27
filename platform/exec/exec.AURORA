@@ -13,7 +13,7 @@ mpinuma=${6}
 nidle=${7}
 
 # force nomp, since we want 1 process per NUMA
-nomp=8
+nomp=17
 
 # nmpi = MPI tasks
 # nomp = OpenMP threads per MPI task
@@ -30,6 +30,5 @@ export OMP_STACKSIZE=400M
 export I_MPI_OFFLOAD=1
 export MPIR_CVAR_ENABLE_GPU=1
 
-export CPU_BIND_SCHEME="--cpu-bind=list:1-8:9-16:17-24:25-32:33-40:41-48:53-60:61-68:69-76:77-84:85-92:93-100"
-echo mpiexec -n ${nmpi} --ppn 12 ${CPU_BIND_SCHEME} gpu_tile_compact.sh $exec
-mpiexec -n ${nmpi} --ppn 12 ${CPU_BIND_SCHEME} gpu_tile_compact.sh $exec
+echo mpiexec -n ${nmpi} --ppn 12 --depth=${nomp} --cpu-bind depth gpu_tile_compact.sh $exec
+mpiexec -n ${nmpi} --ppn 12 --depth=${nomp} --cpu-bind depth gpu_tile_compact.sh $exec

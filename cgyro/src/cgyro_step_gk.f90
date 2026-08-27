@@ -3,6 +3,7 @@ subroutine cgyro_step_gk
   use timer_lib
   use cgyro_globals
   use cgyro_globals_math
+  use cgyro_field_mod, only : cgyro_field_c
 
   implicit none
 
@@ -73,4 +74,3 @@ subroutine cgyro_step_gk
   call cgyro_field_c(.TRUE.)
 
 end subroutine cgyro_step_gk
-

@@ -35,8 +35,8 @@ contains
          ic_c,it_c,iv_v,&
          k_perp,bmag,&
          alpha_poly,&
-         i_proc,n_proc,&
-         cmat, copy_into_cmat, copy_from_cmat_all
+         i_proc,n_proc
+    use cgyro_coll_data, only : cmat, copy_into_cmat, copy_from_cmat_all
     use landau, landauvb=>verbose
     use gyrotransformation, gtvb=>verbose
     use half_hermite

@@ -1,0 +1,118 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import argparse
+import textwrap
+import numpy as np
+import pandas as pd
+from tqdm import tqdm
+from gacodeinput import *
+from gacodefuncs import *
+from cgyro.data import cgyrodata
+
+pd.set_option('display.max_rows', None)
+
+ignore = 'eslshared'
+
+# Command line option parser
+def opts():
+
+    mytext = '''\
+    output:
+       NEED DOCUMENTATION HERE
+    '''
+
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawTextHelpFormatter,
+        prog = 'cgyrodb',
+        description="CGYRO database utility",
+        epilog=textwrap.dedent(mytext))
+
+    parser.add_argument('-ref',
+                        help='Refresh directories',
+                        action='store_true')
+    parser.add_argument('-json',
+                        help='Generate IMAS and localdump files',
+                        action='store_true')
+    parser.add_argument('-db',
+                        help='Load the DB and print',
+                        action='store_true')
+    parser.add_argument('-flux',
+                        help='Add flux to DB',
+                        action='store_true')
+
+    args=parser.parse_args()
+
+    return args.ref,args.json,args.db,args.flux
+
+ref,json,db,doflux = opts()
+
+meta = {}
+
+if (not ref) and (not json) and (not db):
+    print('Type "cgyrodb -h" for help')
+    sys.exit()
+
+def gendict(sim,doflux):
+
+   mydict = {}
+
+   mydict['n_n'] = sim.n_n
+   mydict['n_radial'] = sim.n_radial
+   mydict['n_theta'] = sim.n_theta
+   mydict['q'] = sim.q
+   mydict['s'] = sim.shear
+   mydict['kappa'] = sim.kappa
+   mydict['nuee'] = sim.nu[-1]
+   mydict['a/Ln0'] = sim.dlnndr[0]
+   mydict['a/Lt0'] = sim.dlntdr[0]
+   if sim.n_species > 1:
+      mydict['a/Ln1'] = sim.dlnndr[1]
+      mydict['a/Lt1'] = sim.dlntdr[1]
+   else:
+      mydict['a/Ln1'] = 0.0
+      mydict['a/Lt1'] = 0.0
+
+   if doflux:
+      sim.getflux()
+      y = np.sum(sim.ky_flux,axis=(2,3))
+      for ispec in range(sim.n_species):
+         g = average(y[ispec,0,:],sim.t,0.5,0.0)
+         q = average(y[ispec,1,:],sim.t,0.5,0.0)
+         v = average(y[ispec,2,:],sim.t,0.5,0.0)
+         mydict['g'+str(ispec)] = g
+         mydict['q'+str(ispec)] = q
+         mydict['v'+str(ispec)] = v
+
+   return mydict
+
+# First locate all directories
+y = []
+for root,xd,xf in os.walk('./'):
+   if xd == []:
+      if ignore not in root:
+          y.append(root)
+
+if ref:
+   # Run through directories and update
+   for mdir in y:
+      print('Refreshing '+mdir)
+      os.system('cd '+mdir+' ; python $GACODE_ROOT/cgyro/bin/cgyro_parse.py')
+      os.system('cd '+mdir+' ; $GACODE_ROOT/cgyro/src/cgyro ')
+
+if json:
+   # Run through directories and update
+   for mdir in y:
+      print('Dumping '+mdir)
+      os.system('cgyro_json -e '+mdir)
+
+if db:
+   # Create master dictionary "meta"
+   for mdir in tqdm(y):
+      sim = cgyrodata(mdir+'/',silent=True)
+      meta[mdir]=gendict(sim,doflux)
+
+   df = pd.DataFrame(meta)
+   dfpart = df.T[['n_n','n_radial','n_theta','q','s','kappa','a/Ln0','a/Lt0','a/Ln1','a/Lt1','nuee']]
+   print(dfpart)

@@ -109,10 +109,10 @@ def plot_input_gacode(ax,tag):
 
     # Helper routine to plot data (tag) from input.gacode
 
-    flist = ['input.gacode','input.gacode.new']
-    c     = ['black','magenta']
-
-    for i,myfile in enumerate(flist):
+    list = ['input.gacode','input.gacode.new']
+    c    = ['black','magenta']
+    
+    for i,myfile in enumerate(list):
         if os.path.isfile(myfile):
             expro.expro_read(myfile,0)
             a = max(expro.expro_rmin)
@@ -134,22 +134,22 @@ def plot_z(ax,tag):
     if tag == 'zte':
         ax.plot(x, sim.data['a/Lte'][0], color='k', label=init)
         ax.plot(x, sim.data['a/Lte'][n], color='magenta', label=fin)
-        ax.set_ylabel(r'$z_\mathrm{Te} = a/L_\mathrm{Te}$', color='k')
+        ax.set_ylabel('$z_\mathrm{Te} = a/L_\mathrm{Te}$', color='k')
         plot_input_gacode(ax,'dlntedr')
     elif tag == 'zti':
         ax.plot(x, sim.data['a/Lti1'][0], color='k', label=init)
         ax.plot(x, sim.data['a/Lti1'][n], color='magenta', label=fin)
-        ax.set_ylabel(r'$z_\mathrm{Ti} = a/L_\mathrm{Ti}$', color='k')
+        ax.set_ylabel('$z_\mathrm{Ti} = a/L_\mathrm{Ti}$', color='k')
         plot_input_gacode(ax,'dlntidr_1')
     elif tag == 'zne':
         ax.plot(x, sim.data['a/Lne'][0], color='k', label=init)
         ax.plot(x, sim.data['a/Lne'][n], color='magenta', label=fin)
-        ax.set_ylabel(r'$z_\mathrm{ne} = a/L_\mathrm{ne}$', color='k')
+        ax.set_ylabel('$z_\mathrm{ne} = a/L_\mathrm{ne}$', color='k')
         plot_input_gacode(ax,'dlnnedr')
 
     ax.set_ylim([0.0, 10.0])
     ax.legend(loc=loc)
-    ax.figure.tight_layout()
+    plt.tight_layout
 
 
 def plot_residual(ax,tag):
@@ -167,32 +167,32 @@ def plot_residual(ax,tag):
         ne = np.sum(sim.data['E(pflux_e)'][:, 1:], axis=1)/nx
         if max(ne) > 0.0:
             ax.plot(ne, label=r'$R(n_e)$')
-        ax.set_ylabel(r'$\mathbf{residual}$')
-        ax.set_xlabel(r'$\mathbf{iteration}$')
+        ax.set_ylabel('$\mathbf{residual}$')
+        ax.set_xlabel('$\mathbf{iteration}$')
         ax.set_xlim([0, nit])
         ax.set_ylim([1e-3, 5e0])
         ax.legend(loc=loc)
     else:
         if tag == 'res_te':
             z = sim.data['E(eflux_e)'][:, 1:]
-            ax.set_ylabel(r'$\mathrm{Residual}(T_e)$', color='k')
+            ax.set_ylabel('$\mathrm{Residual}(T_e)$', color='k')
         elif tag == 'res_ti':
             z = sim.data['E(eflux_i)'][:, 1:]
-            ax.set_ylabel(r'$\mathrm{Residual}(T_i)$', color='k')
-        else:
+            ax.set_ylabel('$\mathrm{Residual}(T_i)$', color='k')
+        elif tag == 'res_ne':
             z = sim.data['E(pflux_e)'][:, 1:]
-            ax.set_ylabel(r'$\mathrm{Residual}(n_e)$', color='k')
+            ax.set_ylabel('$\mathrm{Residual}(n_e)$', color='k')
 
         c = ax.pcolor(z,
                       edgecolors='w',
                       linewidths=1,
                       norm=LogNorm(vmin=1e-3, vmax=1.0),
                       cmap='rainbow')
-        ax.figure.colorbar(c, ax=ax)
+        plt.colorbar(c, ax=ax)
         ax.set_xlabel('$r/a$')
-        ax.set_ylabel(r'$\mathbf{iteration}$')
+        ax.set_ylabel('$\mathbf{iteration}$')
 
-    ax.figure.tight_layout()
+    plt.tight_layout
 
 
 def plot_flux(ax,tag):
@@ -228,17 +228,17 @@ def plot_flux(ax,tag):
         if units == 0:
             ax.plot(x, sim.data['pflux_e_tot'][n], label=tot)
             ax.plot(x, sim.data['pflux_e_target'][n], label=tar)
-            ax.set_ylabel(r'$\Gamma_e/\Gamma_{GB}$', color='k')
+            ax.set_ylabel('$\Gamma_e/\Gamma_{GB}$', color='k')
             if max(abs(sim.data['pflux_e_tot'][n])) < 0.1:
                 ax.set_ylim([-0.1, 0.1])
         else:
             ax.plot(x, sim.data['pflux_e_tot'][n]*ggb, label=tot)
             ax.plot(x, sim.data['pflux_e_target'][n]*ggb, label=tar)
-            ax.set_ylabel(r'$\Gamma_e~[10^{19}/m^2/s]$', color='k')
+            ax.set_ylabel('$\Gamma_e~[10^{19}/m^2/s]$', color='k')
     elif tag == 'mflux_target':
         ax.plot(x, sim.data['mflux_tot'][n], label=tot)
         ax.plot(x, sim.data['mflux_target'][n], label=tar)
-        ax.set_ylabel(r'$\Pi/\Pi_{GB}$', color='k')
+        ax.set_ylabel('$\Pi/\Pi_{GB}$', color='k')
 
     for i in range(n_ion):
         pstr = 'pflux_i'+str(i+1)
@@ -246,17 +246,17 @@ def plot_flux(ax,tag):
             if units == 0:
                 ax.plot(x, sim.data[pstr+'_tot'][n], label=tot)
                 ax.plot(x, sim.data[pstr+'_target'][n], label=tar)
-                ax.set_ylabel(r'$\Gamma_{i'+str(i+1)+r'}/\Gamma_{GB}$',
+                ax.set_ylabel('$\Gamma_{i'+str(i+1)+'}/\Gamma_{GB}$',
                               color='k')
             else:
                 ax.plot(x, sim.data[pstr+'_tot'][n]*ggb, label=tot)
                 ax.plot(x, sim.data[pstr+'_target'][n]*ggb, label=tar)
-                ax.set_ylabel(r'$\Gamma_{i'+str(i+1)+r'}~[10^{19}/m^2/s]$',
+                ax.set_ylabel('$\Gamma_{i'+str(i+1)+'}~[10^{19}/m^2/s]$',
                               color='k')
             break
 
     ax.legend(loc=loc)
-    ax.figure.tight_layout()
+    plt.tight_layout
 
 
 def plot_smooth(ax, tag):
@@ -306,9 +306,10 @@ def plot_smooth(ax, tag):
         ax.plot(xf,pf/1e4,color='black',label=init)
         ax.plot(x,w0/1e4,'o',color='k')
 
+        w0_norm = cs[n][0]/(a*sim.data['rmaj/a'][n][0])
         w0 = sim.data['M=wR/cs'][n]/(a*sim.data['rmaj/a'][n])*cs[n]
         xf,pf = smooth_pro(x,sim.data['a*f_rot'][n]*w0_norm,w0,64,type='lin')
-        ax.plot(xf,pf/1e4,color='magenta',label=fin)
+        ax.plot(xf,pf/1e4,color='magenta',label=init)
         ax.plot(x,w0/1e4,'o',color='k')
 
         plot_input_gacode(ax,'w0')
@@ -329,7 +330,7 @@ def plot_smooth(ax, tag):
             break
 
     ax.legend(loc=loc)
-    ax.figure.tight_layout()
+    plt.tight_layout
 
 
 #-------------------------------------------------------------------------------------
@@ -461,20 +462,19 @@ if __name__ == "__main__":
 
         # Generate plots
 
-        tags = ['eflux_e_target', 'eflux_i_target', 'pflux_e_target']
+        list = ['eflux_e_target', 'eflux_i_target', 'pflux_e_target']
         for i in range(n_ion):
-            tags.append('pflux_i'+str(i+1)+'_target')
-        tags = tags+['te', 'ti', 'ne']
+            list.append('pflux_i'+str(i+1)+'_target')
+        list = list+['te', 'ti', 'ne']
         for i in range(n_ion):
-            tags.append('ni'+str(i+1))
-        tags = tags+['zte', 'zti', 'zne']
+            list.append('ni'+str(i+1)+'_target')
+        list = list+['zte', 'zti', 'zne']
 
-        for xlist in tags:
+        for xlist in list:
             figure = plt.figure(figsize=(9, 6))
             figure.subplots_adjust(left=0.12, right=0.95, bottom=0.16)
             ax = figure.add_subplot(111)
             plot_select(ax, xlist)
             pfile = 'out.'+xlist+'.'+ext
             plt.savefig(pfile)
-            plt.close(figure)
             print('INFO: (notebook.py) Wrote '+pfile)

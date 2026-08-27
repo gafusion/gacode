@@ -760,6 +760,7 @@ subroutine cgyro_fft_z2d(plan, indata, outdata)
   use fftw3_omp_offload
 #else
   use cufft
+  use iso_c_binding, ONLY: c_int
 #endif
   use cgyro_nl_comm
 
@@ -775,8 +776,8 @@ subroutine cgyro_fft_z2d(plan, indata, outdata)
 #else
   integer(c_int), intent(inout) :: plan
 #endif
-  complex, dimension(:,:,:), intent(inout) :: indata
-  real, dimension(:,:,:), intent(inout)    :: outdata
+  complex, dimension(:,:,:), target, intent(inout) :: indata
+  real, dimension(:,:,:), target, intent(inout)    :: outdata
   !-----------------------------------
   integer :: rc
 
@@ -785,7 +786,13 @@ subroutine cgyro_fft_z2d(plan, indata, outdata)
 #if defined(MKLGPU)
 !$omp target data map(tofrom: indata, outdata)
 #else
+
+#if defined(OMPGPU_DEVICE_ADDR)
+!$omp target data use_device_addr(indata, outdata)
+#else
 !$omp target data use_device_ptr(indata, outdata)
+#endif
+
 #endif
 
 #else
@@ -829,6 +836,7 @@ subroutine cgyro_fft_c2r(plan, indata, outdata)
   use fftw3_omp_offload
 #else
   use cufft
+  use iso_c_binding, ONLY: c_int
 #endif
   use cgyro_nl_comm
   use, intrinsic :: iso_fortran_env
@@ -845,8 +853,8 @@ subroutine cgyro_fft_c2r(plan, indata, outdata)
 #else
   integer(c_int), intent(inout) :: plan
 #endif
-  complex(KIND=REAL32), dimension(:,:,:), intent(inout) :: indata
-  real(KIND=REAL32), dimension(:,:,:), intent(inout)    :: outdata
+  complex(KIND=REAL32), dimension(:,:,:), target, intent(inout) :: indata
+  real(KIND=REAL32), dimension(:,:,:), target, intent(inout)    :: outdata
   !-----------------------------------
   integer :: rc
 
@@ -855,7 +863,13 @@ subroutine cgyro_fft_c2r(plan, indata, outdata)
 #if defined(MKLGPU)
 !$omp target data map(tofrom: indata, outdata)
 #else
+
+#if defined(OMPGPU_DEVICE_ADDR)
+!$omp target data use_device_addr(indata, outdata)
+#else
 !$omp target data use_device_ptr(indata, outdata)
+#endif
+
 #endif
 
 #else
@@ -899,6 +913,7 @@ subroutine cgyro_fft_d2z(plan, indata, outdata)
   use fftw3_omp_offload
 #else
   use cufft
+  use iso_c_binding, ONLY: c_int
 #endif
   use cgyro_nl_comm
 
@@ -914,8 +929,8 @@ subroutine cgyro_fft_d2z(plan, indata, outdata)
 #else
   integer(c_int), intent(inout) :: plan
 #endif
-  real, dimension(:,:,:), intent(inout)    :: indata
-  complex, dimension(:,:,:), intent(inout) :: outdata
+  real, dimension(:,:,:), target, intent(inout)    :: indata
+  complex, dimension(:,:,:), target, intent(inout) :: outdata
   !-----------------------------------
   integer :: rc
 
@@ -924,7 +939,13 @@ subroutine cgyro_fft_d2z(plan, indata, outdata)
 #if defined(MKLGPU)
 !$omp target data map(tofrom: indata, outdata)
 #else
+
+#if defined(OMPGPU_DEVICE_ADDR)
+!$omp target data use_device_addr(indata, outdata)
+#else
 !$omp target data use_device_ptr(indata, outdata)
+#endif
+
 #endif
 
 #else
@@ -968,6 +989,7 @@ subroutine cgyro_fft_r2c(plan, indata, outdata)
   use fftw3_omp_offload
 #else
   use cufft
+  use iso_c_binding, ONLY: c_int
 #endif
   use cgyro_nl_comm
   use, intrinsic :: iso_fortran_env
@@ -984,8 +1006,8 @@ subroutine cgyro_fft_r2c(plan, indata, outdata)
 #else
   integer(c_int), intent(inout) :: plan
 #endif
-  real(KIND=REAL32), dimension(:,:,:), intent(inout)    :: indata
-  complex(KIND=REAL32), dimension(:,:,:), intent(inout) :: outdata
+  real(KIND=REAL32), dimension(:,:,:), target, intent(inout)    :: indata
+  complex(KIND=REAL32), dimension(:,:,:), target, intent(inout) :: outdata
   !-----------------------------------
   integer :: rc
 
@@ -994,7 +1016,13 @@ subroutine cgyro_fft_r2c(plan, indata, outdata)
 #if defined(MKLGPU)
 !$omp target data map(tofrom: indata, outdata)
 #else
+
+#if defined(OMPGPU_DEVICE_ADDR)
+!$omp target data use_device_addr(indata, outdata)
+#else
 !$omp target data use_device_ptr(indata, outdata)
+#endif
+
 #endif
 
 #else
@@ -1030,6 +1058,109 @@ subroutine cgyro_fft_r2c(plan, indata, outdata)
 end subroutine cgyro_fft_r2c
 
 !-----------------------------------------------------------------
+! Helper function for zero-ing off-diagonal elements
+! with proper GPU offload
+! Using async compute whenever possible
+! Caller responsible for synchronization
+!-----------------------------------------------------------------
+
+subroutine cgyro_zero_offdiag_async(nj,xmany,ymany)
+
+  use cgyro_globals
+
+  implicit none
+  !-----------------------------------
+  integer, intent(in) :: nj
+  complex, dimension(0:ny2,0:nx-1,nj), intent(inout) :: xmany,ymany
+  !-----------------------------------
+  integer :: j
+  integer :: ix,iy
+
+#if defined(OMPGPU)
+  !no async for OMPGPU for now
+!$omp target teams distribute parallel do simd collapse(3)
+#else
+!$acc parallel loop gang vector independent collapse(3) async(2) &
+!$acc&         private(j,ix,iy) &
+!$acc&         present(xmany,ymany)
+#endif
+  do j=1,nj
+     do ix=nx2,nx0-1
+       do iy=0,ny2
+         xmany(iy,ix,j) = 0
+         ymany(iy,ix,j) = 0
+       enddo
+     enddo
+  enddo
+
+#if defined(OMPGPU)
+  !no async for OMPGPU for now
+!$omp target teams distribute parallel do simd collapse(3)
+#else
+!$acc parallel loop gang vector independent collapse(3) async(2) &
+!$acc&         private(j,ix,iy) &
+!$acc&         present(xmany,ymany)
+#endif
+  do j=1,nj
+     do ix=0,nx-1
+       do iy=n_toroidal,ny2
+         xmany(iy,ix,j) = 0
+         ymany(iy,ix,j) = 0
+       enddo
+     enddo
+  enddo
+
+end subroutine cgyro_zero_offdiag_async
+
+subroutine cgyro_zero_offdiag32_async(nj,xmany,ymany)
+
+  use cgyro_globals
+
+  implicit none
+  !-----------------------------------
+  integer, intent(in) :: nj
+  complex(KIND=REAL32), dimension(0:ny2,0:nx-1,nj), intent(inout) :: xmany,ymany
+  !-----------------------------------
+  integer :: j
+  integer :: ix,iy
+
+#if defined(OMPGPU)
+  !no async for OMPGPU for now
+!$omp target teams distribute parallel do simd collapse(3)
+#else
+!$acc parallel loop gang vector independent collapse(3) async(2) &
+!$acc&         private(j,ix,iy) &
+!$acc&         present(xmany,ymany)
+#endif
+  do j=1,nj
+     do ix=nx2,nx0-1
+       do iy=0,ny2
+         xmany(iy,ix,j) = 0
+         ymany(iy,ix,j) = 0
+       enddo
+     enddo
+  enddo
+
+#if defined(OMPGPU)
+  !no async for OMPGPU for now
+!$omp target teams distribute parallel do simd collapse(3)
+#else
+!$acc parallel loop gang vector independent collapse(3) async(2) &
+!$acc&         private(j,ix,iy) &
+!$acc&         present(xmany,ymany)
+#endif
+  do j=1,nj
+     do ix=0,nx-1
+       do iy=n_toroidal,ny2
+         xmany(iy,ix,j) = 0
+         ymany(iy,ix,j) = 0
+       enddo
+     enddo
+  enddo
+
+end subroutine cgyro_zero_offdiag32_async
+
+!-----------------------------------------------------------------
 ! Helper function for filling fxmany and fymany (inputs to FFT)
 ! with proper GPU offload.
 ! Input either fA_nl or fB_nl, with nj being either nsplitA or nplitB
@@ -1046,15 +1177,10 @@ subroutine cgyro_fmany_async(nj, f_nl)
   integer, intent(in) :: nj
   complex, dimension(n_radial,nt_loc,nj,n_toroidal_procs), intent(in) :: f_nl
   !-----------------------------------
-  integer :: j
-  integer :: ix0,ix1,ix2,iy
-  integer :: itm,itl
-  integer :: ir0,ir1
-  integer :: p0,p1
-
+  integer :: j,p
+  integer :: ir,itm,itl,ix,iy
+  integer :: itor, it_loc
   complex :: f0
-  complex :: fx0,fx1
-  complex :: fy0,fy1
 
 ! f_nl is (radial, nt_loc, theta, nv_loc1, toroidal_procs)
 ! where nv_loc1 * toroidal_procs >= nv_loc
@@ -1062,91 +1188,45 @@ subroutine cgyro_fmany_async(nj, f_nl)
   ! no tiling, does not seem to help
 #if defined(OMPGPU)
   !no async for OMPGPU for now
-!$omp target teams distribute parallel do simd collapse(3) &
-!$omp&  private(j,ir0,ir1,p0,p1,ix0,ix1,ix2,iy,f0,itm,itl,fx0,fx1,fy0,fy1)
+!$omp target teams distribute parallel do simd collapse(4) &
+!$omp&  private(j,ir,p,ix,itor,iy,f0,itm,itl)
 #else
-!$acc parallel loop gang vector independent collapse(3) async(2) &
-!$acc&  private(j,ir0,ir1,p0,p1,ix0,ix1,ix2,iy,f0,itm,itl,fx0,fx1,fy0,fy1) &
-!$acc&  present(f_nl,fxmany,fymany)
+!$acc parallel loop gang vector independent collapse(4) async(2) &
+!$acc&         private(j,ir,p,ix,itor,iy,f0,itm,itl) present(f_nl,fxmany,fymany)
 #endif
   do j=1,nj
-     ! process two lines at a time, so we can do everything in parallel
-     do ix2=0,nx/2
-        do iy=0,ny2
-          ! compute the parameters of the two lines
-          ix0 = ix2
-          p0 = ix0
-          ir0 = 1+ ix0 + nx0/2
-          if (ir0 > n_radial) then
-            ir0 = ir0-nx
-            p0  =  p0-nx
-          endif
-          ix1 = nx-ix2
-          p1 = ix1
-          ir1 = 1+ ix1 + nx0/2
-          if (ir1 > n_radial) then
-            ir1 = ir1-nx
-            p1  =  p1-nx
-          endif
-            fx0 = (0.0,0.0)
-            fy0 = (0.0,0.0)
-            fx1 = (0.0,0.0)
-            fy1 = (0.0,0.0)
-            if (iy < n_toroidal) then
-                ! itor = iy+1
-                ! itor=itl + (itm-1)*nt_loc
-                itm = 1 + iy/nt_loc
-                itl = 1 + modulo(iy,nt_loc)
+     do ir=1,n_radial
+       do itm=1,n_toroidal_procs
+         do itl=1,nt_loc
+              itor=itl + (itm-1)*nt_loc
+              iy = itor-1
+              p  = ir-1-nx0/2
+              ix = p
+              if (ix < 0) ix = ix+nx
 
-                if (ir0 > 0) then
-                  f0 = i_c*f_nl(ir0,itl,j,itm)
-                  fx0 = p0*f0
-                  fy0 = iy*f0
-                endif
-                if ((ir1 > 0) .and. (ir0/=ir1)) then
-                  f0 = i_c*f_nl(ir1,itl,j,itm)
-                  fx1 = p1*f0
-                  fy1 = iy*f0
-
-                  if ((iy==0) .and. (ix2/=0) .and. (ix2<nx/2)) then
-                    ! Average elements so as to ensure
-                    !   f(kx,ky=0) = f(-kx,ky=0)^*
-                    ! This symmetry is required for complex input to c2r
-                    fx0 = 0.5*( fx0+ conjg(fx1) )
-                    fx1 = conjg(fx0)
-                  endif
-                endif
-            endif
-            fxmany(iy,ix0,j) = fx0
-            fymany(iy,ix0,j) = fy0
-            if ((ix1<nx) .and. (ix0/=ix1)) then
-              fxmany(iy,ix1,j) = fx1
-              fymany(iy,ix1,j) = fy1
-            endif
-        enddo !iy
-     enddo !ix2
-  enddo ! j
+              f0 = i_c*f_nl(ir,itl,j,itm)
+              fxmany(iy,ix,j) = p*f0
+              fymany(iy,ix,j) = iy*f0
+         enddo
+       enddo
+     enddo
+  enddo
 
 end subroutine cgyro_fmany_async
 
-subroutine cgyro_fmany32_async(nj, f_nl32)
+subroutine cgyro_fmany32_async(nj, f_nl)
 
   use cgyro_globals
 
   implicit none
   !-----------------------------------
   integer, intent(in) :: nj
-  complex(KIND=REAL32), dimension(n_radial,nt_loc,nj,n_toroidal_procs), intent(in) :: f_nl32
+  complex(KIND=REAL32), dimension(n_radial,nt_loc,nj,n_toroidal_procs), intent(in) :: f_nl
   !-----------------------------------
-  integer :: j
-  integer :: ix0,ix1,ix2,iy
-  integer :: itm,itl
-  integer :: ir0,ir1
-  integer :: p0,p1
-
+  integer :: j,p
+  integer :: ir,itm,itl,ix,iy
+  integer :: itor, it_loc
   complex(KIND=REAL32) :: f0
-  complex(KIND=REAL32) :: fx0,fx1
-  complex(KIND=REAL32) :: fy0,fy1
 
 ! f_nl is (radial, nt_loc, theta, nv_loc1, toroidal_procs)
 ! where nv_loc1 * toroidal_procs >= nv_loc
@@ -1154,70 +1234,29 @@ subroutine cgyro_fmany32_async(nj, f_nl32)
   ! no tiling, does not seem to help
 #if defined(OMPGPU)
   !no async for OMPGPU for now
-!$omp target teams distribute parallel do simd collapse(3) &
-!$omp&  private(j,ir0,ir1,p0,p1,ix0,ix1,ix2,iy,f0,itm,itl,fx0,fx1,fy0,fy1)
+!$omp target teams distribute parallel do simd collapse(4) &
+!$omp&  private(j,ir,p,ix,itor,iy,f0,itm,itl)
 #else
-!$acc parallel loop gang vector independent collapse(3) async(2) &
-!$acc&  private(j,ir0,ir1,p0,p1,ix0,ix1,ix2,iy,f0,itm,itl,fx0,fx1,fy0,fy1) &
-!$acc&  present(f_nl32,fxmany,fymany)
+!$acc parallel loop gang vector independent collapse(4) async(2) &
+!$acc&         private(j,ir,p,ix,itor,iy,f0,itm,itl) present(f_nl,fxmany,fymany)
 #endif
   do j=1,nj
-     ! process two lines at a time, so we can do everything in parallel
-     do ix2=0,nx/2
-        do iy=0,ny2
-          ! compute the parameters of the two lines
-          ix0 = ix2
-          p0 = ix0
-          ir0 = 1+ ix0 + nx0/2
-          if (ir0 > n_radial) then
-            ir0 = ir0-nx
-            p0  =  p0-nx
-          endif
-          ix1 = nx-ix2
-          p1 = ix1
-          ir1 = 1+ ix1 + nx0/2
-          if (ir1 > n_radial) then
-            ir1 = ir1-nx
-            p1  =  p1-nx
-          endif
-            fx0 = (0.0,0.0)
-            fy0 = (0.0,0.0)
-            fx1 = (0.0,0.0)
-            fy1 = (0.0,0.0)
-            if (iy < n_toroidal) then
-                ! itor = iy+1
-                ! itor=itl + (itm-1)*nt_loc
-                itm = 1 + iy/nt_loc
-                itl = 1 + modulo(iy,nt_loc)
+     do ir=1,n_radial
+       do itm=1,n_toroidal_procs
+         do itl=1,nt_loc
+              itor=itl + (itm-1)*nt_loc
+              iy = itor-1
+              p  = ir-1-nx0/2
+              ix = p
+              if (ix < 0) ix = ix+nx
 
-                if (ir0 > 0) then
-                  f0 = i_c*f_nl32(ir0,itl,j,itm)
-                  fx0 = p0*f0
-                  fy0 = iy*f0
-                endif
-                if ((ir1 > 0) .and. (ir0/=ir1)) then
-                  f0 = i_c*f_nl32(ir1,itl,j,itm)
-                  fx1 = p1*f0
-                  fy1 = iy*f0
-
-                  if ((iy==0) .and. (ix2/=0) .and. (ix2<nx/2)) then
-                    ! Average elements so as to ensure
-                    !   f(kx,ky=0) = f(-kx,ky=0)^*
-                    ! This symmetry is required for complex input to c2r
-                    fx0 = 0.5*( fx0+ conjg(fx1) )
-                    fx1 = conjg(fx0)
-                  endif
-                endif
-            endif
-            fxmany32(iy,ix0,j) = fx0
-            fymany32(iy,ix0,j) = fy0
-            if ((ix1<nx) .and. (ix0/=ix1)) then
-              fxmany32(iy,ix1,j) = fx1
-              fymany32(iy,ix1,j) = fy1
-            endif
-        enddo !iy
-     enddo !ix2
-  enddo ! j
+              f0 = i_c*f_nl(ir,itl,j,itm)
+              fxmany32(iy,ix,j) = p*f0
+              fymany32(iy,ix,j) = iy*f0
+         enddo
+       enddo
+     enddo
+  enddo
 
 end subroutine cgyro_fmany32_async
 
@@ -1235,88 +1274,72 @@ subroutine cgyro_gmany_async
 
   implicit none
   !-----------------------------------
-  integer :: p0,p1,ix0,ix1,ir0,ir1
-  integer :: j,it,ix2,iy
+  integer :: j,p
+  integer :: it, ir,itm,itl,ix,iy
   integer :: mytm, itor, it_loc
   integer :: jtheta_min
+  integer :: iy0, iy1, ir0, ir1
   complex :: g0
-  complex :: gx0,gy0
-  complex :: gx1,gy1
+
+#ifdef GACODE_GPU_AMD
+  ! AMD GPU  (MI250X) optimal
+  integer, parameter :: F_RADTILE = 8
+  integer, parameter :: F_TORTILE = 16
+#else
+  ! NVIDIA GPU  (A100) optimal
+  integer, parameter :: F_RADTILE = 8
+  integer, parameter :: F_TORTILE = 16
+#endif
 
 ! g_nl      is (n_field,n_radial,n_jtheta,nt_loc,n_toroidal_procs)
 ! jcev_c_nl is (n_field,n_radial,n_jtheta,nv_loc,nt_loc,n_toroidal_procs)
-  mytm = 1 + nt1/nt_loc !my toroidal proc number
-  jtheta_min = 1+((mytm-1)*nsplit)/nv_loc
 
-  ! TODO: tile for performance, since this is effectively a transpose
+  ! tile for performance, since this is effectively a transpose
 #if defined(OMPGPU)
   !no async for OMPGPU for now
-!$omp target teams distribute parallel do simd collapse(3) &
-!$omp&   private(j,ix2,itor,iy,g0,it,iv_loc,it_loc,p0,p1,ix0,ix1,ir0,ir1,gx0,gy0,gx1,gy1)
+!$omp target teams distribute parallel do simd collapse(5) &
+!$omp&   private(j,p,ix,itor,mytm,iy,g0,it,iv_loc,it_loc,jtheta_min,itm,itl,ir)
 #else
-!$acc parallel loop gang vector independent collapse(3) async(2) &
-!$acc&         private(j,ix2,itor,iy,g0,it,iv_loc,it_loc,p0,p1,ix0,ix1,ir0,ir1,gx0,gy0,gx1,gy1) &
+!$acc parallel loop gang vector independent collapse(5) async(2) &
+!$acc&         private(j,p,ix,itor,mytm,iy,g0,it,iv_loc,it_loc,jtheta_min,itm,itl,ir) &
 !$acc&         present(g_nl,jvec_c_nl,gxmany,gymany) &
 !$acc&         present(nsplit,n_radial,n_toroidal_procs,nt_loc,nt1,n_theta,nv_loc,nx0)
 #endif
   do j=1,nsplit
-     ! process two lines at a time, so we can do everything in parallel
-     do ix2=0,nx/2
-        do iy=0,ny2
-          it = 1+((mytm-1)*nsplit+j-1)/nv_loc
-          iv_loc = 1+modulo((mytm-1)*nsplit+j-1,nv_loc)
-          it_loc = it-jtheta_min+1
-          ! compute the parameters of the two lines
-          ix0 = ix2
-          p0 = ix0
-          ir0 = 1+ ix0 + nx0/2
-          if (ir0 > n_radial) then
-            ir0 = ir0-nx
-            p0  =  p0-nx
-          endif
-          ix1 = nx-ix2
-          p1 = ix1
-          ir1 = 1+ ix1 + nx0/2
-          if (ir1 > n_radial) then
-            ir1 = ir1-nx
-            p1  =  p1-nx
-          endif
-            gx0 = (0.0,0.0)
-            gy0 = (0.0,0.0)
-            gx1 = (0.0,0.0)
-            gy1 = (0.0,0.0)
-            if (it <= n_theta) then ! else, it's just padding
-              if (iy < n_toroidal) then
-                itor = iy+1
-                if (ir0 > 0) then
-                  g0 = i_c*sum( jvec_c_nl(1:n_field,ir0,it_loc,iv_loc,itor)*g_nl(1:n_field,ir0,it_loc,itor))
-                  gx0 = p0*g0
-                  gy0 = iy*g0
-                endif
-                if ((ir1 > 0) .and. (ir0/=ir1)) then
-                  g0 = i_c*sum( jvec_c_nl(1:n_field,ir1,it_loc,iv_loc,itor)*g_nl(1:n_field,ir1,it_loc,itor))
-                  gx1 = p1*g0
-                  gy1 = iy*g0
+    do iy0=0,n_toroidal+(F_TORTILE-1)-1,F_TORTILE  ! round up
+      do ir0=0,n_radial+(F_RADTILE-1)-1,F_RADTILE  ! round up
+        do iy1=0,(F_TORTILE-1)   ! tile
+          do ir1=0,(F_RADTILE-1)  ! tile
+            iy = iy0+iy1
+            ir = 1 + ir0+ir1
+            if ((iy < n_toroidal) .and. (ir <= n_radial)) then
+              itor = iy+1
+              itm = 1 + iy/nt_loc
+              itl = 1 + modulo(iy,nt_loc)
+              mytm = 1 + nt1/nt_loc !my toroidal proc number
+              it = 1+((mytm-1)*nsplit+j-1)/nv_loc
+              iv_loc = 1+modulo((mytm-1)*nsplit+j-1,nv_loc)
+              jtheta_min = 1+((mytm-1)*nsplit)/nv_loc
+              it_loc = it-jtheta_min+1
+              iy = itor-1
 
-                  if ((iy==0) .and. (ix2/=0) .and. (ix2<nx/2)) then
-                    ! Average elements so as to ensure
-                    !   g(kx,ky=0) = g(-kx,ky=0)^*
-                    ! This symmetry is required for complex input to c2r
-                    gx0 = 0.5*( gx0+ conjg(gx1) )
-                    gx1 = conjg(gx0)
-                  endif
-                endif
+              p  = ir-1-nx0/2
+              ix = p
+              if (ix < 0) ix = ix+nx
+
+              if (it > n_theta) then
+                 g0 = (0.0,0.0)
+              else
+                 g0 = i_c*sum( jvec_c_nl(1:n_field,ir,it_loc,iv_loc,itor)*g_nl(1:n_field,ir,it_loc,itor))
               endif
+              gxmany(iy,ix,j) = p*g0
+              gymany(iy,ix,j) = iy*g0
             endif
-            gxmany(iy,ix0,j) = gx0
-            gymany(iy,ix0,j) = gy0
-            if ((ix1<nx) .and. (ix0/=ix1)) then
-              gxmany(iy,ix1,j) = gx1
-              gymany(iy,ix1,j) = gy1
-            endif
-        enddo !iy
-     enddo !ix2
-  enddo ! j
+          enddo
+        enddo
+      enddo
+    enddo
+  enddo
 end subroutine cgyro_gmany_async
 
 subroutine cgyro_gmany32_async
@@ -1325,89 +1348,149 @@ subroutine cgyro_gmany32_async
 
   implicit none
   !-----------------------------------
-  integer :: p0,p1,ix0,ix1,ir0,ir1
-  integer :: j,it,ix2,iy
+  integer :: j,p
+  integer :: it, ir,itm,itl,ix,iy
   integer :: mytm, itor, it_loc
   integer :: jtheta_min
+  integer :: iy0, iy1, ir0, ir1
   complex(KIND=REAL32) :: g0
-  complex(KIND=REAL32) :: gx0,gy0
-  complex(KIND=REAL32) :: gx1,gy1
+
+#ifdef GACODE_GPU_AMD
+  ! AMD GPU  (MI250X) optimal
+  integer, parameter :: F_RADTILE = 8
+  integer, parameter :: F_TORTILE = 16
+#else
+  ! NVIDIA GPU  (A100) optimal
+  integer, parameter :: F_RADTILE = 8
+  integer, parameter :: F_TORTILE = 16
+#endif
 
 ! g_nl      is (n_field,n_radial,n_jtheta,nt_loc,n_toroidal_procs)
 ! jcev_c_nl is (n_field,n_radial,n_jtheta,nv_loc,nt_loc,n_toroidal_procs)
-  mytm = 1 + nt1/nt_loc !my toroidal proc number
-  jtheta_min = 1+((mytm-1)*nsplit)/nv_loc
 
-  ! TODO: tile for performance, since this is effectively a transpose
+  ! tile for performance, since this is effectively a transpose
 #if defined(OMPGPU)
   !no async for OMPGPU for now
-!$omp target teams distribute parallel do simd collapse(3) &
-!$omp&   private(j,ix2,itor,iy,g0,it,iv_loc,it_loc,p0,p1,ix0,ix1,ir0,ir1,gx0,gy0,gx1,gy1)
+!$omp target teams distribute parallel do simd collapse(5) &
+!$omp&   private(j,p,ix,itor,mytm,iy,g0,it,iv_loc,it_loc,jtheta_min,itm,itl,ir)
 #else
-!$acc parallel loop gang vector independent collapse(3) async(2) &
-!$acc&         private(j,ix2,itor,iy,g0,it,iv_loc,it_loc,p0,p1,ix0,ix1,ir0,ir1,gx0,gy0,gx1,gy1) &
+!$acc parallel loop gang vector independent collapse(5) async(2) &
+!$acc&         private(j,p,ix,itor,mytm,iy,g0,it,iv_loc,it_loc,jtheta_min,itm,itl,ir) &
 !$acc&         present(g_nl,jvec_c_nl,gxmany32,gymany32) &
 !$acc&         present(nsplit,n_radial,n_toroidal_procs,nt_loc,nt1,n_theta,nv_loc,nx0)
 #endif
   do j=1,nsplit
-     ! process two lines at a time, so we can do everything in parallel
-     do ix2=0,nx/2
-        do iy=0,ny2
-          it = 1+((mytm-1)*nsplit+j-1)/nv_loc
-          iv_loc = 1+modulo((mytm-1)*nsplit+j-1,nv_loc)
-          it_loc = it-jtheta_min+1
-          ! compute the parameters of the two lines
-          ix0 = ix2
-          p0 = ix0
-          ir0 = 1+ ix0 + nx0/2
-          if (ir0 > n_radial) then
-            ir0 = ir0-nx
-            p0  =  p0-nx
-          endif
-          ix1 = nx-ix2
-          p1 = ix1
-          ir1 = 1+ ix1 + nx0/2
-          if (ir1 > n_radial) then
-            ir1 = ir1-nx
-            p1  =  p1-nx
-          endif
-            gx0 = (0.0,0.0)
-            gy0 = (0.0,0.0)
-            gx1 = (0.0,0.0)
-            gy1 = (0.0,0.0)
-            if (it <= n_theta) then ! else, it's just padding
-              if (iy < n_toroidal) then
-                itor = iy+1
-                if (ir0 > 0) then
-                  g0 = i_c*sum( jvec_c_nl32(1:n_field,ir0,it_loc,iv_loc,itor)*g_nl32(1:n_field,ir0,it_loc,itor))
-                  gx0 = p0*g0
-                  gy0 = iy*g0
-                endif
-                if ((ir1 > 0) .and. (ir0/=ir1)) then
-                  g0 = i_c*sum( jvec_c_nl32(1:n_field,ir1,it_loc,iv_loc,itor)*g_nl32(1:n_field,ir1,it_loc,itor))
-                  gx1 = p1*g0
-                  gy1 = iy*g0
+    do iy0=0,n_toroidal+(F_TORTILE-1)-1,F_TORTILE  ! round up
+      do ir0=0,n_radial+(F_RADTILE-1)-1,F_RADTILE  ! round up
+        do iy1=0,(F_TORTILE-1)   ! tile
+          do ir1=0,(F_RADTILE-1)  ! tile
+            iy = iy0+iy1
+            ir = 1 + ir0+ir1
+            if ((iy < n_toroidal) .and. (ir <= n_radial)) then
+              itor = iy+1
+              itm = 1 + iy/nt_loc
+              itl = 1 + modulo(iy,nt_loc)
+              mytm = 1 + nt1/nt_loc !my toroidal proc number
+              it = 1+((mytm-1)*nsplit+j-1)/nv_loc
+              iv_loc = 1+modulo((mytm-1)*nsplit+j-1,nv_loc)
+              jtheta_min = 1+((mytm-1)*nsplit)/nv_loc
+              it_loc = it-jtheta_min+1
+              iy = itor-1
 
-                  if ((iy==0) .and. (ix2/=0) .and. (ix2<nx/2)) then
-                    ! Average elements so as to ensure
-                    !   g(kx,ky=0) = g(-kx,ky=0)^*
-                    ! This symmetry is required for complex input to c2r
-                    gx0 = 0.5*( gx0+ conjg(gx1) )
-                    gx1 = conjg(gx0)
-                  endif
-                endif
+              p  = ir-1-nx0/2
+              ix = p
+              if (ix < 0) ix = ix+nx
+
+              if (it > n_theta) then
+                 g0 = (0.0,0.0)
+              else
+                 g0 = i_c*sum( jvec_c_nl32(1:n_field,ir,it_loc,iv_loc,itor)*g_nl32(1:n_field,ir,it_loc,itor))
               endif
+              gxmany32(iy,ix,j) = p*g0
+              gymany32(iy,ix,j) = iy*g0
             endif
-            gxmany32(iy,ix0,j) = gx0
-            gymany32(iy,ix0,j) = gy0
-            if ((ix1<nx) .and. (ix0/=ix1)) then
-              gxmany32(iy,ix1,j) = gx1
-              gymany32(iy,ix1,j) = gy1
-            endif
-        enddo !iy
-     enddo !ix2
-  enddo ! j
+          enddo
+        enddo
+      enddo
+    enddo
+  enddo
 end subroutine cgyro_gmany32_async
+
+!-----------------------------------------------------------------
+! Helper function for averaging elements to enforce FFT preconditions
+! with proper GPU offload.
+! Works for both fxmany and gxmany, actual size passed as nj
+! Using async compute whenever possible
+! Caller responsible for synchronization
+!-----------------------------------------------------------------
+
+subroutine cgyro_sym_async(nj, many)
+
+  use cgyro_globals
+
+  implicit none
+  !-----------------------------------
+  integer, intent(in) :: nj
+  complex, dimension(0:ny2,0:nx-1,nj), intent(inout) :: many
+  !-----------------------------------
+  integer:: j, ix
+  complex :: f0
+
+  ! Average elements so as to ensure
+  !   f(kx,ky=0) = f(-kx,ky=0)^*
+  ! This symmetry is required for complex input to c2r
+#if defined(OMPGPU)
+  !no async for OMPGPU for now
+!$omp target teams distribute parallel do simd collapse(2) &
+!$omp&  private(j,ix,f0) firstprivate(nj,nx) 
+#else
+!$acc parallel loop gang vector independent collapse(2) async(2) &
+!$acc&         private(j,ix,f0) firstprivate(nj,nx) &
+!$acc&         present(many)
+#endif
+  do j=1,nj
+    do ix=1,nx/2-1
+      f0 = 0.5*( many(0,ix,j)+conjg(many(0,nx-ix,j)) )
+      many(0,ix   ,j) = f0
+      many(0,nx-ix,j) = conjg(f0)
+    enddo
+  enddo
+
+end subroutine cgyro_sym_async
+
+subroutine cgyro_sym32_async(nj, many)
+
+  use cgyro_globals
+
+  implicit none
+  !-----------------------------------
+  integer, intent(in) :: nj
+  complex(KIND=REAL32), dimension(0:ny2,0:nx-1,nj), intent(inout) :: many
+  !-----------------------------------
+  integer:: j, ix
+  complex :: f0
+
+  ! Average elements so as to ensure
+  !   f(kx,ky=0) = f(-kx,ky=0)^*
+  ! This symmetry is required for complex input to c2r
+#if defined(OMPGPU)
+  !no async for OMPGPU for now
+!$omp target teams distribute parallel do simd collapse(2) &
+!$omp&  private(j,ix,f0) firstprivate(nj,nx) 
+#else
+!$acc parallel loop gang vector independent collapse(2) async(2) &
+!$acc&         private(j,ix,f0) firstprivate(nj,nx) &
+!$acc&         present(many)
+#endif
+  do j=1,nj
+    do ix=1,nx/2-1
+      f0 = 0.5*( many(0,ix,j)+conjg(many(0,nx-ix,j)) )
+      many(0,ix   ,j) = f0
+      many(0,nx-ix,j) = conjg(f0)
+    enddo
+  enddo
+
+end subroutine cgyro_sym32_async
 
 !-----------------------------------------------------------------
 ! Helper function for transposing FFT output into MPI-friendly format
@@ -1605,6 +1688,9 @@ subroutine cgyro_nl_fftw_fp64
   ! make sure reqs progress
   call cgyro_nl_fftw_comm_test()
 
+  ! we can zero the elements we know are zero while we wait
+  call cgyro_zero_offdiag_async(nsplitA,fxmany,fymany)
+
   call timer_lib_out('nl_mem')
 
   ! time to wait for the FA_nl to become avaialble
@@ -1633,6 +1719,11 @@ subroutine cgyro_nl_fftw_fp64
   ! make sure reqs progress
   call cgyro_nl_fftw_comm_test()
 
+  ! Average elements so as to ensure
+  !   f(kx,ky=0) = f(-kx,ky=0)^*
+  ! This symmetry is required for complex input to c2r
+  call cgyro_sym_async(nsplitA,fxmany)
+
      ! --------------------------------------
      ! perform many Fourier Transforms at once
      ! --------------------------------------
@@ -1651,6 +1742,9 @@ subroutine cgyro_nl_fftw_fp64
 
   ! make sure reqs progress
   call cgyro_nl_fftw_comm_test()
+
+  ! we can zero the elements we know are zero while we wait for comm
+  call cgyro_zero_offdiag_async(nsplit,gxmany,gymany)
 
   call timer_lib_out('nl')
 
@@ -1679,6 +1773,11 @@ subroutine cgyro_nl_fftw_fp64
 
   ! make sure reqs progress
   call cgyro_nl_fftw_comm_test()
+
+  ! Average elements so as to ensure
+  !   g(kx,ky=0) = g(-kx,ky=0)^*
+  ! This symmetry is required for complex input to c2r
+  call cgyro_sym_async(nsplit,gxmany)
 
   call cgyro_fft_z2d(plan_c2r_manyG,gymany,vymany)
 
@@ -1729,6 +1828,12 @@ subroutine cgyro_nl_fftw_fp64
     call cgyro_fmany_r32_async(nsplitA, fxmany, fA_nl32)
   endif
 
+  if (nsplitB > 0) then
+    ! we can zero the elements we know are zero while we waita
+    ! assuming nsplitB<=nsplitA
+    call cgyro_zero_offdiag_async(nsplitB,fxmany,fymany)
+  endif
+
   call timer_lib_out('nl_mem')
 
   call timer_lib_in('nl_comm')
@@ -1769,6 +1874,11 @@ subroutine cgyro_nl_fftw_fp64
 
   ! make sure reqs progress
   call cgyro_nl_fftw_comm_test()
+
+  ! Average elements so as to ensure
+  !   f(kx,ky=0) = f(-kx,ky=0)^*
+  ! This symmetry is required for complex input to c2r
+  call cgyro_sym_async(nsplitB,fxmany)
 
      ! --------------------------------------
      ! perform many Fourier Transforms at once
@@ -1860,6 +1970,9 @@ subroutine cgyro_nl_fftw_fp32
   ! make sure reqs progress
   call cgyro_nl_fftw_comm_test()
 
+  ! we can zero the elements we know are zero while we wait
+  call cgyro_zero_offdiag32_async(nsplitA,fxmany32,fymany32)
+
   call timer_lib_out('nl_mem')
 
   ! time to wait for the FA_nl to become avaialble
@@ -1888,6 +2001,11 @@ subroutine cgyro_nl_fftw_fp32
   ! make sure reqs progress
   call cgyro_nl_fftw_comm_test()
 
+  ! Average elements so as to ensure
+  !   f(kx,ky=0) = f(-kx,ky=0)^*
+  ! This symmetry is required for complex input to c2r
+  call cgyro_sym32_async(nsplitA,fxmany32)
+
      ! --------------------------------------
      ! perform many Fourier Transforms at once
      ! --------------------------------------
@@ -1906,6 +2024,9 @@ subroutine cgyro_nl_fftw_fp32
 
   ! make sure reqs progress
   call cgyro_nl_fftw_comm_test()
+
+  ! we can zero the elements we know are zero while we wait for comm
+  call cgyro_zero_offdiag32_async(nsplit,gxmany32,gymany32)
 
   call timer_lib_out('nl')
 
@@ -1934,6 +2055,11 @@ subroutine cgyro_nl_fftw_fp32
 
   ! make sure reqs progress
   call cgyro_nl_fftw_comm_test()
+
+  ! Average elements so as to ensure
+  !   g(kx,ky=0) = g(-kx,ky=0)^*
+  ! This symmetry is required for complex input to c2r
+  call cgyro_sym32_async(nsplit,gxmany32)
 
   call cgyro_fft_c2r(plan_c2r_manyG,gymany32,vymany32)
 
@@ -1977,7 +2103,14 @@ subroutine cgyro_nl_fftw_fp32
   ! NOTE: The FFT will generate an unwanted n=0,p=-nr/2 component
   ! that will be filtered in the main time-stepping loop
 
+  ! tile for performance, since this is effectively a transpose
   call cgyro_fmany32_r32_async(nsplitA, fxmany32, fA_nl32)
+
+  if (nsplitB > 0) then
+    ! we can zero the elements we know are zero while we waita
+    ! assuming nsplitB<=nsplitA
+    call cgyro_zero_offdiag32_async(nsplitB,fxmany32,fymany32)
+  endif
 
   call timer_lib_out('nl_mem')
 
@@ -2015,6 +2148,11 @@ subroutine cgyro_nl_fftw_fp32
 
   ! make sure reqs progress
   call cgyro_nl_fftw_comm_test()
+
+  ! Average elements so as to ensure
+  !   f(kx,ky=0) = f(-kx,ky=0)^*
+  ! This symmetry is required for complex input to c2r
+  call cgyro_sym32_async(nsplitB,fxmany32)
 
      ! --------------------------------------
      ! perform many Fourier Transforms at once
@@ -2063,6 +2201,7 @@ subroutine cgyro_nl_fftw_fp32
   ! NOTE: The FFT will generate an unwanted n=0,p=-nr/2 component
   ! that will be filtered in the main time-stepping loop
 
+  ! tile for performance, since this is effectively a transpose
   call cgyro_fmany32_r32_async(nsplitB, fxmany32, fB_nl32)
 
   call timer_lib_out('nl_mem')
@@ -2251,74 +2390,46 @@ subroutine cgyro_f_one(i_omp, j, nj, f_nl)
   integer, intent(in) :: i_omp, j, nj
   complex, dimension(n_radial,nt_loc,nj,n_toroidal_procs), intent(in) :: f_nl
   !-----------------------------------
-  integer :: ix0,ix1,ix2,iy
-  integer :: itm,itl
-  integer :: ir0,ir1
-  integer :: p0,p1
+  integer :: ix,iy
+  integer :: ir,itm,itl
+  integer :: itor
+  integer :: p
 
   complex :: f0
-  complex :: fx0,fy0
-  complex :: fx1,fy1
 
   include 'fftw3.f03'
 
 ! f_nl is (radial, nt_loc, theta, nv_loc1, toroidal_procs)
 ! where nv_loc1 * toroidal_procs >= nv_loc
-        ! Array mapping
-        ! process two lines at a time, mimick GPU strategy to keep uniform code
-        do ix2=0,nx/2
-          ! compute the parameters of the two lines
-          ix0 = ix2
-          p0 = ix0
-          ir0 = 1+ ix0 + nx0/2
-          if (ir0 > n_radial) then
-            ir0 = ir0-nx
-            p0  =  p0-nx
-          endif
-          ix1 = nx-ix2
-          p1 = ix1
-          ir1 = 1+ ix1 + nx0/2
-          if (ir1 > n_radial) then
-            ir1 = ir1-nx
-            p1  =  p1-nx
-          endif
-          do iy=0,ny2
-            fx0 = (0.0,0.0)
-            fy0 = (0.0,0.0)
-            fx1 = (0.0,0.0)
-            fy1 = (0.0,0.0)
-            if (iy < n_toroidal) then
-                ! itor = iy+1
-                ! itor=itl + (itm-1)*nt_loc
-                itm = 1 + iy/nt_loc
-                itl = 1 + modulo(iy,nt_loc)
-                if (ir0 > 0) then
-                  f0 = i_c*f_nl(ir0,itl,j,itm)
-                  fx0 = p0*f0
-                  fy0 = iy*f0
-                endif
-                if ((ir1 > 0) .and. (ir0/=ir1)) then
-                  f0 = i_c*f_nl(ir1,itl,j,itm)
-                  fx1 = p1*f0
-                  fy1 = iy*f0
+        ! zero elements not otherwise set below
+        fx(0:ny2,nx2:nx0-1,i_omp) = 0.0
+        fy(0:ny2,nx2:nx0-1,i_omp) = 0.0
 
-                  if ((iy==0) .and. (ix2/=0) .and. (ix2<nx/2)) then
-                    ! Average elements so as to ensure
-                    !   f(kx,ky=0) = f(-kx,ky=0)^*
-                    ! This symmetry is required for complex input to c2r
-                    fx0 = 0.5*( fx0+ conjg(fx1) )
-                    fx1 = conjg(fx0)
-                  endif
-                endif
-            endif
-            fx(iy,ix0,i_omp) = fx0
-            fy(iy,ix0,i_omp) = fy0
-            if ((ix1<nx) .and. (ix0/=ix1)) then
-              fx(iy,ix1,i_omp) = fx1
-              fy(iy,ix1,i_omp) = fy1
-            endif
-            enddo !iy
-        enddo !ix2
+        ! Array mapping
+        do ir=1,n_radial
+           p  = ir-1-nx0/2
+           ix = p
+           if (ix < 0) ix = ix+nx
+           do itm=1,n_toroidal_procs
+            do itl=1,nt_loc
+              itor=itl + (itm-1)*nt_loc
+              iy = itor-1
+              f0 = i_c*f_nl(ir,itl,j,itm)
+              fx(iy,ix,i_omp) = p*f0
+              fy(iy,ix,i_omp) = iy*f0
+            enddo
+           enddo
+           if ((ix/=0) .and. (ix<(nx/2))) then ! happens after ix>nx/2
+             ! Average elements so as to ensure
+             !   f(kx,ky=0) = f(-kx,ky=0)^*
+             ! This symmetry is required for complex input to c2r
+             f0 = 0.5*( fx(0,ix,i_omp)+conjg(fx(0,nx-ix,i_omp)) )
+             fx(0,ix   ,i_omp) = f0
+             fx(0,nx-ix,i_omp) = conjg(f0)
+           endif
+           fx(n_toroidal:ny2,ix,i_omp) = 0.0
+           fy(n_toroidal:ny2,ix,i_omp) = 0.0
+        enddo
 
         if (i_omp==1) then
          ! use the main thread to progress the async MPI
@@ -2345,74 +2456,46 @@ subroutine cgyro_f32_one(i_omp, j, nj, f_nl32)
   integer, intent(in) :: i_omp, j, nj
   complex(KIND=REAL32), dimension(n_radial,nt_loc,nj,n_toroidal_procs), intent(in) :: f_nl32
   !-----------------------------------
-  integer :: ix0,ix1,ix2,iy
-  integer :: itm,itl
-  integer :: ir0,ir1
-  integer :: p0,p1
+  integer :: ix,iy
+  integer :: ir,itm,itl
+  integer :: itor
+  integer :: p
 
   complex(KIND=REAL32) :: f0
-  complex(KIND=REAL32) :: fx0,fy0
-  complex(KIND=REAL32) :: fx1,fy1
 
   include 'fftw3.f03'
 
 ! f_nl is (radial, nt_loc, theta, nv_loc1, toroidal_procs)
 ! where nv_loc1 * toroidal_procs >= nv_loc
-        ! Array mapping
-        ! process two lines at a time, mimick GPU strategy to keep uniform code
-        do ix2=0,nx/2
-          ! compute the parameters of the two lines
-          ix0 = ix2
-          p0 = ix0
-          ir0 = 1+ ix0 + nx0/2
-          if (ir0 > n_radial) then
-            ir0 = ir0-nx
-            p0  =  p0-nx
-          endif
-          ix1 = nx-ix2
-          p1 = ix1
-          ir1 = 1+ ix1 + nx0/2
-          if (ir1 > n_radial) then
-            ir1 = ir1-nx
-            p1  =  p1-nx
-          endif
-          do iy=0,ny2
-            fx0 = (0.0,0.0)
-            fy0 = (0.0,0.0)
-            fx1 = (0.0,0.0)
-            fy1 = (0.0,0.0)
-            if (iy < n_toroidal) then
-                ! itor = iy+1
-                ! itor=itl + (itm-1)*nt_loc
-                itm = 1 + iy/nt_loc
-                itl = 1 + modulo(iy,nt_loc)
-                if (ir0 > 0) then
-                  f0 = i_c*f_nl32(ir0,itl,j,itm)
-                  fx0 = p0*f0
-                  fy0 = iy*f0
-                endif
-                if ((ir1 > 0) .and. (ir0/=ir1)) then
-                  f0 = i_c*f_nl32(ir1,itl,j,itm)
-                  fx1 = p1*f0
-                  fy1 = iy*f0
+        ! zero elements not otherwise set below
+        fx32(0:ny2,nx2:nx0-1,i_omp) = 0.0
+        fy32(0:ny2,nx2:nx0-1,i_omp) = 0.0
 
-                  if ((iy==0) .and. (ix2/=0) .and. (ix2<nx/2)) then
-                    ! Average elements so as to ensure
-                    !   f(kx,ky=0) = f(-kx,ky=0)^*
-                    ! This symmetry is required for complex input to c2r
-                    fx0 = 0.5*( fx0+ conjg(fx1) )
-                    fx1 = conjg(fx0)
-                  endif
-                endif
-            endif
-            fx32(iy,ix0,i_omp) = fx0
-            fy32(iy,ix0,i_omp) = fy0
-            if ((ix1<nx) .and. (ix0/=ix1)) then
-              fx32(iy,ix1,i_omp) = fx1
-              fy32(iy,ix1,i_omp) = fy1
-            endif
-            enddo !iy
-        enddo !ix2
+        ! Array mapping
+        do ir=1,n_radial
+           p  = ir-1-nx0/2
+           ix = p
+           if (ix < 0) ix = ix+nx
+           do itm=1,n_toroidal_procs
+            do itl=1,nt_loc
+              itor=itl + (itm-1)*nt_loc
+              iy = itor-1
+              f0 = i_c*f_nl32(ir,itl,j,itm)
+              fx32(iy,ix,i_omp) = p*f0
+              fy32(iy,ix,i_omp) = iy*f0
+            enddo
+           enddo
+           if ((ix/=0) .and. (ix<(nx/2))) then ! happens after ix>nx/2
+             ! Average elements so as to ensure
+             !   f(kx,ky=0) = f(-kx,ky=0)^*
+             ! This symmetry is required for complex input to c2r
+             f0 = 0.5*( fx32(0,ix,i_omp)+conjg(fx32(0,nx-ix,i_omp)) )
+             fx32(0,ix   ,i_omp) = f0
+             fx32(0,nx-ix,i_omp) = conjg(f0)
+           endif
+           fx32(n_toroidal:ny2,ix,i_omp) = 0.0
+           fy32(n_toroidal:ny2,ix,i_omp) = 0.0
+        enddo
 
         if (i_omp==1) then
          ! use the main thread to progress the async MPI
@@ -2445,80 +2528,57 @@ subroutine cgyro_g_one(i_omp, j)
   !-----------------------------------
   integer, intent(in) :: i_omp, j
   !-----------------------------------
-  integer :: ix0,ix1,iy,ix2
-  integer :: ir0,ir1
+  integer :: ix,iy
+  integer :: ir,itm,itl
   integer :: it,itor,mytm,it_loc
-  integer :: p0,p1
+  integer :: p
   integer :: jtheta_min
 
   complex :: g0
-  complex :: gx0,gy0
-  complex :: gx1,gy1
 
   include 'fftw3.f03'
 
 ! g_nl      is (n_field,n_radial,n_jtheta,nt_loc,n_toroidal_procs)
 ! jcev_c_nl is (n_field,n_radial,n_jtheta,nv_loc,nt_loc,n_toroidal_procs)
-        mytm = 1 + nt1/nt_loc !my toroidal proc number
-        it = 1+((mytm-1)*nsplit+j-1)/nv_loc
-        iv_loc = 1+modulo((mytm-1)*nsplit+j-1,nv_loc)
-        jtheta_min = 1+((mytm-1)*nsplit)/nv_loc
-        it_loc = it-jtheta_min+1
+        ! zero elements not otherwise set below
+        gx(0:ny2,nx2:nx0-1,i_omp) = 0.0
+        gy(0:ny2,nx2:nx0-1,i_omp) = 0.0
 
         ! Array mapping
-        ! process two lines at a time, mimick GPU strategy to keep uniform code
-        do ix2=0,nx/2
-          ! compute the parameters of the two lines
-          ix0 = ix2
-          p0 = ix0
-          ir0 = 1+ ix0 + nx0/2
-          if (ir0 > n_radial) then
-            ir0 = ir0-nx
-            p0  =  p0-nx
-          endif
-          ix1 = nx-ix2
-          p1 = ix1
-          ir1 = 1+ ix1 + nx0/2
-          if (ir1 > n_radial) then
-            ir1 = ir1-nx
-            p1  =  p1-nx
-          endif
-          do iy=0,ny2
-            gx0 = (0.0,0.0)
-            gy0 = (0.0,0.0)
-            gx1 = (0.0,0.0)
-            gy1 = (0.0,0.0)
-            if (it <= n_theta) then ! else, it's just padding
-              if (iy < n_toroidal) then
-                itor = iy+1
-                if (ir0 > 0) then
-                  g0 = i_c*sum( jvec_c_nl(1:n_field,ir0,it_loc,iv_loc,itor)*g_nl(1:n_field,ir0,it_loc,itor))
-                  gx0 = p0*g0
-                  gy0 = iy*g0
-                endif
-                if ((ir1 > 0) .and. (ir0/=ir1)) then
-                  g0 = i_c*sum( jvec_c_nl(1:n_field,ir1,it_loc,iv_loc,itor)*g_nl(1:n_field,ir1,it_loc,itor))
-                  gx1 = p1*g0
-                  gy1 = iy*g0
+        do ir=1,n_radial
+           p  = ir-1-nx0/2
+           ix = p
+           if (ix < 0) ix = ix+nx
+           do itm=1,n_toroidal_procs
+            do itl=1,nt_loc
+              itor = itl + (itm-1)*nt_loc
+              mytm = 1 + nt1/nt_loc !my toroidal proc number
+              it = 1+((mytm-1)*nsplit+j-1)/nv_loc
+              iv_loc = 1+modulo((mytm-1)*nsplit+j-1,nv_loc)
+              jtheta_min = 1+((mytm-1)*nsplit)/nv_loc
+              it_loc = it-jtheta_min+1
 
-                  if ((iy==0) .and. (ix2/=0) .and. (ix2<nx/2)) then
-                    ! Average elements so as to ensure
-                    !   g(kx,ky=0) = g(-kx,ky=0)^*
-                    ! This symmetry is required for complex input to c2r
-                    gx0 = 0.5*( gx0+ conjg(gx1) )
-                    gx1 = conjg(gx0)
-                  endif
-                endif
+              iy = itor-1
+              if (it > n_theta) then
+                 g0 = (0.0,0.0)
+              else
+                 g0 = i_c*sum( jvec_c_nl(:,ir,it_loc,iv_loc,itor)*g_nl(:,ir,it_loc,itor))
               endif
-            endif
-            gx(iy,ix0,i_omp) = gx0
-            gy(iy,ix0,i_omp) = gy0
-            if ((ix1<nx) .and. (ix0/=ix1)) then
-              gx(iy,ix1,i_omp) = gx1
-              gy(iy,ix1,i_omp) = gy1
-            endif
-            enddo !iy
-        enddo !ix2
+              gx(iy,ix,i_omp) = p*g0
+              gy(iy,ix,i_omp) = iy*g0
+            enddo
+           enddo
+           if ((ix/=0) .and. (ix<(nx/2))) then ! happens after ix>nx/2
+              ! Average elements so as to ensure
+              !   g(kx,ky=0) = g(-kx,ky=0)^*
+              ! This symmetry is required for complex input to c2r
+              g0 = 0.5*( gx(0,ix,i_omp)+conjg(gx(0,nx-ix,i_omp)) )
+              gx(0,ix   ,i_omp) = g0
+              gx(0,nx-ix,i_omp) = conjg(g0)
+           endif
+           gx(n_toroidal:ny2,ix,i_omp) = 0.0
+           gy(n_toroidal:ny2,ix,i_omp) = 0.0
+        enddo
 
         if (i_omp==1) then
          ! use the main thread to progress the async MPI
@@ -2544,80 +2604,57 @@ subroutine cgyro_g32_one(i_omp, j)
   !-----------------------------------
   integer, intent(in) :: i_omp, j
   !-----------------------------------
-  integer :: ix0,ix1,iy,ix2
-  integer :: ir0,ir1
+  integer :: ix,iy
+  integer :: ir,itm,itl
   integer :: it,itor,mytm,it_loc
-  integer :: p0,p1
+  integer :: p
   integer :: jtheta_min
 
   complex(KIND=REAL32) :: g0
-  complex(KIND=REAL32) :: gx0,gy0
-  complex(KIND=REAL32) :: gx1,gy1
 
   include 'fftw3.f03'
 
 ! g_nl      is (n_field,n_radial,n_jtheta,nt_loc,n_toroidal_procs)
 ! jcev_c_nl is (n_field,n_radial,n_jtheta,nv_loc,nt_loc,n_toroidal_procs)
-        mytm = 1 + nt1/nt_loc !my toroidal proc number
-        it = 1+((mytm-1)*nsplit+j-1)/nv_loc
-        iv_loc = 1+modulo((mytm-1)*nsplit+j-1,nv_loc)
-        jtheta_min = 1+((mytm-1)*nsplit)/nv_loc
-        it_loc = it-jtheta_min+1
+        ! zero elements not otherwise set below
+        gx32(0:ny2,nx2:nx0-1,i_omp) = 0.0
+        gy32(0:ny2,nx2:nx0-1,i_omp) = 0.0
 
         ! Array mapping
-        ! process two lines at a time, mimick GPU strategy to keep uniform code
-        do ix2=0,nx/2
-          ! compute the parameters of the two lines
-          ix0 = ix2
-          p0 = ix0
-          ir0 = 1+ ix0 + nx0/2
-          if (ir0 > n_radial) then
-            ir0 = ir0-nx
-            p0  =  p0-nx
-          endif
-          ix1 = nx-ix2
-          p1 = ix1
-          ir1 = 1+ ix1 + nx0/2
-          if (ir1 > n_radial) then
-            ir1 = ir1-nx
-            p1  =  p1-nx
-          endif
-          do iy=0,ny2
-            gx0 = (0.0,0.0)
-            gy0 = (0.0,0.0)
-            gx1 = (0.0,0.0)
-            gy1 = (0.0,0.0)
-            if (it <= n_theta) then ! else, it's just padding
-              if (iy < n_toroidal) then
-                itor = iy+1
-                if (ir0 > 0) then
-                  g0 = i_c*sum( jvec_c_nl32(1:n_field,ir0,it_loc,iv_loc,itor)*g_nl32(1:n_field,ir0,it_loc,itor))
-                  gx0 = p0*g0
-                  gy0 = iy*g0
-                endif
-                if ((ir1 > 0) .and. (ir0/=ir1)) then
-                  g0 = i_c*sum( jvec_c_nl32(1:n_field,ir1,it_loc,iv_loc,itor)*g_nl32(1:n_field,ir1,it_loc,itor))
-                  gx1 = p1*g0
-                  gy1 = iy*g0
+        do ir=1,n_radial
+           p  = ir-1-nx0/2
+           ix = p
+           if (ix < 0) ix = ix+nx
+           do itm=1,n_toroidal_procs
+            do itl=1,nt_loc
+              itor = itl + (itm-1)*nt_loc
+              mytm = 1 + nt1/nt_loc !my toroidal proc number
+              it = 1+((mytm-1)*nsplit+j-1)/nv_loc
+              iv_loc = 1+modulo((mytm-1)*nsplit+j-1,nv_loc)
+              jtheta_min = 1+((mytm-1)*nsplit)/nv_loc
+              it_loc = it-jtheta_min+1
 
-                  if ((iy==0) .and. (ix2/=0) .and. (ix2<nx/2)) then
-                    ! Average elements so as to ensure
-                    !   g(kx,ky=0) = g(-kx,ky=0)^*
-                    ! This symmetry is required for complex input to c2r
-                    gx0 = 0.5*( gx0+ conjg(gx1) )
-                    gx1 = conjg(gx0)
-                  endif
-                endif
+              iy = itor-1
+              if (it > n_theta) then
+                 g0 = (0.0,0.0)
+              else
+                 g0 = i_c*sum( jvec_c_nl32(:,ir,it_loc,iv_loc,itor)*g_nl32(:,ir,it_loc,itor))
               endif
-            endif
-            gx32(iy,ix0,i_omp) = gx0
-            gy32(iy,ix0,i_omp) = gy0
-            if ((ix1<nx) .and. (ix0/=ix1)) then
-              gx32(iy,ix1,i_omp) = gx1
-              gy32(iy,ix1,i_omp) = gy1
-            endif
-            enddo !iy
-        enddo !ix2
+              gx32(iy,ix,i_omp) = p*g0
+              gy32(iy,ix,i_omp) = iy*g0
+            enddo
+           enddo
+           if ((ix/=0) .and. (ix<(nx/2))) then ! happens after ix>nx/2
+              ! Average elements so as to ensure
+              !   g(kx,ky=0) = g(-kx,ky=0)^*
+              ! This symmetry is required for complex input to c2r
+              g0 = 0.5*( gx32(0,ix,i_omp)+conjg(gx32(0,nx-ix,i_omp)) )
+              gx32(0,ix   ,i_omp) = g0
+              gx32(0,nx-ix,i_omp) = conjg(g0)
+           endif
+           gx32(n_toroidal:ny2,ix,i_omp) = 0.0
+           gy32(n_toroidal:ny2,ix,i_omp) = 0.0
+        enddo
 
         if (i_omp==1) then
          ! use the main thread to progress the async MPI

@@ -1,0 +1,35 @@
+#---------------------------------------------------
+# Comet SYSTEM INFO:
+# - 47,776 processor cores
+# - 1984 compute nodes
+# - 2 12-core Intel "Haswell" (2.5GHz) per node 
+# - Intel Haswell
+# - 2 CPUs per node, 12 cores/CPU.
+#---------------------------------------------------
+
+IDENTITY="COMET - SDSC"
+CORES_PER_NODE=24
+NUMAS_PER_NODE=2
+
+# Compilers and flags
+#FC     = mpif90 -mod ${GACODE_ROOT}/modules -I${GACODE_ROOT}/modules -I${MKLROOT}/include -I${NETCDFHOME}/include -I${FFTWHOME}/include -diag-disable 5140,8290,8291
+FC     = mpif90 -mod ${GACODE_ROOT}/modules -I${MKLROOT}/include -I${NETCDFHOME}/include -I${FFTWHOME}/include -diag-disable 5140,8290,8291
+F77    = ${FC}
+
+NETCDF_INC = ${NETCDFHOME}/include
+NETCDF = -L${NETCDFHOME}/lib -lnetcdf -lnetcdff
+
+FOMP   = -qopenmp
+FMATH  = -r8
+FOPT   = -xHOST -O3 -no-prec-div -g
+FDEBUG = -O0 -g -check all
+
+# System math libraries
+LMATH = -L${FFTWHOME}/lib -lfftw3_threads -lfftw3f_threads -lfftw3 -lfftw3f -mkl=sequential
+
+# Archive 
+ARCH = ar cr
+
+%.o: %.mod
+
+

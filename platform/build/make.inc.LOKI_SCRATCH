@@ -1,0 +1,58 @@
+#-----------------------------------------------------
+# Loki cluster at MIT PSFC (after April, 2011 upgrade)
+#-----------------------------------------------------
+# D. R. Ernst <dernst@psfc.mit.edu>
+#
+# From https://fusion.gat.com/theory/Gyroquickstart:
+#
+# Set the environment variables as follows:
+#
+#   export GACODE_PLATFORM=LOKI
+#   export GACODE_ROOT=$HOME/gacode
+#   . $GACODE_ROOT/shared/bin/gacode_setup
+#   export IDL_PATH="$GACODE_ROOT/gyro/vugyro:$GACODE_ROOT/tgyro/tools:<IDL_DEFAULT>"
+#
+# To build gyro, do 
+#  
+#   cd $GACODE_ROOT
+#   make
+#
+# To test gyro, do
+#
+#   mkdir testdir ; cd testdir
+#   qsub -I -l nodes=1 # otherwise mpiexec will fail
+#   export GACODE_PLATFORM=LOKI
+#   export GACODE_ROOT=$HOME/gacode
+#   . $GACODE_ROOT/shared/bin/gacode_setup
+#   export IDL_PATH="$GACODE_ROOT/gyro/vugyro:$GACODE_ROOT/tgyro/tools:<IDL_DEFAULT>"
+#   gyro -g reg01
+#   gyro -e reg01
+#   exit # to end interactive batch job
+#
+#-----------------------------------------------------
+# Compilers
+
+FC	= mpif90 -woff801 -module $(GACODE_ROOT)/modules
+F77	= mpif90 -woff801
+CC      = mpicc
+
+FOMP    = -mp
+FMATH	= -r8
+FOPT	= -Ofast -mcpu=opteron -fPIC
+FDEBUG	= -ffortran-bounds-check 
+
+# Libraries
+
+LAPACKLIB     = /opt/lib/libacml.so /opt/lib/libacml_mv.so 
+BLASLIB       = /usr/local/lib64/libgoto2.so 
+LMATH         = -L/usr/local/lib $(LAPACKLIB) $(BLASLIB)  -lrfftw -lfftw -lm
+
+# OPTIONAL: netCDF (for gyro2gkv)
+
+NETCDF        = -lnetcdf -lcurl -lhdf5_hl -lhdf5
+NETCDF_INC    = /usr/local/include
+
+# Archive 
+
+ARCH = ar cr
+

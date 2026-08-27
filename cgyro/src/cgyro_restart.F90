@@ -4,14 +4,6 @@
 ! PURPOSE:
 !  This is the master file controlling input and output of
 !  restart data using MPI-IO.
-!
-! Relevant parametes:
-!  RESTART_PRESERVATION_MODE
-!   1 - Do not create .old restart file, and remove last restart file before writing new restart file (max 1 restart files on disk)
-!   2 - Do not create .old restart file, but remove last restart file after successful creation (max 2 restart files on disk)
-!   3 - Do create .old restart file, remove previous .old before writing writing new restart file (max 2 restart files on disk, default)
-!   4 - Do create .old restart file, remove previous .old only after succesfully writing new restart file (max 3 restart files on disk)
-!   5 - Rename previous restart files using start index as extension (no limit on number of restart files on disk)
 !------------------------------------------------
 
 module cgyro_restart
@@ -42,6 +34,15 @@ subroutine cgyro_write_restart
 
   call cgyro_write_restart_one
   
+  ! Write restart tag
+  if (i_proc == 0) then
+     open(unit=io,file=trim(path)//runfile_restart_tag,status='replace')
+     write(io,*) i_current
+     write(io,fmtstr) t_current
+     write(io,*) delta_t_gk
+     close(io)
+  endif
+
 end subroutine cgyro_write_restart
 
 subroutine cgyro_write_restart_one
@@ -49,7 +50,6 @@ subroutine cgyro_write_restart_one
   use mpi
   use cgyro_globals
   use cgyro_io
-  use cgyro_step, ONLY: delta_t_gk,delta_t_at_restart
 #ifdef __INTEL_COMPILER
   ! ifort defined rename in the ifport module
   use ifport
@@ -76,12 +76,11 @@ subroutine cgyro_write_restart_one
   character(8)  :: sdate
   character(10) :: stime
   character(len=64) :: platform
-  character(16)  :: istr,pistr
+  character(16)  :: pistr
   integer(KIND=8) :: start_time,cp_time
   integer(KIND=8) :: count_rate, count_max
   real :: cp_dt
   integer :: statusfd
-  integer :: fcount
   integer :: ierr,ic0,j
 
   ! use system_clock to be consistent with cgyro_kernel
@@ -121,13 +120,10 @@ subroutine cgyro_write_restart_one
 
   if ((i_proc == 0) .and. (restart_preservation_mode<4)) then 
     ! Anything but restart_preservation_mode == 4
-    ! (and restart_preservation_mode>4 do not use .old)
     ! User does not want high guarntees for the old file
     ! So, remove .old file, if it exists
     ierr  = UNLINK(trim(path)//runfile_restart//".old")
     ! NOTE: We will not check if it succeeded... not important, may not even exist (yet)
-    ! same for the tag file
-    ierr  = UNLINK(trim(path)//runfile_restart_tag//".old")
   endif
 
   if ((i_proc == 0) .and. (restart_preservation_mode<2)) then 
@@ -136,8 +132,6 @@ subroutine cgyro_write_restart_one
     ! So, remove existing restart file, if it exists
     ierr = UNLINK(trim(path)//runfile_restart)
     ! NOTE: We will not check if it succeeded... not important, may not even exist (yet)
-    ! same for the tag file
-    ierr  = UNLINK(trim(path)//runfile_restart_tag)
   endif
 
   ! TODO Error handling
@@ -168,11 +162,6 @@ subroutine cgyro_write_restart_one
           'native',&
           finfo,&
           i_err)
-  if (i_err /= 0) then
-     call cgyro_error('MPI_FILE_SET_VIEW in cgyro_write_restart failed')
-     return
-  endif
-
 
   ! need h_x here
 #if defined(OMPGPU)
@@ -194,21 +183,12 @@ subroutine cgyro_write_restart_one
      return
   endif
 
-  fcount = 0;
-  call MPI_GET_COUNT(fstatus, MPI_COMPLEX16, fcount, i_err)
-  if (fcount /= size(h_x)) then
-     call cgyro_error('Partial restart write!')
-     return
-  endif
-
-  call MPI_BARRIER(CGYRO_COMM_WORLD,i_err)
   call MPI_FILE_SYNC(fhv,i_err)
   if (i_err /= 0) then
      call cgyro_error('MPI_FILE_SYNC in cgyro_write_restart failed')
      return
   endif
 
-  call MPI_BARRIER(CGYRO_COMM_WORLD,i_err)
   call MPI_FILE_CLOSE(fhv,i_err)
   if (i_err /= 0) then
      call cgyro_error('MPI_FILE_CLOSE in cgyro_write_restart failed')
@@ -226,38 +206,11 @@ subroutine cgyro_write_restart_one
 
   ! now that we know things worked well, move the file in its final location
   if (i_proc == 0) then 
-     if (restart_preservation_mode==5) then 
-        ! restart_preservation_mode == 5
-        ! User requested to save every single restart file
-
-        ! but first check if an existing restart file exists at all
-        open(unit=io,&
-             file=trim(path)//runfile_restart,&
-             status='old',iostat=i_err)
-        close(io)
-
-        if (i_err == 0) then
-                WRITE(istr,"(A1,I8.8)") ".",i_at_restart
-                i_err = RENAME(trim(path)//runfile_restart, trim(path)//runfile_restart//trim(istr))
-                if (i_err /= 0) then
-                   call cgyro_error('Saving of existing restart file failed')
-                   return
-                endif
-                ! NOTE: We will not check if it succeeded... not important, may not even exist (yet)
-                ! same for the tag file
-                i_err = RENAME(trim(path)//runfile_restart_tag, trim(path)//runfile_restart_tag//trim(istr))
-                if (i_err /= 0) then
-                   call cgyro_error('Saving of existing restart file tag failed')
-                   return
-                endif
-        endif
-     elseif (restart_preservation_mode>2) then 
+     if (restart_preservation_mode>2) then 
         ! restart_preservation_mode == 3 or 4
         ! First try to save any existing restart file as old
         i_err = RENAME(trim(path)//runfile_restart, trim(path)//runfile_restart//".old")
         ! NOTE: We will not check if it succeeded... not important, may not even exist (yet)
-        ! same for the tag file
-        i_err = RENAME(trim(path)//runfile_restart_tag, trim(path)//runfile_restart_tag//".old")
      endif
 
      ! Rename part into the final expected file name
@@ -266,18 +219,6 @@ subroutine cgyro_write_restart_one
         call cgyro_error('Final rename in cgyro_write_restart failed')
         return
      endif
-
-     ! Write restart tag
-     open(unit=io,file=trim(path)//runfile_restart_tag,status='replace')
-     write(io,*) i_current
-     write(io,fmtstr) t_current
-     write(io,*) delta_t_gk
-     close(io)
-
-     ! Save what were the values for the restart file we just created
-     i_at_restart = i_current
-     t_at_restart = t_current
-     delta_t_at_restart = delta_t_gk
   endif
 
   call system_clock(cp_time,count_rate,count_max)
@@ -426,11 +367,6 @@ subroutine cgyro_read_restart
      call MPI_BCAST(i_current,1,MPI_INTEGER,0,CGYRO_COMM_WORLD,i_err)
      call MPI_BCAST(t_current,1,MPI_DOUBLE_PRECISION,0,CGYRO_COMM_WORLD,i_err)
      call MPI_BCAST(delta_t_last,1,MPI_DOUBLE_PRECISION,0,CGYRO_COMM_WORLD,i_err)
-
-     ! Save what were the values for the restart file we just read
-     i_at_restart = i_current
-     t_at_restart = t_current
-     delta_t_at_restart = delta_t_last
       
   endif
 
@@ -448,9 +384,9 @@ subroutine cgyro_read_restart
         source(j,:,0) = h_x(ic0+j,:,0)
         h_x(ic0+j,:,0) = 0.0
      enddo
-     dsrc = 0.0
+     sa = 0.0
      do j=1,nint(t_current/delta_t)
-        dsrc = 1.0+exp(-delta_t/tau_ave)*dsrc
+        sa = 1.0+exp(-delta_t/tau_ave)*sa
      enddo
   endif
 

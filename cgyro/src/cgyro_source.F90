@@ -26,7 +26,7 @@ subroutine cgyro_source
      nu_eff = abs(nu_global)
   endif
 
-  dsrc = 1.0+exp(-delta_t/tau_ave)*dsrc
+  sa = 1.0+exp(-delta_t/tau_ave)*sa
 
   ! Time-delay source
   if (nt1 == 0) then
@@ -51,7 +51,7 @@ subroutine cgyro_source
       do j=1,n_theta
         ! Recursive update of p=+1 source 
         source(j,iv_loc,0) = source(j,iv_loc,0) + &
-                (h_x(icp+j,iv_loc,0)-source(j,iv_loc,0))/dsrc
+                (h_x(icp+j,iv_loc,0)-source(j,iv_loc,0))/sa
         ! Subtract source from h(0,+1)
         h_x(icp+j,iv_loc,0) = h_x(icp+j,iv_loc,0) - &
                 nu_eff*delta_t*source(j,iv_loc,0)

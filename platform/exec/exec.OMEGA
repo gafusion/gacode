@@ -5,6 +5,8 @@ simdir=${1}
 nmpi=${2}
 exec=${3}
 nomp=${4}
+numa=${5}
+mpinuma=${6}
 
 cd $simdir
 export OMP_NUM_THREADS=$nomp ; /fusion/usc/c8/opt/env/gcc-8.3.1/bin/mpirun -np $nmpi $exec

@@ -2,6 +2,9 @@ subroutine cgyro_init_arrays
 
   use mpi
   use cgyro_globals
+  use cgyro_field_mod, only : cgyro_field_c_init_coefficients, &
+                              cgyro_field_v_init_coefficients
+  use cgyro_flux_mod, only : jmvec_c
   use cgyro_io
   use parallel_lib
 
@@ -11,7 +14,6 @@ subroutine cgyro_init_arrays
   real :: efac
   real :: u,sm,sb
   real :: fac
-  real :: k_perp_max
   integer :: ir,it,is,ie,ix
   integer :: itm,itl,itor,mytor,itf
   integer :: it_loc
@@ -23,7 +25,6 @@ subroutine cgyro_init_arrays
   real, dimension(:,:,:), allocatable :: res_loc
   real, dimension(:,:,:), allocatable :: jloc_c
   real, dimension(:,:,:), allocatable :: res_norm
-  real, dimension(:,:), allocatable :: res_weight
   real, external :: spectraldiss
 
   real, dimension(:), allocatable :: gdlnndr,gdlntdr
@@ -114,36 +115,25 @@ subroutine cgyro_init_arrays
                       /(k_perp(ic,itor)*rho)**2 &
                       * (2*bmag(it) * jloc_c(2,ic,itor) - jloc_c(1,ic,itor))
               endif
-           endif   
-        endif
-     enddo
-
-     ! Maxwell-stress factors for momentum flux 
-     if (momentum_print_flag == 1) then
-        do ic=1,nc
-           it = it_c(ic)
-           fac = rho * temp(is)/(z(is) * bmag(it)) * bpol(it)/bmag(it) &
-                 * 2.0 * energy(ie)*(1-xi(ix)**2) * k_x(ic,itor)
+           endif
            
-           jmvec_c(1,ic,iv_loc,itor) =  0.0
-            
+        endif
+
+        if (momentum_print_flag == 1) then
+           jmvec_c(:,ic,iv_loc,itor) = 0.0
+
            if (n_field > 1) then
               efac = -xi(ix)*vel2(ie)*vth(is)
-              jmvec_c(2,ic,iv_loc,itor) = efac * fac * jloc_c(3,ic,itor)
-              
-              if (n_field > 2) then
-                 if(itor == 0) then
-                    jmvec_c(3,ic,iv_loc,itor) = 0.0
-                 else
-                    jmvec_c(3,ic,iv_loc,itor) = fac * z(is)*bmag(it)/mass(is) &
-                          /(k_perp(ic,itor)*rho)**2 &
-                          * bmag(it) * jloc_c(2,ic,itor)
-                 endif
-              endif   
-           endif
-        enddo
-     endif
+              jmvec_c(2,ic,iv_loc,itor) = efac*fac*jloc_c(3,ic,itor)
 
+              if (n_field > 2 .and. itor /= 0) then
+                 jmvec_c(3,ic,iv_loc,itor) = fac*z(is)*bmag(it)/mass(is) &
+                      /(k_perp(ic,itor)*rho)**2 &
+                      *bmag(it)*jloc_c(2,ic,itor)
+              endif
+           endif
+        endif
+     enddo
    enddo
   enddo
  
@@ -226,21 +216,24 @@ subroutine cgyro_init_arrays
   !-------------------------------------------------------------------------
 
   !-------------------------------------------------------------------------
-  ! Conservative upwind factor
+  ! Conservative upwind projection factors
   !
   allocate(res_loc(nc,n_species,nt1:nt2))
   allocate(res_norm(nc,n_species,nt1:nt2))
-  allocate(res_weight(n_xi,n_energy))
 
-  do ix=1,n_xi
-     do ie=1,n_energy
-        res_weight(ix,ie) = abs(xi(ix))*vel(ie)
-     enddo
-  enddo 
+  ! Note: Original code was using res_weight_power here
+  !       Ingoring it in the updated code
+
+  ! --------------------------------------------------------------------
+  ! Post-stencil conservation projection factors (all backends; computed
+  ! on the host, copied to device below).
+  !
+  ! The dissipation is corrected by removing its projection
+  ! --------------------------------------------------------------------
   res_loc(:,:,:) = 0.0
-
-!$omp parallel private(ic,iv_loc,is,ix,ie)
-!$omp do collapse(2) reduction(+:res_loc)
+  ! NOTE: reduction is REQUIRED -- consecutive iv map to different species
+  ! (velocity_order=1 has is fastest), so threads collide on res_loc(:,is,:)
+!$omp parallel do collapse(2) private(iv_loc,is,ix,ie,ic) reduction(+:res_loc)
   do itor=nt1,nt2
    do iv=nv1,nv2
      iv_loc = iv-nv1+1
@@ -249,45 +242,61 @@ subroutine cgyro_init_arrays
      ie = ie_v(iv)
      do ic=1,nc
         res_loc(ic,is,itor) = res_loc(ic,is,itor) + &
-                w_exi(ie,ix)*jvec_c(1,ic,iv_loc,itor)**2*res_weight(ix,ie)
+                w_exi(ie,ix)*jvec_c(1,ic,iv_loc,itor)**2
      enddo
    enddo
   enddo
-!$omp end do
-!$omp end parallel
-
-  call MPI_ALLREDUCE(res_loc,&
-       res_norm,&
-       size(res_norm),&
-       MPI_DOUBLE_PRECISION,&
-       MPI_SUM,&
-       NEW_COMM_1,&
-       i_err)
-
+  call MPI_ALLREDUCE(res_loc,res_norm,size(res_norm),&
+       MPI_DOUBLE_PRECISION,MPI_SUM,NEW_COMM_1,i_err)
 !$omp parallel do collapse(2) private(iv_loc,is,ix,ie,ic)
   do itor=nt1,nt2
    do iv=nv1,nv2
      iv_loc = iv-nv1+1
      is = is_v(iv)
-     ix = ix_v(iv)
-     ie = ie_v(iv)
      do ic=1,nc
-        upfac1(ic,iv_loc,itor) = w_exi(ie,ix)*abs(xi(ix))*vel(ie) * &
-                jvec_c(1,ic,iv_loc,itor)
-        upfac2(ic,iv_loc,itor) = jvec_c(1,ic,iv_loc,itor)*res_weight(ix,ie)/ &
-                res_norm(ic,is,itor)
+        upfac_num(ic,1,iv_loc,itor) = jvec_c(1,ic,iv_loc,itor)/res_norm(ic,is,itor)
      enddo
    enddo
   enddo
 
-  deallocate(res_weight)
+  ! upfac_num(:,2) is meaningful only for n_field>1; 
+  if (n_field > 1) then
+     res_loc(:,:,:) = 0.0
+     ! reduction REQUIRED here too (see the number-moment loop above)
+!$omp parallel do collapse(2) private(iv_loc,is,ix,ie,ic) reduction(+:res_loc)
+     do itor=nt1,nt2
+      do iv=nv1,nv2
+        iv_loc = iv-nv1+1
+        is = is_v(iv)
+        ix = ix_v(iv)
+        ie = ie_v(iv)
+        do ic=1,nc
+           res_loc(ic,is,itor) = res_loc(ic,is,itor) + &
+                   w_exi(ie,ix)*jvec_c(2,ic,iv_loc,itor)**2
+        enddo
+      enddo
+     enddo
+     call MPI_ALLREDUCE(res_loc,res_norm,size(res_norm),&
+          MPI_DOUBLE_PRECISION,MPI_SUM,NEW_COMM_1,i_err)
+!$omp parallel do collapse(2) private(iv_loc,is,ix,ie,ic)
+     do itor=nt1,nt2
+      do iv=nv1,nv2
+        iv_loc = iv-nv1+1
+        is = is_v(iv)
+        do ic=1,nc
+           upfac_num(ic,2,iv_loc,itor) = jvec_c(2,ic,iv_loc,itor)/res_norm(ic,is,itor)
+        enddo
+      enddo
+     enddo
+  endif
+
   deallocate(res_norm)
   deallocate(res_loc)
-  
+
 #if defined(OMPGPU)
-!$omp target enter data map(to:upfac1,upfac2)
+!$omp target enter data map(to:upfac_num)
 #elif defined(_OPENACC)
-!$acc enter data copyin(upfac1,upfac2)
+!$acc enter data copyin(upfac_num)
 #endif
 
   !------------------------------------------------------------------------------
@@ -295,98 +304,13 @@ subroutine cgyro_init_arrays
   !------------------------------------------------------------------------------
   ! Coefficient setup
   !
-  allocate(vfac(nv_loc))
-  do iv=nv1,nv2
 
-     iv_loc = iv-nv1+1
-     is = is_v(iv)
-     ix = ix_v(iv)
-     ie = ie_v(iv)
-
-     vfac(iv_loc) = w_exi(ie,ix)*z(is)**2/temp(is)*dens(is)
-
-  enddo
-
-  allocate(sum_den_h(n_theta))
-  sum_den_h(:) = 0.0
-  do is=1,n_species
-     do ie=1,n_energy
-        do ix=1,n_xi
-           do it=1,n_theta
-              sum_den_h(it) = sum_den_h(it) + w_exi(ie,ix) &
-                   *z(is)**2/temp(is)*dens2_rot(it,is)
-           enddo
-        enddo
-     enddo
-  enddo
-
-  if (ae_flag == 1) then
-     sum_den_h(:) = sum_den_h(:) + dens_ele*dens_ele_rot(:)/temp_ele
+  call cgyro_field_c_init_coefficients
+  if ((collision_model /= 5) .AND. (collision_field_model == 1)) then
+    call cgyro_field_v_init_coefficients
   endif
-
-  allocate(sum_den_x(nc,nt1:nt2))
-  if (n_field > 1) allocate(sum_cur_x(nc,nt1:nt2))
-
-  call cgyro_field_coefficients
   !------------------------------------------------------------------------------
 
-  !-------------------------------------------------------------------------
-  ! Zonal flow with adiabatic electrons:
-  !
-  do itor=nt1,nt2
-   if (itor == 0 .and. ae_flag == 1) then
-     ! since this applies only to itor == 0, we do not need to extend the matrix
-     allocate(hzf(n_radial,n_theta,n_theta))
-     hzf(:,:,:) = 0.0      
-     do ir=1,n_radial
-        do it=1,n_theta
-           ! my_toroidal==0
-           hzf(ir,it,it) = k_perp(ic_c(ir,it),0)**2 * lambda_debye**2 &
-                * dens_ele/temp_ele + sum_den_h(it)
-           do jt=1,n_theta
-              hzf(ir,it,jt) = hzf(ir,it,jt) &
-                   - dens_ele*dens_ele_rot(it)/temp_ele*w_theta(jt)
-           enddo
-        enddo
-     enddo
-
-     allocate(work(n_theta))
-     allocate(i_piv(n_theta))
-     do ir=1,n_radial
-        call DGETRF(n_theta,n_theta,hzf(ir,:,:),n_theta,i_piv,info)
-        call DGETRI(n_theta,hzf(ir,:,:),n_theta,i_piv,work,n_theta,info)
-     enddo
-     deallocate(i_piv)
-     deallocate(work)
-
-     allocate(xzf(n_radial,n_theta,n_theta))
-     xzf(:,:,:) = 0.0     
-     do ir=1,n_radial
-        do it=1,n_theta
-           ! my_toroidal==0
-           xzf(ir,it,it) = k_perp(ic_c(ir,it),0)**2*lambda_debye**2 &
-                * dens_ele/temp_ele+sum_den_x(ic_c(ir,it),0)
-           do jt=1,n_theta
-              xzf(ir,it,jt) = xzf(ir,it,jt) &
-                   - dens_ele*dens_ele_rot(it)/temp_ele*w_theta(jt)
-           enddo
-        enddo
-     enddo
-
-     allocate(work(n_theta))
-     allocate(i_piv(n_theta))
-     do ir=1,n_radial
-        call DGETRF(n_theta,n_theta,xzf(ir,:,:),n_theta,i_piv,info)
-        call DGETRI(n_theta,xzf(ir,:,:),n_theta,i_piv,work,n_theta,info)
-     enddo
-     deallocate(i_piv)
-     deallocate(work)
-
-   endif
-  enddo
-
-  if (n_field > 1) deallocate(sum_cur_x)
-  deallocate(sum_den_x)
 
   !-------------------------------------------------------------------------
 
@@ -407,7 +331,7 @@ subroutine cgyro_init_arrays
      c_wave(l) = 2.0/pi/ll**2*(-1)**(l-1)
   enddo
   source = 0.0
-  dsrc   = 0.0
+  sa     = 0.0
   !-------------------------------------------------------------------------
 
   !-------------------------------------------------------------------------
@@ -425,20 +349,6 @@ subroutine cgyro_init_arrays
 #elif defined(_OPENACC)
 !$acc enter data copyin(c_wave,thfac_itor,cderiv,uderiv)
 #endif
-
-  ! Set maximum k_perp for hyperviscosity
-  if (hyper_flag == 1) then
-     k_perp_max = 0.0
-     do itor=nt1,nt2
-        do ic=1,nc
-           ir = ir_c(ic)
-           u = sqrt((2.0*pi*(ir - px_zero + px0)/length)**2 + (k_theta_base*itor)**2)
-           k_perp_max = max(k_perp_max, u)
-        enddo
-     enddo
-  elseif (hyper_flag == 2) then
-     k_perp_max = maxval(k_perp(:,nt1:nt2))
-  endif
 
   ! Streaming coefficients (for speed optimization)
 
@@ -474,7 +384,7 @@ subroutine cgyro_init_arrays
                 + omega_rot_edrift(it))
         
            ! Note that we shift the dissipation with px0 (ballooning angle linear mode)
-           u = (2.0*pi/n_radial)*(ir - px_zero + px0)
+           u = (2.0*pi/n_radial)*(px(ir)+px0)
 
            ! (d/dr) components from drifts
         
@@ -491,18 +401,7 @@ subroutine cgyro_init_arrays
                 * (abs(omega_rdrift(it,is))*energy(ie)*(1.0+xi(ix)**2) &
                 + abs(omega_cdrift_r(it,is)*xi(ix))*vel(ie) &
                 + abs(omega_rot_drift_r(it,is)) &
-                + abs(omega_rot_edrift_r(it)))
-
-           ! Perpendicular hyperviscosity (excludes zonal mode)
-           if (hyper_flag > 0 .and. itor /= 0) then
-              if (hyper_flag == 1) then
-                 u = sqrt((2.0*pi*(ir - px_zero + px0)/length)**2 + (k_theta_base*itor)**2)
-              elseif (hyper_flag == 2) then
-                 u = k_perp(ic,itor)
-              endif
-              omega_cap_h(ic, iv_loc, itor) = omega_cap_h(ic,iv_loc,itor) &
-                   - hyper_coeff * (u/k_perp_max)**(2*hyper_order)
-           endif     
+                + abs(omega_rot_edrift_r(it)))          
              
            ! omega_star 
            carg = &
@@ -521,7 +420,11 @@ subroutine cgyro_init_arrays
            sm = sdlnndr(is)+sdlntdr(is)*(energy(ie)-1.5)
 
            ! generalized beta/drift shear (acts on H)
-           sb = -sbeta*energy(ie)*xi(ix)**2/bmag(it)**3
+           if (sbeta_const_flag == 1) then
+              sb = -sbeta
+           else
+              sb = -sbeta*energy(ie)*xi(ix)**2/bmag(it)**3
+           endif
 
            arg = k_theta_base*itor*length/(2*pi)
 

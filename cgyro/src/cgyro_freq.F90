@@ -12,6 +12,7 @@ subroutine cgyro_freq
 
   use cgyro_globals
   use cgyro_io
+  use cgyro_field_mod, only : cgyro_field_e_get_diff1
 
   implicit none
 
@@ -42,8 +43,7 @@ subroutine cgyro_freq
      total_weighted_freq = (0.0,0.0)
      do ic=1,nc
         ! Use potential to compute frequency
-        fo1 = field_old(1,ic,itor)
-        fo2 = field_old2(1,ic,itor)
+        call cgyro_field_e_get_diff1(ic,itor, fo1,fo2)  ! returns fo1 and fo2
         mw = abs(fo1)
         mode_weight(ic) =  mw
         total_weight = total_weight + mw

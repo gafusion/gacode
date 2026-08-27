@@ -1,0 +1,69 @@
+#!/bin/sh
+# GACODE Parallel execution script (LOKI_SCRATCH)
+#
+# This version: D. R. Ernst <dernst@psfc.mit.edu>
+#
+#    - avoids overhead of NFS writes to /home during execution
+#    - copies inputs to scratch area on master node
+#    - all file reads/writes are local to that node  
+#    - copies results back to /home directory on head node
+#
+
+simdir=${1}
+nmpi=${2}
+exec=${3}
+nomp=${4}
+numa=${5}
+mpinuma=${6}
+
+workdir=/scratch`echo $simdir | sed -e "s/\/home//g"`
+
+echo "gacode source directory:"
+echo "     $executable"
+echo "gacode simulation directory:" 
+echo "     $simdir"
+echo "working directory:"
+echo "     $workdir"
+echo "number of processors:"
+echo "     $nmpi"
+master=`hostname`
+echo "master node: "
+echo "     $master"
+
+copy_data(){
+   echo "-----------------------------------------------------------"
+   echo "Copying data from "
+   echo "      $master:$workdir"
+   echo "to"
+   echo "      $simdir"
+   # note that variables are global and inherit values from main script
+   echo " "
+   echo "Copy of original data will be left in "
+   echo "      $master:$workdir"
+   echo " "
+   echo "TO CLEAN UP: run ./gyro_clean_scratch.sh"
+   echo "-----------------------------------------------------------"
+   cleanup_script=gyro_clean_scratch.sh
+   echo "#!/bin/bash" > $cleanup_script
+   echo "echo 'Deleting $master:$workdir ...'" >> $cleanup_script 
+   echo "rsh $master rm -rf $workdir"  >> $cleanup_script 
+   echo "echo 'done.'" >> $cleanup_script
+   chmod u+x $cleanup_script 
+   cp -a $workdir/* $simdir
+}
+
+mkdir -p $workdir
+cp -a $simdir/* $workdir 
+echo "$master:$workdir" >$simdir/scratch_area
+
+cd $workdir
+
+trap "copy_data"  SIGINT SIGTERM
+
+mpiexec -n $nmpi $exec
+
+sleep 1
+
+copy_data
+
+

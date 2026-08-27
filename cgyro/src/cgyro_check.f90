@@ -18,8 +18,17 @@ subroutine cgyro_check
      return
   endif
 
+  if (zf_test_mode == 0 .and. modulo(n_radial,box_size) /= 0) then 
+     call cgyro_info('RESOLUTION WARNING -- n_radial not a multiple of box_size.')
+  endif
+
+  !if (zf_test_mode == 0 .and. n_radial < (n_toroidal-1)*box_size) then
+  !   call cgyro_info('RESOLUTION WARNING -- n_radial < n*box_size.')
+  !endif
+
   if (zf_test_mode == 0 .and. n_radial < box_size) then
      call cgyro_info('SEVERE RESOLUTION WARNING -- n_radial < box_size.')
+     return
   endif
 
   if (modulo(n_theta,theta_plot) /= 0) then
@@ -80,6 +89,36 @@ subroutine cgyro_check
      return
   end select
   !-----------------------------------------------------------------------
+
+  !-----------------------------------------------------------------------
+  ! Profile checks
+  !
+  select case (profile_model)
+
+  case (1)
+     call cgyro_info('Profile model: local input (input.cgyro)')
+
+  case (2)
+     call cgyro_info('Profile model: experimental (input.gacode)')
+
+  case default
+     call cgyro_error('Invalid value for profile_model')
+     return
+
+  end select
+  !-----------------------------------------------------------------------
+
+  if (profile_model == 2) then
+     select case(quasineutral_flag)
+     case(0)
+        call cgyro_info('QN flag: Not enforcing quasi-neutrality')
+     case(1)
+        call cgyro_info('QN flag: Enforcing quasi-neutrality')
+     case default
+        call cgyro_error('Invalid value for quasineutral_flag')
+        return
+     end select
+  endif
 
   !------------------------------------------------------------------------
   ! Equilibrium model
@@ -158,7 +197,7 @@ subroutine cgyro_check
   ! Even for rotation_model=1, the collision eqn does not have the field
   ! correction; explicit_trap_flag=1 will at least do the field correction
   ! for the trapping terms
-  if (ae_flag == 1 .and. rotation_model > 1) then
+  if(ae_flag == 1 .and. rotation_model > 1) then
      call cgyro_info('WARNING -- n=0 eqn does not have proper adiabatic ele response')
   endif
   
@@ -291,6 +330,17 @@ subroutine cgyro_check
        '   '//ctag(6)// &
        '     '//ctag(7))
   
+  if (collision_model == 5 .or. collision_model == 1) then
+     select case(z_eff_method)
+     case(1)
+        call cgyro_info('Collision model Z_eff: Using Z_eff input')
+     case(2)
+        call cgyro_info('Collision model Z_eff: Computed from ni and Zi')
+     case default
+        call cgyro_error('Invalid value for z_eff_method')
+        return  
+     end select
+  endif
   !------------------------------------------------------------------------
 
 
@@ -300,10 +350,10 @@ subroutine cgyro_check
   endif
 
 
-  if (collision_test_mode > 0) then
+  if (collision_test_mode>0) then
      write(unit=outstr,fmt='(A,I1)') 'Warning, 0<collision_test_mode=',collision_test_mode
      call cgyro_info(trim(outstr))
-  endif
+  end if
      
   
   !------------------------------------------------------------------------
@@ -343,22 +393,13 @@ subroutine cgyro_check
      call cgyro_error('Invalid value for nup_alpha')
      return
   endif
-  if (hyper_flag < 0 .or. hyper_flag > 2) then
-     call cgyro_error('Invalid value for hyper_flag')
-     return
-  endif 
-  if (hyper_order < 1) then
-     call cgyro_error('Invalid value for hyper_order')
-     return
-  endif
-  if (hyper_coeff < 0.0) then
-     call cgyro_error('Invalid value for hyper_coeff')
-     return
-  endif
   !------------------------------------------------------------------------
 
-  if (exch_flag == 0) then
-     call cgyro_info('WARNING: Please set EXCH_FLAG=1 for future compatibility')
+  if (global_flag == 1) then 
+     call cgyro_info('##################### IMPORTANT ######################')
+     call cgyro_info('#       GLOBAL_FLAG=1 not ready for production       #')
+     call cgyro_info('#  See https://github.com/gafusion/gacode/issues/451 #')
+     call cgyro_info('######################################################')
   endif
 
 end subroutine cgyro_check

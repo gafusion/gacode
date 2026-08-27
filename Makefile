@@ -9,6 +9,7 @@ all:
 	cd tgyro ; make
 	cd profiles_gen ; make
 	cd f2py ; make
+	cd qlgyro ; make
 
 # Clean but do not build gyro and le3
 
@@ -24,6 +25,7 @@ clean:
 	cd tgyro ; make clean
 	cd profiles_gen ; make clean
 	cd f2py ; make clean
+	cd qlgyro ; make clean
 	cd gyro ; make clean
 	cd le3 ; make clean
 	rm -f f2py/*/*.pyc

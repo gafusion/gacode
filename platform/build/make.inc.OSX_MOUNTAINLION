@@ -1,0 +1,26 @@
+#---------------------------------------------------
+# OSX Mountain Lion (10.8.x)
+#---------------------------------------------------
+
+# Compilers and flags
+
+FC	= mpif90 -I$(GACODE_ROOT)/modules -J$(GACODE_ROOT)/modules
+F77	= mpif90
+
+FOMP    = -fopenmp
+FMATH	= -fdefault-real-8 -fPIC
+FOPT	= -O3 -framework Accelerate
+FDEBUG  = -Wall -fcheck=all -ffpe-trap=invalid,zero,overflow
+
+# System math libraries
+
+LMATH = 
+
+# NetCDF libraries
+
+NETCDF = -L/opt/local/lib -lnetcdff -lnetcdf -lm -lz -lcurl 
+NETCDF_INC = /opt/local/include
+ 
+# Archive
+
+ARCH = ar cr

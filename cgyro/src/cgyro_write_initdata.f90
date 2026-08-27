@@ -12,9 +12,8 @@ subroutine cgyro_write_initdata
 
   implicit none
 
-  integer :: p,in,is,it,ir
-  real :: kymax,dn,dt,rhoa
-  integer, dimension(:), allocatable :: px
+  integer :: p,in,is,it
+  real :: kymax,kyrat,dn,dt
   real, external :: spectraldiss
   character(len=50) :: msg,lfmt
 
@@ -97,12 +96,6 @@ subroutine cgyro_write_initdata
      write(io,'(t2,3(a,1x,f3.1,2x),t48,a)') &
           'C(theta):',maxval(abs(omega_stream))*maxval(vel)*maxval(xi)*delta_t/d_theta/1.6
 
-     if (hyper_flag == 1) then
-        write(io,*)
-        write(io,'(t2,a,1x,i2,3x,a,1x,1pe12.5,t48,a)') &
-             'hyper_order',hyper_order , 'hyper_coeff:',hyper_coeff , '[hyperviscosity order and coefficient]'
-     endif
-
      write(io,*) 
      write(io,21) 'r/a',rmin,'R/a',rmaj,'q',q,'zmag',zmag,'kappa',kappa   
      write(io,22) 'shift',shift,'s',s,'dzmag',dzmag,'s_kappa',s_kappa
@@ -126,11 +119,10 @@ subroutine cgyro_write_initdata
 
      write(io,*)
      write(io,'(a)') &
-          ' i  z  n/n_norm   T/T_norm   m/m_norm     a/Ln       a/Lt       nu       rho/rhos'
+          ' i  z  n/n_norm   T/T_norm   m/m_norm     a/Ln       a/Lt       nu'
      do is=1,n_species
-        rhoa = sqrt(temp(is)*mass(is))/abs(z(is))
-        write(io,'(t1,i2,1x,i2,3(2x,1pe9.3),2(1x,1pe10.3),(2x,1pe9.3),3(1x,1pe10.3))') &
-             is,int(z(is)),dens(is),temp(is),mass(is),dlnndr(is),dlntdr(is),nu(is),rhoa
+        write(io,'(t1,i2,1x,i2,3(2x,1pe9.3),2(1x,1pe10.3),(2x,1pe9.3),2(1x,1pe10.3))') &
+             is,int(z(is)),dens(is),temp(is),mass(is),dlnndr(is),dlntdr(is),nu(is)
      enddo
 
      ! Profile shear (let s=curvature, k=gradient)
@@ -148,7 +140,27 @@ subroutine cgyro_write_initdata
              is,sdlnndr(is),dlnndr(is)-dn,dlnndr(is)+dn,sdlntdr(is),dlntdr(is)-dt,dlntdr(is)+dt,sbeta
         enddo
      endif
-     
+
+     ! Running from input.gacode
+     if (profile_model == 2) then
+        dn = rho/(rhos/a_meters)
+        kyrat = abs(q/rmin*rhos/a_meters)
+        write(io,*)
+        write(io,10) '           a[m]:',a_meters, '|b_unit[T]|:',abs(b_unit),  '   |rhos/a|:',abs(rhos)/a_meters,' dn:',dn
+        write(io,10) 'n_norm[e19/m^3]:',dens_norm,'v_norm[m/s]:',vth_norm,'T_norm[keV]:',temp_norm
+        write(io,*)
+        write(io,'(t2,a)') ' n = 1         2         3         4         5         6         7         8'      
+        write(io,'(t2,a,8(1pe9.3,1x))') 'KY = ',kyrat,2*kyrat,3*kyrat,4*kyrat,5*kyrat,6*kyrat,7*kyrat,8*kyrat        
+        write(io,'(t2,a,8(1pe9.3,1x))') 'LY = ',&
+             2*pi/kyrat,&
+             2*pi/(2*kyrat),&
+             2*pi/(3*kyrat),&
+             2*pi/(4*kyrat),&
+             2*pi/(5*kyrat),& 
+             2*pi/(6*kyrat),& 
+             2*pi/(7*kyrat),& 
+             2*pi/(8*kyrat) 
+     endif
      write(io,*)
 
      close(io)
@@ -191,6 +203,17 @@ subroutine cgyro_write_initdata
      write (io,fmtstr) gamma_e
      write (io,fmtstr) gamma_p
      write (io,fmtstr) mach
+     write (io,fmtstr) a_meters
+     write (io,fmtstr) b_unit
+     write (io,fmtstr) b_gs2
+     write (io,fmtstr) dens_norm
+     write (io,fmtstr) temp_norm
+     write (io,fmtstr) vth_norm
+     write (io,fmtstr) mass_norm
+     write (io,fmtstr) rho_star_norm
+     write (io,fmtstr) gamma_gb_norm
+     write (io,fmtstr) q_gb_norm
+     write (io,fmtstr) pi_gb_norm
      do is=1,n_species
         write (io,fmtstr) z(is)
         write (io,fmtstr) mass(is)
@@ -208,9 +231,7 @@ subroutine cgyro_write_initdata
      write (io,fmtstr) sbeta
      ! Added 17 Dec 2024
      write (io,fmtstr) z_eff
-     write (io,fmtstr) b_gs2     
      write (io,'(i0)') hiprec_flag
-     write (io,fmtstr) px0
      close(io)
 
   endif
@@ -279,10 +300,6 @@ subroutine cgyro_write_initdata
   ! Write the initial grid data 
   !
   if (silent_flag == 0 .and. i_proc == 0) then
-     allocate(px(n_radial))
-     do ir=1,n_radial
-        px(ir) = ir-px_zero
-     enddo
 
      open(unit=io,file=trim(path)//runfile_grids,status='replace')
      write(io,'(i0)') n_toroidal
@@ -307,20 +324,14 @@ subroutine cgyro_write_initdata
         write(io,'(1pe13.6)') rho*q/rmin
      endif
      write(io,'(1pe13.6)') (spectraldiss((pi/n_toroidal)*in,nup_alpha),in=0,n_toroidal-1)
-     if (n_radial > 1) then
-        write(io,'(1pe13.6)') (spectraldiss((2*pi/n_radial)*p,nup_radial),p=-n_radial/2,n_radial/2-1)
-     else
-        ! ZF test
-        write(io,'(1pe13.6)') 0.0
-     endif
+     write(io,'(1pe13.6)') (spectraldiss((2*pi/n_radial)*p,nup_radial),p=-n_radial/2,n_radial/2-1)
      write(io,'(i0)') hiprec_flag
-     write(io,'(1pe13.6)') dealias
      close(io)
-     deallocate(px)
 
   endif
   !----------------------------------------------------------------------------
 
+10 format(t2,4(a,1x,1pe9.3,2x))  
 20 format(t2,4(a,1x,1pe10.3,2x)) 
 21 format(t3,a3,1x,f8.5,1x,a5,1x,f8.5,a4,1x,f8.5,a7,1x,f8.5,a9,1x,f8.5)
 22 format(t14,             a7,1x,f8.5,a4,1x,f8.5,a7,1x,f8.5,a9,1x,f8.5)

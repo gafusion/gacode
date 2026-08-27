@@ -1,0 +1,64 @@
+#!/usr/bin/env python
+
+import os,re,sys
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import rc
+
+rc('text',usetex=True)
+rc('font',size=16)
+
+#param = 'KY'
+param = 'dir'
+
+def mygrep(f,param):
+   with open(f,'r') as file:
+      for line in file:
+         if re.search(param, line):
+            x = line.strip().split('=')[1]
+   return x
+
+r = './'
+
+dirs = os.listdir(r)
+k = []
+d = []
+for d0 in dirs:
+   if os.path.isdir(d0):
+      d.append(d0)
+      if param == 'dir':
+         ky = int(d0[1:])
+      else:
+         ky = float(mygrep(d0+'/input.cgyro'))
+      k.append(ky)
+
+n = len(k)
+i = np.argsort(k)
+
+# (modes,points)
+km = np.zeros([4,32])
+g = np.zeros([4,32])
+w = np.zeros([4,32])
+p = np.zeros([4],dtype=int)
+
+indx = np.genfromtxt('indx',dtype=int)
+   
+for j,i0 in enumerate(i):
+   data = np.genfromtxt(d[i0]+'/out.cgyro.dmd',comments='#')
+   z = data.flatten()
+   n = len(z)//3
+
+   for mode in range(n):
+      i1 = indx[j,mode]-1
+      g[i1,p[i1]]  = z[3*mode]
+      w[i1,p[i1]]  = z[3*mode+1] 
+      km[i1,p[i1]] = k[i0]
+      p[i1] += 1
+
+for branch in range(3):
+   f = open('mode'+str(branch),'w')
+   for i in range(p[branch]):
+      data = (km[branch,i],w[branch,i],g[branch,i])
+      str1 = '{:.5f}  {:+.5f}  {:.5f} \n'.format(*data)
+      f.write(str1)
+   f.close()

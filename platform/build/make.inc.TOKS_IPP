@@ -1,0 +1,33 @@
+# FIXED Hardware parameters
+IDENTITY="IPP linux cluster (ifort+lapack+FFTW, no MKL)"
+CORES_PER_NODE=16
+NUMAS_PER_NODE=1
+
+# Compilers and flags
+FC  = mpiifort -gen-interfaces -module ${GACODE_ROOT}/modules
+F77 = ${FC}
+
+FOMP   =-qopenmp
+FMATH  =-real-size 64
+FOPT   =-Ofast
+FDEBUG =-eD -Ktrap=fp -m 1
+
+# System math libraries (FFTW 3.3.4, Intel-16.0, IMPI 5.1.1)
+SOFT=/afs/ipp-garching.mpg.de/common/soft
+FFTDIR=${SOFT}/fftw/fftw-3.3.4/amd64_rhel7/intel-16.0/impi-5.1
+LAPACK=${SOFT}/lapack/3.2.1/amd64_sles11/production
+
+LMATH = ${LAPACK}/lapack_amd64.a ${LAPACK}/blas_amd64.a ${FFTDIR}/lib/libfftw3.a ${FFTDIR}/lib/libfftw3_omp.a
+FFTW_INC=${FFTDIR}/include
+
+# NetCDF
+NETCDF=-L${NETCDF_HOME}/lib -lnetcdff -L/afs/@cell/common/soft/hdf5/1.8.12/@sys/intel/14.0/impi-4.1.3/lib -lnetcdf /lib64/libz.so.1 -Wl,-rpath,${NETCDF_HOME}/lib
+NETCDF_INC=${NETCDF_HOME}/include
+
+# Archive 
+ARCH = ar cr
+
+ifdef FANN_ROOT
+   # neural net libraries
+   NN_LIB=-L$(GACODE_ROOT)/../neural/ -I$(GACODE_ROOT)/../neural/ -lbrainfuse -L$(FANN_ROOT)/lib -lfann
+endif

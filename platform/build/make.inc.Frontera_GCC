@@ -1,0 +1,31 @@
+#----------------------------------------------------------
+# Dell (frontera.tacc.utexas.edu) 
+#
+# Frontera SYSTEM INFO:
+# - Intel Cascade Lake (CLX)
+# - 28 cores * 2 sockets * 1 hyperthreads / node
+#----------------------------------------------------------
+
+IDENTITY="TACC Frontera (Cascade Lake)"
+CORES_PER_NODE=56
+NUMAS_PER_NODE=2
+
+# Compilers and flags
+FC     = mpif90 -std=f2008 -fall-intrinsics -I$(GACODE_ROOT)/modules -J$(GACODE_ROOT)/modules -fPIC
+F77    = mpif77 -I$(GACODE_ROOT)/modules
+
+FOMP	= -fopenmp
+FMATH	= -fdefault-real-8 -fdefault-double-8
+FOPT	= -Ofast
+FDEBUG	= -Wall -W fcheck=mem,bounds -g -fbacktrace -ffpe-trap=invalid,zero,overflow
+
+# System math libraries
+LMATH = -L${TACC_FFTW3_LIB} -lfftw3_threads -lfftw3f_threads -lfftw3 -lfftw3f -L${TACC_MKL_LIB} -lmkl_intel_lp64 -lmkl_core -lmkl_gnu_thread -lpthread -ldl -lm -lgomp
+
+FFTW_INC = ${TACC_FFTW3_INC}
+# NetCDF
+NETCDF 	= -L${TACC_NETCDF_LIB} -lnetcdf -lnetcdff
+NETCDF_INC = ${TACC_NETCDF_INC}
+
+# Archive 
+ARCH = ar cr

@@ -1,0 +1,13 @@
+#!/bin/sh
+# GACODE Parallel execution script (OSX_YOSEMITE)
+
+simdir=${1}
+nmpi=${2}
+exec=${3}
+nomp=${4}
+numa=${5}
+mpinuma=${6}
+
+cd $simdir
+mpiexec-mpich-gcc5 -env OMP_NUM_THREADS $nomp -np $nmpi $exec
+

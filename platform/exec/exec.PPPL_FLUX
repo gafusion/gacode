@@ -1,10 +1,12 @@
 #!/bin/sh
-# GACODE Parallel execution script (PPPL_FLUX)
+# GACODE Parallel execution script (PPPL FLUX)
 
 simdir=${1}
 nmpi=${2}
 exec=${3}
 nomp=${4}
+numa=${5}
+mpinuma=${6}
 
 cd $simdir
 

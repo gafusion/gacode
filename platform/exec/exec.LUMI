@@ -1,13 +1,17 @@
-#! /usr/bin/env bash
+#! /usr/bin/env bash 
 # GACODE Parallel execution script
 
 simdir=${1}
 nmpi=${2}
 exec=${3}
 nomp=${4}
+numa=${5}
+mpinuma=${6}
 
 # nmpi = MPI tasks
 # nomp = OpenMP threads per MPI task
+# numa = NUMAs active per node
+# mpinuma = MPI tasks per active NUMA 
 
 . $GACODE_ROOT/shared/bin/gacode_mpi_tool
 
@@ -20,15 +24,22 @@ export OMP_NUM_THREADS=$nomp
 export OMP_STACKSIZE=400M
 export MPICH_GPU_SUPPORT_ENABLED=1
 
+#export SLURM_CPU_BIND="cores"
 ulimit -c unlimited
 
+#
 # As recommended by
 # https://docs.lumi-supercomputer.eu/runjobs/scheduled-jobs/lumig-job/
+#
 
 CPU_BIND="mask_cpu:fe000000000000,fe00000000000000"
 CPU_BIND="${CPU_BIND},fe0000,fe000000"
 CPU_BIND="${CPU_BIND},fe,fe00"
 CPU_BIND="${CPU_BIND},fe00000000,fe0000000000"
+
+#echo "> srun -n$nmpi -c$nomp --gpus-per-task=1 --partition=standard-g --account=project_462000507 --gpu-bind=closest $exec"
+#srun -n$nmpi -c$nomp --gpus-per-task=1 --account=project_462000507 --partition=standard-g --gres=gpu:4 --gpu-bind=closest $exec
+#$exec
 
 echo "> srun -n $nmpi --cpu-bind=${CPU_BIND} $GACODE_ROOT/platform/exec/wrap.${GACODE_PLATFORM} $exec"
 srun -n $nmpi --cpu-bind=${CPU_BIND} $GACODE_ROOT/platform/exec/wrap.${GACODE_PLATFORM} $exec

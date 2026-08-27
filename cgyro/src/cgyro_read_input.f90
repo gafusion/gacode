@@ -34,9 +34,6 @@ subroutine cgyro_read_input
   call cgyro_readbc_int(nup_radial,'NUP_RADIAL')
   call cgyro_readbc_int(nup_theta,'NUP_THETA')
   call cgyro_readbc_int(nup_alpha,'NUP_ALPHA')
-  call cgyro_readbc_int(hyper_flag,'HYPER_FLAG')
-  call cgyro_readbc_int(hyper_order,'HYPER_ORDER')
-  call cgyro_readbc_real(hyper_coeff)
   call cgyro_readbc_int(n_wave,'N_WAVE')
   call cgyro_readbc_int(constant_stream_flag,'CONSTANT_STREAM_FLAG')
   call cgyro_readbc_int(explicit_trap_flag,'EXPLICIT_TRAP_FLAG')
@@ -45,6 +42,7 @@ subroutine cgyro_read_input
   call cgyro_readbc_real(ipccw)
   call cgyro_readbc_real(btccw)
   call cgyro_readbc_int(silent_flag,'SILENT_FLAG')
+  call cgyro_readbc_int(profile_model,'PROFILE_MODEL')
   call cgyro_readbc_int(equilibrium_model,'EQUILIBRIUM_MODEL')
   call cgyro_readbc_int(collision_model,'COLLISION_MODEL')
   call cgyro_readbc_int(collision_mom_restore,'COLLISION_MOM_RESTORE')
@@ -57,8 +55,8 @@ subroutine cgyro_read_input
   call cgyro_readbc_int(collision_test_mode,'COLLISION_TEST_MODE')
   call cgyro_readbc_int(collision_field_max_l,'COLLISION_FIELD_MAX_L')
   call cgyro_readbc_int(collision_test_max_l,'COLLISION_TEST_MAX_L')
-  call cgyro_readbc_int(z_eff_method,'Z_EFF_METHOD')
   call cgyro_readbc_real(z_eff)
+  call cgyro_readbc_int(z_eff_method,'Z_EFF_METHOD')
   call cgyro_readbc_int(zf_test_mode,'ZF_TEST_MODE')
   call cgyro_readbc_int(nonlinear_flag,'NONLINEAR_FLAG')
   call cgyro_readbc_int(ae_flag,'AE_FLAG')
@@ -94,14 +92,12 @@ subroutine cgyro_read_input
   call cgyro_readbc_int(nl_single_flag,'NL_SINGLE_FLAG')
   call cgyro_readbc_real(px0)
   call cgyro_readbc_int(exch_flag,'EXCH_FLAG')
-  call cgyro_readbc_int(nl_min,'NL_MIN')
-  call cgyro_readbc_real(dealias)
-  call cgyro_readbc_int(dealias_order,'DEALIAS_ORDER')
+  call cgyro_readbc_real(res_weight_power)
   call cgyro_readbc_int(scale_index,'SCALE_INDEX')
   call cgyro_readbc_real(scale_stream)
   call cgyro_readbc_real(scale_trap)
   call cgyro_readbc_real(scale_drift)
-  !
+
   call cgyro_readbc_real(rmin)
   call cgyro_readbc_real(rmaj)
   call cgyro_readbc_real(q)
@@ -124,7 +120,6 @@ subroutine cgyro_read_input
      call cgyro_readbc_real(shape_s_cos(is))
   enddo
   call cgyro_readbc_real(betae_unit)
-  call cgyro_readbc_real(beta_star_scale)
   call cgyro_readbc_int(n_species,'N_SPECIES')
   call cgyro_readbc_real(nu_ee)
 
@@ -139,6 +134,22 @@ subroutine cgyro_read_input
   call cgyro_readbc_realv(sdlnndr,is)
   call cgyro_readbc_realv(sdlntdr,is)
   call cgyro_readbc_real(sbeta)
+  call cgyro_readbc_realv(dlnndr_scale,is)
+  call cgyro_readbc_realv(dlntdr_scale,is)
+
+  call cgyro_readbc_int(quasineutral_flag,'QUASINEUTRAL_FLAG')
+  call cgyro_readbc_real(lambda_star_scale)
+  call cgyro_readbc_real(gamma_e_scale)
+  call cgyro_readbc_real(gamma_p_scale)
+  call cgyro_readbc_real(mach_scale)
+  call cgyro_readbc_real(beta_star_scale)
+  call cgyro_readbc_real(betae_unit_scale)
+  call cgyro_readbc_real(nu_ee_scale)
+  call cgyro_readbc_real(zf_scale)
+
+  call cgyro_readbc_int(sbeta_const_flag,'SBETA_CONST_FLAG')
+  call cgyro_readbc_real(sbeta_h)
+
   
   if (i_proc == 0) close(1)
 

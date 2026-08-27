@@ -1,0 +1,13 @@
+#!/bin/bash
+
+QUEUE="all.q"
+bfile=$SIMDIR/batch.src
+
+echo "#$ -N $LOCDIR" > $bfile
+echo "#$ -o $SIMDIR/batch.out" >> $bfile
+echo "#$ -e $SIMDIR/batch.err" >> $bfile
+echo "#$ -q $QUEUE" >> $bfile
+echo "#$ -V" >> $bfile
+echo "#$ -S /bin/bash" >> $bfile
+echo "#$ -pe make $nmpi" >> $bfile
+echo "$CODE -e $LOCDIR -n $nmpi -nomp $nomp -p $SIMROOT" >> $bfile

@@ -9,6 +9,9 @@ subroutine cgyro_write_timedata
 
   use mpi
   use cgyro_globals
+  use cgyro_field_mod, only : field_cur
+  use cgyro_flux_mod, only: cflux,gflux,moment,cflux_mom,gflux_mom, &
+          nflux_mom,cgyro_flux_sync_cap_h_c_cur,cgyro_flux
   use cgyro_step
 
   implicit none
@@ -29,6 +32,8 @@ subroutine cgyro_write_timedata
   ! Increment the print counter on actual output steps
   if (io_control == 2) i_current = i_current+1
 
+  call cgyro_flux_sync_cap_h_c_cur
+
   !---------------------------------------------------------------------------
   if (n_toroidal == 1 .and. h_print_flag == 1) then
      call write_distribution(trim(path)//binfile_hb)
@@ -48,6 +53,20 @@ subroutine cgyro_write_timedata
        trim(path)//binfile_ky_cflux,&
        size(cflux(:,1:nflux,:,:)),&
        cflux(:,1:nflux,:,:))
+
+  if (momentum_print_flag == 1) then
+     ! Three-way momentum-flux decomposition with field breakdown
+     call cgyro_write_distributed_breal(&
+          trim(path)//binfile_ky_flux_mom,&
+          size(gflux_mom(0,:,1:nflux_mom,:,:)),&
+          real(gflux_mom(0,:,1:nflux_mom,:,:)))
+
+     ! Central three-way momentum-flux decomposition
+     call cgyro_write_distributed_breal(&
+          trim(path)//binfile_ky_cflux_mom,&
+          size(cflux_mom(:,1:nflux_mom,:,:)),&
+          cflux_mom(:,1:nflux_mom,:,:))
+  endif
 
   if (gflux_print_flag == 1) then
      ! Global (n,e,v) fluxes for all species
@@ -70,20 +89,6 @@ subroutine cgyro_write_timedata
      enddo
   endif
 
-  if (momentum_print_flag == 1) then
-     ! ky momentum flux for all species with field breakdown
-     call cgyro_write_distributed_breal(&
-          trim(path)//binfile_ky_flux_mom,&
-          size(gflux_mom(0,:,1:nflux_mom,:,:)),&
-          real(gflux_mom(0,:,1:nflux_mom,:,:)))
-
-     ! central ky momentum flux for all species with field breakdown
-     call cgyro_write_distributed_breal(&
-          trim(path)//binfile_ky_cflux_mom,&
-          size(cflux_mom(:,1:nflux_mom,:,:)),&
-          cflux_mom(:,1:nflux_mom,:,:))
-  end if
-
   if (field_print_flag == 1) then
      p_field = n_field
   else
@@ -96,7 +101,7 @@ subroutine cgyro_write_timedata
         ir = ir_c(ic)
         it = it_c(ic)
         if (itp(it) > 0) then
-           field_plot(ir,itp(it),nt1:nt2) = field(i_field,ic,nt1:nt2)
+           field_plot(ir,itp(it),nt1:nt2) = field_cur(i_field,ic,nt1:nt2)
         endif
      enddo
 
@@ -113,7 +118,7 @@ subroutine cgyro_write_timedata
      ! Do not include exchange in precision
      call write_precision(trim(path)//runfile_prec,sum(abs(real(gflux(0,:,1:3,:,:)))))
   else
-     call write_precision(trim(path)//runfile_prec,sum(abs(field)))
+     call write_precision(trim(path)//runfile_prec,sum(abs(field_cur)))
   endif
 
   !------------------------------------------------------------------
@@ -122,37 +127,39 @@ subroutine cgyro_write_timedata
   !
   has_balloon = (n_toroidal == 1) .and. ((nt1 > 0)  .and. (box_size == 1))
   has_zf      = zf_test_mode > 0
-  if (i_proc == 0 .and. has_zf) then
+  if ( (i_proc==0) .and. (has_zf .or. has_balloon) ) then
      ! NOTE: Only process the first my_toroidal
+
      do i_field=1,n_field
+
         do ir=1,n_radial
            do it=1,n_theta
-              ftemp(it,ir) = field(i_field,ic_c(ir,it),nt1)
+              ftemp(it,ir) = field_cur(i_field,ic_c(ir,it),nt1)
            enddo
         enddo
-        call write_binary(trim(path)//binfile_fieldb(i_field),ftemp(:,:),size(ftemp))
+
+        a_norm = 1.0
+        if (has_balloon) then
+           !if (i_field == 1) then
+           !   it = maxloc(abs(ftemp(:,n_radial/2+1)),dim=1)
+           !   a_norm = ftemp(it,n_radial/2+1)
+           !endif
+           call extended_ang(ftemp)
+        endif
+
+        call write_binary(trim(path)//binfile_fieldb(i_field),&
+             ftemp(:,:)/a_norm,size(ftemp))
      enddo
-  endif
-  if (i_proc == 0 .and. has_balloon) then
-     ! NOTE: Only process the first my_toroidal
-     do i_field=1,n_field
+     if (has_balloon) then
+        call cgyro_error_estimate_epar
         do ir=1,n_radial
            do it=1,n_theta
-              ftemp(it,ir) = field(i_field,ic_c(ir,it),nt1)
+              ftemp(it,ir) = epar(ic_c(ir,it),nt1)
            enddo
         enddo
         call extended_ang(ftemp)
-
-        call write_binary(trim(path)//binfile_fieldb(i_field),ftemp(:,:),size(ftemp))
-     enddo
-     do ir=1,n_radial
-        do it=1,n_theta
-           ftemp(it,ir) = epar(ic_c(ir,it),nt1)
-        enddo
-     enddo
-     call extended_ang(ftemp)
-
-     call write_binary(trim(path)//binfile_fieldb(4),ftemp(:,:),size(ftemp))
+        call write_binary(trim(path)//binfile_fieldb(4),ftemp(:,:),size(ftemp))
+     endif
   endif
   !---------------------------------------------------------------
 
@@ -602,6 +609,7 @@ subroutine write_distribution(datafile)
 
   use mpi
   use cgyro_globals
+  use cgyro_flux_mod, only: cap_h_c_cur
 
   !------------------------------------------------------
   implicit none
@@ -636,8 +644,8 @@ subroutine write_distribution(datafile)
 
      allocate(h_x_glob(nc,nv))
      ! Collect distribution onto process 0
-     call MPI_GATHER(cap_h_c(:,:,nt1),&
-          size(cap_h_c(:,:,nt1)),&
+     call MPI_GATHER(cap_h_c_cur(:,:,nt1),&
+          size(cap_h_c_cur(:,:,nt1)),&
           MPI_DOUBLE_COMPLEX,&
           h_x_glob(:,:),&
           size(h_x_glob),&
@@ -928,15 +936,14 @@ subroutine extended_ang(f2d)
 
   implicit none
 
-  integer :: ir,p
+  integer :: ir
   complex, intent(inout), dimension(n_theta,n_radial) :: f2d
   complex, dimension(n_theta,n_radial) :: f1d 
 
   ! Assumption is that box_size=1
 
   do ir=1,n_radial
-     p = ir-px_zero
-     f1d(:,ir) = f2d(:,ir)*exp(-2*pi*i_c*(p+px0)*q*sign_qs*nt1)
+     f1d(:,ir) = f2d(:,ir)*exp(-2*pi*i_c*(px(ir)+px0)*k_theta_base*nt1*rmin*sign_qs)
   enddo
 
   if (sign_qs < 0) then

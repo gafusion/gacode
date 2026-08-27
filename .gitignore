@@ -1,9 +1,9 @@
 *~
 shared/neural
-CLAUDE.md
 
 # Object files and modules
-modules/*
+modules/*.mod
+modules/*genmod*
 */*.o
 */*/*.o
 */*/*/*.o
