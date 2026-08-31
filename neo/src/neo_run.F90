@@ -74,7 +74,8 @@ subroutine neo_run()
   neo_jtor_thS_out    = neo_th_out(8)                ! <jtor/R> / <1/R> j_norm (Sauter)
   neo_jpar_thSmod_out = neo_th_out(9)                ! <jpar B> / j_norm (Sauter modified 2021)
   neo_jtor_thSmod_out = neo_th_out(10)               ! <jtor/R> / <1/R> j_norm (Sauter modified 2021)
-  
+
+#ifndef NO_NCLASS_NEO  
   !!!!!!!!!!!!!!!!!!
   ! NCLASS results
   !!!!!!!!!!!!!!!!!!
@@ -86,6 +87,7 @@ subroutine neo_run()
      neo_nclassvis_out(is)       = neo_nclass_out(is,5)    ! ymu_s(1,1) / (m_norm*dens_norm*vth_norm/a_norm)
   enddo
   neo_jpar_nclass_out = neo_nclass_1d_out                  ! <j B> / j_norm
+#endif
  
   !!!!!!!!!!!!!!!!!!
   ! dke results
