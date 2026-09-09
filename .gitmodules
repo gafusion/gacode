@@ -1,3 +1,0 @@
-[submodule "shared/neural"]
-	path = shared/neural
-	url = git@github.com:gafusion/neural.git
