@@ -1,0 +1,40 @@
+#---------------------------------------------------
+# PPPL Systems (FLUX) 
+#               with Intel Compiler and OpenMPI
+#---------------------------------------------------
+# L. Peterson (jpeterso@pppl.gov)
+# D. Mikkelsen (mikk@pppl.gov)
+# N. Ferraro (nferraro@pppl.gov)
+# B.A. Grierson (bgriers@pppl.gov)
+# J Parisi -- jparisi@pppl.gov
+
+IDENTITY        = "PPPL FLUX cluster"
+CORES_PER_NODE  = 1
+NUMAS_PER_NODE  = 1
+
+# Compilers (GCC) and flags
+FC      = mpif90 -fallow-argument-mismatch -I$(GACODE_ROOT)/modules -J$(GACODE_ROOT)/modules -fPIC -I$(FFTW_HOME)/include -I$(NETCDF_FORTRAN_HOME)/include -I$(GACODE_ROOT)/../neural
+F77     = $(FC)
+
+# Optimization and debug flags
+FOMP   = -fopenmp
+FMATH  = -fdefault-real-8 -fdefault-double-8
+FOPT   = -Ofast
+FDEBUG = -Wall -W -fcheck=mem,bounds -g -fbacktrace -ffpe-trap=invalid,zero,overflow
+
+F2PY    = f2py
+
+# System math libraries
+# If you really want MKL with GCC, replace this with an explicit MKL link line, e.g.:
+LMATH   = -lm -L${FFTW_HOME}/lib -lfftw3_threads -lfftw3f_threads -lfftw3 -lfftw3f ${LLIBS}
+
+# NetCDF
+NETCDF      = -L$(NETCDF_FORTRAN_HOME)/lib -lnetcdff \
+              -L$(NETCDF_C_HOME)/lib64 -lnetcdf
+NETCDF_INC  = -I$(NETCDF_FORTRAN_HOME)/include -I$(NETCDF_C_HOME)/include
+
+# Mapping (modules are generated when compiling; usually no rule needed here)
+# %.o : %.mod
+
+# Archive
+ARCH    = ar cr
