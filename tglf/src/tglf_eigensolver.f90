@@ -2664,9 +2664,9 @@
       bmat(ia,ja) = -0.5*sig_B
 !
       ja = 3*nbasis+jb + ja0
-      amat(ia,ja) = 1.5*sig_A
-      bmat(ia,ja) = 1.5*sig_B +d_ee*nuei_p1_p3*bp3   &
+      amat(ia,ja) = 1.5*sig_A +d_ee*nuei_p1_p3*bp3   &
        +d_ee*(1.0 - ft2)*(bn*an*nuei_p1_n + bp3*ap3*nuei_p1_p3 + bp1*ap1*nuei_p1_p1)
+      bmat(ia,ja) = 1.5*sig_B
 !
       ja = 4*nbasis+jb + ja0
       amat(ia,ja) = 0.0
