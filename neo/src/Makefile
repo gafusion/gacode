@@ -27,22 +27,28 @@ OBJECTS = neo_globals.o \
           neo_equilibrium.o \
           neo_g_velocitygrids.o \
           neo_rotation.o \
-          neo_nclass_dr.o \
-          neo_theory.o \
-          neo_transport.o \
-          neo_3d_driver.o \
-          neo_check.o \
-          neo_compute_fcoll.o \
-	  $(NN).o \
-          neo_do.o \
-          neo_error.o \
-          neo_init.o \
-          neo_init_serial.o \
-          neo_make_profiles.o \
-          neo_read_input.o \
-          neo_run.o \
-          neo_spitzer.o \
-          matconv.o
+
+ifndef NO_NCLASS_NEO
+   OBJECTS += neo_nclass_dr.o 
+else
+   NEO_FLAGS += -DNO_NCLASS_NEO
+endif
+
+OBJECTS += neo_theory.o \
+           neo_transport.o \
+           neo_3d_driver.o \
+           neo_check.o \
+           neo_compute_fcoll.o \
+	   $(NN).o \
+           neo_do.o \
+           neo_error.o \
+           neo_init.o \
+           neo_init_serial.o \
+           neo_make_profiles.o \
+           neo_read_input.o \
+           neo_run.o \
+           neo_spitzer.o \
+           matconv.o
 
 # JC: Commenting out 2024.04.25
 #NEO_FLAGS = -cpp
@@ -65,7 +71,7 @@ OBJECTS = neo_globals.o \
 .SUFFIXES : .o .f90 .F90
 
 all: neo_lib.a $(EXEC).o $(EXTRA_LIBS)
-	$(FC) $(FFLAGS) $(NEO_FLAGS) -o $(EXEC) $(EXEC).o neo_lib.a $(EXTRA_LIBS) $(LMATH) $(NN_LIB) ${NEO_LIBS}
+	echo $(OBJECTS); $(FC) $(FFLAGS) $(NEO_FLAGS) -o $(EXEC) $(EXEC).o neo_lib.a $(EXTRA_LIBS) $(LMATH) $(NN_LIB) ${NEO_LIBS}
 
 neo_lib.a: $(OBJECTS)
 	$(ARCH) neo_lib.a $(OBJECTS)
