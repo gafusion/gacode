@@ -23,6 +23,8 @@ module neo_transport
 
   ! poloidal and toroidal velocities
   integer :: m_theta
+  real, dimension(:,:), allocatable :: pflux_th         ! (ns,nt)
+  real, dimension(:,:), allocatable :: pflux_gv_th      ! (ns,nt)
   real, dimension(:,:), allocatable :: vpol, vtor, upar ! (ns,nt): vel/vt0
   real, dimension(:,:,:), allocatable :: vpol_fourier  ! (ns,mt,2)
   real, dimension(:,:,:), allocatable :: vtor_fourier  ! (ns,mt,2)
@@ -43,6 +45,7 @@ module neo_transport
   integer, parameter, private :: io=1
   character(len=80),private :: runfile_transp = 'out.neo.transport'
   character(len=80),private :: runfile_phi    = 'out.neo.phi'
+  character(len=80),private :: runfile_pflux_th = 'out.neo.pflux_th'
   character(len=80),private :: runfile_vel    = 'out.neo.vel'
   character(len=80),private :: runfile_vel_fourier    = 'out.neo.vel_fourier'
   character(len=80),private :: runfile_exp    = 'out.neo.transport_exp'
@@ -75,6 +78,8 @@ contains
        allocate(pvisc(n_species))
        allocate(d_phi(n_theta))
 
+       allocate(pflux_th(n_species,n_theta))
+       allocate(pflux_gv_th(n_species,n_theta))
        allocate(vpol(n_species,n_theta))
        allocate(vtor(n_species,n_theta))
        allocate(upar(n_species,n_theta))
@@ -93,6 +98,8 @@ contains
           open(unit=io,file=trim(path)//runfile_transp,status='replace')
           close(io)
           open(unit=io,file=trim(path)//runfile_phi,status='replace')
+          close(io)
+          open(unit=io,file=trim(path)//runfile_pflux_th,status='replace')
           close(io)
           open(unit=io,file=trim(path)//runfile_vel,status='replace')
           close(io)
@@ -125,6 +132,8 @@ contains
        deallocate(kbig_upar)
        deallocate(pvisc)
        deallocate(d_phi)
+       deallocate(pflux_th)
+       deallocate(pflux_gv_th)
        deallocate(vpol)
        deallocate(vtor)
        deallocate(upar)
@@ -162,7 +171,8 @@ contains
 
     ! Compute the neoclassical transport coefficients
 
-    pflux(:)  = 0.0 
+    pflux(:)  = 0.0
+    pflux_th(:,:) = 0.0
     eflux(:)  = 0.0
     mflux(:)  = 0.0
     upar(:,:) = 0.0
@@ -188,6 +198,11 @@ contains
        if (ix == 0) then  
           pflux(is) = pflux(is) + w_theta(it) &
                * 4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
+               * (driftx(is,it) * (4.0/3.0) * evec_e1(ie,ix) &
+               + driftxrot1(is,it) * evec_e0(ie,ix))
+
+          pflux_th(is,it) = pflux_th(is,it) + &
+               4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
                * (driftx(is,it) * (4.0/3.0) * evec_e1(ie,ix) &
                + driftxrot1(is,it) * evec_e0(ie,ix))
 
@@ -219,6 +234,11 @@ contains
 
           pflux(is) = pflux(is) + w_theta(it) &
                * dens(is,ir) * dens_fac(is,it) &
+               * 4.0/sqrt(pi) * g(i) &
+               * driftxrot2(is,it) * (1.0/3.0) * evec_e05(ie,ix)
+          
+          pflux_th(is,it) = pflux_th(is,it) +  &
+               dens(is,ir) * dens_fac(is,it) &
                * 4.0/sqrt(pi) * g(i) &
                * driftxrot2(is,it) * (1.0/3.0) * evec_e05(ie,ix)
 
@@ -258,6 +278,10 @@ contains
        else if (ix == 2) then
           pflux(is) = pflux(is) + w_theta(it) &
                * 4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
+               * driftx(is,it) * (2.0/15.0) * evec_e1(ie,ix)
+
+          pflux_th(is,it) = pflux_th(is,it) +  &
+                4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
                * driftx(is,it) * (2.0/15.0) * evec_e1(ie,ix)
 
           eflux(is) = eflux(is) + w_theta(it) * temp(is,ir) &
@@ -394,6 +418,7 @@ contains
 
     ! Sugama gyro-viscosity "H" fluxes
     pflux_gv(:)  = 0.0
+    pflux_gv_th(:,:)  = 0.0
     eflux_gv(:)  = 0.0
     mflux_gv(:)  = 0.0
     do is=1,n_species
@@ -408,6 +433,9 @@ contains
           fac1 = fac1 + w_theta(it) * dens(is,ir)  * dens_fac(is,it) &
                / Bmag(it)**3 * (2.0 * gradr(it) * gradpar_gradr(it) &
                - 1.0/Bmag(it) * gradr(it)**2 * gradpar_Bmag(it))
+          pflux_gv_th(is,it) = dens(is,ir)  * dens_fac(is,it) &
+               / Bmag(it)**3 * (2.0 * gradr(it) * gradpar_gradr(it) &
+               - 1.0/Bmag(it) * gradr(it)**2 * gradpar_Bmag(it))
           fac2 = fac2 + w_theta(it) * dens(is,ir)  * dens_fac(is,it) &
                / Bmag(it)**3 * (2.0 * gradr(it) * gradpar_gradr(it) &
                - 1.0/Bmag(it) * gradr(it)**2 * gradpar_Bmag(it)) &
@@ -416,6 +444,9 @@ contains
        pflux_gv(is) = -0.5 * rho(ir)**2 * mass(is) &
             * temp(is,ir) / (Z(is)*1.0)**2 * I_div_psip * r(ir) / q(ir) &
             * fac1 * omega_rot_deriv(ir)
+       pflux_gv_th(is,:) = -0.5 * rho(ir)**2 * mass(is) &
+            * temp(is,ir) / (Z(is)*1.0)**2 * I_div_psip * r(ir) / q(ir) &
+            * pflux_gv_th(is,:) * omega_rot_deriv(ir)
        ! EAB: 02/05/14 fixed bug in mflux_gv -- dlntdr bigR_th0**2 term
        ! had wrong sign
        mflux_gv(is) =  -0.5 * temp(is,ir) * rho(ir)**2 * mass(is) &
@@ -565,6 +596,7 @@ contains
     integer, intent (in) :: ir
     integer :: is, jt
     real :: pgb, egb, mgb, dens_ele, temp_ele
+    real :: sum1, sum2
 
     if(silent_flag > 0 .or. i_proc > 0) return
     
@@ -644,6 +676,20 @@ contains
     write(io,*) upar(:,:)
     close(io)
 
+    ! pflux (theta), pflux_gv (theta)
+    open(io,file=trim(path)//runfile_pflux_th,status='old',position='append')
+    do is=1, n_species
+       sum1 = 0.0
+       sum2 = 0.0
+       do jt=1, n_theta
+          write(io,*) pflux_th(is,jt), pflux_gv_th(is,jt)
+          !sum1 = sum1 + pflux_th(is,jt) * w_theta(jt)
+          !sum2 = sum2 + pflux_gv_th(is,jt) * w_theta(jt)
+       enddo
+       !print *, sum1, pflux(is), sum2, pflux_gv(is)
+    enddo
+    close(io)
+    
     ! u_par, vpol, vtor theta fourier coefficients
     open(io,file=trim(path)//runfile_vel_fourier,status='old',position='append')
     do is=1,n_species

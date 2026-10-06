@@ -26,15 +26,21 @@ then
   echo "          -ie <n>"
   echo "          Energy index (if applicable)"
   echo
+  echo "          -is <list>"
+  echo "          Species (1-based) for pflux_th, e.g. 1 or 1,3 [default: all]"
+  echo
   echo "          -plot <type>"
   echo "          Generate plot of given type."
   echo "          If this keyword is omitted, data will be listed to the screen."
   echo "           <type> = xtsurf"
   echo "                  = f3x (plots of pitch-angle dependence in 3D NEO)."
+  echo "                  = pflux_th (pflux_th and pflux_gv_th vs. theta, from out.neo.pflux_th;"
+  echo "                              prints out.neo.transport and out.neo.transport_gv values)."
   echo
   echo "Example:"
   echo
   echo "   neo_plot -e . -plot xtsurf"
+  echo "   neo_plot -e . -plot pflux_th -is 1,2"
 
   exit 1
 fi
@@ -50,6 +56,7 @@ PLOT_TYPE=xtsurf
 FTYPE=screen
 IE=0
 N=0
+SPEC=all
 #==============================================================================
 
 #==============================================================================
@@ -69,6 +76,8 @@ while [ $# -gt 0 ] ; do
   -ie) shift ; IE=$1 ;;
 
   -n) shift ; N=$1 ;;
+
+  -is) shift ; SPEC=$1 ;;
 
   *) echo "ERROR: incorrect neo_plot syntax." ; exit 1 ;;
 
@@ -93,6 +102,9 @@ case "$PLOT_TYPE" in
 
    f3x)
 	python $GACODE_ROOT/neo/bin/neo_plot_f3x.py $FTYPE $IE $N $LOCDIR ;;
+
+   pflux_th)
+	python $GACODE_ROOT/neo/bin/neo_plot_pflux_th.py $SIMDIR $FTYPE $SPEC ;;
 
 esac
 
