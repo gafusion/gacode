@@ -1,0 +1,24 @@
+# STELLARAI B200 GPU nodes: 96 CPU cores and 8 GPUs per node.
+
+IDENTITY="STELLARAI GPU"
+CORES_PER_NODE=96
+NUMAS_PER_NODE=2
+
+FC     = mpif90 -module $(GACODE_ROOT)/modules -I$(GACODE_ROOT)/modules -Mpreprocess -DUSE_INLINE -DDISABLE_GPUDIRECT_MPI -DNO_ASYNC_MPI -Mdefaultunit
+F77    = $(FC)
+
+FACC   = -acc -gpu=cc100 -cudalib=cufft
+FOMP   = -mp -Mstack_arrays
+FMATH  = -r8
+FOPT   = -fast
+FDEBUG = -g -Kieee -Mbounds -traceback
+F2PY   = f2py
+
+LMATH  = -llapack -lblas
+
+NETCDF     = $(shell nf-config --flibs)
+NETCDF_INC = $(shell nf-config --includedir)
+
+%.o : %.mod
+
+ARCH = ar cr

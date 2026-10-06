@@ -1,0 +1,29 @@
+# STELLARAI CPU: Intel oneAPI 2026, OpenMPI, MKL, and NetCDF Fortran.
+
+IDENTITY="STELLARAI CPU"
+CORES_PER_NODE=96
+NUMAS_PER_NODE=2
+
+FC     = mpif90 -gen-interfaces -module $(GACODE_ROOT)/modules -I$(GACODE_ROOT)/modules -I$(MKLROOT)/include/fftw
+F77    = $(FC)
+
+FOMP   = -qopenmp
+FMATH  = -real-size 64
+FOPT   = -O2
+# ifx 2026 at -O2 changes the Miller-geometry TGLF regression results.
+# -O1 passes all TGLF cases and is also needed by TGYRO, which links TGLF.
+ifeq ($(CURDIR),$(GACODE_ROOT)/tglf/src)
+FOPT   = -O1
+endif
+FDEBUG = -check all -traceback
+F2PY   = f2py
+
+LMATH  = -qmkl
+
+# Use the NetCDF Fortran module loaded by env.STELLARAI_CPU.
+NETCDF     = $(shell nf-config --flibs)
+NETCDF_INC = $(if $(shell command -v nf-config),$(shell nf-config --includedir),$(error NetCDF Fortran is required: put its nf-config on PATH))
+
+%.o : %.mod
+
+ARCH = ar cr

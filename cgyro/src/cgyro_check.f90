@@ -220,6 +220,11 @@ subroutine cgyro_check
      ctag(2) = 'x'
   case(5)
      call cgyro_info('Collision model: Simple Lorentz ee+ei')
+     ! the simple collision matrix always includes trapping
+     if (explicit_trap_flag == 1) then
+        call cgyro_error('collision_model=5 not supported with explicit_trap_flag=1')
+        return
+     endif
   case(6)
      call cgyro_info('Collision model: Landau')
   case(7)

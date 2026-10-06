@@ -1,0 +1,13 @@
+#!/bin/bash
+# GACODE parallel execution script (STELLARAI GPU)
+
+simdir=$1
+nmpi=$2
+exec_cmd=$3
+nomp=$4
+
+cd "$simdir"
+export OMP_NUM_THREADS="$nomp"
+read -r -a exec_args <<< "$exec_cmd"
+echo "mpirun -np $nmpi ${exec_args[*]}"
+mpirun -np "$nmpi" "$GACODE_ROOT/platform/exec/wrap.$GACODE_PLATFORM" "${exec_args[@]}"
