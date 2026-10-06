@@ -1,0 +1,7 @@
+#!/bin/bash
+
+IFS=, read -r -a gpus <<< "$CUDA_VISIBLE_DEVICES"
+local_rank=${OMPI_COMM_WORLD_LOCAL_RANK:-$SLURM_LOCALID}
+export CUDA_VISIBLE_DEVICES="${gpus[$((local_rank % ${#gpus[@]}))]}"
+export ACC_DEVICE_NUM=0
+exec "$@"
