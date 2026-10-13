@@ -25,6 +25,10 @@ module neo_transport
   integer :: m_theta
   real, dimension(:,:), allocatable :: pflux_th         ! (ns,nt)
   real, dimension(:,:), allocatable :: pflux_gv_th      ! (ns,nt)
+  real, dimension(:,:), allocatable :: eflux_th         ! (ns,nt)
+  real, dimension(:,:), allocatable :: eflux_gv_th      ! (ns,nt)
+  real, dimension(:,:), allocatable :: mflux_th         ! (ns,nt)
+  real, dimension(:,:), allocatable :: mflux_gv_th      ! (ns,nt)
   real, dimension(:,:), allocatable :: vpol, vtor, upar ! (ns,nt): vel/vt0
   real, dimension(:,:,:), allocatable :: vpol_fourier  ! (ns,mt,2)
   real, dimension(:,:,:), allocatable :: vtor_fourier  ! (ns,mt,2)
@@ -45,7 +49,7 @@ module neo_transport
   integer, parameter, private :: io=1
   character(len=80),private :: runfile_transp = 'out.neo.transport'
   character(len=80),private :: runfile_phi    = 'out.neo.phi'
-  character(len=80),private :: runfile_pflux_th = 'out.neo.pflux_th'
+  character(len=80),private :: runfile_flux_th = 'out.neo.flux_theta'
   character(len=80),private :: runfile_vel    = 'out.neo.vel'
   character(len=80),private :: runfile_vel_fourier    = 'out.neo.vel_fourier'
   character(len=80),private :: runfile_exp    = 'out.neo.transport_exp'
@@ -80,6 +84,10 @@ contains
 
        allocate(pflux_th(n_species,n_theta))
        allocate(pflux_gv_th(n_species,n_theta))
+       allocate(eflux_th(n_species,n_theta))
+       allocate(eflux_gv_th(n_species,n_theta))
+       allocate(mflux_th(n_species,n_theta))
+       allocate(mflux_gv_th(n_species,n_theta))
        allocate(vpol(n_species,n_theta))
        allocate(vtor(n_species,n_theta))
        allocate(upar(n_species,n_theta))
@@ -99,7 +107,7 @@ contains
           close(io)
           open(unit=io,file=trim(path)//runfile_phi,status='replace')
           close(io)
-          open(unit=io,file=trim(path)//runfile_pflux_th,status='replace')
+          open(unit=io,file=trim(path)//runfile_flux_th,status='replace')
           close(io)
           open(unit=io,file=trim(path)//runfile_vel,status='replace')
           close(io)
@@ -134,6 +142,10 @@ contains
        deallocate(d_phi)
        deallocate(pflux_th)
        deallocate(pflux_gv_th)
+       deallocate(eflux_th)
+       deallocate(eflux_gv_th)
+       deallocate(mflux_th)
+       deallocate(mflux_gv_th)
        deallocate(vpol)
        deallocate(vtor)
        deallocate(upar)
@@ -165,7 +177,7 @@ contains
     use neo_rotation
     implicit none
     integer :: i, is, ie, ix, it
-    real :: fac, fac1, fac2, rfac, poisson_F0fac, &
+    real :: fac, sfac, gfac, rfac, poisson_F0fac, &
          B2_div_dens, bigR2_avg
     integer, intent (in) :: ir
 
@@ -174,7 +186,9 @@ contains
     pflux(:)  = 0.0
     pflux_th(:,:) = 0.0
     eflux(:)  = 0.0
+    eflux_th(:,:) = 0.0
     mflux(:)  = 0.0
+    mflux_th(:,:)  = 0.0
     upar(:,:) = 0.0
     uparB(:)  = 0.0
     uparBN(:) = 0.0
@@ -195,24 +209,26 @@ contains
           rfac = rfac + lam_rot_aniso(is,it)
        endif
 
-       if (ix == 0) then  
-          pflux(is) = pflux(is) + w_theta(it) &
-               * 4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
+       if (ix == 0) then
+          fac = 4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
                * (driftx(is,it) * (4.0/3.0) * evec_e1(ie,ix) &
                + driftxrot1(is,it) * evec_e0(ie,ix))
+          
+          pflux(is) = pflux(is) + w_theta(it) * fac
 
-          pflux_th(is,it) = pflux_th(is,it) + &
-               4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
-               * (driftx(is,it) * (4.0/3.0) * evec_e1(ie,ix) &
-               + driftxrot1(is,it) * evec_e0(ie,ix))
-
-          eflux(is) = eflux(is) + w_theta(it) * temp(is,ir) &
+          pflux_th(is,it) = pflux_th(is,it) + fac
+              
+          fac = temp(is,ir) &
                * 4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
                * (driftx(is,it) * (4.0/3.0) &
                * (evec_e2(ie,ix) + rfac * evec_e1(ie,ix)) &
                + driftxrot1(is,it) * (evec_e1(ie,ix) + rfac * evec_e0(ie,ix)))
+          
+          eflux(is) = eflux(is) + w_theta(it) * fac
 
-          mflux(is) = mflux(is) + w_theta(it) * temp(is,ir) &
+          eflux_th(is,it) = eflux_th(is,it) + fac
+
+          fac = temp(is,ir) &
                * dens(is,ir) * dens_fac(is,it) &
                * 4.0/sqrt(pi) * g(i) &
                * bigR(it) / vth(is,ir) &
@@ -226,30 +242,35 @@ contains
                * omega_rot(ir) * bigR(it) / vth(is,ir) &
                * evec_e0(ie,ix))
 
+          mflux(is) = mflux(is) + w_theta(it) * fac
+
+          mflux_th(is,it) = mflux_th(is,it) + fac
+
           d_phi(it) = d_phi(it) + Z(is) *  dens(is,ir) &
                * dens_fac(is,it) * g(i) &
                * 4.0/sqrt(pi) * evec_e0(ie,ix)
 
        else if (ix == 1) then
 
-          pflux(is) = pflux(is) + w_theta(it) &
-               * dens(is,ir) * dens_fac(is,it) &
+          fac = dens(is,ir) * dens_fac(is,it) &
                * 4.0/sqrt(pi) * g(i) &
                * driftxrot2(is,it) * (1.0/3.0) * evec_e05(ie,ix)
           
-          pflux_th(is,it) = pflux_th(is,it) +  &
-               dens(is,ir) * dens_fac(is,it) &
-               * 4.0/sqrt(pi) * g(i) &
-               * driftxrot2(is,it) * (1.0/3.0) * evec_e05(ie,ix)
+          pflux(is) = pflux(is) + w_theta(it) * fac
+          
+          pflux_th(is,it) = pflux_th(is,it) + fac
 
-          eflux(is) = eflux(is) + w_theta(it) * temp(is,ir) &
+          fac = temp(is,ir) &
                * dens(is,ir) * dens_fac(is,it) &
                * 4.0/sqrt(pi) * g(i) &
                * driftxrot2(is,it) * (1.0/3.0) &
                * (evec_e105(ie,ix) + rfac * evec_e05(ie,ix))
+          
+          eflux(is) = eflux(is) + w_theta(it) * fac
 
-          mflux(is) = mflux(is) + w_theta(it) &
-               * 4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
+          eflux_th(is,it) = eflux_th(is,it) + fac
+
+          fac = 4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
                * temp(is,ir) / vth(is,ir) * bigR(it) &
                * (8.0/15.0 * driftx(is,it) * Btor(it)/Bmag(it) * sqrt(2.0) &
                * evec_e105(ie,ix) &
@@ -258,6 +279,10 @@ contains
                + 1.0/3.0 * driftxrot2(is,it) &
                * omega_rot(ir) * bigR(it) / vth(is,ir) * evec_e05(ie,ix) &
                + 2.0/15.0 * driftxrot3(is,it)* evec_e105(ie,ix))
+
+          mflux(is) = mflux(is) + w_theta(it) * fac
+
+          mflux_th(is,it) = mflux_th(is,it) + fac
 
           ! uparB = < B * 1/n * int vpar * (F0 g)>
           uparB(is) = uparB(is) + w_theta(it) &
@@ -276,20 +301,24 @@ contains
                * 4.0/sqrt(pi) * evec_e05(ie,ix)
 
        else if (ix == 2) then
-          pflux(is) = pflux(is) + w_theta(it) &
-               * 4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
-               * driftx(is,it) * (2.0/15.0) * evec_e1(ie,ix)
 
-          pflux_th(is,it) = pflux_th(is,it) +  &
-                4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
+          fac = 4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
                * driftx(is,it) * (2.0/15.0) * evec_e1(ie,ix)
+          
+          pflux(is) = pflux(is) + w_theta(it) * fac
 
-          eflux(is) = eflux(is) + w_theta(it) * temp(is,ir) &
+          pflux_th(is,it) = pflux_th(is,it) + fac
+
+          fac = temp(is,ir) &
                * 4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
                * driftx(is,it) * (2.0/15.0) &
                * (evec_e2(ie,ix) + rfac * evec_e1(ie,ix))
+          
+          eflux(is) = eflux(is) + w_theta(it) * fac
 
-          mflux(is) = mflux(is) + w_theta(it) * temp(is,ir) &
+          eflux_th(is,it) = eflux_th(is,it) + fac
+
+          fac = temp(is,ir) &
                * dens(is,ir) * dens_fac(is,it) &
                * 4.0/sqrt(pi) * g(i) &
                * bigR(it) / vth(is,ir) &
@@ -299,20 +328,28 @@ contains
                + 2.0/15.0 * driftx(is,it) &
                * omega_rot(ir) * bigR(it) / vth(is,ir) &
                * evec_e1(ie,ix))
+          
+          mflux(is) = mflux(is) + w_theta(it) * fac
+
+          mflux_th(is,it) = mflux_th(is,it) + fac
 
        else if (ix == 3) then
-          mflux(is) = mflux(is) + w_theta(it) &
-               * 4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
+          fac = 4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
                * temp(is,ir) / vth(is,ir) * bigR(it) &
                * 2.0/35.0 * evec_e105(ie,ix) &
                * (driftx(is,it) * Btor(it)/Bmag(it) * sqrt(2.0) &
                - driftxrot3(is,it))
+          
+          mflux(is) = mflux(is) + w_theta(it) * fac
+
+          mflux_th(is,it) = mflux_th(is,it) + fac
 
        endif
     enddo
 
     do is=1, n_species
        eflux(is) = eflux(is) + omega_rot(ir) * mflux(is)
+       eflux_th(is,:) = eflux_th(is,:) + omega_rot(ir) * mflux_th(is,:)
     enddo
 
     ! d_phi: sum_s Z_s e int f_s = 0
@@ -417,41 +454,17 @@ contains
     endif
 
     ! Sugama gyro-viscosity "H" fluxes
+    ! EAB: STill need to fix this for gv_th !!!!
     pflux_gv(:)  = 0.0
     pflux_gv_th(:,:)  = 0.0
     eflux_gv(:)  = 0.0
+    eflux_gv_th(:,:)  = 0.0
     mflux_gv(:)  = 0.0
+    mflux_gv_th(:,:)  = 0.0
     do is=1,n_species
-       fac1 = 0.0
-       fac2 = 0.0
-       do it=1,n_theta
-          rfac = Z(is)/temp(is,ir) * (phi_rot(it) - phi_rot_avg) &
-               - (omega_rot(ir) * bigR(it) / vth(is,ir))**2 * 0.5
-          if(aniso_model(is) == 2) then
-             rfac = rfac + lam_rot_aniso(is,it)
-          endif
-          fac1 = fac1 + w_theta(it) * dens(is,ir)  * dens_fac(is,it) &
-               / Bmag(it)**3 * (2.0 * gradr(it) * gradpar_gradr(it) &
-               - 1.0/Bmag(it) * gradr(it)**2 * gradpar_Bmag(it))
-          pflux_gv_th(is,it) = dens(is,ir)  * dens_fac(is,it) &
-               / Bmag(it)**3 * (2.0 * gradr(it) * gradpar_gradr(it) &
-               - 1.0/Bmag(it) * gradr(it)**2 * gradpar_Bmag(it))
-          fac2 = fac2 + w_theta(it) * dens(is,ir)  * dens_fac(is,it) &
-               / Bmag(it)**3 * (2.0 * gradr(it) * gradpar_gradr(it) &
-               - 1.0/Bmag(it) * gradr(it)**2 * gradpar_Bmag(it)) &
-               * (1.0 + rfac)
-       enddo
-       pflux_gv(is) = -0.5 * rho(ir)**2 * mass(is) &
-            * temp(is,ir) / (Z(is)*1.0)**2 * I_div_psip * r(ir) / q(ir) &
-            * fac1 * omega_rot_deriv(ir)
-       pflux_gv_th(is,:) = -0.5 * rho(ir)**2 * mass(is) &
-            * temp(is,ir) / (Z(is)*1.0)**2 * I_div_psip * r(ir) / q(ir) &
-            * pflux_gv_th(is,:) * omega_rot_deriv(ir)
-       ! EAB: 02/05/14 fixed bug in mflux_gv -- dlntdr bigR_th0**2 term
-       ! had wrong sign
-       mflux_gv(is) =  -0.5 * temp(is,ir) * rho(ir)**2 * mass(is) &
-            * temp(is,ir) / (Z(is)*1.0)**2 * I_div_psip * r(ir) / q(ir) &
-            * (fac2 * dlntdr(is,ir) + fac1 * (dlnndr(is,ir) &
+       fac = -0.5 * rho(ir)**2 * mass(is) &
+            * temp(is,ir) / (Z(is)*1.0)**2 * I_div_psip * r(ir) / q(ir)
+       sfac = dlnndr(is,ir) &
             - z(is)/temp(is,ir) * dphi0dr(ir) &
             + omega_rot(ir) * bigR_th0**2 / vth(is,ir)**2 &
             * omega_rot_deriv(ir) &
@@ -459,12 +472,32 @@ contains
             * bigR_th0_rderiv &
             + dlntdr(is,ir) * (1.0 + 0.5 * omega_rot(ir)**2 * bigR_th0**2  &
             / vth(is,ir)**2) &
-            + dlntdr(is,ir) * z(is)/temp(is,ir) * phi_rot_avg) )
-       eflux_gv(is) = -0.5  * temp(is,ir) * rho(ir)**2 * mass(is) &
-            * temp(is,ir) / (Z(is)*1.0)**2 * I_div_psip * r(ir) / q(ir) &
-            * fac2 * omega_rot_deriv(ir) &
-            + 2.5 * pflux_gv(is) * temp(is,ir) &
-            + omega_rot(ir) * mflux_gv(is)
+            + dlntdr(is,ir) *  z(is)/temp(is,ir) * phi_rot_avg
+       
+       do it=1,n_theta
+          rfac = Z(is)/temp(is,ir) * (phi_rot(it) - phi_rot_avg) &
+               - (omega_rot(ir) * bigR(it) / vth(is,ir))**2 * 0.5
+          if(aniso_model(is) == 2) then
+             rfac = rfac + lam_rot_aniso(is,it)
+          endif
+
+          gfac = dens(is,ir)  * dens_fac(is,it) / Bmag(it)**3 &
+               * (2.0 * gradr(it) * gradpar_gradr(it) &
+               - 1.0/Bmag(it) * gradr(it)**2 * gradpar_Bmag(it))
+
+          pflux_gv_th(is,it) = fac * gfac * omega_rot_deriv(ir)
+          mflux_gv_th(is,it) = fac * gfac * temp(is,ir) &
+               * (dlntdr(is,ir) * (1.0 + rfac) + sfac)
+          eflux_gv_th(is,it) = fac * gfac * temp(is,ir) * (1.0 + rfac) &
+               * omega_rot_deriv(ir) &
+               + 2.5 * temp(is,ir) * pflux_gv_th(is,it) &
+               + omega_rot(ir) * mflux_gv_th(is,it)
+       enddo
+          
+       pflux_gv(is) = sum(w_theta(1:n_theta) * pflux_gv_th(is,1:n_theta))
+       mflux_gv(is) = sum(w_theta(1:n_theta) * mflux_gv_th(is,1:n_theta))
+       eflux_gv(is) = sum(w_theta(1:n_theta) * eflux_gv_th(is,1:n_theta))
+       
     enddo
 
     do is=1,n_species
@@ -676,13 +709,15 @@ contains
     write(io,*) upar(:,:)
     close(io)
 
-    ! pflux (theta), pflux_gv (theta)
-    open(io,file=trim(path)//runfile_pflux_th,status='old',position='append')
+    ! [p,e,m]flux (theta), [p,e,m]flux_gv (theta)
+    open(io,file=trim(path)//runfile_flux_th,status='old',position='append')
     do is=1, n_species
        sum1 = 0.0
        sum2 = 0.0
        do jt=1, n_theta
-          write(io,*) pflux_th(is,jt), pflux_gv_th(is,jt)
+          write(io,*) pflux_th(is,jt), pflux_gv_th(is,jt), &
+               eflux_th(is,jt), eflux_gv_th(is,jt), &
+               mflux_th(is,jt), mflux_gv_th(is,jt)
           !sum1 = sum1 + pflux_th(is,jt) * w_theta(jt)
           !sum2 = sum2 + pflux_gv_th(is,jt) * w_theta(jt)
        enddo
