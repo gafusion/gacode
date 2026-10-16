@@ -200,7 +200,7 @@ subroutine cgyro_step_gk_ck
         conv = 1
 
         call timer_lib_in('str_mem')
-        call cgyro_vel_copy(h0_old, h0_x)
+        call cgyro_vel_copy(h0_old, h_x)
         call timer_lib_out('str_mem')
 
      else

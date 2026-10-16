@@ -215,22 +215,6 @@ subroutine cgyro_init_manager
 #elif defined(_OPENACC)
 !$acc enter data create(rhs,h0_old)
 #endif
-     case(2)
-        allocate(h0_old(nc,nv_loc,nt1:nt2))
-        allocate(rhs(nc,nv_loc,nt1:nt2,7))
-#if defined(OMPGPU)
-!$omp target enter data map(alloc:rhs,h0_old)
-#elif defined(_OPENACC)
-!$acc enter data create(rhs,h0_old)
-#endif
-     case(3)
-        allocate(h0_old(nc,nv_loc,nt1:nt2))
-        allocate(rhs(nc,nv_loc,nt1:nt2,9))
-#if defined(OMPGPU)
-!$omp target enter data map(alloc:rhs,h0_old)
-#elif defined(_OPENACC)
-!$acc enter data create(rhs,h0_old)
-#endif
      case default
         ! Normal timestep
         allocate(rhs(nc,nv_loc,nt1:nt2,4))
