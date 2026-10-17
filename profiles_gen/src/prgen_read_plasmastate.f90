@@ -248,12 +248,16 @@ subroutine prgen_read_plasmastate
   !------------------------------------------------------------------
   ! Fast-ion handling
   !
+  ! Fast-ion n,T are also zone-centred; map to the full grid exactly
+  ! as for thermal species (boundary = last zone value).
+  !
   ! 1. Beams
   err = nf90_inq_varid(ncid,trim('nbeami'),varid)
   if (err == 0) then
      ! density
      err = nf90_get_var(ncid,varid,plst_nb(1:nx-1,:))
      plst_nb(nx,:) = plst_nb(nx-1,:)
+     call half_to_full(plst_nb,nx,plst_dim_nspec_beam)
      ! perpendicular energy
      err = nf90_inq_varid(ncid,trim('eperp_beami'),varid)
      err = nf90_get_var(ncid,varid,plst_beperp(1:nx-1,:))
@@ -263,6 +267,7 @@ subroutine prgen_read_plasmastate
 
      plst_tb(1:nx-1,:) = 2.0/3.0*(plst_bepar(1:nx-1,:) + plst_beperp(1:nx-1,:))
      plst_tb(nx,:)     = plst_tb(nx-1,:)
+     call half_to_full(plst_tb,nx,plst_dim_nspec_beam)
 
      do i=1,plst_dim_nspec_beam
         if (plst_nb(1,i) > 0.0) then
@@ -292,6 +297,7 @@ subroutine prgen_read_plasmastate
   if (err == 0) then
      err = nf90_get_var(ncid,varid,plst_nmini(1:nx-1))
      plst_nmini(nx) = plst_nmini(nx-1)
+     call half_to_full(plst_nmini,nx,1)
      ! perpendicular energy
      err = nf90_inq_varid(ncid,trim('eperp_mini'),varid)
      err = nf90_get_var(ncid,varid,plst_eperp(1:nx-1))
@@ -301,6 +307,7 @@ subroutine prgen_read_plasmastate
 
      plst_tmini(1:nx-1) = 2.0/3.0*(plst_epar(1:nx-1) + plst_eperp(1:nx-1))
      plst_tmini(nx)     = plst_tmini(nx-1)
+     call half_to_full(plst_tmini,nx,1)
 
      ntop = ntop+1
      plst_ns(:,ntop) = plst_nmini(:)
@@ -316,6 +323,7 @@ subroutine prgen_read_plasmastate
   if (err == 0) then
      err = nf90_get_var(ncid,varid,plst_nfusi(1:nx-1))
      plst_nfusi(nx) = plst_nfusi(nx-1)
+     call half_to_full(plst_nfusi,nx,1)
      ! perpendicular energy
      err = nf90_inq_varid(ncid,trim('eperp_fusi'),varid)
      err = nf90_get_var(ncid,varid,plst_eperp(1:nx-1))
@@ -325,6 +333,7 @@ subroutine prgen_read_plasmastate
 
      plst_tfusi(1:nx-1) = 2.0/3.0*(plst_epar(1:nx-1) + plst_eperp(1:nx-1))
      plst_tfusi(nx)     = plst_tfusi(nx-1)
+     call half_to_full(plst_tfusi,nx,1)
 
      ntop = ntop+1
      plst_ns(:,ntop) = plst_nfusi(:)
@@ -633,3 +642,24 @@ subroutine boundary_fix(x,f,n)
 
 end subroutine boundary_fix
 
+!----------------------------------------------------------
+! half_to_full
+!
+! Map zone-centred values f(1:n-1,:) plus boundary value
+! f(n,:) onto the full rho grid (same as thermal ns,Ts).
+!----------------------------------------------------------
+
+subroutine half_to_full(f,n,m)
+
+  implicit none
+
+  integer, intent(in) :: n,m
+  real, intent(inout), dimension(n,m) :: f
+  real, dimension(n,m) :: g
+
+  g(1,:)     = 1.5*f(1,:)-0.5*f(2,:)
+  g(2:n-1,:) = 0.5*(f(1:n-2,:)+f(2:n-1,:))
+  g(n,:)     = f(n,:)
+  f = g
+
+end subroutine half_to_full
