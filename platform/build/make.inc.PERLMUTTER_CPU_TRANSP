@@ -1,0 +1,41 @@
+#----------------------------------------------------------
+# Cray EX (perlmutter.nersc.gov) [GPU nodes]
+#
+# - 2 CPUs (4 chipplets (16 cores x 2 HT)) (AMD Epyc)
+#----------------------------------------------------------
+
+IDENTITY="NERSC Perlmutter CPU"
+CORES_PER_NODE=256
+NUMAS_PER_NODE=8
+
+# Compiler options/flags
+FC  = mpif90 -std=f2008 -fall-intrinsics -I$(GACODE_ROOT)/modules -J $(GACODE_ROOT)/modules -fPIC -fallow-argument-mismatch -fallow-invalid-boz -I$(FFTW_ROOT)/include
+F77 = mpif77 -I$(GACODE_ROOT)/modules -fallow-argument-mismatch -fallow-invalid-boz
+CC  = gcc
+
+FOMP   = -fopenmp
+FMATH  = -fdefault-real-8 -fdefault-double-8
+FOPT   = -Ofast
+FDEBUG = -Wall -W -fcheck=mem,bounds -g -fbacktrace -ffpe-trap=invalid,zero,overflow
+FACC   =
+F2PY   = f2py --fcompiler=pg
+
+# System math libraries
+
+LMATH  = -L$(LIBS_DIR) -lsci_gnu -L$(FFTW_ROOT)/lib -lfftw3 -lfftw3_threads -lfftw3f
+FFTW_INC = $(FFTW_DIR)/include
+
+# neural net libraries
+NN_LIB=-L$(GACODE_ROOT)/../neural/ -I$(GACODE_ROOT)/../neural/ -lbrainfuse -L$(FANN_ROOT)/lib -lfann
+
+
+# System math libraries
+LMATH=-L$(FFTW_ROOT)/lib -lfftw3_threads -lfftw3f_threads -lfftw3 -lfftw3f -llapack -lblas
+
+# NetCDF
+NETCDF=-L${NETCDF_DIR}/lib -lnetcdff -lnetcdf
+NETCDF_INC = ${NETCDF_DIR}/include
+
+# Archive 
+ARCH = ar cr
+

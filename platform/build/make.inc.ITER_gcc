@@ -1,0 +1,45 @@
+#---------------------------------------------------
+# ITER Systems with GFortran Compiler and OpenMPI
+#---------------------------------------------------
+# A. Pankin (pankin@pppl.gov)
+
+IDENTITY="ITER cluster"
+CORES_PER_NODE=1
+NUMAS_PER_NODE=1
+
+# Compilers gfortran and flags
+FC  = mpif90 -std=f2008 -fall-intrinsics -I$(GACODE_ROOT)/modules -J $(GACODE_ROOT)/modules -fPIC
+F77 = mpif77 -fallow-argument-mismatch -I$(GACODE_ROOT)/modules
+CC  = gcc
+
+FMATH  = -fdefault-real-8 -fdefault-double-8 
+FOPT   = -Ofast
+FDEBUG = -Wall -W -fcheck=mem,bounds -g -fbacktrace -ffpe-trap=invalid,zero,overflow
+F2PY   = f2py
+FOMP   = -fopenmp
+
+# System math libraries
+SLAPACK_HOME=${EBROOTSCALAPACK}
+OBLAS_HOME=${EBROOTOPENBLAS}
+FANN_ROOT=${EBROOTFANN}
+FFTW_HOME=/work/imas/opt/EasyBuild/software/FFTW/3.3.8-gompi-2020b
+LMATH  = -L${SLAPACK_HOME} -lscalapack -L${OBLAS_HOME} -lopenblas -L$(FFTW_HOME)/lib -lfftw3_threads -lfftw3 -L${GACODE_ROOT}/../neural -lbrainfuse ${FANN_ROOT}/lib/libfann.so
+FFTW_INC = $(FFTW_HOME)/include
+FOPT += -I${GACODE_ROOT}/../neural
+FDEBUG += -I${GACODE_ROOT}/../neural 
+
+# NCLASS will conflict with other NCLASS version in TRANSP
+NO_NCLASS_NEO = 1
+
+# NetCDF
+NETCDF_FORTRAN_HOME=${EBROOTNETCDFMINFORTRAN}
+NETCDF_C_HOME=${EBROOTNETCDF}
+NETCDF = -L${NETCDF_FORTRAN_HOME}/lib -lnetcdff -L${NETCDF_C_HOME}/lib -lnetcdf
+NETCDF_INC =${NETCDF_FORTRAN_HOME}/include -I${NETCDF_C_HOME}/include
+
+# Mapping
+%.o : %.mod
+
+# Archive
+ARCH = ar cr
+
