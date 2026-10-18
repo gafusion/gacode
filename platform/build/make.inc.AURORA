@@ -8,11 +8,17 @@ CORES_PER_NODE=204
 NUMAS_PER_NODE=12
 
 # Compilers and flags
-FC     = mpif90 -gen-interfaces -module ${GACODE_ROOT}/modules -I${GACODE_ROOT}/module -allow nofpp-comments
+FC     = mpif90 -gen-interfaces -module ${GACODE_ROOT}/modules -I${GACODE_ROOT}/modules -allow nofpp-comments
 F77    = ${FC}
 
-FOMP   = -fiopenmp -fopenmp-targets=spir64 -DOMPGPU -DMKLGPU
+FOMP      = -fiopenmp -fopenmp-targets=spir64 -DOMPGPU -DMKLGPU
+
+# For legacy fixed-form Fortran (.f, .for)
+FMATH_FIXED     = -real-size 64 -qmkl=parallel -I${TACC_MKL_INC}/
+
+# For preprocessed/free-form sources only (.F, .F90, selected files)
 FMATH  = -real-size 64 -qmkl=parallel -fpp -free -I${TACC_MKL_INC}/
+
 # Note: -Ofast produces bad results
 FOPT   = -g -O2
 FDEBUG = -eD -Ktrap=fp -m 1
