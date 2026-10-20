@@ -22,6 +22,8 @@ module neo_energy_grid
   ! (species,species,energy,xi)
   real, dimension(:,:,:,:,:), allocatable :: emat_coll_test, emat_coll_field
 
+  private :: ENERGY_coll_ints_quad
+
   ! private variables
   logical, private :: initialized_basis = .false.
   logical, private :: initialized_coll  = .false.
@@ -287,17 +289,47 @@ contains
   end subroutine ENERGY_coll_ints_alloc
 
   subroutine ENERGY_coll_ints(ir)
+    use iso_fortran_env, only: qp => real128
+    use neo_globals, only: n_species, n_energy, n_xi, write_cmoments_flag
+    implicit none
+    integer, intent(in) :: ir
+    integer :: i
+    real(qp), allocatable :: test(:,:,:,:,:), field(:,:,:,:,:), gamma_qp(:)
+
+    ! Keep high-order collision moments in quad precision until the solver conversion.
+    allocate(test(n_species,n_species,0:n_energy,0:n_energy,0:n_xi))
+    allocate(field(n_species,n_species,0:n_energy,0:n_energy,0:n_xi))
+    allocate(gamma_qp(size(mygamma2)))
+    do i=1,size(gamma_qp)
+       gamma_qp(i) = gamma(real(i,qp)/2.0_qp)
+    enddo
+    emat_coll_test = 0.0
+    emat_coll_field = 0.0
+    call ENERGY_coll_ints_quad(ir,test,field,gamma_qp)
+    emat_coll_test = real(test,kind(emat_coll_test))
+    emat_coll_field = real(field,kind(emat_coll_field))
+
+    if (write_cmoments_flag == 1) then
+       call write_fullcoll_mono(ir)
+    endif
+  end subroutine ENERGY_coll_ints
+
+  subroutine ENERGY_coll_ints_quad(ir,emat_coll_test,emat_coll_field,mygamma2)
+    use iso_fortran_env, only: qp => real128
     use neo_globals
     implicit none
     integer, intent(in) :: ir
-    real :: tauinv_ab, tauinv_ba, lambda
+    real(qp) :: tauinv_ab, tauinv_ba, lambda
     integer :: xarg, yarg
-    real :: rs, ru, rd, rh, rk, rp, rpi, rv, r1, r2, r3, r4, r5, r6, r7
-    real, dimension(:,:), allocatable :: fcoll, fcoll_bar, &
+    real(qp) :: rs, ru, rd, rh, rk, rp, rpi, rv, r1, r2, r3, r4, r5, r6, r7
+    real(qp), dimension(:,:), allocatable :: fcoll, fcoll_bar, &
          fcollinv, fcollinv_bar
+    real(qp), intent(out) :: emat_coll_test(n_species,n_species,0:n_energy,0:n_energy,0:n_xi)
+    real(qp), intent(out) :: emat_coll_field(n_species,n_species,0:n_energy,0:n_energy,0:n_xi)
+    real(qp), intent(in) :: mygamma2(:)
     integer :: fmarg
     integer :: is, js, ie, je, ix, jx, ke, me
-    real :: zarg0, zarg1, zarg2
+    real(qp) :: zarg0, zarg1, zarg2
 
     emat_coll_test(:,:,:,:,:)  = 0.0
     emat_coll_field(:,:,:,:,:) = 0.0
@@ -313,14 +345,14 @@ contains
 
           ! (Note: pol part of dens from rotation will be added 
           !  in coll term in kinetic equation)
-          tauinv_ab = nu(is,ir) * (1.0*Z(js))**2 / (1.0*Z(is))**2 & 
+          tauinv_ab = nu(is,ir) * (1.0_qp*Z(js))**2 / (1.0_qp*Z(is))**2 &
                * dens(js,ir)/dens(is,ir)
-          tauinv_ba = nu(js,ir) * (1.0*Z(is))**2 / (1.0*Z(js))**2 & 
+          tauinv_ba = nu(js,ir) * (1.0_qp*Z(is))**2 / (1.0_qp*Z(js))**2 &
                * dens(is,ir)/dens(js,ir)
 
           lambda = (vth(is,ir) / vth(js,ir))**2
           call neo_compute_fcoll(fmarg,lambda,fcoll,fcoll_bar)
-          call neo_compute_fcoll(fmarg,1.0/lambda,fcollinv,fcollinv_bar)
+          call neo_compute_fcoll(fmarg,1.0_qp/lambda,fcollinv,fcollinv_bar)
 
           do ie=0, n_energy
              do je=0,n_energy
@@ -364,7 +396,7 @@ contains
                                        emat_coll_field(is,js,ie,je,ix) &
                                        + (mass(js)*dens(js,ir)*vth(js,ir)) &
                                        / (mass(is)*dens(is,ir)*vth(is,ir)) &
-                                       * 2.0*tauinv_ba &
+                                       * 2.0_qp*tauinv_ba &
                                        / sqrt(lambda*pi) &
                                        * zarg0 * zarg1 &
                                        * (fcoll(xarg,0) - fcoll(xarg-2,2)) &
@@ -383,7 +415,7 @@ contains
                                   emat_coll_test(is,js,ie,je,ix) = &
                                        emat_coll_test(is,js,ie,je,ix) &
                                        -tauinv_ab &
-                                       * 0.25 *ix*(ix+1) &
+                                       * 0.25_qp *ix*(ix+1) &
                                        * zarg0 * zarg1 &
                                        * mygamma2(xarg) &
                                        / zarg2
@@ -395,7 +427,7 @@ contains
                                        emat_coll_field(is,js,ie,je,ix) &
                                        + (mass(js)*dens(js,ir)*vth(js,ir)) &
                                        / (mass(is)*dens(is,ir)*vth(is,ir)) &
-                                       * (2.0/3.0)*tauinv_ba &
+                                       * (2.0_qp/3.0_qp)*tauinv_ba &
                                        * temp(js,ir) / temp(is,ir) &
                                        / sqrt(lambda*pi) &
                                        * zarg0 * zarg1 &
@@ -414,7 +446,7 @@ contains
                                     -tauinv_ab &
                                     * sqrt(lambda/pi) &
                                     * temp(is,ir)/temp(js,ir) &
-                                    * (1.0/3.0) *ix*(ix+1) &
+                                    * (1.0_qp/3.0_qp) *ix*(ix+1) &
                                     * zarg0 * zarg1 &
                                     * mygamma2(xarg+3) &
                                     / zarg2
@@ -425,7 +457,7 @@ contains
                                        emat_coll_field(is,js,ie,je,ix) &
                                        + (mass(js)*dens(js,ir)*vth(js,ir)) &
                                        / (mass(is)*dens(is,ir)*vth(is,ir)) &
-                                       * 0.5 * tauinv_ba &
+                                       * 0.5_qp * tauinv_ba &
                                        * temp(js,ir) / temp(is,ir) &
                                        * zarg0 * zarg1 &
                                        * mygamma2(xarg+4) / mygamma2(5) &
@@ -452,19 +484,19 @@ contains
                                yarg = e_alpha*me + xi_beta_l(jx)
                                rs = (mass(js)*dens(js,ir)*vth(js,ir)) &
                                     / (mass(is)*dens(is,ir)*vth(is,ir)) &
-                                    * 4.0*tauinv_ba &
+                                    * 4.0_qp*tauinv_ba &
                                     * temp(js,ir)/temp(is,ir) &
-                                    * (1.0 + mass(is)/mass(js)) &
+                                    * (1.0_qp + mass(is)/mass(js)) &
                                     / sqrt(lambda*pi) &
                                     * zarg0 * zarg1 * fcoll(xarg,2) / zarg2 &
                                     / fcoll(1,2) * fcollinv(yarg,2)
                                xarg = e_alpha*(ke+me) &
                                     + xi_beta_l(ix) + xi_beta_l(jx)
-                               ru = 2.0*tauinv_ab * sqrt(lambda/pi) &
+                               ru = 2.0_qp*tauinv_ab * sqrt(lambda/pi) &
                                     * zarg0 * zarg1 &
                                     * (fcoll(xarg-1,0)-fcoll(xarg-3,2) &
-                                    - 2.0*temp(is,ir)/temp(js,ir) &
-                                    * (1.0 + mass(js)/mass(is)) &
+                                    - 2.0_qp*temp(is,ir)/temp(js,ir) &
+                                    * (1.0_qp + mass(js)/mass(is)) &
                                     * fcoll(xarg-1,2)) &
                                     / zarg2 
                                emat_coll_field(is,js,ie,je,ix) = &
@@ -491,71 +523,71 @@ contains
                                yarg = e_alpha*me + xi_beta_l(jx)
                                rs = (mass(js)*dens(js,ir)*vth(js,ir)) &
                                     / (mass(is)*dens(is,ir)*vth(is,ir)) &
-                                    * 4.0*tauinv_ba &
+                                    * 4.0_qp*tauinv_ba &
                                     * temp(js,ir)/temp(is,ir) &
-                                    * (1.0 + mass(is)/mass(js)) &
+                                    * (1.0_qp + mass(is)/mass(js)) &
                                     / sqrt(lambda*pi) &
                                     * zarg0 * zarg1 * fcoll(xarg,2) / zarg2 &
                                     / fcoll(1,2) * fcollinv(yarg,2)
                                ! u-restoring
                                xarg = e_alpha*(ke+me) &
                                     + xi_beta_l(ix) + xi_beta_l(jx)
-                               ru = 2.0*tauinv_ab * sqrt(lambda/pi) &
+                               ru = 2.0_qp*tauinv_ab * sqrt(lambda/pi) &
                                     * zarg0 * zarg1 &
                                     * (fcoll(xarg-1,0)-fcoll(xarg-3,2) &
-                                    - 2.0*temp(is,ir)/temp(js,ir) &
-                                    * (1.0 + mass(js)/mass(is)) &
+                                    - 2.0_qp*temp(is,ir)/temp(js,ir) &
+                                    * (1.0_qp + mass(js)/mass(is)) &
                                     * fcoll(xarg-1,2)) &
                                     / zarg2
                                ! h-heating friction
                                xarg = e_alpha*ke + xi_beta_l(ix)
-                               r1 = 4.0*(2.0*mass(is)/mass(js)-1.0) &
+                               r1 = 4.0_qp*(2.0_qp*mass(is)/mass(js)-1.0_qp) &
                                     * fcoll(xarg,2) &
-                                    + 8.0*temp(is,ir)/temp(js,ir) &
-                                    * (1.0 + mass(js)/mass(is)) &
+                                    + 8.0_qp*temp(is,ir)/temp(js,ir) &
+                                    * (1.0_qp + mass(js)/mass(is)) &
                                     * fcoll(xarg+2,2) &
-                                    - 4.0*(1.0 + mass(is)/mass(js)) &
+                                    - 4.0_qp*(1.0_qp + mass(is)/mass(js)) &
                                     * (fcoll(xarg+2,0)-fcoll(xarg,2))
                                xarg = 3
-                               r2 = 4.0*(2.0*mass(is)/mass(js)-1.0) &
+                               r2 = 4.0_qp*(2.0_qp*mass(is)/mass(js)-1.0_qp) &
                                     * fcoll(xarg,2) &
-                                    + 8.0*temp(is,ir)/temp(js,ir) &
-                                    * (1.0 + mass(js)/mass(is)) &
+                                    + 8.0_qp*temp(is,ir)/temp(js,ir) &
+                                    * (1.0_qp + mass(js)/mass(is)) &
                                     * fcoll(xarg+2,2) &
-                                    - 4.0*(1.0 + mass(is)/mass(js)) &
+                                    - 4.0_qp*(1.0_qp + mass(is)/mass(js)) &
                                     * (fcoll(xarg+2,0)-fcoll(xarg,2))
                                xarg = e_alpha*me + xi_beta_l(jx)
-                               r3 = 4.0*(2.0*mass(js)/mass(is)-1.0) &
+                               r3 = 4.0_qp*(2.0_qp*mass(js)/mass(is)-1.0_qp) &
                                     * fcollinv(xarg,2) &
-                                    + 8.0*temp(js,ir)/temp(is,ir) &
-                                    * (1.0 + mass(is)/mass(js)) &
+                                    + 8.0_qp*temp(js,ir)/temp(is,ir) &
+                                    * (1.0_qp + mass(is)/mass(js)) &
                                     * fcollinv(xarg+2,2) &
-                                    - 4.0*(1.0 + mass(js)/mass(is)) &
+                                    - 4.0_qp*(1.0_qp + mass(js)/mass(is)) &
                                     * (fcollinv(xarg+2,0)-fcollinv(xarg,2))
                                rh = (mass(js)*dens(js,ir)*vth(js,ir)**3) &
                                     / (mass(is)*dens(is,ir)*vth(is,ir)**3) &
-                                    * 1.5*tauinv_ba / sqrt(lambda*pi) &
+                                    * 1.5_qp*tauinv_ba / sqrt(lambda*pi) &
                                     * zarg0 * zarg1 * r1 / zarg2 &
                                     / r2 * r3
                                ! k-heating friction
                                xarg = e_alpha*ke + xi_beta_l(ix)
-                               r1 = 12.0 * fcoll(xarg,2) &
-                                    - 8.0*temp(is,ir)/temp(js,ir) &
-                                    * (1.0 + mass(js)/mass(is)) &
+                               r1 = 12.0_qp * fcoll(xarg,2) &
+                                    - 8.0_qp*temp(is,ir)/temp(js,ir) &
+                                    * (1.0_qp + mass(js)/mass(is)) &
                                     * fcoll(xarg+2,2) &
-                                    + 4.0*(fcoll(xarg+2,0)-fcoll(xarg,2))
+                                    + 4.0_qp*(fcoll(xarg+2,0)-fcoll(xarg,2))
                                xarg = 3
-                               r2 = 12.0 * fcoll(xarg,2) &
-                                    - 8.0*temp(is,ir)/temp(js,ir) &
-                                    * (1.0 + mass(js)/mass(is)) &
+                               r2 = 12.0_qp * fcoll(xarg,2) &
+                                    - 8.0_qp*temp(is,ir)/temp(js,ir) &
+                                    * (1.0_qp + mass(js)/mass(is)) &
                                     * fcoll(xarg+2,2) &
-                                    + 4.0*(fcoll(xarg+2,0)-fcoll(xarg,2))
+                                    + 4.0_qp*(fcoll(xarg+2,0)-fcoll(xarg,2))
                                xarg = e_alpha*me + xi_beta_l(jx)
-                               r3 = 12.0 * fcoll(xarg,2) &
-                                    - 8.0*temp(is,ir)/temp(js,ir) &
-                                    * (1.0 + mass(js)/mass(is)) &
+                               r3 = 12.0_qp * fcoll(xarg,2) &
+                                    - 8.0_qp*temp(is,ir)/temp(js,ir) &
+                                    * (1.0_qp + mass(js)/mass(is)) &
                                     * fcoll(xarg+2,2) &
-                                    + 4.0*(fcoll(xarg+2,0)-fcoll(xarg,2))
+                                    + 4.0_qp*(fcoll(xarg+2,0)-fcoll(xarg,2))
                                rk = tauinv_ab * sqrt(lambda/pi) &
                                     * zarg0 * zarg1 * r1 / zarg2 &
                                     / r2 * r3
@@ -568,28 +600,28 @@ contains
                             if(ix == 2) then
                                ! nup-energy restoring
                                xarg = e_alpha*ke + xi_beta_l(ix)
-                               r1 = 8.0 * (1.0 + 1.5*mass(is)/mass(js)) &
+                               r1 = 8.0_qp * (1.0_qp + 1.5_qp*mass(is)/mass(js)) &
                                     * fcoll(xarg-1,2) &
-                                    + 8.0*temp(is,ir)/temp(js,ir) &
-                                    * (1.0 + mass(js)/mass(is)) &
+                                    + 8.0_qp*temp(is,ir)/temp(js,ir) &
+                                    * (1.0_qp + mass(js)/mass(is)) &
                                     * fcoll(xarg+1,2) &
-                                    - 4.0 * (1.0 + 1.5*mass(is)/mass(js)) &
+                                    - 4.0_qp * (1.0_qp + 1.5_qp*mass(is)/mass(js)) &
                                     * (fcoll(xarg+1,0)-fcoll(xarg-1,2))
                                xarg = 2
-                               r2 = 8.0 * (1.0 + 1.5*mass(is)/mass(js)) &
+                               r2 = 8.0_qp * (1.0_qp + 1.5_qp*mass(is)/mass(js)) &
                                     * fcoll(xarg-1,2) &
-                                    + 8.0*temp(is,ir)/temp(js,ir) &
-                                    * (1.0 + mass(js)/mass(is)) &
+                                    + 8.0_qp*temp(is,ir)/temp(js,ir) &
+                                    * (1.0_qp + mass(js)/mass(is)) &
                                     * fcoll(xarg+1,2) &
-                                    - 4.0 * (1.0 + 1.5*mass(is)/mass(js)) &
+                                    - 4.0_qp * (1.0_qp + 1.5_qp*mass(is)/mass(js)) &
                                     * (fcoll(xarg+1,0)-fcoll(xarg-1,2))
                                xarg = e_alpha*me + xi_beta_l(jx)
-                               r3 = 8.0 * (1.0 + 1.5*mass(js)/mass(is)) &
+                               r3 = 8.0_qp * (1.0_qp + 1.5_qp*mass(js)/mass(is)) &
                                     * fcollinv(xarg-1,2) &
-                                    + 8.0*temp(js,ir)/temp(is,ir) &
-                                    * (1.0 + mass(is)/mass(js)) &
+                                    + 8.0_qp*temp(js,ir)/temp(is,ir) &
+                                    * (1.0_qp + mass(is)/mass(js)) &
                                     * fcollinv(xarg+1,2) &
-                                    - 4.0 * (1.0 + 1.5*mass(js)/mass(is)) &
+                                    - 4.0_qp * (1.0_qp + 1.5_qp*mass(js)/mass(is)) &
                                     * (fcollinv(xarg+1,0)-fcollinv(xarg-1,2))
                                rp = (temp(js,ir)*dens(js,ir)) &
                                     / (temp(is,ir)*dens(is,ir)) &
@@ -602,10 +634,10 @@ contains
                                ! pi-energy restoring
                                xarg = e_alpha*ke + xi_beta_l(ix)
                                yarg = e_alpha*me + xi_beta_l(jx)
-                               r1 = -8.0*temp(is,ir)/temp(js,ir) &
-                                    * (1.0 + mass(js)/mass(is)) &
+                               r1 = -8.0_qp*temp(is,ir)/temp(js,ir) &
+                                    * (1.0_qp + mass(js)/mass(is)) &
                                     * fcoll(xarg+yarg-1,2) &
-                                    + 4.0 * fcoll(xarg+yarg-1,0)
+                                    + 4.0_qp * fcoll(xarg+yarg-1,0)
                                rpi = tauinv_ab * sqrt(lambda/pi) &
                                     * zarg0 * zarg1 * r1 / zarg2
                                emat_coll_test(is,js,ie,je,ix) = &
@@ -615,25 +647,25 @@ contains
                             if(ix == 0) then
                                ! energy diffusion
                                xarg = e_alpha*me + xi_beta_l(jx) 
-                               r2 = 8.0*temp(js,ir)/temp(is,ir) &
-                                    * (1.0 + mass(is)/mass(js)) &
+                               r2 = 8.0_qp*temp(js,ir)/temp(is,ir) &
+                                    * (1.0_qp + mass(is)/mass(js)) &
                                     * fcollinv(xarg+1,2) &
-                                    - 4.0 * fcollinv(xarg+1,0)
+                                    - 4.0_qp * fcollinv(xarg+1,0)
                                xarg = 2
-                               r3 = 8.0*temp(is,ir)/temp(js,ir) &
-                                    * (1.0 + mass(js)/mass(is)) &
+                               r3 = 8.0_qp*temp(is,ir)/temp(js,ir) &
+                                    * (1.0_qp + mass(js)/mass(is)) &
                                     * fcoll(xarg+1,2) &
-                                    - 4.0 * fcoll(xarg+1,0)
+                                    - 4.0_qp * fcoll(xarg+1,0)
                                r1 = (temp(js,ir)*dens(js,ir)) &
                                     / (temp(is,ir)*dens(is,ir)) &
                                     * tauinv_ba / tauinv_ab / lambda * r2 / r3
                                xarg = e_alpha*ke + xi_beta_l(ix) 
                                yarg = e_alpha*me + xi_beta_l(jx)
-                               rd =  -4.0*tauinv_ab * sqrt(lambda/pi) &
+                               rd =  -4.0_qp*tauinv_ab * sqrt(lambda/pi) &
                                     * xarg * zarg0 * zarg1 &
-                                    * 0.5 * yarg &
+                                    * 0.5_qp * yarg &
                                     * fcoll(xarg+yarg-3,2) / zarg2
-                               rv =  4.0*tauinv_ab * sqrt(lambda/pi) &
+                               rv =  4.0_qp*tauinv_ab * sqrt(lambda/pi) &
                                     * xarg * zarg0 * zarg1 &
                                     * r1 * fcoll(xarg-1,2) / zarg2
                                emat_coll_test(is,js,ie,je,ix) = &
@@ -654,12 +686,12 @@ contains
                                  * (fcoll(xarg-1,0) - fcoll(xarg-3,2)) &
                                  / zarg2
 
-                            rd = 4.0*tauinv_ab * sqrt(lambda/pi) &
+                            rd = 4.0_qp*tauinv_ab * sqrt(lambda/pi) &
                                  * (e_alpha*ke + xi_beta_l(ix)) &
                                  * zarg0 * zarg1 &
-                                 * ( (1.0 - temp(is,ir)/temp(js,ir)) &
+                                 * ( (1.0_qp - temp(is,ir)/temp(js,ir)) &
                                  * fcoll(xarg-1,2) &
-                                 - 0.5 * (e_alpha*me + xi_beta_l(jx)) &
+                                 - 0.5_qp * (e_alpha*me + xi_beta_l(jx)) &
                                  * fcoll(xarg-3,2) ) &
                                  / zarg2
 
@@ -669,37 +701,37 @@ contains
                             ! Real full field-particle operator
 
                             r1 = mass(is)/mass(js) &
-                                 * (1.0 + lambda)**(-0.5*(xarg+3)) &
+                                 * (1.0_qp + lambda)**(-0.5_qp*(xarg+3)) &
                                  * mygamma2(xarg + 3)
 
                             xarg = e_alpha*ke + xi_beta_l(ix)
                             yarg = e_alpha*me + xi_beta_l(jx)
 
-                            r2 = -2.0/(ix+0.5) &
+                            r2 = -2.0_qp/(ix+0.5_qp) &
                                  * (mass(is)/mass(js) &
-                                 - ix*(1.0-mass(is)/mass(js))) &
+                                 - ix*(1.0_qp-mass(is)/mass(js))) &
                                  * fcoll(xarg-ix+1,yarg+jx+2)
 
-                            r3 = -2.0/(ix+0.5) &
-                                 * (1.0 + ix*(1.0-mass(is)/mass(js))) &
+                            r3 = -2.0_qp/(ix+0.5_qp) &
+                                 * (1.0_qp + ix*(1.0_qp-mass(is)/mass(js))) &
                                  * fcoll_bar(xarg+ix+2,yarg-jx+1)
 
-                            r4 = -ix*(ix-1.0)/(ix*ix - 0.25) &
+                            r4 = -ix*(ix-1.0_qp)/(ix*ix - 0.25_qp) &
                                  * fcoll(xarg-ix+3,yarg+jx+2)
 
-                            r5 = -ix*(ix-1.0)/(ix*ix - 0.25) &
+                            r5 = -ix*(ix-1.0_qp)/(ix*ix - 0.25_qp) &
                                  * fcoll_bar(xarg+ix+2,yarg-jx+3)
 
-                            r6 = (ix+1.0)*(ix+2.0)/(ix+1.5)/(ix+0.5) &
+                            r6 = (ix+1.0_qp)*(ix+2.0_qp)/(ix+1.5_qp)/(ix+0.5_qp) &
                                  * fcoll(xarg-ix+1,yarg+jx+4)
 
-                            r7 = (ix+1.0)*(ix+2.0)/(ix+1.5)/(ix+0.5) &
+                            r7 = (ix+1.0_qp)*(ix+2.0_qp)/(ix+1.5_qp)/(ix+0.5_qp) &
                                  * fcoll_bar(xarg+ix+4,yarg-jx+1)
 
                             emat_coll_field(is,js,ie,je,ix) = &
                                  emat_coll_field(is,js,ie,je,ix) &
-                                 + tauinv_ab * 2.0/sqrt(pi) * lambda**1.5 &
-                                 * lambda**(0.5*(e_alpha*me &
+                                 + tauinv_ab * 2.0_qp/sqrt(pi) * lambda**1.5_qp &
+                                 * lambda**(0.5_qp*(e_alpha*me &
                                  + xi_beta_l(ix))) &
                                  * zarg0 * zarg1 &
                                  * (r1 + r2 + r3 + r4 + r5 + r6 + r7) &
@@ -779,14 +811,14 @@ contains
                    ! C_ie = Connor case ma>mb
                    emat_coll_test(is,js,:,:,:) = 0.0
                    emat_coll_field(is,js,:,:,:) = 0.0
-                   tauinv_ab = nu(is,ir) * (1.0*Z(js))**2 / (1.0*Z(is))**2 & 
+                   tauinv_ab = nu(is,ir) * (1.0_qp*Z(js))**2 / (1.0_qp*Z(is))**2 &
                         * dens(js,ir)/dens(is,ir)
-                   tauinv_ba = nu(js,ir) * (1.0*Z(is))**2 / (1.0*Z(js))**2 & 
+                   tauinv_ba = nu(js,ir) * (1.0_qp*Z(is))**2 / (1.0_qp*Z(js))**2 &
                         * dens(is,ir)/dens(js,ir)
 
                    lambda = (vth(is,ir) / vth(js,ir))**2
                    call neo_compute_fcoll(fmarg,lambda,fcoll,fcoll_bar)
-                   call neo_compute_fcoll(fmarg,1.0/lambda,fcollinv,fcollinv_bar)
+                   call neo_compute_fcoll(fmarg,1.0_qp/lambda,fcollinv,fcollinv_bar)
                    do ie=0, n_energy
                       do je=0,n_energy
                          do ix=0, n_xi
@@ -808,7 +840,7 @@ contains
                                        -tauinv_ab &
                                        * sqrt(lambda/pi) &
                                        * temp(is,ir)/temp(js,ir) &
-                                       * (1.0/3.0) *ix*(ix+1) &
+                                       * (1.0_qp/3.0_qp) *ix*(ix+1) &
                                        * zarg0 * zarg1 &
                                        * mygamma2(xarg+3) &
                                        / zarg2
@@ -819,7 +851,7 @@ contains
                                           emat_coll_field(is,js,ie,je,ix) &
                                           + (mass(js)*dens(js,ir)*vth(js,ir)) &
                                           / (mass(is)*dens(is,ir)*vth(is,ir)) &
-                                          * 0.5 * tauinv_ba &
+                                          * 0.5_qp * tauinv_ba &
                                           * temp(js,ir) / temp(is,ir) &
                                           * zarg0 * zarg1 &
                                           * mygamma2(xarg+4) / mygamma2(5) &
@@ -837,14 +869,14 @@ contains
                 ! C_ei = L(fe) with Connor case ma<mb
                 emat_coll_field(is,js,:,:,:) = 0.0
                 emat_coll_test(is,js,:,:,:) = 0.0
-                tauinv_ab = nu(is,ir) * (1.0*Z(js))**2 / (1.0*Z(is))**2 & 
+                tauinv_ab = nu(is,ir) * (1.0_qp*Z(js))**2 / (1.0_qp*Z(is))**2 &
                      * dens(js,ir)/dens(is,ir)
-                tauinv_ba = nu(js,ir) * (1.0*Z(is))**2 / (1.0*Z(js))**2 & 
+                tauinv_ba = nu(js,ir) * (1.0_qp*Z(is))**2 / (1.0_qp*Z(js))**2 &
                      * dens(is,ir)/dens(js,ir)
 
                 lambda = (vth(is,ir) / vth(js,ir))**2
                 call neo_compute_fcoll(fmarg,lambda,fcoll,fcoll_bar)
-                call neo_compute_fcoll(fmarg,1.0/lambda,fcollinv,fcollinv_bar)
+                call neo_compute_fcoll(fmarg,1.0_qp/lambda,fcollinv,fcollinv_bar)
                 do ie=0, n_energy
                    do je=0,n_energy
                       do ix=0, n_xi
@@ -865,7 +897,7 @@ contains
                                   emat_coll_test(is,js,ie,je,ix) = &
                                        emat_coll_test(is,js,ie,je,ix) &
                                        -tauinv_ab &
-                                       * 0.25 *ix*(ix+1) &
+                                       * 0.25_qp *ix*(ix+1) &
                                        * zarg0 * zarg1 &
                                        * mygamma2(xarg) &
                                        / zarg2
@@ -877,7 +909,7 @@ contains
                                        emat_coll_field(is,js,ie,je,ix) &
                                        + (mass(js)*dens(js,ir)*vth(js,ir)) &
                                        / (mass(is)*dens(is,ir)*vth(is,ir)) &
-                                       * (2.0/3.0)*tauinv_ba &
+                                       * (2.0_qp/3.0_qp)*tauinv_ba &
                                        * temp(js,ir) / temp(is,ir) &
                                        / sqrt(lambda*pi) &
                                        * zarg0 * zarg1 &
@@ -900,26 +932,23 @@ contains
     deallocate(fcollinv)
     deallocate(fcollinv_bar)
 
-    if (write_cmoments_flag == 1) then
-       call write_fullcoll_mono(ir)
-    endif
-
-  end subroutine ENERGY_coll_ints
+  end subroutine ENERGY_coll_ints_quad
 
   subroutine write_fullcoll_mono(ir)
+    use iso_fortran_env, only: qp => real128
     use neo_globals
     implicit none
     integer, intent(in) :: ir
-    real :: tauinv_ab, tauinv_ba, lambda
+    real(qp) :: tauinv_ab, tauinv_ba, lambda
     integer :: xarg, yarg
-    real :: rd, r1, r2, r3, r4, r5, r6, r7
-    real, dimension(:,:), allocatable :: fcoll, fcoll_bar, &
+    real(qp) :: rd, r1, r2, r3, r4, r5, r6, r7
+    real(qp), dimension(:,:), allocatable :: fcoll, fcoll_bar, &
          fcollinv, fcollinv_bar
     integer :: fmarg
     integer :: is, js, ie, je, ix, jx
-    real, dimension(:,:,:,:,:), allocatable :: test_mono
-    real, dimension(:,:,:,:,:), allocatable :: field_mono
-    real, dimension(:,:), allocatable :: ctot
+    real(qp), dimension(:,:,:,:,:), allocatable :: test_mono
+    real(qp), dimension(:,:,:,:,:), allocatable :: field_mono
+    real(qp), dimension(:,:), allocatable :: ctot
 
     allocate(test_mono(n_species,n_species,0:n_energy,0:n_energy,0:n_xi))
     allocate(field_mono(n_species,n_species,0:n_energy,0:n_energy,0:n_xi))
@@ -952,14 +981,14 @@ contains
 
           ! (Note: pol part of dens from rotation will be added 
           !  in coll term in kinetic equation)
-          tauinv_ab = nu(is,ir) * (1.0*Z(js))**2 / (1.0*Z(is))**2 & 
+          tauinv_ab = nu(is,ir) * (1.0_qp*Z(js))**2 / (1.0_qp*Z(is))**2 &
                * dens(js,ir)/dens(is,ir)
-          tauinv_ba = nu(js,ir) * (1.0*Z(is))**2 / (1.0*Z(js))**2 & 
+          tauinv_ba = nu(js,ir) * (1.0_qp*Z(is))**2 / (1.0_qp*Z(js))**2 &
                * dens(is,ir)/dens(js,ir)
 
           lambda = (vth(is,ir) / vth(js,ir))**2
           call neo_compute_fcoll(fmarg,lambda,fcoll,fcoll_bar)
-          call neo_compute_fcoll(fmarg,1.0/lambda,fcollinv,fcollinv_bar)
+          call neo_compute_fcoll(fmarg,1.0_qp/lambda,fcollinv,fcollinv_bar)
 
           do ie=0, n_energy
              do je=0,n_energy
@@ -976,11 +1005,11 @@ contains
                         * sqrt(lambda/pi) *ix*(ix+1) &
                         * (fcoll(xarg-1,0) - fcoll(xarg-3,2)) 
 
-                   rd = 4.0*tauinv_ab * sqrt(lambda/pi) &
+                   rd = 4.0_qp*tauinv_ab * sqrt(lambda/pi) &
                         * (e_alpha*ie + xi_beta_l(ix)) &
-                        * ( (1.0 - temp(is,ir)/temp(js,ir)) &
+                        * ( (1.0_qp - temp(is,ir)/temp(js,ir)) &
                         * fcoll(xarg-1,2) &
-                        - 0.5 * (e_alpha*je + xi_beta_l(jx)) &
+                        - 0.5_qp * (e_alpha*je + xi_beta_l(jx)) &
                         * fcoll(xarg-3,2) )
 
                    test_mono(is,js,ie,je,ix) = &
@@ -989,37 +1018,37 @@ contains
                    ! Real full field-particle operator
 
                    r1 = mass(is)/mass(js) &
-                        * (1.0 + lambda)**(-0.5*(xarg+3)) &
+                        * (1.0_qp + lambda)**(-0.5_qp*(xarg+3)) &
                         * mygamma2(xarg + 3)
 
                    xarg = e_alpha*ie + xi_beta_l(ix)
                    yarg = e_alpha*je + xi_beta_l(jx)
 
-                   r2 = -2.0/(ix+0.5) &
+                   r2 = -2.0_qp/(ix+0.5_qp) &
                         * (mass(is)/mass(js) &
-                        - ix*(1.0-mass(is)/mass(js))) &
+                        - ix*(1.0_qp-mass(is)/mass(js))) &
                         * fcoll(xarg-ix+1,yarg+jx+2)
 
-                   r3 = -2.0/(ix+0.5) &
-                        * (1.0 + ix*(1.0-mass(is)/mass(js))) &
+                   r3 = -2.0_qp/(ix+0.5_qp) &
+                        * (1.0_qp + ix*(1.0_qp-mass(is)/mass(js))) &
                         * fcoll_bar(xarg+ix+2,yarg-jx+1)
 
-                   r4 = -ix*(ix-1.0)/(ix*ix - 0.25) &
+                   r4 = -ix*(ix-1.0_qp)/(ix*ix - 0.25_qp) &
                         * fcoll(xarg-ix+3,yarg+jx+2)
 
-                   r5 = -ix*(ix-1.0)/(ix*ix - 0.25) &
+                   r5 = -ix*(ix-1.0_qp)/(ix*ix - 0.25_qp) &
                         * fcoll_bar(xarg+ix+2,yarg-jx+3)
 
-                   r6 = (ix+1.0)*(ix+2.0)/(ix+1.5)/(ix+0.5) &
+                   r6 = (ix+1.0_qp)*(ix+2.0_qp)/(ix+1.5_qp)/(ix+0.5_qp) &
                         * fcoll(xarg-ix+1,yarg+jx+4)
 
-                   r7 = (ix+1.0)*(ix+2.0)/(ix+1.5)/(ix+0.5) &
+                   r7 = (ix+1.0_qp)*(ix+2.0_qp)/(ix+1.5_qp)/(ix+0.5_qp) &
                         * fcoll_bar(xarg+ix+4,yarg-jx+1)
 
                    field_mono(is,js,ie,je,ix) = &
                         field_mono(is,js,ie,je,ix) &
-                        + tauinv_ab * 2.0/sqrt(pi) * lambda**1.5 &
-                        * lambda**(0.5*(e_alpha*je &
+                        + tauinv_ab * 2.0_qp/sqrt(pi) * lambda**1.5_qp &
+                        * lambda**(0.5_qp*(e_alpha*je &
                         + xi_beta_l(ix))) &
                         * (r1 + r2 + r3 + r4 + r5 + r6 + r7)
 
