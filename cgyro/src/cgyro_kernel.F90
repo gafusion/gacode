@@ -50,10 +50,6 @@ subroutine cgyro_kernel
      select case(delta_t_method)
      case(1)
         call cgyro_step_gk_ck
-     case(2)
-        call cgyro_step_gk_bs5
-     case(3)
-        call cgyro_step_gk_v76 
      case default
         ! Normal timestep
         call cgyro_step_gk

@@ -66,10 +66,6 @@ subroutine cgyro_check
      call cgyro_info('Time integrator: RK4 4:4(3) [non-adaptive]')
   case(1)
      call cgyro_info('Time integrator: Cash-Karp 6:5(4) [adaptive]')
-  case(2)
-     call cgyro_info('Time integrator: Bogacki-Shampine 7:5(4) [adaptive]')
-  case(3)
-     call cgyro_info('Time integrator: Verner 10:7(6) [adaptive]')
   case default
      call cgyro_error('Invalid value for delta_t_method')
      return

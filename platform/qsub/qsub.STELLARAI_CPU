@@ -1,0 +1,29 @@
+bfile=$SIMDIR/batch.src
+echo "#!/bin/bash" > "$bfile"
+echo "#SBATCH -J $LOCDIR" >> "$bfile"
+echo "#SBATCH -o $SIMDIR/batch.out" >> "$bfile"
+echo "#SBATCH -e $SIMDIR/batch.err" >> "$bfile"
+echo "#SBATCH -t $WALLTIME" >> "$bfile"
+echo "#SBATCH --nodes=$nodes" >> "$bfile"
+echo "#SBATCH --ntasks=$nmpi" >> "$bfile"
+echo "#SBATCH --cpus-per-task=$nomp" >> "$bfile"
+if [ "$QUEUE" != "null_queue" ]; then
+  echo "#SBATCH -p $QUEUE" >> "$bfile"
+else
+  echo "#SBATCH -p cpu" >> "$bfile"
+fi
+if [ -n "$REPO" ] && [ "$REPO" != "null_repo" ]; then
+  echo "#SBATCH --account=$REPO" >> "$bfile"
+fi
+if [ -n "$MEMPERNODE" ]; then
+  echo "#SBATCH --mem=$MEMPERNODE" >> "$bfile"
+elif [ -n "$MEMPERCPU" ]; then
+  echo "#SBATCH --mem-per-cpu=$MEMPERCPU" >> "$bfile"
+else
+  echo "#SBATCH --mem-per-cpu=3800M" >> "$bfile"
+fi
+echo "module purge" >> "$bfile"
+echo "export GACODE_ROOT=\"$GACODE_ROOT\" GACODE_PLATFORM=\"$GACODE_PLATFORM\"" >> "$bfile"
+echo ". \"$GACODE_ROOT/platform/env/env.$GACODE_PLATFORM\"" >> "$bfile"
+echo ". \"$GACODE_ROOT/shared/bin/gacode_setup\"" >> "$bfile"
+echo "$CODE -e $LOCDIR -n $nmpi -nomp $nomp -numa $numa -mpinuma $mpinuma -p $SIMROOT" >> "$bfile"

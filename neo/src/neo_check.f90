@@ -54,10 +54,6 @@ subroutine neo_check
      if(silent_flag == 0 .and. i_proc == 0) then
         write(io_neoout,30) 'sim_model','THEORY (with nclass)'
      endif
-  case(4)
-     if(silent_flag == 0 .and. i_proc == 0) then
-        write(io_neoout,30) 'sim_model','NEURAL NETWORK'
-     endif
   case(5)
      if(silent_flag == 0 .and. i_proc == 0) then
         write(io_neoout,30) 'sim_model','THEORY (modified Sauter)'
@@ -92,18 +88,6 @@ subroutine neo_check
         write(io_neoout,30) 'collision_model','CONNOR'
      endif
 
-  case (2) 
-
-     if(silent_flag == 0 .and. i_proc == 0) then
-        write(io_neoout,30) 'collision_model','REDUCED HIRSHMAN-SIGMAR'
-     end if
-
-  case (3) 
-
-     if(silent_flag == 0 .and. i_proc == 0) then
-        write(io_neoout,30) 'collision_model','FULL HIRSHMAN-SIGMAR'
-     endif
-
   case (4) 
 
      if(silent_flag == 0 .and. i_proc == 0) then
@@ -118,7 +102,30 @@ subroutine neo_check
 
   case default
 
-     call neo_error('ERROR: (NEO) invalid collision_model')
+     call neo_error('ERROR: (NEO) invalid collision_model (must be 1, 4 or 5)')
+     return
+
+  end select
+
+  ! Energy basis
+  !
+  select case (laguerre_method)
+
+  case (1)
+
+     if(silent_flag == 0 .and. i_proc == 0) then
+        write(io_neoout,30) 'laguerre_method','LAGUERRE 1/2 (l=0), 3/2 (l>0)'
+     endif
+
+  case (2)
+
+     if(silent_flag == 0 .and. i_proc == 0) then
+        write(io_neoout,30) 'laguerre_method','SONINE'
+     endif
+
+  case default
+
+     call neo_error('ERROR: (NEO) invalid laguerre_method (must be 1 or 2)')
      return
 
   end select

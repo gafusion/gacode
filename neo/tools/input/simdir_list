@@ -1,15 +1,9 @@
 Local NEO templates:
 reg01:	  connor+i  +loc +sa +nrot +2d
-reg02:	  hs0   +i  +loc +sa +nrot +2d
-reg03:	  hs	+i  +loc +sa +nrot +2d
 reg04:	  fp	+i  +loc +sa +nrot +2d
 reg05:	  connor+ie +loc +sa +nrot +2d
-reg06:	  hs0   +ie +loc +sa +nrot +2d
-reg07:	  hs	+ie +loc +sa +nrot +2d
 reg08:	  fp	+ie +loc +sa +nrot +2d
 reg09:	  connor+iec+loc +sa +nrot +2d
-reg10:	  hs0   +iec+loc +sa +nrot +2d
-reg11:	  hs	+iec+loc +sa +nrot +2d
 reg12:	  fp	+iec+loc +sa +nrot +2d
 reg13:	  fp	+i  +loc +mil+nrot +2d
 reg14:	  fp	+i  +loc +sa + rot +2d

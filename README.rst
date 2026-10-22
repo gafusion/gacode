@@ -1,7 +1,7 @@
 Using GACODE
 ============
 
-GACODE is free software released under the Apache 2.0 license. The developers of GACODE recommend the following **best practices**
+GACODE is free software released under the GPL-3.0 license. The developers of GACODE recommend the following **best practices**
 
 1. Compile/use the Software source code AS IS for publication purposes. You are welcome and encouraged to request changes through the `github issues system <https://github.com/gafusion/gacode/issues>`_, to make code modifications for testing purposes, or to issue pull requests
 2. In published results or presentations, include the code name(s) and appropriate references in the table below
