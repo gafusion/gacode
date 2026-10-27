@@ -23,7 +23,6 @@ subroutine neo_do
   use neo_g_velocitygrids
   use neo_allocate_profile
   use neo_3d_driver
-  use neo_neural
   use mpi
   
   implicit none
@@ -123,38 +122,6 @@ subroutine neo_do
      return
   end if
 
-  if(sim_model == 4) then
-     ! Neural Network calculation only -- no numerical kinetic calculation
-     call EQUIL_alloc(1)
-     call NEURAL_alloc(1)
-     do ir=1, n_radial
-        call EQUIL_do(ir)
-        call NEURAL_do(ir)
-        if(error_status > 0) goto 100
-        call NEURAL_write(ir)
-        ! Store the local neo transport values at ir=1 in neo_xtheory_out
-        ! (n_species_max, transport coeff)
-        if(ir == 1) then
-           neo_dke_out(:,:)  = 0.0
-           neo_dke_1d_out(:) = 0.0
-           neo_gv_out(:,:)   = 0.0
-           neo_th_out(:)     = 0.0
-           neo_thHS_out(:,:) = 0.0
-           neo_dke_1d_out(1) = jpar_nn_neo
-           neo_dke_1d_out(2) = jtor_nn_neo
-           do is=1,n_species
-              neo_dke_out(is,1) = pflux_nn_neo(is)
-              neo_dke_out(is,2) = eflux_nn_neo(is)
-              neo_dke_out(is,5) = vpol_th0_nn_neo(is)
-           enddo
-        endif
-     enddo
-     call NEURAL_alloc(0)
-     call EQUIL_alloc(0)
-     deallocate(thcyc)
-     return
-  end if
-  
   ! Set-up the energy grids for basis ints (indep of r)
   call ENERGY_basis_ints_alloc(1)
   call ENERGY_basis_ints

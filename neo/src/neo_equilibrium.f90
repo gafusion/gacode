@@ -117,7 +117,22 @@ contains
   
   subroutine EQUIL_do(ir)
     use neo_globals
-    use geo
+    use geo, only : geo_interp
+    use geo, only : geo_b, geo_bigr, geo_bigr_r, geo_bigr_t, geo_bp, &
+         geo_bt, geo_dbdt, geo_g_theta, geo_gcos1, geo_gcos2, &
+         geo_grad_r, geo_gsin, geo_l_t, geo_nsin, geo_theta_nc
+    use geo, only : geo_beta_star_in, geo_delta_in, geo_drmaj_in, &
+         geo_dzmag_in, geo_f, geo_ffprime, geo_kappa_in, geo_model_in, &
+         geo_ntheta_in, geo_q_in, geo_rmaj_in, geo_rmin_in, &
+         geo_s_delta_in, geo_s_in, geo_s_kappa_in, geo_s_zeta_in, &
+         geo_shape_cos0_in, geo_shape_cos1_in, geo_shape_cos2_in, &
+         geo_shape_cos3_in, geo_shape_cos4_in, geo_shape_cos5_in, &
+         geo_shape_cos6_in, geo_shape_s_cos0_in, geo_shape_s_cos1_in, &
+         geo_shape_s_cos2_in, geo_shape_s_cos3_in, geo_shape_s_cos4_in, &
+         geo_shape_s_cos5_in, geo_shape_s_cos6_in, geo_shape_s_sin3_in, &
+         geo_shape_s_sin4_in, geo_shape_s_sin5_in, geo_shape_s_sin6_in, &
+         geo_shape_sin3_in, geo_shape_sin4_in, geo_shape_sin5_in, &
+         geo_shape_sin6_in, geo_signb_in, geo_zeta_in, geo_zmag_in
     implicit none
     integer, intent(in) :: ir
     integer :: it, jt, id, is

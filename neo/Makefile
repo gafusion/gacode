@@ -16,10 +16,8 @@ all:
 	cd ${GACODE_ROOT}/shared ; make
 	cd ${GACODE_ROOT}/f2py ; make
 	cd src ; make
-	cd ${GACODE_ROOT}/neo/tools/pneo ; make
 
 clean:
 	cd src ; make clean
-	cd ${GACODE_ROOT}/neo/tools/pneo ; make clean
 
 .IGNORE:

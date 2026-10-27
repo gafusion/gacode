@@ -118,12 +118,6 @@ subroutine cgyro_check_memory(datafile)
      case(1)
         call cgyro_alloc_add_3d(io,nc,nv_loc,nt_loc,16,'h0_old')
         call cgyro_alloc_add_4d(io,nc,nv_loc,nt_loc,6,16,'rhs')
-     case(2)
-        call cgyro_alloc_add_3d(io,nc,nv_loc,nt_loc,16,'h0_old')
-        call cgyro_alloc_add_4d(io,nc,nv_loc,nt_loc,7,16,'rhs')
-     case(3)
-        call cgyro_alloc_add_3d(io,nc,nv_loc,nt_loc,16,'h0_old')
-        call cgyro_alloc_add_4d(io,nc,nv_loc,nt_loc,9,16,'rhs')
      case default
         ! Normal timestep
         call cgyro_alloc_add_4d(io,nc,nv_loc,nt_loc,4,16,'rhs')

@@ -10,14 +10,6 @@ endif
 
 EXEC = neo
 
-ifdef FANN_ROOT
-   # neural net libraries
-   NN=neo_neural.fann
-else
-   #stub file
-   NN=neo_neural
-endif
-
 OBJECTS = neo_globals.o \
           neo_energy_grid.o \
           neo_interface.o \
@@ -32,8 +24,6 @@ OBJECTS = neo_globals.o \
           neo_transport.o \
           neo_3d_driver.o \
           neo_check.o \
-          neo_compute_fcoll.o \
-	  $(NN).o \
           neo_do.o \
           neo_error.o \
           neo_init.o \
@@ -65,13 +55,13 @@ OBJECTS = neo_globals.o \
 .SUFFIXES : .o .f90 .F90
 
 all: neo_lib.a $(EXEC).o $(EXTRA_LIBS)
-	$(FC) $(FFLAGS) $(NEO_FLAGS) -o $(EXEC) $(EXEC).o neo_lib.a $(EXTRA_LIBS) $(LMATH) $(NN_LIB) ${NEO_LIBS}
+	$(FC) $(FFLAGS) $(NEO_FLAGS) -o $(EXEC) $(EXEC).o neo_lib.a $(EXTRA_LIBS) $(LMATH) ${NEO_LIBS} 
 
 neo_lib.a: $(OBJECTS)
 	$(ARCH) neo_lib.a $(OBJECTS)
 
 .f90.o .F90.o :
-	$(FC) $(FMATH) $(FFLAGS) $(NN_LIB) $(NEO_FLAGS) -c $<
+	$(FC) $(FMATH) $(FFLAGS) $(NEO_FLAGS) -c $<
 
 .c.o:
 	$(CC) $(CFLAGS) $(CDEFS) $(NEO_FLAGS) -c $< $(VERBOSE)

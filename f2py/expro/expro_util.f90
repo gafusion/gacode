@@ -335,7 +335,10 @@ subroutine expro_compute_derived
   temp = expro_qbeame+expro_qrfe+expro_qione
   call volint(temp,expro_pow_e_aux,expro_n_exp)
   ! Total electron power 
-  temp = temp+expro_qohme-(expro_qbrem-expro_qsync-expro_qline)-expro_qei+expro_qfuse
+  ! Radiation terms are positive losses; same sum as tgyro_source.f90 and
+  ! gacode.io/tgyro/scenarios. NOTE: from 2022 ("TGYRO ohmic fixes") to
+  ! 17 Oct 2026 this read -(qbrem-qsync-qline), adding qsync and qline.
+  temp = temp+expro_qohme-expro_qbrem-expro_qsync-expro_qline-expro_qei+expro_qfuse
   call volint(temp,expro_pow_e,expro_n_exp)
   ! Total auxiliary ion power 
   temp = expro_qbeami+expro_qrfi+expro_qioni+expro_qcxi
