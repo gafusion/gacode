@@ -6,6 +6,5 @@ fortranformat
 scikit-image
 build
 pandas
-pydmd
 meson
 ninja

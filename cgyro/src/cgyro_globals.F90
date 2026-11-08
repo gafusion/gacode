@@ -279,7 +279,7 @@ module cgyro_globals
   ! Precision for IO (these are set in cgyro_init_manager)
   !
   ! BYTE=4 (standard single precision)
-  ! BYTE=8 (double precision for DMD analysis)
+  ! BYTE=8 (double precision)
   !
   integer :: BYTE
   character(len=8)  :: fmtstr   
