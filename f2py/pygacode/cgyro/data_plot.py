@@ -1559,7 +1559,7 @@ class cgyrodata_plot(data.cgyrodata):
          ax.set_xlabel(r'$\theta/\pi$')
          ax.set_ylabel(r'$\xi = v_\parallel/v$')
 
-         hp = np.transpose(np.array(self.hb[0,:,spec,:,ie,itime]))
+         hp = np.transpose(self.hb[:,spec,:,ie,itime].real)
          hmin = hp.min()
          hmax = hp.max()
          dh = (hmax-hmin)/100.0
@@ -1584,7 +1584,7 @@ class cgyrodata_plot(data.cgyrodata):
          ax.set_xlabel(r'$\theta/\pi$')
          ax.set_ylabel(r'$\xi = v_\parallel/v$')
 
-         hp = np.transpose(np.array(self.hb[1,:,spec,:,ie,itime]))
+         hp = np.transpose(self.hb[:,spec,:,ie,itime].imag)
          hmin = hp.min()
          hmax = hp.max()
          dh = (hmax-hmin)/100.0
@@ -1655,17 +1655,17 @@ class cgyrodata_plot(data.cgyrodata):
          ax.grid(which="both",ls=":")
          ax.grid(which="major",ls=":")
 
-         ax.set_title(r'$'+u+r': \\xi=0 \quad \mathrm{ie}='+str(ie)+'$')
+         ax.set_title(r'$'+u+r': \xi=0 \quad \mathrm{ie}='+str(ie)+'$')
          ax.set_xlabel(r'$\theta/\pi$')
 
          if self.n_xi%2 == 0:
-            hp = np.array(func[:,:,spec,self.n_xi//2,ie,itime]+
-                          func[:,:,spec,self.n_xi//2-1,ie,itime])*0.5
+            hp = (func[:,spec,self.n_xi//2,ie,itime]+
+                  func[:,spec,self.n_xi//2-1,ie,itime])*0.5
          else:
-            hp = np.array(func[:,:,spec,self.n_xi//2,ie,itime])
+            hp = func[:,spec,self.n_xi//2,ie,itime]
             
-         ax.plot(x,hp[0,:],'-o',color='black',markersize=2)
-         ax.plot(x,hp[1,:],'-o',color='blue',markersize=2)
+         ax.plot(x,hp.real,'-o',color='black',markersize=2)
+         ax.plot(x,hp.imag,'-o',color='blue',markersize=2)
          ax.set_xlim([-tmax,tmax])
 
          #========================================================
@@ -1677,14 +1677,14 @@ class cgyrodata_plot(data.cgyrodata):
          ax.grid(which="both",ls=":")
          ax.grid(which="major",ls=":")
 
-         ax.set_title(r'$'+u+r': \\theta/\pi='+str(thetapi)+r' \quad \mathrm{ie}='+str(ie)+'$')
+         ax.set_title(r'$'+u+r': \theta/\pi='+str(thetapi)+r' \quad \mathrm{ie}='+str(ie)+'$')
          ax.set_xlabel(r'$\xi = v_\parallel/v$')
 
          n0 = (self.n_radial//2)*self.n_theta+i0
          
-         hp = np.array(func[0,:,spec,:,ie,itime])
+         hp = func[:,spec,:,ie,itime].real
          ax.plot(self.xi,hp[n0,:],'-o',color='black',markersize=2)
-         hp = np.array(func[1,:,spec,:,ie,itime])
+         hp = func[:,spec,:,ie,itime].imag
          ax.plot(self.xi,hp[n0,:],'-o',color='blue',markersize=2)
          ax.set_xlim([-1,1])
          #========================================================
@@ -1696,13 +1696,13 @@ class cgyrodata_plot(data.cgyrodata):
          ax.grid(which="both",ls=":")
          ax.grid(which="major",ls=":")
 
-         ax.set_title(r'$'+u+r': \\theta/\pi='+str(thetapi)+r' \quad \mathrm{ix}='+str(ix)+'$')
+         ax.set_title(r'$'+u+r': \theta/\pi='+str(thetapi)+r' \quad \mathrm{ix}='+str(ix)+'$')
          ax.set_xlabel(r'$x=\sqrt{\varepsilon}$')
 
          n0 = (self.n_radial//2)*self.n_theta+i0
 
-         hpa = np.array(func[0,n0,spec,:,:,itime])
-         hpb = np.array(func[1,n0,spec,:,:,itime])
+         hpa = func[n0,spec,:,:,itime].real
+         hpb = func[n0,spec,:,:,itime].imag
          p0 = np.zeros(self.n_energy)
          p1 = np.zeros(self.n_energy)
 
@@ -1754,10 +1754,10 @@ class cgyrodata_plot(data.cgyrodata):
       else:
          ax.set_xlim([-tmax,tmax])
 
-      # y = y[re/im,theta,xi]
+      # y = y[theta,xi]
       try:
-         y = np.array(self.hb[:,:,spec,:,ie,itime])
-      except:
+         y = self.hb[:,spec,:,ie,itime]
+      except AttributeError:
          raise ValueError('(plot_hball.py) Need to run with H_PRINT_FLAG=1')
 
       xp,wp = np.polynomial.legendre.leggauss(self.n_xi)
@@ -1769,8 +1769,8 @@ class cgyrodata_plot(data.cgyrodata):
          c[:] = 0.0 ; c[l] = 1.0
          pl = np.polynomial.legendre.legval(xp,c)
          for j in range(len(x)):
-            alr[j] = (l+0.5)*np.sum(pl[:]*y[0,j,:])
-            ali[j] = (l+0.5)*np.sum(pl[:]*y[1,j,:])
+            alr[j] = (l+0.5)*np.sum(pl[:]*y[j,:].real)
+            ali[j] = (l+0.5)*np.sum(pl[:]*y[j,:].imag)
 
          ax.plot(x,alr,'-',color=cvec[l%6],label=r'$\ell='+str(l)+'$')
          ax.plot(x,ali,'--',color=cvec[l%6])

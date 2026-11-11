@@ -601,7 +601,7 @@ subroutine write_distribution(datafile)
   implicit none
   !
   character (len=*), intent(in) :: datafile
-  integer :: ir,it
+  integer :: ir,it,ie,ix,is
   complex, dimension(:,:), allocatable :: h_x_glob
   complex :: ftemp(n_theta,n_radial)
   !------------------------------------------------------
@@ -634,21 +634,27 @@ subroutine write_distribution(datafile)
           size(cap_h_c_cur(:,:,nt1)),&
           MPI_DOUBLE_COMPLEX,&
           h_x_glob(:,:),&
-          size(h_x_glob),&
+          size(cap_h_c_cur(:,:,nt1)),&
           MPI_DOUBLE_COMPLEX,&
           0,&
           NEW_COMM_1,&
           i_err)
 
      if (i_proc == 0) then
-        do iv=1,nv
-           do ir=1,n_radial
-              do it=1,n_theta
-                 ftemp(it,ir) = h_x_glob(ic_c(ir,it),iv)
+        ! Write in (species, xi, energy) order, species fastest, for any VELOCITY_ORDER
+        do ie=1,n_energy
+           do ix=1,n_xi
+              do is=1,n_species
+                 iv = iv_v(ie,ix,is)
+                 do ir=1,n_radial
+                    do it=1,n_theta
+                       ftemp(it,ir) = h_x_glob(ic_c(ir,it),iv)
+                    enddo
+                 enddo
+                 if (zf_test_mode == 0) call extended_ang(ftemp)
+                 write(io) cmplx(ftemp,kind=4)
               enddo
            enddo
-           if (zf_test_mode == 0) call extended_ang(ftemp)
-           write(io) cmplx(ftemp,kind=4)
         enddo
         close(io)
      endif
