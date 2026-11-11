@@ -29,6 +29,7 @@ module neo_transport
   real, dimension(:,:), allocatable :: eflux_gv_th      ! (ns,nt)
   real, dimension(:,:), allocatable :: mflux_th         ! (ns,nt)
   real, dimension(:,:), allocatable :: mflux_gv_th      ! (ns,nt)
+  real, dimension(:,:), allocatable :: pflux_fric_th    ! (ns,nt)
   real, dimension(:,:), allocatable :: vpol, vtor, upar ! (ns,nt): vel/vt0
   real, dimension(:,:,:), allocatable :: vpol_fourier  ! (ns,mt,2)
   real, dimension(:,:,:), allocatable :: vtor_fourier  ! (ns,mt,2)
@@ -88,6 +89,7 @@ contains
        allocate(eflux_gv_th(n_species,n_theta))
        allocate(mflux_th(n_species,n_theta))
        allocate(mflux_gv_th(n_species,n_theta))
+       allocate(pflux_fric_th(n_species,n_theta))
        allocate(vpol(n_species,n_theta))
        allocate(vtor(n_species,n_theta))
        allocate(upar(n_species,n_theta))
@@ -146,6 +148,7 @@ contains
        deallocate(eflux_gv_th)
        deallocate(mflux_th)
        deallocate(mflux_gv_th)
+       deallocate(pflux_fric_th)
        deallocate(vpol)
        deallocate(vtor)
        deallocate(upar)
@@ -185,6 +188,7 @@ contains
 
     pflux(:)  = 0.0
     pflux_th(:,:) = 0.0
+    pflux_fric_th(:,:) = 0.0
     eflux(:)  = 0.0
     eflux_th(:,:) = 0.0
     mflux(:)  = 0.0
@@ -506,6 +510,9 @@ contains
             + abs(uparB(is))/rho(ir)
     enddo
 
+    ! Friction-form local particle flux (same flux-surface average as pflux)
+    call TRANSP_fric(ir)
+
   end subroutine TRANSP_do
 
   subroutine compute_velocity(ir)
@@ -620,6 +627,44 @@ contains
 
   end subroutine compute_velocity
 
+  subroutine TRANSP_fric(ir)
+    ! Compute friction (v_par/B moment) form of particle flux, pflux_fric_th(is,it)
+    use neo_globals
+    use neo_energy_grid
+    use neo_equilibrium
+    use neo_rotation
+    implicit none
+    integer, intent(in) :: ir
+    integer :: i, is, ks, je, it
+    integer, dimension(:,:,:,:), allocatable :: mi
+    real :: c1, cc
+
+    allocate(mi(n_species,0:n_energy,0:n_xi,n_theta))
+    do i=1,n_row
+       mi(is_indx(i),ie_indx(i),ix_indx(i),it_indx(i)) = i
+    enddo
+
+    do is=1,n_species
+       do it=1,n_theta
+          c1 = 0.0
+          do je=0,n_energy
+             do ks=1,n_species
+                c1 = c1 + emat_coll_test(is,ks,0,je,1) * dens_fac(ks,it) &
+                     * g(mi(is,je,1,it))
+                c1 = c1 + emat_coll_field(is,ks,0,je,1) * dens_fac(ks,it) &
+                     * g(mi(ks,je,1,it))
+             enddo
+          enddo
+          cc = I_div_psip * mass(is)/(1.0*Z(is)) * rho(ir) / Bmag(it)
+          pflux_fric_th(is,it) = -(4.0/(3.0*sqrt(pi))) * dens(is,ir) &
+               * dens_fac(is,it) * cc * sqrt(2.0) * vth(is,ir) * c1
+       enddo
+    enddo
+
+    deallocate(mi)
+
+  end subroutine TRANSP_fric
+  
   subroutine TRANSP_write(ir)
     use neo_globals
     use neo_rotation
@@ -709,7 +754,7 @@ contains
     write(io,*) upar(:,:)
     close(io)
 
-    ! [p,e,m]flux (theta), [p,e,m]flux_gv (theta)
+    ! [p,e,m]flux (theta), [p,e,m]flux_gv (theta), pflux_fric (theta)
     open(io,file=trim(path)//runfile_flux_th,status='old',position='append')
     do is=1, n_species
        sum1 = 0.0
@@ -717,11 +762,12 @@ contains
        do jt=1, n_theta
           write(io,*) pflux_th(is,jt), pflux_gv_th(is,jt), &
                eflux_th(is,jt), eflux_gv_th(is,jt), &
-               mflux_th(is,jt), mflux_gv_th(is,jt)
-          !sum1 = sum1 + pflux_th(is,jt) * w_theta(jt)
-          !sum2 = sum2 + pflux_gv_th(is,jt) * w_theta(jt)
+               mflux_th(is,jt), mflux_gv_th(is,jt), &
+               pflux_fric_th(is,jt)
+          sum1 = sum1 + pflux_th(is,jt) * w_theta(jt)
+          sum2 = sum2 + pflux_fric_th(is,jt) * w_theta(jt)
        enddo
-       !print *, sum1, pflux(is), sum2, pflux_gv(is)
+       !print *, pflux(is), sum1, sum2 
     enddo
     close(io)
     
