@@ -1,0 +1,43 @@
+#-----------------
+#
+#  KISTI-6 HANGANG (GH200 / ARM Grace)  --  HANGANG
+#  Cray programming environment: ftn wrapper + Cray MPICH
+#
+# -----------------
+
+# FIXED Hardware parameters
+IDENTITY="KISTI HANGANG (Cray wrapper)"
+
+CORES_PER_NODE=288
+NUMAS_PER_NODE=4
+
+# GH200 GPU mapping
+GPU_PER_NODE=4
+
+# Compiler: Cray ftn wrapper (PrgEnv-nvidia -> nvfortran).
+# The wrapper automatically adds MPI (cray-mpich), cray-libsci (the OpenMP
+# variant when -mp is given), cray-fftw, cray-hdf5/netcdf include/link options.
+FC = ftn -module ${GACODE_ROOT}/modules -Mpreprocess -DUSE_INLINE
+F77 = ${FC}
+
+# Compiler options / flags (kept identical to the HANGANG build)
+CUDA_VER ?= 12.9
+FACC = -acc -Minfo=accel -cuda -gpu=cc90,cuda${CUDA_VER} -cudalib=cufft
+FOMP = -mp -Mstack_arrays
+FMATH = -r8
+FOPT = -fast
+FDEBUG = -g -Kieee -Ktrap=fp,divz -Mbounds -Mchkptr -Mchstk -traceback -Minform=inform
+
+# LibSci is linked by the ftn wrapper. Do NOT add -lsci_nvidia here:
+# an explicit serial libsci conflicts with the OpenMP variant the wrapper picks.
+LMATH =
+
+# NetCDF: the wrapper normally adds it when cray-netcdf is loaded.
+# The explicit flags below are kept as a safe fallback (nf-config --flibs was
+# empty on HANGANG). If the link step complains about duplicates, set NETCDF =
+NETCDF_DIR = ${CRAY_NETCDF_PREFIX}
+NETCDF = -L${NETCDF_DIR}/lib -lnetcdff -lnetcdf
+NETCDF_INC = ${NETCDF_DIR}/include
+
+# Archive
+ARCH = ar cr
