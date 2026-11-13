@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+# Assign a GH200 GPU to each local MPI rank.
+
+if [ -n "${SLURM_LOCALID:-}" ]; then
+    local_rank=${SLURM_LOCALID}
+elif [ -n "${PMI_LOCAL_RANK:-}" ]; then
+    local_rank=${PMI_LOCAL_RANK}
+else
+    local_rank=0
+fi
+
+if [ -n "${CUDA_VISIBLE_DEVICES:-}" ]; then
+    IFS=',' read -r -a visible_gpus <<< "${CUDA_VISIBLE_DEVICES}"
+    nvisible=${#visible_gpus[@]}
+else
+    nvisible=4
+fi
+
+if [ "${nvisible}" -le 1 ]; then
+    export ACC_DEVICE_NUM=0
+else
+    export ACC_DEVICE_NUM=$((local_rank % nvisible))
+fi
+
+echo "SLURM_LOCALID=${SLURM_LOCALID:-unset} CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-unset} -> ACC_DEVICE_NUM=${ACC_DEVICE_NUM}"
+# Per-rank CPU placement check
+echo "rank=${SLURM_PROCID:-?} host=$(hostname) $(grep Cpus_allowed_list /proc/self/status) omp=${OMP_NUM_THREADS:-unset} gpu=${ACC_DEVICE_NUM}"
+
+# Split the executable string and its arguments when passed as one argument.
+if [ "$#" -eq 1 ]; then
+    read -r -a cmd <<< "$1"
+    exec "${cmd[@]}"
+else
+    exec "$@"
+fi

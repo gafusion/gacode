@@ -1,0 +1,67 @@
+#!/bin/bash
+
+# Default queue and repository
+if [ "$QUEUE" == "null_queue" ] ; then
+    QUEUE=normal
+fi
+
+if [ "$REPO" == "null_repo" ] ; then
+    REPO=etc
+fi
+
+# HANGANG GPU configuration
+GPU_PER_NODE=4
+
+# Validate MPI task count
+if [ -z "$nmpi" ] || [ "$nmpi" -le 0 ]; then
+    echo "ERROR: Invalid MPI task count: $nmpi"
+    exit 1
+fi
+
+# Calculate node and MPI task layout
+node=$(( (nmpi + GPU_PER_NODE - 1) / GPU_PER_NODE ))
+nmpi_per_node=$(( (nmpi + node - 1) / node ))
+
+# Active NUMAs per node = one per GPU (at most), overriding the value from gacode_mpi_tool
+numa=$(( nmpi_per_node < GPU_PER_NODE ? nmpi_per_node : GPU_PER_NODE ))
+
+echo "HANGANG job configuration:"
+echo "  Queue          : $QUEUE"
+echo "  Nodes          : $node"
+echo "  MPI tasks      : $nmpi"
+echo "  Tasks per node : $nmpi_per_node"
+echo "  GPUs per node  : $GPU_PER_NODE"
+echo "  OMP threads    : $nomp"
+
+# Create batch.src
+bfile=$SIMDIR/batch.src
+
+cat > "$bfile" <<EOF
+#!/bin/bash -l
+#SBATCH -J $LOCDIR
+#SBATCH -p $QUEUE
+#SBATCH --comment="field=phys;appl=cgyro"
+#SBATCH --nodes=$node
+#SBATCH --ntasks-per-node=$nmpi_per_node
+#SBATCH --gres=gpu:$GPU_PER_NODE
+#SBATCH --cpus-per-task=$nomp
+#SBATCH --exclusive
+#SBATCH -o $SIMDIR/batch.out
+#SBATCH -e $SIMDIR/batch.err
+#SBATCH --time=$WALLTIME
+
+
+cd "$SIMROOT"
+ulimit -s unlimited
+
+export OMP_NUM_THREADS=$nomp
+export OMP_DYNAMIC=FALSE
+export OMP_PROC_BIND=TRUE
+export OMP_PLACES=cores
+export GACODE_CPU_BIND=verbose,cores
+
+
+$CODE -e $LOCDIR -n $nmpi -nomp $nomp -numa $numa -p $SIMROOT
+EOF
+
+echo "Generated: $bfile"

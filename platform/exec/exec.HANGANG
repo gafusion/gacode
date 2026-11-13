@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# GACODE parallel execution script (KISTI-6 HANGANG, Cray wrapper / Cray MPICH build)
+
+simdir=${1:?Usage: exec.HANGANG2 simdir nmpi executable nomp numa mpinuma}
+nmpi=${2:?Missing MPI task count}
+exec=${3:?Missing executable}
+nomp=${4:?Missing OpenMP thread count}
+numa=${5:-}
+mpinuma=${6:-}
+
+# nmpi   = MPI tasks
+# nomp   = OpenMP threads per MPI task
+# numa, mpinuma are accepted for GACODE compatibility but are not used for
+# placement here: placement is set by the srun options below.
+
+. "${GACODE_ROOT}/shared/bin/gacode_mpi_tool"
+
+cd "${simdir}" || exit 1
+
+# Stack size per OpenMP thread (override from the batch script if needed,
+# e.g. export OMP_STACKSIZE=512M)
+export OMP_STACKSIZE="${OMP_STACKSIZE:-4G}"
+export OMP_NUM_THREADS="${nomp}"
+
+# GPU-aware Cray MPICH: CGYRO passes GPU buffers directly to MPI.
+# Requires a craype-accel-* module to have been loaded at build time.
+export MPICH_GPU_SUPPORT_ENABLED=1
+
+# Launch with Cray MPICH through srun (no --mpi=pmix, no OMPI_MCA_*/FI_PROVIDER).
+# --cpus-per-task is passed explicitly: depending on the Slurm version, srun does
+# not inherit sbatch's --cpus-per-task. The sbatch allocation must provide at
+# least nomp CPUs per task.
+# CPU binding can be changed from the batch script, e.g.
+#   export GACODE_CPU_BIND=verbose,cores   (prints the mask of every task)
+cpubind="${GACODE_CPU_BIND:-cores}"
+launcher=(srun --ntasks="${nmpi}" --cpus-per-task="${nomp}" --cpu-bind="${cpubind}")
+wrapper="${GACODE_ROOT}/platform/exec/wrap.${GACODE_PLATFORM}"
+
+echo "> ${launcher[*]} ${wrapper} ${exec}"
+exec "${launcher[@]}" "${wrapper}" "${exec}"
