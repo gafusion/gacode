@@ -603,25 +603,7 @@ contains
   end subroutine compute_velocity
 
   subroutine TRANSP_fric(ir)
-    ! Theta-resolved fluxes in friction (collisional-moment) form, with the
-    ! weights of the NEO flux definitions (Belli et al. PPCF 51 (2009) Eqs 18-20;
-    ! Sugama & Nishimura PoP 4 (1997) 2215 Eq 27):
-    !   Gamma^f = -int alpha_1 C,  Q^f = -int T (alpha_1 E_a/vt_a^2 + alpha_2) C,
-    !   Pi^f    = -int (T/omega_0) alpha_2 C ,  alpha_1 = Lambda_a.
-    ! With the moments of the collision operator acting on g (peculiar velocity v'):
-    !   R = int m v'_par C,        W = int (1/2) m v'^2 C,
-    !   H = int (1/2) m v'^2 m v'_par C,   P = int m v'_par^2 C,
-    ! (species-summed test+field parts) the local fluxes are
-    !   pflux = -(rho/Z) (I/psi'B) R
-    !   eflux = -(rho/Z) { omega R^2 W m/psi' + (I/psi'B) H
-    !            + (I/psi'B)[1/2 m omega^2 R^2 + Z (phi_rot-<phi_rot>)] R
-    !            + (1/2) omega m (I/B)(I/psi'B) P }
-    !   mflux = -(rho/2Z) { 2 omega R^2 m (I/psi'B) R + m [(I/B)(I/psi'B) P
-    !            + (1/psi')(1/2)(R^2-(I/B)^2)(2W-P)] }
-    ! (same normalization as pflux, eflux, mflux in out.neo.transport).
-    ! W, R, H come from the l=0,1 rows (ie=0,1) of emat_coll_*; P needs the
-    ! l=2 moment with weight x^2, which is the exact row emat_coll_p2_* for
-    ! both Laguerre methods.  Anisotropic species are not supported (left 0).
+    ! Theta-resolved fluxes in friction (collisional-moment) form
     use neo_globals
     use neo_energy_grid
     use neo_equilibrium
@@ -634,7 +616,7 @@ contains
     real :: k13, k1, om, rr2, afac, ub, inv_psip, ival
     real :: rmom, wen, hmom, pmom, x2c0, perp
 
-    ! anisotropic species: not supported, fluxes stay 0 (zeroed in TRANSP_do)
+    ! anisotropic species: not supported, fluxes stay 0 
     if(any(aniso_model(:) == 2)) return
 
     allocate(mi(n_species,0:n_energy,0:n_xi,n_theta))
