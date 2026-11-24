@@ -309,7 +309,7 @@ subroutine neo_do
                     enddo
 
                  else if(ix==0 .and. it == 1 &
-                      .and. (ie==0 .or. ie==1) &
+                      .and. (ie==0 .or. (ie==1 .and. is ==1)) &
                       .and. (collision_model==3 .or. &
                       collision_model==4 .or. collision_model==5)) then
                     ! <f_ie> = 0
@@ -593,7 +593,7 @@ contains
                    g(i) = 0.0
 
                 else if(ix==0 .and. it==1 &
-                     .and. (ie==0 .or. ie==1) &
+                     .and. (ie==0 .or. (ie==1 .and. is==1)) &
                      .and. (collision_model==3 .or. &
                      collision_model==4 .or. collision_model==5)) then
                    g(i) = 0.0
