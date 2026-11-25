@@ -23,6 +23,10 @@ module neo_transport
 
   ! poloidal and toroidal velocities
   integer :: m_theta
+  ! theta-resolved (friction-form) fluxes, same normalization as pflux,eflux,mflux
+  real, dimension(:,:), allocatable :: pflux_fric_th    ! (ns,nt)
+  real, dimension(:,:), allocatable :: eflux_fric_th    ! (ns,nt)
+  real, dimension(:,:), allocatable :: mflux_fric_th    ! (ns,nt)
   real, dimension(:,:), allocatable :: vpol, vtor, upar ! (ns,nt): vel/vt0
   real, dimension(:,:,:), allocatable :: vpol_fourier  ! (ns,mt,2)
   real, dimension(:,:,:), allocatable :: vtor_fourier  ! (ns,mt,2)
@@ -43,6 +47,7 @@ module neo_transport
   integer, parameter, private :: io=1
   character(len=80),private :: runfile_transp = 'out.neo.transport'
   character(len=80),private :: runfile_phi    = 'out.neo.phi'
+  character(len=80),private :: runfile_flux_th = 'out.neo.flux_theta'
   character(len=80),private :: runfile_vel    = 'out.neo.vel'
   character(len=80),private :: runfile_vel_fourier    = 'out.neo.vel_fourier'
   character(len=80),private :: runfile_exp    = 'out.neo.transport_exp'
@@ -75,6 +80,9 @@ contains
        allocate(pvisc(n_species))
        allocate(d_phi(n_theta))
 
+       allocate(pflux_fric_th(n_species,n_theta))
+       allocate(eflux_fric_th(n_species,n_theta))
+       allocate(mflux_fric_th(n_species,n_theta))
        allocate(vpol(n_species,n_theta))
        allocate(vtor(n_species,n_theta))
        allocate(upar(n_species,n_theta))
@@ -93,6 +101,8 @@ contains
           open(unit=io,file=trim(path)//runfile_transp,status='replace')
           close(io)
           open(unit=io,file=trim(path)//runfile_phi,status='replace')
+          close(io)
+          open(unit=io,file=trim(path)//runfile_flux_th,status='replace')
           close(io)
           open(unit=io,file=trim(path)//runfile_vel,status='replace')
           close(io)
@@ -125,6 +135,9 @@ contains
        deallocate(kbig_upar)
        deallocate(pvisc)
        deallocate(d_phi)
+       deallocate(pflux_fric_th)
+       deallocate(eflux_fric_th)
+       deallocate(mflux_fric_th)
        deallocate(vpol)
        deallocate(vtor)
        deallocate(upar)
@@ -156,13 +169,17 @@ contains
     use neo_rotation
     implicit none
     integer :: i, is, ie, ix, it
-    real :: fac, fac1, fac2, rfac, poisson_F0fac, &
+    real :: fac, sfac, gfac, rfac, poisson_F0fac, &
          B2_div_dens, bigR2_avg
+    real :: pg, mg, eg
     integer, intent (in) :: ir
 
     ! Compute the neoclassical transport coefficients
 
-    pflux(:)  = 0.0 
+    pflux(:)  = 0.0
+    pflux_fric_th(:,:) = 0.0
+    eflux_fric_th(:,:) = 0.0
+    mflux_fric_th(:,:) = 0.0
     eflux(:)  = 0.0
     mflux(:)  = 0.0
     upar(:,:) = 0.0
@@ -185,19 +202,24 @@ contains
           rfac = rfac + lam_rot_aniso(is,it)
        endif
 
-       if (ix == 0) then  
-          pflux(is) = pflux(is) + w_theta(it) &
-               * 4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
+       if (ix == 0) then
+          fac = 4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
                * (driftx(is,it) * (4.0/3.0) * evec_e1(ie,ix) &
                + driftxrot1(is,it) * evec_e0(ie,ix))
+          
+          pflux(is) = pflux(is) + w_theta(it) * fac
 
-          eflux(is) = eflux(is) + w_theta(it) * temp(is,ir) &
+              
+          fac = temp(is,ir) &
                * 4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
                * (driftx(is,it) * (4.0/3.0) &
                * (evec_e2(ie,ix) + rfac * evec_e1(ie,ix)) &
                + driftxrot1(is,it) * (evec_e1(ie,ix) + rfac * evec_e0(ie,ix)))
+          
+          eflux(is) = eflux(is) + w_theta(it) * fac
 
-          mflux(is) = mflux(is) + w_theta(it) * temp(is,ir) &
+
+          fac = temp(is,ir) &
                * dens(is,ir) * dens_fac(is,it) &
                * 4.0/sqrt(pi) * g(i) &
                * bigR(it) / vth(is,ir) &
@@ -211,25 +233,32 @@ contains
                * omega_rot(ir) * bigR(it) / vth(is,ir) &
                * evec_e0(ie,ix))
 
+          mflux(is) = mflux(is) + w_theta(it) * fac
+
+
           d_phi(it) = d_phi(it) + Z(is) *  dens(is,ir) &
                * dens_fac(is,it) * g(i) &
                * 4.0/sqrt(pi) * evec_e0(ie,ix)
 
        else if (ix == 1) then
 
-          pflux(is) = pflux(is) + w_theta(it) &
-               * dens(is,ir) * dens_fac(is,it) &
+          fac = dens(is,ir) * dens_fac(is,it) &
                * 4.0/sqrt(pi) * g(i) &
                * driftxrot2(is,it) * (1.0/3.0) * evec_e05(ie,ix)
+          
+          pflux(is) = pflux(is) + w_theta(it) * fac
+          
 
-          eflux(is) = eflux(is) + w_theta(it) * temp(is,ir) &
+          fac = temp(is,ir) &
                * dens(is,ir) * dens_fac(is,it) &
                * 4.0/sqrt(pi) * g(i) &
                * driftxrot2(is,it) * (1.0/3.0) &
                * (evec_e105(ie,ix) + rfac * evec_e05(ie,ix))
+          
+          eflux(is) = eflux(is) + w_theta(it) * fac
 
-          mflux(is) = mflux(is) + w_theta(it) &
-               * 4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
+
+          fac = 4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
                * temp(is,ir) / vth(is,ir) * bigR(it) &
                * (8.0/15.0 * driftx(is,it) * Btor(it)/Bmag(it) * sqrt(2.0) &
                * evec_e105(ie,ix) &
@@ -238,6 +267,9 @@ contains
                + 1.0/3.0 * driftxrot2(is,it) &
                * omega_rot(ir) * bigR(it) / vth(is,ir) * evec_e05(ie,ix) &
                + 2.0/15.0 * driftxrot3(is,it)* evec_e105(ie,ix))
+
+          mflux(is) = mflux(is) + w_theta(it) * fac
+
 
           ! uparB = < B * 1/n * int vpar * (F0 g)>
           uparB(is) = uparB(is) + w_theta(it) &
@@ -256,16 +288,22 @@ contains
                * 4.0/sqrt(pi) * evec_e05(ie,ix)
 
        else if (ix == 2) then
-          pflux(is) = pflux(is) + w_theta(it) &
-               * 4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
-               * driftx(is,it) * (2.0/15.0) * evec_e1(ie,ix)
 
-          eflux(is) = eflux(is) + w_theta(it) * temp(is,ir) &
+          fac = 4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
+               * driftx(is,it) * (2.0/15.0) * evec_e1(ie,ix)
+          
+          pflux(is) = pflux(is) + w_theta(it) * fac
+
+
+          fac = temp(is,ir) &
                * 4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
                * driftx(is,it) * (2.0/15.0) &
                * (evec_e2(ie,ix) + rfac * evec_e1(ie,ix))
+          
+          eflux(is) = eflux(is) + w_theta(it) * fac
 
-          mflux(is) = mflux(is) + w_theta(it) * temp(is,ir) &
+
+          fac = temp(is,ir) &
                * dens(is,ir) * dens_fac(is,it) &
                * 4.0/sqrt(pi) * g(i) &
                * bigR(it) / vth(is,ir) &
@@ -275,14 +313,19 @@ contains
                + 2.0/15.0 * driftx(is,it) &
                * omega_rot(ir) * bigR(it) / vth(is,ir) &
                * evec_e1(ie,ix))
+          
+          mflux(is) = mflux(is) + w_theta(it) * fac
+
 
        else if (ix == 3) then
-          mflux(is) = mflux(is) + w_theta(it) &
-               * 4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
+          fac = 4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it) * g(i) &
                * temp(is,ir) / vth(is,ir) * bigR(it) &
                * 2.0/35.0 * evec_e105(ie,ix) &
                * (driftx(is,it) * Btor(it)/Bmag(it) * sqrt(2.0) &
                - driftxrot3(is,it))
+          
+          mflux(is) = mflux(is) + w_theta(it) * fac
+
 
        endif
     enddo
@@ -393,34 +436,14 @@ contains
     endif
 
     ! Sugama gyro-viscosity "H" fluxes
+    ! (flux-surface averages accumulated directly; no theta-resolved storage)
     pflux_gv(:)  = 0.0
     eflux_gv(:)  = 0.0
     mflux_gv(:)  = 0.0
     do is=1,n_species
-       fac1 = 0.0
-       fac2 = 0.0
-       do it=1,n_theta
-          rfac = Z(is)/temp(is,ir) * (phi_rot(it) - phi_rot_avg) &
-               - (omega_rot(ir) * bigR(it) / vth(is,ir))**2 * 0.5
-          if(aniso_model(is) == 2) then
-             rfac = rfac + lam_rot_aniso(is,it)
-          endif
-          fac1 = fac1 + w_theta(it) * dens(is,ir)  * dens_fac(is,it) &
-               / Bmag(it)**3 * (2.0 * gradr(it) * gradpar_gradr(it) &
-               - 1.0/Bmag(it) * gradr(it)**2 * gradpar_Bmag(it))
-          fac2 = fac2 + w_theta(it) * dens(is,ir)  * dens_fac(is,it) &
-               / Bmag(it)**3 * (2.0 * gradr(it) * gradpar_gradr(it) &
-               - 1.0/Bmag(it) * gradr(it)**2 * gradpar_Bmag(it)) &
-               * (1.0 + rfac)
-       enddo
-       pflux_gv(is) = -0.5 * rho(ir)**2 * mass(is) &
-            * temp(is,ir) / (Z(is)*1.0)**2 * I_div_psip * r(ir) / q(ir) &
-            * fac1 * omega_rot_deriv(ir)
-       ! EAB: 02/05/14 fixed bug in mflux_gv -- dlntdr bigR_th0**2 term
-       ! had wrong sign
-       mflux_gv(is) =  -0.5 * temp(is,ir) * rho(ir)**2 * mass(is) &
-            * temp(is,ir) / (Z(is)*1.0)**2 * I_div_psip * r(ir) / q(ir) &
-            * (fac2 * dlntdr(is,ir) + fac1 * (dlnndr(is,ir) &
+       fac = -0.5 * rho(ir)**2 * mass(is) &
+            * temp(is,ir) / (Z(is)*1.0)**2 * I_div_psip * r(ir) / q(ir)
+       sfac = dlnndr(is,ir) &
             - z(is)/temp(is,ir) * dphi0dr(ir) &
             + omega_rot(ir) * bigR_th0**2 / vth(is,ir)**2 &
             * omega_rot_deriv(ir) &
@@ -428,12 +451,32 @@ contains
             * bigR_th0_rderiv &
             + dlntdr(is,ir) * (1.0 + 0.5 * omega_rot(ir)**2 * bigR_th0**2  &
             / vth(is,ir)**2) &
-            + dlntdr(is,ir) * z(is)/temp(is,ir) * phi_rot_avg) )
-       eflux_gv(is) = -0.5  * temp(is,ir) * rho(ir)**2 * mass(is) &
-            * temp(is,ir) / (Z(is)*1.0)**2 * I_div_psip * r(ir) / q(ir) &
-            * fac2 * omega_rot_deriv(ir) &
-            + 2.5 * pflux_gv(is) * temp(is,ir) &
-            + omega_rot(ir) * mflux_gv(is)
+            + dlntdr(is,ir) *  z(is)/temp(is,ir) * phi_rot_avg
+       
+       do it=1,n_theta
+          rfac = Z(is)/temp(is,ir) * (phi_rot(it) - phi_rot_avg) &
+               - (omega_rot(ir) * bigR(it) / vth(is,ir))**2 * 0.5
+          if(aniso_model(is) == 2) then
+             rfac = rfac + lam_rot_aniso(is,it)
+          endif
+
+          gfac = dens(is,ir)  * dens_fac(is,it) / Bmag(it)**3 &
+               * (2.0 * gradr(it) * gradpar_gradr(it) &
+               - 1.0/Bmag(it) * gradr(it)**2 * gradpar_Bmag(it))
+
+          pg = fac * gfac * omega_rot_deriv(ir)
+          mg = fac * gfac * temp(is,ir) &
+               * (dlntdr(is,ir) * (1.0 + rfac) + sfac)
+          eg = fac * gfac * temp(is,ir) * (1.0 + rfac) &
+               * omega_rot_deriv(ir) &
+               + 2.5 * temp(is,ir) * pg &
+               + omega_rot(ir) * mg
+
+          pflux_gv(is) = pflux_gv(is) + w_theta(it) * pg
+          mflux_gv(is) = mflux_gv(is) + w_theta(it) * mg
+          eflux_gv(is) = eflux_gv(is) + w_theta(it) * eg
+       enddo
+       
     enddo
 
     do is=1,n_species
@@ -441,6 +484,9 @@ contains
             +  (abs(pflux(is)) + abs(eflux(is)) + abs(mflux(is)))/rho(ir)**2 &
             + abs(uparB(is))/rho(ir)
     enddo
+
+    ! Friction-form local particle flux (same flux-surface average as pflux)
+    call TRANSP_fric(ir)
 
   end subroutine TRANSP_do
 
@@ -556,6 +602,107 @@ contains
 
   end subroutine compute_velocity
 
+  subroutine TRANSP_fric(ir)
+    ! Theta-resolved fluxes in friction (collisional-moment) form
+    use neo_globals
+    use neo_energy_grid
+    use neo_equilibrium
+    use neo_rotation
+    implicit none
+    integer, intent(in) :: ir
+    integer :: i, is, it
+    integer, dimension(:,:,:,:), allocatable :: mi
+    real :: c00, c01, c1, c2, c20
+    real :: k13, k1, om, rr2, afac, ub, inv_psip, ival
+    real :: rmom, wen, hmom, pmom, x2c0, perp
+
+    ! anisotropic species: not supported, fluxes stay 0 
+    if(any(aniso_model(:) == 2)) return
+
+    allocate(mi(n_species,0:n_energy,0:n_xi,n_theta))
+    do i=1,n_row
+       mi(is_indx(i),ie_indx(i),ix_indx(i),it_indx(i)) = i
+    enddo
+
+    inv_psip = q(ir)/r(ir)
+    ival = I_div_psip/inv_psip
+    om = omega_rot(ir)
+
+    do is=1,n_species
+       do it=1,n_theta
+          c00 = crow(is,it,0,0)
+          c01 = 0.0
+          if(n_energy >= 1) c01 = crow(is,it,1,0)
+          c1  = crow(is,it,0,1)
+          c2  = 0.0
+          if(n_energy >= 1) c2 = crow(is,it,1,1)
+          c20 = 0.0
+          if(n_xi >= 2) c20 = crow_p2(is,it)
+
+          k1  = 4.0/sqrt(pi) * dens(is,ir) * dens_fac(is,it)
+          k13 = k1/3.0
+          afac  = I_div_psip/Bmag(it)
+          ub  = ival/Bmag(it)
+          rr2 = bigR(it)**2
+
+          ! int x^2 C_0 = 1.5 c(0,0) - c(1,0)   (phi_1 = 3/2 - x^2 at l=0)
+          x2c0 = 1.5*c00 - c01
+          rmom = k13 * mass(is) * sqrt(2.0) * vth(is,ir) * c1
+          hmom = k13 * mass(is) * sqrt(2.0) * vth(is,ir) * temp(is,ir) &
+               * (2.5*c1 - c2)
+          wen  = k1 * temp(is,ir) * x2c0
+          pmom = (2.0/3.0) * temp(is,ir) * k1 * (x2c0 + 0.4*c20)
+
+          ! perpendicular part of alpha_2 (mu |grad psi|^2/B = (1/2) v_perp^2 (R^2-(I/B)^2))
+          perp = 0.5*(rr2 - ub**2)*(2.0*wen - pmom)
+          pflux_fric_th(is,it) = -rho(ir)/Z(is) * afac * rmom
+          eflux_fric_th(is,it) = -rho(ir)/Z(is) * ( &
+               inv_psip*om*rr2*mass(is)*wen + afac*hmom &
+               + afac*(0.5*mass(is)*om**2*rr2 &
+               + Z(is)*(phi_rot(it)-phi_rot_avg))*rmom &
+               + 0.5*om*mass(is)*(ub*afac*pmom + inv_psip*perp) )
+          mflux_fric_th(is,it) = -rho(ir)/(2.0*Z(is)) * ( &
+               2.0*om*rr2*mass(is)*afac*rmom &
+               + mass(is)*(ub*afac*pmom + inv_psip*perp) )
+       enddo
+    enddo
+
+    deallocate(mi)
+
+  contains
+
+    real function crow(js,jt,ie,ix)
+      ! species-summed (test+field) collision row (ie,ix) acting on g at theta jt
+      integer, intent(in) :: js,jt,ie,ix
+      integer :: je, ks
+      crow = 0.0
+      do je=0,n_energy
+         do ks=1,n_species
+            crow = crow + emat_coll_test(js,ks,ie,je,ix)*dens_fac(ks,jt) &
+                 * g(mi(js,je,ix,jt))
+            crow = crow + emat_coll_field(js,ks,ie,je,ix)*dens_fac(ks,jt) &
+                 * g(mi(ks,je,ix,jt))
+         enddo
+      enddo
+    end function crow
+
+    real function crow_p2(js,jt)
+      ! same, for the l=2 row with test function x^2
+      integer, intent(in) :: js,jt
+      integer :: je, ks
+      crow_p2 = 0.0
+      do je=0,n_energy
+         do ks=1,n_species
+            crow_p2 = crow_p2 + emat_coll_p2_test(js,ks,je)*dens_fac(ks,jt) &
+                 * g(mi(js,je,2,jt))
+            crow_p2 = crow_p2 + emat_coll_p2_field(js,ks,je)*dens_fac(ks,jt) &
+                 * g(mi(ks,je,2,jt))
+         enddo
+      enddo
+    end function crow_p2
+
+  end subroutine TRANSP_fric
+
   subroutine TRANSP_write(ir)
     use neo_globals
     use neo_rotation
@@ -644,6 +791,17 @@ contains
     write(io,*) upar(:,:)
     close(io)
 
+    ! friction-form fluxes vs theta: pflux, eflux, mflux
+    ! should match dke+gv fluxes from neo solve
+    open(io,file=trim(path)//runfile_flux_th,status='old',position='append')
+    do is=1, n_species
+       do jt=1, n_theta
+          write(io,*) pflux_fric_th(is,jt), eflux_fric_th(is,jt), &
+               mflux_fric_th(is,jt)
+       enddo
+    enddo
+    close(io)
+    
     ! u_par, vpol, vtor theta fourier coefficients
     open(io,file=trim(path)//runfile_vel_fourier,status='old',position='append')
     do is=1,n_species

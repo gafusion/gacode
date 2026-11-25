@@ -50,6 +50,12 @@ module neo_energy_grid
   ! (species,species,energy,energy,xi)
   real, dimension(:,:,:,:,:), allocatable :: emat_coll_test, emat_coll_field
 
+  ! l=2 collision row with test function x^2 (the P2 weight of alpha_2):
+  ! emat_coll_p2_*(is,js,je) = same operator/normalization as the (ie,ix=2)
+  ! rows of emat_coll_*, but with phi_ie -> x^2.  x^2 is not in the l=2 test
+  ! space of LAGUERRE_METHOD=1 (for method 2 it equals the ie=0 row).
+  real, dimension(:,:,:), allocatable :: emat_coll_p2_test, emat_coll_p2_field
+
   ! private variables
   logical, private :: initialized_basis = .false.
   logical, private :: initialized_coll  = .false.
@@ -157,6 +163,8 @@ contains
 
        allocate(emat_coll_test(n_species,n_species,0:n_energy,0:n_energy,0:n_xi))
        allocate(emat_coll_field(n_species,n_species,0:n_energy,0:n_energy,0:n_xi))
+       allocate(emat_coll_p2_test(n_species,n_species,0:n_energy))
+       allocate(emat_coll_p2_field(n_species,n_species,0:n_energy))
 
        initialized_coll = .true.
 
@@ -165,6 +173,8 @@ contains
 
        deallocate(emat_coll_test)
        deallocate(emat_coll_field)
+       deallocate(emat_coll_p2_test)
+       deallocate(emat_coll_p2_field)
 
        initialized_coll = .false.
 
@@ -294,6 +304,8 @@ contains
 
     emat_coll_test(:,:,:,:,:)  = 0.0
     emat_coll_field(:,:,:,:,:) = 0.0
+    emat_coll_p2_test(:,:,:)   = 0.0
+    emat_coll_p2_field(:,:,:)  = 0.0
 
     if (collision_model /= 1 .and. collision_model /= 4 .and. &
          collision_model /= 5) then
@@ -374,6 +386,8 @@ contains
              if(is .ne. is_ele .and. js == is_ele) then
                 emat_coll_test(is,js,:,:,:) = 0.0
                 emat_coll_field(is,js,:,:,:) = 0.0
+                emat_coll_p2_test(is,js,:) = 0.0
+                emat_coll_p2_field(is,js,:) = 0.0
                 if(coll_uncoupledei_model == 2) then
                    ! C_ie = Connor case ma>mb
                    call coll_test_ints(is,js,ir,tauinv_ab,lambda,1,3)
@@ -384,6 +398,8 @@ contains
                 ! C_ei = L(fe) with Connor case ma<mb
                 emat_coll_test(is,js,:,:,:) = 0.0
                 emat_coll_field(is,js,:,:,:) = 0.0
+                emat_coll_p2_test(is,js,:) = 0.0
+                emat_coll_p2_field(is,js,:) = 0.0
                 call coll_test_ints(is,js,ir,tauinv_ab,lambda,1,2)
                 call coll_field_ints(is,js,ir,tauinv_ab,tauinv_ba,lambda,1,2)
              endif
@@ -455,6 +471,7 @@ contains
     real, intent(in) :: tauinv_ab, lambda
     real, dimension(:), allocatable :: x, w, k0, k2
     real, dimension(:,:), allocatable :: phi, dphi, tpa, ten
+    real, dimension(:,:), allocatable :: rr, drr, tra, tre
     real :: c0, ta
     integer :: nq, ix, q, ne
 
@@ -499,6 +516,33 @@ contains
 
     enddo
 
+    ! l=2 row with test function x^2 (phi_i -> x^2, D phi_i -> 2 x^2); same
+    ! forms and normalization as the l=2 rows above
+    emat_coll_p2_test(is,js,:) = 0.0
+    if (n_xi >= 2 .and. .not. mono) then
+       allocate(rr(1,nq),drr(1,nq),tra(1,0:ne),tre(1,0:ne))
+       rr(1,:)  = x**2
+       drr(1,:) = 2.0*x**2
+       call basis_eval(ne,0.5*e_lag(2),xi_beta_l(2),nq,x,phi,dphi)
+       tre = 0.0
+       if (model == 1) then
+          select case (ccase)
+          case (1)
+             tra = c0*proj(rr,phi,w*(k0-k2))
+          case (2)
+             tra = 0.5*tauinv_ab*proj(rr,phi,w/x)
+          case (3)
+             tra = c0*ta*(2.0/3.0)*proj(rr,phi,w*x**2)
+          end select
+       else
+          tra = c0*proj(rr,phi,w*(k0-k2))
+          tre = 4*c0*((1-ta)*proj(drr,phi,w*x**2*k2) &
+               -0.5*proj(drr,dphi,w*k2))
+       endif
+       emat_coll_p2_test(is,js,:) = -6.0*tra(1,:)+tre(1,:)
+       deallocate(rr,drr,tra,tre)
+    endif
+
     deallocate(x,w,k0,k2,phi,dphi,tpa,ten)
 
   end subroutine coll_test_ints
@@ -522,11 +566,14 @@ contains
     integer :: nq, ie, q, ne
 
     emat_coll_field(is,js,:,:,:) = 0.0
+    emat_coll_p2_field(is,js,:)  = 0.0
 
     if (model == 5) return
 
     if (model == 4) then
        call fp_field(is,js,tauinv_ab,lambda,mass(is)/mass(js))
+       if (n_xi >= 2 .and. .not. mono) &
+            call fp_field_p2(is,js,tauinv_ab,lambda,mass(is)/mass(js))
        return
     endif
 
@@ -741,6 +788,112 @@ contains
     deallocate(x,w,wa,wb,ma,mb,tg,tw,la,lb,f,pidx,xb4,xb6,va1,va2,vb1,vb2)
 
   end subroutine fp_field
+
+  !---------------------------------------------------------------
+  ! l=2 field-particle row with test function x^2 = x^beta_r L_0, beta_r=2:
+  ! emat_coll_p2_field(is,js,:).  Same expression as fp_field with the
+  ! test-species basis replaced by the single function x^beta_r (n=0), so
+  ! the power 2*beta in fp_field becomes beta_r+beta_c, the inner integral
+  ! over the field species uses p = l+B+beta_c and that over the test
+  ! species p = l+B+beta_r.  For beta_r=beta_c (LAGUERRE_METHOD=2) this is
+  ! exactly the ie=0 row of emat_coll_field(is,js,:,:,2).
+  !---------------------------------------------------------------
+  subroutine fp_field_p2(is,js,tauinv_ab,lambda,mab)
+    use neo_globals, only : n_energy, n_xi, pi
+    implicit none
+    integer, intent(in) :: is, js
+    real, intent(in) :: tauinv_ab, lambda, mab
+    integer, parameter :: lp = 2, betar = 2
+    real, dimension(:), allocatable :: x, w, wa, wb, tg, tw, xb4, xb6
+    real, dimension(:), allocatable :: va1, va2, vb1, vb2
+    logical, dimension(:), allocatable :: ma, mb
+    real, dimension(:,:), allocatable :: la, lb, tpc, tpr, f
+    real, dimension(:,:,:), allocatable :: ita, itb
+    integer :: plc(2), plr(2)
+    real :: xmax, scut, cf, alpha, el, w2, w3, w45, w67
+    integer :: ne, nq, nt, pmax, b0, b1, nb, k, betac
+
+    ne    = n_energy
+    alpha = 0.5*e_lag(lp)
+    betac = xi_beta_l(lp)
+    el    = 1.0*lp
+    cf    = lambda**(0.5*betac)
+
+    call field_grid(lambda,x,w)
+    nq = size(x)
+    xmax = x_extent()
+
+    allocate(ma(nq),mb(nq),wa(nq),wb(nq))
+    ma = x <= xmax
+    mb = sqrt(lambda)*x <= xmax
+    wa = 0.0
+    wb = 0.0
+    where (ma) wa = w*exp(-x*x)
+    where (mb) wb = w*exp(-lambda*x*x)
+
+    pmax = max(n_xi+4+maxval(xi_beta_l), lp+4+betar, lp+4+betac)
+    scut = 10.0*ne+2*pmax+80
+    nt   = ne+ceiling(3*sqrt(scut))+12+(pmax+2)/2
+    allocate(tg(nt),tw(nt))
+    call gauss_legendre01(nt,tg,tw)
+
+    plc = (/ lp+2+betac, lp+4+betac /)
+    plr = (/ lp+2+betar, lp+4+betar /)
+    allocate(tpc(nt,2),tpr(nt,2))
+    do k=1,2
+       tpc(:,k) = tw*tg**plc(k)
+       tpr(:,k) = tw*tg**plr(k)
+    enddo
+
+    allocate(la(1,nq),lb(0:ne,nq),f(1,0:ne))
+    allocate(xb4(nq),xb6(nq),va1(nblk),va2(nblk),vb1(nblk),vb2(nblk))
+    allocate(ita(0:ne,nblk,2),itb(0:ne,nblk,2))
+
+    la(1,:) = merge(1.0,0.0,ma)
+    call lag_eval(ne,alpha,nq,merge(lambda*x*x,0.0,mb),lb)
+    do k=0,ne
+       lb(k,:) = merge(lb(k,:),0.0,mb)
+    enddo
+    xb4 = x**(4+betar+betac)
+    xb6 = x**(6+betar+betac)
+
+    w2  = -2.0/(el+0.5)*(mab-el*(1-mab))
+    w3  = -2.0/(el+0.5)*(1+el*(1-mab))
+    w67 = (el+1.0)*(el+2.0)/((el+1.5)*(el+0.5))
+    w45 = -el*(el-1.0)/(el*el-0.25)
+
+    ! R: local term
+    f = mab*2*cf*proj(la,lb, &
+         merge(w*exp(-(1+lambda)*x*x),0.0,ma.and.mb)*x**(betar+betac+2))
+
+    do b0=1,nq,nblk
+       b1 = min(nq,b0+nblk-1)
+       nb = b1-b0+1
+
+       ! field-species inner integrals (c=lambda, powers plc)
+       call inner_ints(ne,alpha,lambda,nt,tg,2,plc,tpc,scut, &
+            nb,x(b0:b1),ma(b0:b1),ita)
+       ! test-species inner integrals (c=1, powers plr); only n=0 is used
+       call inner_ints(ne,alpha,1.0,nt,tg,2,plr,tpr,scut, &
+            nb,x(b0:b1),mb(b0:b1),itb)
+
+       va1(1:nb) = wa(b0:b1)*(w2*xb4(b0:b1)+w45*xb6(b0:b1))
+       va2(1:nb) = wa(b0:b1)*w67*xb6(b0:b1)
+       vb1(1:nb) = wb(b0:b1)*(w3*xb4(b0:b1)+w45*xb6(b0:b1))
+       vb2(1:nb) = wb(b0:b1)*w67*xb6(b0:b1)
+
+       f = f + cf*( &
+            proj(la(:,b0:b1),ita(:,1:nb,1),va1(1:nb)) &
+            +proj(la(:,b0:b1),ita(:,1:nb,2),va2(1:nb)) &
+            +proj(itb(0:0,1:nb,1),lb(:,b0:b1),vb1(1:nb)) &
+            +proj(itb(0:0,1:nb,2),lb(:,b0:b1),vb2(1:nb)))
+    enddo
+
+    emat_coll_p2_field(is,js,:) = tauinv_ab*2/sqrt(pi)*lambda**1.5*f(1,:)
+
+    deallocate(x,w,wa,wb,ma,mb,tg,tw,tpc,tpr,la,lb,f,xb4,xb6,va1,va2,vb1,vb2,ita,itb)
+
+  end subroutine fp_field_p2
 
   ! it(n,q,k) = int_0^1 t^p e^{-u} L_n^(alpha)(u) dt, u = c x_q^2 t^2,
   ! p = plist(k), for the nodes x_q with mask(q) (zero elsewhere).
