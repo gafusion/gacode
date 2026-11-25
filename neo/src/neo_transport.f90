@@ -712,7 +712,6 @@ contains
     integer, intent (in) :: ir
     integer :: is, jt
     real :: pgb, egb, mgb, dens_ele, temp_ele
-    real :: sum1, sum2, sum3
 
     if(silent_flag > 0 .or. i_proc > 0) return
     
@@ -792,20 +791,14 @@ contains
     write(io,*) upar(:,:)
     close(io)
 
-    ! friction-form fluxes vs theta: pflux, eflux (zero rotation), mflux (=0)
+    ! friction-form fluxes vs theta: pflux, eflux, mflux
+    ! should match dke+gv fluxes from neo solve
     open(io,file=trim(path)//runfile_flux_th,status='old',position='append')
     do is=1, n_species
-       sum1 = 0.0
-       sum2 = 0.0
-       sum3 = 0.0
        do jt=1, n_theta
           write(io,*) pflux_fric_th(is,jt), eflux_fric_th(is,jt), &
                mflux_fric_th(is,jt)
-          sum1 = sum1 + pflux_fric_th(is,jt) * w_theta(jt)
-          sum2 = sum2 + eflux_fric_th(is,jt) * w_theta(jt)
-          sum3 = sum3 + mflux_fric_th(is,jt) * w_theta(jt)
        enddo
-       !print *, pflux(is)+pflux_gv(is), sum1, eflux(is)+eflux_gv(is), sum2, mflux(is)+mflux_gv(is), sum3
     enddo
     close(io)
     
